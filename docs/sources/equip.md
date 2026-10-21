@@ -7,7 +7,7 @@
 | ファイル | 件数 | 主な出典 |
 |---|---|---|
 | `data/skills.json` | 179 (武器 66・防具 71・シリーズ 25・グループ 17) | MHDB `/ja/skills` + MHWS-in-json `SkillCommonData` (gameId で結合) |
-| `data/armor.json` | 714 (下位 132・上位 582。頭 164・胴 140・腕 135・腰 137・脚 138) | MHDB `/ja/armor`, `/ja/armor/sets` |
+| `data/armor.json` | 714 (下位 132・上位 582。頭 164・胴 140・腕 135・腰 137・脚 138)。限界突破後のスロットあり 580・出典が食い違って空き 2 | MHDB `/ja/armor`, `/ja/armor/sets`。限界突破は規則で計算し wiki と照合 (下の「防具の限界突破」) |
 | `data/bonuses.json` | シリーズ 25・グループ 17 | MHDB `/ja/armor/sets` |
 | `data/decorations.json` | 361 (武器用 295・防具用 66) | MHDB `/ja/decorations` |
 | `data/weapons_sns.json` | 片手剣 95 (うちアーティア系 6・巨戟アーティア 3) | MHDB `/ja/weapons?q={"kind":"sword-shield"}` |
@@ -17,7 +17,8 @@
 | `data/my_weapons.json` | 0 (空) | 人が増やす |
 
 生成: `PYTHONIOENCODING=utf-8 python tools/build_equip.py` (キャッシュが無ければ `tools/equip_fetch.py` で取ってから作る。`--refresh` で取り直し)。
-キャッシュ (`tools/.cache/equip/`) だけを読むので再実行で同じ結果になる (`generatedAt` は実行時刻でなく生データの取得時刻の最大値)。2 回実行して md5 が同じことを確認済み。
+キャッシュ (`tools/.cache/equip/`) だけを読むので再実行で同じ結果になる (`generatedAt` は実行時刻でなく生データの取得時刻の最大値)。2 回実行して md5 が同じことを確認済み (限界突破を足した 2026-10-21 data-fix の後も確認。armor.json 以外の 6 ファイルは足す前とバイト単位で同じ)。
+限界突破の照合用に wiki のページ (`tools/.cache/equip/wiki/`) と MHDB `/en/armor` も取る。`--refresh` で取り直して wiki が規則と食い違ったら、その防具は null になり標準出力に「限界突破の不一致」と出る。
 
 ## 出典とライセンス
 
@@ -26,8 +27,11 @@
 | wilds.mhdb.io `/ja/` (armor, armor/sets, skills, decorations, weapons, charms) | `urllib` で取得。2026-10-21 03:08 UTC | MHDB (LartTyler/mhdb-wilds-data)。ゲームデータの数値と名前だけを使う。版の固定はできない (生 API) ので MHWS-in-json と照合した |
 | GitHub `dzxrly/MHWS-in-json` commit `4a99b26` (release `database-20261020-070700-4a99b26`, ゲーム版 1.42.0.2) | natives の生 JSON を raw.githubusercontent.com から、PROCESSED_DATA / DATABASE_ja-JP の zip を release から | MIT |
 | 泣シミュ (mhwilds.wiki-db.com/sim) | 護石の取り込み形式と選択肢の確認だけ (画面のスクリプトを読んだ)。データは取り込まない | — |
+| wilds.mhdb.io `/en/armor` | wiki の英語の防具名と突き合わせるため (id は `/ja/` と共通。スロットが `/ja/` と同じことも確かめる) | 同上 |
+| monsterhunterwiki.org の Wilds の防具シリーズのページ 182 件 | Bucket API (`armor`, game = MHWilds) でページ名を集め、MediaWiki API でウィキテキストを 50 件ずつ取得。2026-10-21 04:07 UTC | **CC BY-SA 4.0**。限界突破後のスロットの**照合だけ**に使う (値は規則で計算する)。armor.json の `meta.license.wiki` に表記 |
+| Game8 (照合のみ・取り込まない) | 限界突破の解説 `game8.jp/mhwilds/749580` と全 14 武器種の最強装備ページを人手で照合 (2026-10-21)。結果の数と食い違いだけを `tools/equip_limitbreak.py` の `GAME8_CHECK` / `DISPUTED` に残す | 規約不明のため取り込み元にしない |
 
-使った MHWS-in-json のファイル: `Common/Equip/SkillCommonData`, `RandomAmuletPtTable`, `RandomAmuletLotSkillTable`, `RandomAmuletAccSlot` (生成に使う)、`PROCESSED_DATA` の `amulet_pool.json` / `skill_pool.json` と `DATABASE_ja-JP` の `EquipCollection.xlsx` / `SkillCollection.xlsx` (照合に使う)。`ArmorData` / `AccessoryData` / `ShortSword` の生 JSON も取得してあるが今は使っていない。
+使った MHWS-in-json のファイル: `Common/Equip/SkillCommonData`, `RandomAmuletPtTable`, `RandomAmuletLotSkillTable`, `RandomAmuletAccSlot`, `ArmorUpgradeData`, `ArmorSpUpgradeCostData` (生成に使う)、`PROCESSED_DATA` の `amulet_pool.json` / `skill_pool.json` と `DATABASE_ja-JP` の `EquipCollection.xlsx` / `SkillCollection.xlsx` (照合に使う)。`ArmorData` / `AccessoryData` / `ShortSword` の生 JSON も取得してあるが今は使っていない。
 
 ## 照合の結果 (meta.checks に残してある)
 
@@ -49,7 +53,7 @@
 - 契約外で足した項目: `description` (スキル全体の説明)、`internalId` (`HunterSkill_026` など)、`decorations`。
 
 ### 防具 (armor.json)
-- `slots` は MHDB の並び (全件大きい順) に 0 を足して長さ 3。**限界突破後のスロットは持たない** (下の未確定事項)。
+- `slots` は MHDB の並び (全件大きい順) に 0 を足して長さ 3。限界突破**前**のスロット。限界突破後は `slotsLimitBreak` (下の「防具の限界突破」)。
 - `skills` には武器/防具スキルだけを入れ、シリーズ/グループスキルは `setBonusId` / `groupBonusId` で表す。
 - **ゴグα/β (id 670〜679) は 1 部位に シリーズスキルが 2 つ** ある (巨戟龍の黙示録 + 部位ごとに別のシリーズスキル。例: ゴグヘルムα = 白熾龍の脈動)。MHDB の armorSet.bonus は 1 つしか持たず、ゴグβ では 護鎖刃竜の命脈 (ヘルムβ だけのもの) になっていて部位によっては誤り。そこで部位自身のスキル一覧から取り、
   - `setBonusIds` (契約外で追加) = その部位が数に入る全シリーズスキルの id。シリーズ全部位に共通するもの (= 巨戟龍の黙示録) を先頭に。
@@ -57,7 +61,59 @@
   - build.js は `setBonusIds` があればそれを全部数える。
 - グループスキルは全部位 1 つ以下 (確認済み)。
 - 下位防具にもシリーズ/グループスキルが付いているものがある (MHDB と MHWS-in-json の両方で同じ)。データのまま。
-- 契約外で足した項目: `setBonusIds`, `armorSetId`, `armorSetName`。
+- 契約外で足した項目: `setBonusIds`, `armorSetId`, `armorSetName` (2026-10-21 に契約へ追記済み)。
+
+### 防具の限界突破 (armor.json の `limitBreakable` / `slotsLimitBreak`。2026-10-21 data-fix)
+
+TU4 (Ver.1.040) で追加された強化。HR100 以上で、上位の防具 (レア5〜8) の強化上限 Lv が上がり、レア5・6 はスロットも強化される。
+ゲームデータ (MHWS-in-json) には限界突破**後**のスロットの欄が無い (ArmorData は限界突破前のスロットだけ。
+ArmorUpgradeData / ArmorSpUpgradeCostData / EquipDataSetting にもスロットの設定は無い) ので、例を集めて規則を探した。
+
+**規則** (`tools/equip_limitbreak.py` の `RULE_ADD`。各枠に足す Lv、上限 Lv3、余りは次の枠に回さない):
+
+| レア度 | 規則 | 例 |
+|---|---|---|
+| 5 | 3 つの枠をそれぞれ +1 (空き枠は Lv1 の枠になる) | ②①ー → ③②①、ーーー → ①①① |
+| 6 | 1 番目と 2 番目の枠を +1 | ②①ー → ③②ー、②ーー → ③①ー、③ーー → ③①ー |
+| 7・8 | 変わらない (防御力だけ上がる) | ③②① → ③②① |
+| 1〜4 (下位) | 限界突破できない (`limitBreakable: false`, `slotsLimitBreak: null`) | |
+
+限界突破できるレア度は ArmorUpgradeData の `_IsSpecialUpgrade = true` の行から取る (内部の RARE4〜7 = レア5〜8。
+ArmorSpUpgradeCostData の対象レア度と一致することを生成時に確かめる)。強化上限 Lv は通常/限界突破後で
+レア5 = 20/28、レア6 = 16/22、レア7 = 11/16、レア8 = 10/14 (wiki の Max Level / Transcend Max Level とも一致)。
+
+**照合の結果** (確度 high):
+
+| 出典 | 比べた数 | 一致 | メモ |
+|---|---|---|---|
+| wiki の防具シリーズのページ (`Transcend N Deco`) | 554 部位 (レア5 200・レア6 186・レア7 80・レア8 88) | **554** | bot (MH Wiki Toolkit) が 2026-10-12 に書き込んだもの。生成のたびに全件比べ、食い違えばその防具は null にする |
+| Game8 の限界突破ページの「スロットが増加する防具一覧」 | 385 部位 (一覧 386 件。ダイバーボディα は MHDB の名前が ダイバースーツα で結合できず) | 383 | 強化前のスロットも 385 件すべて MHDB と一致。食い違いは下の 2 部位だけ |
+| Game8 の全 14 武器種の最強装備ページの「(限界突破強化)」 | 43 件 (14 部位。すべてレア6) | 43 | 片手剣 (668364): 護火竜アームβ ②①① → ③②①、護火竜グリーヴβ ②ーー → ③①ー、護兇爪竜メイルβ ②②ー → ③③ー。操虫棍 (668371) のミツネヘルムα ③ーー → ③①ー は上限に当たる例 |
+| Game8 の解説文 | — | — | 「レア5が3枠、レア6が2枠増える」「左から順に1個ずつ増えている」「ミツネ装備のみスロットの増加量が少ない」 |
+| TU4 の告知 (Game*Spark の紹介記事) | — | — | 「レア5・6の防具では装飾品スロットが強化」= レア7・8 は変わらない |
+
+**出典が食い違う防具 (推測で埋めない → `slotsLimitBreak: null`、理由は `slotsLimitBreakNote`)**:
+
+| 防具 | 限界突破前 | wiki | Game8 の一覧 |
+|---|---|---|---|
+| 鬼の外衣α (id 589、豪鬼α・レア6) | ③①ー | ③②ー | ③②① |
+| 鬼の腰巻α (id 591、豪鬼α・レア6) | ③①ー | ③②ー | ③②① |
+
+- Game8 の「増加パターン一覧」は先頭が Lv3 の行で余りを次の枠に回している (③ーー → ③①①) が、同じページの防具一覧の
+  ミツネ防具 5 部位 (③ーー → ③①ー など) と最強装備ページのミツネヘルムα はそうなっておらず、本文でも
+  「ミツネ装備のみスロットの増加量が少ない」としている。先頭が Lv3 のレア6 はミツネ 5 部位と豪鬼α 2 部位の 7 部位だけで、
+  ミツネは wiki と Game8 が一致 (余りは回らない)。豪鬼α だけが Game8 の表どおりの値なので、Game8 側が表から埋めた可能性が高い
+  (= ③②ー の見込み) が、確かめるまで空けておく。**ゲームで豪鬼αの胴か腰を限界突破すれば決まる**
+  (決まったら `tools/equip_limitbreak.py` の `DISPUTED` から外して再生成する)。
+- レア5 に Lv3 の枠を持つ防具は無いので、レア5 で上限に当たる場合の振る舞いはデータに出てこない。
+
+**wiki と比べられなかった部位** (規則で埋めた。レア7・8 は「変わらない」なので値は `slots` と同じ):
+- wiki に限界突破の欄が無い: レア7 5 部位・レア8 22 部位。スロット 0 の部位 (欄を書かない) と、ページに限界突破の記載が無い
+  フルドレスα (Gala Suit α)・蒼世ノ侍α (Azure Age α) の 10 部位 (どちらもレア8)。
+- wiki にページが無い: ププロフェイクα (Rompomask α、レア8)。
+
+`meta.limitBreak` に 規則 (`rule` / `ruleAdd` / `cap`)・限界突破できるレア度と強化上限 Lv (`rarities` / `levels`)・
+照合の結果 (`checks.wiki` / `checks.game8`)・食い違い (`disputed`)・規則の型ごとの例 (`examples`)・出典を入れてある。
 
 ### シリーズ/グループ (bonuses.json)
 - シリーズスキル 25 件はすべて 2 部位でⅠ・4 部位でⅡ (ranks はデータから)。グループスキル 17 件はすべて 3 部位。
@@ -102,7 +158,10 @@
 
 | 事項 | 確度 | メモ |
 |---|---|---|
-| 防具の限界突破後のスロット | — (持たない) | 機械可読な出典が無い。`slots` は限界突破前。必要になったら手入力の仕組みを別に作る |
+| 防具の限界突破後のスロット (`slotsLimitBreak`) | high | 2026-10-21 に規則で埋めた (上の「防具の限界突破」)。wiki 554/554・Game8 383/385 一致 |
+| 豪鬼α の胴・腰 (鬼の外衣α・鬼の腰巻α) の限界突破後のスロット | — (null) | wiki ③②ー / Game8 ③②①。ゲームで確かめたら `DISPUTED` から外す |
+| フルドレスα・蒼世ノ侍α・ププロフェイクα が限界突破できるか | medium | wiki に限界突破の記載が無い。レア8 なのでスロットは変わらず、`slotsLimitBreak` には影響しない (`limitBreakable` はレア度で true にしている) |
+| 防御力の最大値 (`defense.max`) | 未照合 (MHDB のまま) | 上位 (レア5〜8) の全 582 部位で、MHDB の値が ArmorUpgradeData から計算した値 (初期値 + 2 × (強化上限 Lv − 1)) より 2 高い (例: レア6 は MHDB 80 / 計算 78。wiki も 78)。下位は一致。火力計算には使わないので直していない |
 | 破滅のキリエヴェルド 3 本の種類 (攻撃/会心/属性の激化) | medium | 攻撃力・会心率・AttributeValue からの推定。MHDB・MHWS-in-json とも種類名を持たない |
 | アーティア系の属性値の目安 `mhwsAttributeValue` | low | 属性未選択 (Attribute=NONE) の行の値×10。実際の属性値は生産時の選択で決まるので my_weapons.json に手入力 |
 | 鑑定護石のスキル Lv は表の値で固定か | medium | 抽選表は群ごとに Lv を 1 つだけ持つ (固定と読める)。検証では表の Lv を**上限**として扱い、低いときは警告 `not-exact` に留めた |

@@ -1,0 +1,20 @@
+{
+  "name": "片手剣ビルド (モンハンワイルズ)",
+  "short_name": "片手剣ビルド",
+  "description": "モンハンワイルズ (PS5) の片手剣のビルドを組む非公式ツール",
+  "lang": "ja",
+  "dir": "ltr",
+  "id": "mhwilds-sns/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f4f6",
+  "theme_color": "#1f5c70",
+  "icons": [
+    { "src": "app/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "app/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "app/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "app/icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}

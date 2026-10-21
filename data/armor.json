@@ -3,9 +3,13 @@
   "source": [
    "https://wilds.mhdb.io/ja/armor",
    "https://wilds.mhdb.io/ja/armor/sets",
-   "https://github.com/dzxrly/MHWS-in-json/releases/download/database-20261020-070700-4a99b26/DATABASE_ja-JP_20261020-070700-4a99b26.zip"
+   "https://github.com/dzxrly/MHWS-in-json/releases/download/database-20261020-070700-4a99b26/DATABASE_ja-JP_20261020-070700-4a99b26.zip",
+   "https://wilds.mhdb.io/en/armor",
+   "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/4a99b267930a0a83bcf45274733f169455c7b641/MHWS-in-json/natives/STM/GameDesign/Common/Equip/ArmorUpgradeData.user.3.json",
+   "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/4a99b267930a0a83bcf45274733f169455c7b641/MHWS-in-json/natives/STM/GameDesign/Common/Equip/ArmorSpUpgradeCostData.user.3.json",
+   "https://monsterhunterwiki.org/api.php"
   ],
-  "generatedAt": "2026-10-21T03:08:28+00:00",
+  "generatedAt": "2026-10-21T04:07:06+00:00",
   "gameVersion": "1.042",
   "sourceVersions": {
    "mhdb": "wilds.mhdb.io /ja/ (取得日時は meta.source の各 fetchedAt)",
@@ -13,7 +17,8 @@
   },
   "license": {
    "mhdb": "wilds.mhdb.io (LartTyler/mhdb-wilds-data)。ゲームデータの数値と名前のみ使用",
-   "mhwsInJson": "MIT (dzxrly/MHWS-in-json)"
+   "mhwsInJson": "MIT (dzxrly/MHWS-in-json)",
+   "wiki": "CC BY-SA 4.0 (Monster Hunter Wiki, monsterhunterwiki.org の寄稿者)。防具シリーズのページの Transcend N Deco を限界突破後のスロットの照合に使用"
   },
   "checks": {
    "multiSetBonusPieces": [
@@ -31,7 +36,1062 @@
    "mhwsCompared": 714,
    "mismatches": []
   },
-  "note": "slots は限界突破前。setBonusIds はその部位が数に入る全シリーズスキル (ゴグα/β は 2 つ。先頭がシリーズ共通のもの = setBonusId)"
+  "limitBreak": {
+   "rarities": [
+    5,
+    6,
+    7,
+    8
+   ],
+   "levels": {
+    "1": {
+     "maxLevel": 11,
+     "limitBreakMaxLevel": null
+    },
+    "2": {
+     "maxLevel": 11,
+     "limitBreakMaxLevel": null
+    },
+    "3": {
+     "maxLevel": 9,
+     "limitBreakMaxLevel": null
+    },
+    "4": {
+     "maxLevel": 8,
+     "limitBreakMaxLevel": null
+    },
+    "5": {
+     "maxLevel": 20,
+     "limitBreakMaxLevel": 28
+    },
+    "6": {
+     "maxLevel": 16,
+     "limitBreakMaxLevel": 22
+    },
+    "7": {
+     "maxLevel": 11,
+     "limitBreakMaxLevel": 16
+    },
+    "8": {
+     "maxLevel": 10,
+     "limitBreakMaxLevel": 14
+    }
+   },
+   "rule": {
+    "5": "3 つの枠をそれぞれ +1 (上限 Lv3。空き枠は Lv1 の枠になる)。例 ②①ー → ③②①",
+    "6": "1 番目と 2 番目の枠を +1 (上限 Lv3。上限で余った分は次の枠に回らない)。例 ②①ー → ③②ー、③ーー → ③①ー",
+    "7": "スロットは変わらない (防御力だけ上がる)",
+    "8": "スロットは変わらない (防御力だけ上がる)"
+   },
+   "ruleAdd": {
+    "5": [
+     1,
+     1,
+     1
+    ],
+    "6": [
+     1,
+     1,
+     0
+    ],
+    "7": [
+     0,
+     0,
+     0
+    ],
+    "8": [
+     0,
+     0,
+     0
+    ]
+   },
+   "cap": 3,
+   "confidence": "high",
+   "confidenceNote": "wiki (bot が書いた全部位) と規則が全件一致、Game8 の一覧とも 385 件中 383 件一致 (残り 2 件は出典どうしの食い違い = disputed)。レア7・8 でスロットが変わらないことは公式の告知 (「レア5・6の防具では装飾品スロットが強化」) とも合う",
+   "filled": 580,
+   "disputed": [
+    {
+     "id": 589,
+     "name": "鬼の外衣α",
+     "slots": [
+      3,
+      1,
+      0
+     ],
+     "wiki": [
+      3,
+      2,
+      0
+     ],
+     "game8": [
+      3,
+      2,
+      1
+     ],
+     "note": "限界突破後のスロットが出典で食い違う (wiki ③②ー / Game8 ③②①)。同じく先頭が Lv3 のミツネ防具は両方の出典で「余りは次の枠に回らない」なので ③②ー の可能性が高いが、ゲームで確かめるまで空けておく"
+    },
+    {
+     "id": 591,
+     "name": "鬼の腰巻α",
+     "slots": [
+      3,
+      1,
+      0
+     ],
+     "wiki": [
+      3,
+      2,
+      0
+     ],
+     "game8": [
+      3,
+      2,
+      1
+     ],
+     "note": "限界突破後のスロットが出典で食い違う (wiki ③②ー / Game8 ③②①)。同じく先頭が Lv3 のミツネ防具は両方の出典で「余りは次の枠に回らない」なので ③②ー の可能性が高いが、ゲームで確かめるまで空けておく"
+    }
+   ],
+   "checks": {
+    "wiki": {
+     "wikiPieces": 713,
+     "joined": 581,
+     "notInWiki": [
+      {
+       "id": 699,
+       "name": "ププロフェイクα",
+       "nameEn": "Rompomask α",
+       "wikiCandidates": 0
+      }
+     ],
+     "baseSlotMismatch": [],
+     "compared": 554,
+     "matched": 554,
+     "mismatches": [],
+     "noTranscendField": {
+      "7": 5,
+      "8": 22
+     },
+     "byRarity": {
+      "5": {
+       "compared": 200,
+       "matched": 200,
+       "patterns": {
+        "①①①→②②②": 12,
+        "①①ー→②②①": 26,
+        "①ーー→②①①": 56,
+        "②①①→③②②": 2,
+        "②①ー→③②①": 20,
+        "②②ー→③③①": 2,
+        "②ーー→③①①": 39,
+        "ーーー→①①①": 43
+       }
+      },
+      "6": {
+       "compared": 186,
+       "matched": 186,
+       "patterns": {
+        "①①①→②②①": 4,
+        "①①ー→②②ー": 14,
+        "①ーー→②①ー": 26,
+        "②①①→③②①": 12,
+        "②①ー→③②ー": 28,
+        "②②①→③③①": 9,
+        "②②ー→③③ー": 14,
+        "②ーー→③①ー": 63,
+        "③①ー→③②ー": 2,
+        "③②①→③③①": 1,
+        "③②ー→③③ー": 1,
+        "③ーー→③①ー": 3,
+        "ーーー→①①ー": 9
+       }
+      },
+      "7": {
+       "compared": 80,
+       "matched": 80,
+       "patterns": {
+        "①①①→①①①": 1,
+        "①①ー→①①ー": 5,
+        "①ーー→①ーー": 6,
+        "②①①→②①①": 2,
+        "②①ー→②①ー": 7,
+        "②②①→②②①": 2,
+        "②②ー→②②ー": 5,
+        "②ーー→②ーー": 9,
+        "③①①→③①①": 7,
+        "③①ー→③①ー": 14,
+        "③②①→③②①": 1,
+        "③②ー→③②ー": 5,
+        "③③ー→③③ー": 1,
+        "③ーー→③ーー": 15
+       }
+      },
+      "8": {
+       "compared": 88,
+       "matched": 88,
+       "patterns": {
+        "①①①→①①①": 3,
+        "①①ー→①①ー": 4,
+        "①ーー→①ーー": 5,
+        "②①①→②①①": 3,
+        "②①ー→②①ー": 7,
+        "②②①→②②①": 2,
+        "②②②→②②②": 2,
+        "②②ー→②②ー": 4,
+        "②ーー→②ーー": 12,
+        "③①①→③①①": 4,
+        "③①ー→③①ー": 6,
+        "③②①→③②①": 6,
+        "③②ー→③②ー": 12,
+        "③③①→③③①": 1,
+        "③③ー→③③ー": 5,
+        "③ーー→③ーー": 12
+       }
+      }
+     }
+    },
+    "game8": {
+     "checkedAt": "2026-10-21",
+     "limitBreakPage": {
+      "url": "https://game8.jp/mhwilds/749580",
+      "listed": 386,
+      "joinedByName": 385,
+      "matched": 383,
+      "note": "「スロットが増加する防具一覧」(レア5 200 件・レア6 186 件)。名前で結合できない 1 件は ダイバーボディα (MHDB では ダイバースーツα)。強化前のスロットは結合できた 385 件すべて MHDB と一致。食い違いは 豪鬼α の 2 部位だけ (disputed)。同ページの本文: 「レア5が3枠、レア6が2枠増える」「左から順に1個ずつ増えている」「ミツネ装備のみスロットの増加量が少ない」(= 先頭が Lv3 で上限に当たる防具)"
+     },
+     "buildPages": {
+      "urls": [
+       "https://game8.jp/mhwilds/668362",
+       "https://game8.jp/mhwilds/668363",
+       "https://game8.jp/mhwilds/668364",
+       "https://game8.jp/mhwilds/668365",
+       "https://game8.jp/mhwilds/668366",
+       "https://game8.jp/mhwilds/668367",
+       "https://game8.jp/mhwilds/668368",
+       "https://game8.jp/mhwilds/668370",
+       "https://game8.jp/mhwilds/668371",
+       "https://game8.jp/mhwilds/668372",
+       "https://game8.jp/mhwilds/668373",
+       "https://game8.jp/mhwilds/668374",
+       "https://game8.jp/mhwilds/668375",
+       "https://game8.jp/mhwilds/670772"
+      ],
+      "mentions": 43,
+      "pieces": 14,
+      "matched": 43,
+      "note": "全 14 武器種の最強装備ページの「(限界突破強化)」付きの防具。すべてレア6 で、規則と一致。例: 護火竜アームβ ②①① → ③②①、護火竜グリーヴβ ②ーー → ③①ー、護兇爪竜メイルβ ②②ー → ③③ー、ミツネヘルムα ③ーー → ③①ー (上限に当たる例。操虫棍のページ)"
+     }
+    }
+   },
+   "examples": [
+    {
+     "id": 2,
+     "name": "コンガメイルα",
+     "rarity": 5,
+     "slots": [
+      0,
+      0,
+      0
+     ],
+     "slotsLimitBreak": [
+      1,
+      1,
+      1
+     ],
+     "wikiPage": "Conga α Set (MHWilds)"
+    },
+    {
+     "id": 1,
+     "name": "コンガヘルムα",
+     "rarity": 5,
+     "slots": [
+      1,
+      0,
+      0
+     ],
+     "slotsLimitBreak": [
+      2,
+      1,
+      1
+     ],
+     "wikiPage": "Conga α Set (MHWilds)"
+    },
+    {
+     "id": 30,
+     "name": "ランゴグリーヴα",
+     "rarity": 5,
+     "slots": [
+      1,
+      1,
+      0
+     ],
+     "slotsLimitBreak": [
+      2,
+      2,
+      1
+     ],
+     "wikiPage": "Vespoid α Set (MHWilds)"
+    },
+    {
+     "id": 76,
+     "name": "レイアメイルβ",
+     "rarity": 5,
+     "slots": [
+      1,
+      1,
+      1
+     ],
+     "slotsLimitBreak": [
+      2,
+      2,
+      2
+     ],
+     "wikiPage": "Rathian β Set (MHWilds)"
+    },
+    {
+     "id": 78,
+     "name": "レイアコイルβ",
+     "rarity": 5,
+     "slots": [
+      2,
+      0,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      1,
+      1
+     ],
+     "wikiPage": "Rathian β Set (MHWilds)"
+    },
+    {
+     "id": 75,
+     "name": "レイアヘルムβ",
+     "rarity": 5,
+     "slots": [
+      2,
+      1,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      2,
+      1
+     ],
+     "wikiPage": "Rathian β Set (MHWilds)"
+    },
+    {
+     "id": 307,
+     "name": "ブロッサムベストα",
+     "rarity": 5,
+     "slots": [
+      2,
+      1,
+      1
+     ],
+     "slotsLimitBreak": [
+      3,
+      2,
+      2
+     ],
+     "wikiPage": "Blossom α Set (MHWilds)"
+    },
+    {
+     "id": 284,
+     "name": "ギルドクロスブーツα",
+     "rarity": 5,
+     "slots": [
+      2,
+      2,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      3,
+      1
+     ],
+     "wikiPage": "Guild Cross α Set (MHWilds)"
+    },
+    {
+     "id": 184,
+     "name": "シーウーメイルα",
+     "rarity": 6,
+     "slots": [
+      0,
+      0,
+      0
+     ],
+     "slotsLimitBreak": [
+      1,
+      1,
+      0
+     ],
+     "wikiPage": "Xu Wu α Set (MHWilds)"
+    },
+    {
+     "id": 130,
+     "name": "護火竜メイルα",
+     "rarity": 6,
+     "slots": [
+      1,
+      0,
+      0
+     ],
+     "slotsLimitBreak": [
+      2,
+      1,
+      0
+     ],
+     "wikiPage": "Guardian Rathalos α Set (MHWilds)"
+    },
+    {
+     "id": 19,
+     "name": "ブランゴコイルβ",
+     "rarity": 6,
+     "slots": [
+      1,
+      1,
+      0
+     ],
+     "slotsLimitBreak": [
+      2,
+      2,
+      0
+     ],
+     "wikiPage": "Blango β Set (MHWilds)"
+    },
+    {
+     "id": 160,
+     "name": "インゴットコイルα",
+     "rarity": 6,
+     "slots": [
+      1,
+      1,
+      1
+     ],
+     "slotsLimitBreak": [
+      2,
+      2,
+      1
+     ],
+     "wikiPage": "Ingot α Set (MHWilds)"
+    },
+    {
+     "id": 17,
+     "name": "ブランゴメイルβ",
+     "rarity": 6,
+     "slots": [
+      2,
+      0,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      1,
+      0
+     ],
+     "wikiPage": "Blango β Set (MHWilds)"
+    },
+    {
+     "id": 185,
+     "name": "シーウーアームα",
+     "rarity": 6,
+     "slots": [
+      2,
+      1,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      2,
+      0
+     ],
+     "wikiPage": "Xu Wu α Set (MHWilds)"
+    },
+    {
+     "id": 16,
+     "name": "ブランゴヘルムβ",
+     "rarity": 6,
+     "slots": [
+      2,
+      1,
+      1
+     ],
+     "slotsLimitBreak": [
+      3,
+      2,
+      1
+     ],
+     "wikiPage": "Blango β Set (MHWilds)"
+    },
+    {
+     "id": 18,
+     "name": "ブランゴアームβ",
+     "rarity": 6,
+     "slots": [
+      2,
+      2,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      3,
+      0
+     ],
+     "wikiPage": "Blango β Set (MHWilds)"
+    },
+    {
+     "id": 45,
+     "name": "レウスグリーヴβ",
+     "rarity": 6,
+     "slots": [
+      2,
+      2,
+      1
+     ],
+     "slotsLimitBreak": [
+      3,
+      3,
+      1
+     ],
+     "wikiPage": "Rathalos β Set (MHWilds)"
+    },
+    {
+     "id": 291,
+     "name": "ミツネアームβ",
+     "rarity": 6,
+     "slots": [
+      3,
+      0,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      1,
+      0
+     ],
+     "wikiPage": "Mizutsune β Set (MHWilds)"
+    },
+    {
+     "id": 289,
+     "name": "ミツネヘルムβ",
+     "rarity": 6,
+     "slots": [
+      3,
+      2,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      3,
+      0
+     ],
+     "wikiPage": "Mizutsune β Set (MHWilds)"
+    },
+    {
+     "id": 292,
+     "name": "ミツネコイルβ",
+     "rarity": 6,
+     "slots": [
+      3,
+      2,
+      1
+     ],
+     "slotsLimitBreak": [
+      3,
+      3,
+      1
+     ],
+     "wikiPage": "Mizutsune β Set (MHWilds)"
+    },
+    {
+     "id": 114,
+     "name": "ダハディラヘルムα",
+     "rarity": 7,
+     "slots": [
+      1,
+      0,
+      0
+     ],
+     "slotsLimitBreak": [
+      1,
+      0,
+      0
+     ],
+     "wikiPage": "Dahaad α Set (MHWilds)"
+    },
+    {
+     "id": 117,
+     "name": "ダハディラコイルα",
+     "rarity": 7,
+     "slots": [
+      1,
+      1,
+      0
+     ],
+     "slotsLimitBreak": [
+      1,
+      1,
+      0
+     ],
+     "wikiPage": "Dahaad α Set (MHWilds)"
+    },
+    {
+     "id": 240,
+     "name": "ダハディラコイルβ",
+     "rarity": 7,
+     "slots": [
+      1,
+      1,
+      1
+     ],
+     "slotsLimitBreak": [
+      1,
+      1,
+      1
+     ],
+     "wikiPage": "Dahaad β Set (MHWilds)"
+    },
+    {
+     "id": 11,
+     "name": "ゴアヘルムα",
+     "rarity": 7,
+     "slots": [
+      2,
+      0,
+      0
+     ],
+     "slotsLimitBreak": [
+      2,
+      0,
+      0
+     ],
+     "wikiPage": "Gore α Set (MHWilds)"
+    },
+    {
+     "id": 13,
+     "name": "ゴアアームα",
+     "rarity": 7,
+     "slots": [
+      2,
+      1,
+      0
+     ],
+     "slotsLimitBreak": [
+      2,
+      1,
+      0
+     ],
+     "wikiPage": "Gore α Set (MHWilds)"
+    },
+    {
+     "id": 404,
+     "name": "レダゼルトメイルβ",
+     "rarity": 7,
+     "slots": [
+      2,
+      1,
+      1
+     ],
+     "slotsLimitBreak": [
+      2,
+      1,
+      1
+     ],
+     "wikiPage": "Rey Dau β Set (MHWilds)"
+    },
+    {
+     "id": 98,
+     "name": "ドーベルグリーヴα",
+     "rarity": 7,
+     "slots": [
+      2,
+      2,
+      0
+     ],
+     "slotsLimitBreak": [
+      2,
+      2,
+      0
+     ],
+     "wikiPage": "Dober α Set (MHWilds)"
+    },
+    {
+     "id": 610,
+     "name": "ラギアメイルβ",
+     "rarity": 7,
+     "slots": [
+      2,
+      2,
+      1
+     ],
+     "slotsLimitBreak": [
+      2,
+      2,
+      1
+     ],
+     "wikiPage": "Lagiacrus β Set (MHWilds)"
+    },
+    {
+     "id": 12,
+     "name": "ゴアメイルα",
+     "rarity": 7,
+     "slots": [
+      3,
+      0,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      0,
+      0
+     ],
+     "wikiPage": "Gore α Set (MHWilds)"
+    },
+    {
+     "id": 14,
+     "name": "ゴアコイルα",
+     "rarity": 7,
+     "slots": [
+      3,
+      1,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      1,
+      0
+     ],
+     "wikiPage": "Gore α Set (MHWilds)"
+    },
+    {
+     "id": 154,
+     "name": "トゥナムルアームβ",
+     "rarity": 7,
+     "slots": [
+      3,
+      1,
+      1
+     ],
+     "slotsLimitBreak": [
+      3,
+      1,
+      1
+     ],
+     "wikiPage": "Uth Duna β Set (MHWilds)"
+    },
+    {
+     "id": 95,
+     "name": "ドーベルメイルα",
+     "rarity": 7,
+     "slots": [
+      3,
+      2,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      2,
+      0
+     ],
+     "wikiPage": "Dober α Set (MHWilds)"
+    },
+    {
+     "id": 609,
+     "name": "ラギアヘルムβ",
+     "rarity": 7,
+     "slots": [
+      3,
+      2,
+      1
+     ],
+     "slotsLimitBreak": [
+      3,
+      2,
+      1
+     ],
+     "wikiPage": "Lagiacrus β Set (MHWilds)"
+    },
+    {
+     "id": 285,
+     "name": "封印の眼帯α",
+     "rarity": 7,
+     "slots": [
+      3,
+      3,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      3,
+      0
+     ],
+     "wikiPage": "Sealed Eyepatch α Set (MHWilds)"
+    },
+    {
+     "id": 207,
+     "name": "シュバルカコイルα",
+     "rarity": 8,
+     "slots": [
+      1,
+      0,
+      0
+     ],
+     "slotsLimitBreak": [
+      1,
+      0,
+      0
+     ],
+     "wikiPage": "Arkveld α Set (MHWilds)"
+    },
+    {
+     "id": 360,
+     "name": "護鎖刃竜ヘルムα",
+     "rarity": 8,
+     "slots": [
+      1,
+      1,
+      0
+     ],
+     "slotsLimitBreak": [
+      1,
+      1,
+      0
+     ],
+     "wikiPage": "Guardian Arkveld α Set (MHWilds)"
+    },
+    {
+     "id": 466,
+     "name": "護鎖刃竜アームβ",
+     "rarity": 8,
+     "slots": [
+      1,
+      1,
+      1
+     ],
+     "slotsLimitBreak": [
+      1,
+      1,
+      1
+     ],
+     "wikiPage": "Guardian Arkveld β Set (MHWilds)"
+    },
+    {
+     "id": 205,
+     "name": "シュバルカメイルα",
+     "rarity": 8,
+     "slots": [
+      2,
+      0,
+      0
+     ],
+     "slotsLimitBreak": [
+      2,
+      0,
+      0
+     ],
+     "wikiPage": "Arkveld α Set (MHWilds)"
+    },
+    {
+     "id": 208,
+     "name": "シュバルカグリーヴα",
+     "rarity": 8,
+     "slots": [
+      2,
+      1,
+      0
+     ],
+     "slotsLimitBreak": [
+      2,
+      1,
+      0
+     ],
+     "wikiPage": "Arkveld α Set (MHWilds)"
+    },
+    {
+     "id": 669,
+     "name": "オリオンブーツα",
+     "rarity": 8,
+     "slots": [
+      2,
+      1,
+      1
+     ],
+     "slotsLimitBreak": [
+      2,
+      1,
+      1
+     ],
+     "wikiPage": "Orion α Set (MHWilds)"
+    },
+    {
+     "id": 206,
+     "name": "シュバルカアームα",
+     "rarity": 8,
+     "slots": [
+      2,
+      2,
+      0
+     ],
+     "slotsLimitBreak": [
+      2,
+      2,
+      0
+     ],
+     "wikiPage": "Arkveld α Set (MHWilds)"
+    },
+    {
+     "id": 523,
+     "name": "シュバルカアームβ",
+     "rarity": 8,
+     "slots": [
+      2,
+      2,
+      1
+     ],
+     "slotsLimitBreak": [
+      2,
+      2,
+      1
+     ],
+     "wikiPage": "Arkveld β Set (MHWilds)"
+    },
+    {
+     "id": 666,
+     "name": "オリオンベストα",
+     "rarity": 8,
+     "slots": [
+      2,
+      2,
+      2
+     ],
+     "slotsLimitBreak": [
+      2,
+      2,
+      2
+     ],
+     "wikiPage": "Orion α Set (MHWilds)"
+    },
+    {
+     "id": 21,
+     "name": "ギルドエースピアスα",
+     "rarity": 8,
+     "slots": [
+      3,
+      0,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      0,
+      0
+     ],
+     "wikiPage": "Guild Ace α Set (MHWilds)"
+    },
+    {
+     "id": 313,
+     "name": "無垢ナル龍甲β",
+     "rarity": 8,
+     "slots": [
+      3,
+      1,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      1,
+      0
+     ],
+     "wikiPage": "Numinous β Set (MHWilds)"
+    },
+    {
+     "id": 618,
+     "name": "トゥナムルグリーヴγ",
+     "rarity": 8,
+     "slots": [
+      3,
+      1,
+      1
+     ],
+     "slotsLimitBreak": [
+      3,
+      1,
+      1
+     ],
+     "wikiPage": "Uth Duna γ Set (MHWilds)"
+    },
+    {
+     "id": 315,
+     "name": "無垢ナル龍靴β",
+     "rarity": 8,
+     "slots": [
+      3,
+      2,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      2,
+      0
+     ],
+     "wikiPage": "Numinous β Set (MHWilds)"
+    },
+    {
+     "id": 311,
+     "name": "無垢ナル龍冠β",
+     "rarity": 8,
+     "slots": [
+      3,
+      2,
+      1
+     ],
+     "slotsLimitBreak": [
+      3,
+      2,
+      1
+     ],
+     "wikiPage": "Numinous β Set (MHWilds)"
+    },
+    {
+     "id": 330,
+     "name": "レダゼルトアームγ",
+     "rarity": 8,
+     "slots": [
+      3,
+      3,
+      0
+     ],
+     "slotsLimitBreak": [
+      3,
+      3,
+      0
+     ],
+     "wikiPage": "Rey Dau γ Set (MHWilds)"
+    },
+    {
+     "id": 665,
+     "name": "オリオンヘッドα",
+     "rarity": 8,
+     "slots": [
+      3,
+      3,
+      1
+     ],
+     "slotsLimitBreak": [
+      3,
+      3,
+      1
+     ],
+     "wikiPage": "Orion α Set (MHWilds)"
+    }
+   ],
+   "sources": [
+    "https://monsterhunterwiki.org/ (MHWilds の防具シリーズのページ。CC BY-SA 4.0。照合に使用)",
+    "https://game8.jp/mhwilds/749580 (照合のみ。取り込まない)",
+    "https://www.gamespark.jp/article/2025/11/12/159406.html (TU4 の告知の紹介: レア5・6 はスロットも強化)",
+    "MHWS-in-json ArmorUpgradeData / ArmorSpUpgradeCostData (限界突破できるレア度と強化上限 Lv)"
+   ]
+  },
+  "note": "slots は限界突破前、slotsLimitBreak は限界突破後 (limitBreak に規則と照合結果)。限界突破できない防具 (下位) は limitBreakable=false・slotsLimitBreak=null。出典が食い違って決められない防具は slotsLimitBreak=null で理由を slotsLimitBreakNote に書く。setBonusIds はその部位が数に入る全シリーズスキル (ゴグα/β は 2 つ。先頭がシリーズ共通のもの = setBonusId)"
  },
  "armor": [
   {
@@ -70,7 +1130,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 1,
-   "armorSetName": "コンガα"
+   "armorSetName": "コンガα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 2,
@@ -108,7 +1174,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 1,
-   "armorSetName": "コンガα"
+   "armorSetName": "コンガα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 3,
@@ -146,7 +1218,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 1,
-   "armorSetName": "コンガα"
+   "armorSetName": "コンガα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 4,
@@ -184,7 +1262,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 1,
-   "armorSetName": "コンガα"
+   "armorSetName": "コンガα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 5,
@@ -222,7 +1306,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 1,
-   "armorSetName": "コンガα"
+   "armorSetName": "コンガα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 6,
@@ -256,7 +1346,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 2,
-   "armorSetName": "トリス"
+   "armorSetName": "トリス",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 7,
@@ -290,7 +1382,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 2,
-   "armorSetName": "トリス"
+   "armorSetName": "トリス",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 8,
@@ -324,7 +1418,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 2,
-   "armorSetName": "トリス"
+   "armorSetName": "トリス",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 9,
@@ -358,7 +1454,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 2,
-   "armorSetName": "トリス"
+   "armorSetName": "トリス",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 10,
@@ -392,7 +1490,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 2,
-   "armorSetName": "トリス"
+   "armorSetName": "トリス",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 11,
@@ -432,7 +1532,13 @@
     3
    ],
    "armorSetId": 3,
-   "armorSetName": "ゴアα"
+   "armorSetName": "ゴアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 12,
@@ -472,7 +1578,13 @@
     3
    ],
    "armorSetId": 3,
-   "armorSetName": "ゴアα"
+   "armorSetName": "ゴアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 13,
@@ -512,7 +1624,13 @@
     3
    ],
    "armorSetId": 3,
-   "armorSetName": "ゴアα"
+   "armorSetName": "ゴアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 14,
@@ -552,7 +1670,13 @@
     3
    ],
    "armorSetId": 3,
-   "armorSetName": "ゴアα"
+   "armorSetName": "ゴアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 15,
@@ -592,7 +1716,13 @@
     3
    ],
    "armorSetId": 3,
-   "armorSetName": "ゴアα"
+   "armorSetName": "ゴアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 16,
@@ -628,7 +1758,13 @@
     4
    ],
    "armorSetId": 4,
-   "armorSetName": "ブランゴβ"
+   "armorSetName": "ブランゴβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 17,
@@ -664,7 +1800,13 @@
     4
    ],
    "armorSetId": 4,
-   "armorSetName": "ブランゴβ"
+   "armorSetName": "ブランゴβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 18,
@@ -700,7 +1842,13 @@
     4
    ],
    "armorSetId": 4,
-   "armorSetName": "ブランゴβ"
+   "armorSetName": "ブランゴβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 19,
@@ -736,7 +1884,13 @@
     4
    ],
    "armorSetId": 4,
-   "armorSetName": "ブランゴβ"
+   "armorSetName": "ブランゴβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 20,
@@ -772,7 +1926,13 @@
     4
    ],
    "armorSetId": 4,
-   "armorSetName": "ブランゴβ"
+   "armorSetName": "ブランゴβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 21,
@@ -814,7 +1974,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 5,
-   "armorSetName": "ギルドエースα"
+   "armorSetName": "ギルドエースα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 22,
@@ -856,7 +2022,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 5,
-   "armorSetName": "ギルドエースα"
+   "armorSetName": "ギルドエースα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 23,
@@ -898,7 +2070,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 5,
-   "armorSetName": "ギルドエースα"
+   "armorSetName": "ギルドエースα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 24,
@@ -940,7 +2118,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 5,
-   "armorSetName": "ギルドエースα"
+   "armorSetName": "ギルドエースα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 25,
@@ -982,7 +2166,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 5,
-   "armorSetName": "ギルドエースα"
+   "armorSetName": "ギルドエースα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 26,
@@ -1020,7 +2210,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 6,
-   "armorSetName": "ランゴスタα"
+   "armorSetName": "ランゴスタα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 27,
@@ -1058,7 +2254,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 6,
-   "armorSetName": "ランゴスタα"
+   "armorSetName": "ランゴスタα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 28,
@@ -1096,7 +2298,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 6,
-   "armorSetName": "ランゴスタα"
+   "armorSetName": "ランゴスタα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 29,
@@ -1134,7 +2342,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 6,
-   "armorSetName": "ランゴスタα"
+   "armorSetName": "ランゴスタα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 30,
@@ -1172,7 +2386,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 6,
-   "armorSetName": "ランゴスタα"
+   "armorSetName": "ランゴスタα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 31,
@@ -1210,7 +2430,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 7,
-   "armorSetName": "ヒラバミ"
+   "armorSetName": "ヒラバミ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 32,
@@ -1248,7 +2470,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 7,
-   "armorSetName": "ヒラバミ"
+   "armorSetName": "ヒラバミ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 33,
@@ -1286,7 +2510,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 7,
-   "armorSetName": "ヒラバミ"
+   "armorSetName": "ヒラバミ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 34,
@@ -1324,7 +2550,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 7,
-   "armorSetName": "ヒラバミ"
+   "armorSetName": "ヒラバミ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 35,
@@ -1362,7 +2590,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 7,
-   "armorSetName": "ヒラバミ"
+   "armorSetName": "ヒラバミ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 36,
@@ -1396,7 +2626,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 8,
-   "armorSetName": "アロイα"
+   "armorSetName": "アロイα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 37,
@@ -1430,7 +2666,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 8,
-   "armorSetName": "アロイα"
+   "armorSetName": "アロイα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 38,
@@ -1464,7 +2706,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 8,
-   "armorSetName": "アロイα"
+   "armorSetName": "アロイα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 39,
@@ -1502,7 +2750,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 8,
-   "armorSetName": "アロイα"
+   "armorSetName": "アロイα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 40,
@@ -1540,7 +2794,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 8,
-   "armorSetName": "アロイα"
+   "armorSetName": "アロイα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 41,
@@ -1580,7 +2840,13 @@
     7
    ],
    "armorSetId": 9,
-   "armorSetName": "レウスβ"
+   "armorSetName": "レウスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 42,
@@ -1616,7 +2882,13 @@
     7
    ],
    "armorSetId": 9,
-   "armorSetName": "レウスβ"
+   "armorSetName": "レウスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 43,
@@ -1652,7 +2924,13 @@
     7
    ],
    "armorSetId": 9,
-   "armorSetName": "レウスβ"
+   "armorSetName": "レウスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 44,
@@ -1688,7 +2966,13 @@
     7
    ],
    "armorSetId": 9,
-   "armorSetName": "レウスβ"
+   "armorSetName": "レウスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 45,
@@ -1724,7 +3008,13 @@
     7
    ],
    "armorSetId": 9,
-   "armorSetName": "レウスβ"
+   "armorSetName": "レウスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    1
+   ]
   },
   {
    "id": 46,
@@ -1762,7 +3052,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 10,
-   "armorSetName": "チャタα"
+   "armorSetName": "チャタα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 47,
@@ -1800,7 +3096,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 10,
-   "armorSetName": "チャタα"
+   "armorSetName": "チャタα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 48,
@@ -1838,7 +3140,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 10,
-   "armorSetName": "チャタα"
+   "armorSetName": "チャタα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 49,
@@ -1876,7 +3184,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 10,
-   "armorSetName": "チャタα"
+   "armorSetName": "チャタα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 50,
@@ -1914,7 +3228,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 10,
-   "armorSetName": "チャタα"
+   "armorSetName": "チャタα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 51,
@@ -1952,7 +3272,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 11,
-   "armorSetName": "ボーンα"
+   "armorSetName": "ボーンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 52,
@@ -1990,7 +3316,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 11,
-   "armorSetName": "ボーンα"
+   "armorSetName": "ボーンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 53,
@@ -2028,7 +3360,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 11,
-   "armorSetName": "ボーンα"
+   "armorSetName": "ボーンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 54,
@@ -2062,7 +3400,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 11,
-   "armorSetName": "ボーンα"
+   "armorSetName": "ボーンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 55,
@@ -2096,7 +3440,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 11,
-   "armorSetName": "ボーンα"
+   "armorSetName": "ボーンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 56,
@@ -2130,7 +3480,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 12,
-   "armorSetName": "ランゴスタ"
+   "armorSetName": "ランゴスタ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 57,
@@ -2164,7 +3516,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 12,
-   "armorSetName": "ランゴスタ"
+   "armorSetName": "ランゴスタ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 58,
@@ -2198,7 +3552,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 12,
-   "armorSetName": "ランゴスタ"
+   "armorSetName": "ランゴスタ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 59,
@@ -2232,7 +3588,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 12,
-   "armorSetName": "ランゴスタ"
+   "armorSetName": "ランゴスタ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 60,
@@ -2266,7 +3624,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 12,
-   "armorSetName": "ランゴスタ"
+   "armorSetName": "ランゴスタ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 61,
@@ -2302,7 +3662,9 @@
     10
    ],
    "armorSetId": 13,
-   "armorSetName": "ドシャグマ"
+   "armorSetName": "ドシャグマ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 62,
@@ -2338,7 +3700,9 @@
     10
    ],
    "armorSetId": 13,
-   "armorSetName": "ドシャグマ"
+   "armorSetName": "ドシャグマ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 63,
@@ -2374,7 +3738,9 @@
     10
    ],
    "armorSetId": 13,
-   "armorSetName": "ドシャグマ"
+   "armorSetName": "ドシャグマ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 64,
@@ -2410,7 +3776,9 @@
     10
    ],
    "armorSetId": 13,
-   "armorSetName": "ドシャグマ"
+   "armorSetName": "ドシャグマ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 65,
@@ -2446,7 +3814,9 @@
     10
    ],
    "armorSetId": 13,
-   "armorSetName": "ドシャグマ"
+   "armorSetName": "ドシャグマ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 66,
@@ -2482,7 +3852,13 @@
     7
    ],
    "armorSetId": 14,
-   "armorSetName": "護火竜β"
+   "armorSetName": "護火竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 67,
@@ -2522,7 +3898,13 @@
     7
    ],
    "armorSetId": 14,
-   "armorSetName": "護火竜β"
+   "armorSetName": "護火竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 68,
@@ -2558,7 +3940,13 @@
     7
    ],
    "armorSetId": 14,
-   "armorSetName": "護火竜β"
+   "armorSetName": "護火竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 69,
@@ -2594,7 +3982,13 @@
     7
    ],
    "armorSetId": 14,
-   "armorSetName": "護火竜β"
+   "armorSetName": "護火竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    1
+   ]
   },
   {
    "id": 70,
@@ -2634,7 +4028,13 @@
     7
    ],
    "armorSetId": 14,
-   "armorSetName": "護火竜β"
+   "armorSetName": "護火竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 71,
@@ -2672,7 +4072,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 15,
-   "armorSetName": "クナファα"
+   "armorSetName": "クナファα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 72,
@@ -2710,7 +4116,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 15,
-   "armorSetName": "クナファα"
+   "armorSetName": "クナファα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 73,
@@ -2748,7 +4160,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 15,
-   "armorSetName": "クナファα"
+   "armorSetName": "クナファα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 74,
@@ -2786,7 +4204,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 15,
-   "armorSetName": "クナファα"
+   "armorSetName": "クナファα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 75,
@@ -2820,7 +4244,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 16,
-   "armorSetName": "レイアβ"
+   "armorSetName": "レイアβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 76,
@@ -2854,7 +4284,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 16,
-   "armorSetName": "レイアβ"
+   "armorSetName": "レイアβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    2
+   ]
   },
   {
    "id": 77,
@@ -2892,7 +4328,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 16,
-   "armorSetName": "レイアβ"
+   "armorSetName": "レイアβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 78,
@@ -2926,7 +4368,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 16,
-   "armorSetName": "レイアβ"
+   "armorSetName": "レイアβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 79,
@@ -2964,7 +4412,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 16,
-   "armorSetName": "レイアβ"
+   "armorSetName": "レイアβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 80,
@@ -2998,7 +4452,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 17,
-   "armorSetName": "ネラチカβ"
+   "armorSetName": "ネラチカβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 81,
@@ -3032,7 +4492,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 18,
-   "armorSetName": "護竜セクレト"
+   "armorSetName": "護竜セクレト",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 82,
@@ -3066,7 +4528,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 19,
-   "armorSetName": "スキュラβ"
+   "armorSetName": "スキュラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 83,
@@ -3100,7 +4568,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 19,
-   "armorSetName": "スキュラβ"
+   "armorSetName": "スキュラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    2
+   ]
   },
   {
    "id": 84,
@@ -3134,7 +4608,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 19,
-   "armorSetName": "スキュラβ"
+   "armorSetName": "スキュラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 85,
@@ -3168,7 +4648,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 19,
-   "armorSetName": "スキュラβ"
+   "armorSetName": "スキュラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 86,
@@ -3202,7 +4688,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 19,
-   "armorSetName": "スキュラβ"
+   "armorSetName": "スキュラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 87,
@@ -3236,7 +4728,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 20,
-   "armorSetName": "シルドα"
+   "armorSetName": "シルドα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 88,
@@ -3270,7 +4768,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 20,
-   "armorSetName": "シルドα"
+   "armorSetName": "シルドα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 89,
@@ -3304,7 +4808,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 21,
-   "armorSetName": "コンガβ"
+   "armorSetName": "コンガβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 90,
@@ -3338,7 +4848,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 21,
-   "armorSetName": "コンガβ"
+   "armorSetName": "コンガβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    2
+   ]
   },
   {
    "id": 91,
@@ -3372,7 +4888,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 21,
-   "armorSetName": "コンガβ"
+   "armorSetName": "コンガβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 92,
@@ -3406,7 +4928,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 21,
-   "armorSetName": "コンガβ"
+   "armorSetName": "コンガβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 93,
@@ -3440,7 +4968,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 21,
-   "armorSetName": "コンガβ"
+   "armorSetName": "コンガβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 94,
@@ -3478,7 +5012,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 22,
-   "armorSetName": "ドーベルα"
+   "armorSetName": "ドーベルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 95,
@@ -3516,7 +5056,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 22,
-   "armorSetName": "ドーベルα"
+   "armorSetName": "ドーベルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 96,
@@ -3554,7 +5100,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 22,
-   "armorSetName": "ドーベルα"
+   "armorSetName": "ドーベルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 97,
@@ -3592,7 +5144,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 22,
-   "armorSetName": "ドーベルα"
+   "armorSetName": "ドーベルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 98,
@@ -3630,7 +5188,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 22,
-   "armorSetName": "ドーベルα"
+   "armorSetName": "ドーベルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 99,
@@ -3668,7 +5232,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 23,
-   "armorSetName": "ゲリョスα"
+   "armorSetName": "ゲリョスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 100,
@@ -3706,7 +5276,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 23,
-   "armorSetName": "ゲリョスα"
+   "armorSetName": "ゲリョスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 101,
@@ -3744,7 +5320,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 23,
-   "armorSetName": "ゲリョスα"
+   "armorSetName": "ゲリョスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 102,
@@ -3782,7 +5364,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 23,
-   "armorSetName": "ゲリョスα"
+   "armorSetName": "ゲリョスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 103,
@@ -3820,7 +5408,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 23,
-   "armorSetName": "ゲリョスα"
+   "armorSetName": "ゲリョスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 104,
@@ -3858,7 +5452,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 24,
-   "armorSetName": "レイアα"
+   "armorSetName": "レイアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 105,
@@ -3892,7 +5492,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 24,
-   "armorSetName": "レイアα"
+   "armorSetName": "レイアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 106,
@@ -3930,7 +5536,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 24,
-   "armorSetName": "レイアα"
+   "armorSetName": "レイアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 107,
@@ -3968,7 +5580,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 24,
-   "armorSetName": "レイアα"
+   "armorSetName": "レイアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 108,
@@ -4006,7 +5624,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 24,
-   "armorSetName": "レイアα"
+   "armorSetName": "レイアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 109,
@@ -4042,7 +5666,9 @@
     15
    ],
    "armorSetId": 25,
-   "armorSetName": "護鎖刃竜"
+   "armorSetName": "護鎖刃竜",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 110,
@@ -4082,7 +5708,9 @@
     15
    ],
    "armorSetId": 25,
-   "armorSetName": "護鎖刃竜"
+   "armorSetName": "護鎖刃竜",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 111,
@@ -4118,7 +5746,9 @@
     15
    ],
    "armorSetId": 25,
-   "armorSetName": "護鎖刃竜"
+   "armorSetName": "護鎖刃竜",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 112,
@@ -4154,7 +5784,9 @@
     15
    ],
    "armorSetId": 25,
-   "armorSetName": "護鎖刃竜"
+   "armorSetName": "護鎖刃竜",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 113,
@@ -4190,7 +5822,9 @@
     15
    ],
    "armorSetId": 25,
-   "armorSetName": "護鎖刃竜"
+   "armorSetName": "護鎖刃竜",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 114,
@@ -4230,7 +5864,13 @@
     16
    ],
    "armorSetId": 26,
-   "armorSetName": "ダハディラα"
+   "armorSetName": "ダハディラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    0,
+    0
+   ]
   },
   {
    "id": 115,
@@ -4270,7 +5910,13 @@
     16
    ],
    "armorSetId": 26,
-   "armorSetName": "ダハディラα"
+   "armorSetName": "ダハディラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 116,
@@ -4310,7 +5956,13 @@
     16
    ],
    "armorSetId": 26,
-   "armorSetName": "ダハディラα"
+   "armorSetName": "ダハディラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 117,
@@ -4350,7 +6002,13 @@
     16
    ],
    "armorSetId": 26,
-   "armorSetName": "ダハディラα"
+   "armorSetName": "ダハディラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 118,
@@ -4390,7 +6048,13 @@
     16
    ],
    "armorSetId": 26,
-   "armorSetName": "ダハディラα"
+   "armorSetName": "ダハディラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    0,
+    0
+   ]
   },
   {
    "id": 119,
@@ -4430,7 +6094,13 @@
     18
    ],
    "armorSetId": 27,
-   "armorSetName": "トゥナムルα"
+   "armorSetName": "トゥナムルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 120,
@@ -4470,7 +6140,13 @@
     18
    ],
    "armorSetId": 27,
-   "armorSetName": "トゥナムルα"
+   "armorSetName": "トゥナムルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 121,
@@ -4510,7 +6186,13 @@
     18
    ],
    "armorSetId": 27,
-   "armorSetName": "トゥナムルα"
+   "armorSetName": "トゥナムルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 122,
@@ -4550,7 +6232,13 @@
     18
    ],
    "armorSetId": 27,
-   "armorSetName": "トゥナムルα"
+   "armorSetName": "トゥナムルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 123,
@@ -4590,7 +6278,13 @@
     18
    ],
    "armorSetId": 27,
-   "armorSetName": "トゥナムルα"
+   "armorSetName": "トゥナムルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 124,
@@ -4630,7 +6324,13 @@
     19
    ],
    "armorSetId": 28,
-   "armorSetName": "レダゼルトα"
+   "armorSetName": "レダゼルトα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 125,
@@ -4670,7 +6370,13 @@
     19
    ],
    "armorSetId": 28,
-   "armorSetName": "レダゼルトα"
+   "armorSetName": "レダゼルトα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 126,
@@ -4710,7 +6416,13 @@
     19
    ],
    "armorSetId": 28,
-   "armorSetName": "レダゼルトα"
+   "armorSetName": "レダゼルトα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 127,
@@ -4750,7 +6462,13 @@
     19
    ],
    "armorSetId": 28,
-   "armorSetName": "レダゼルトα"
+   "armorSetName": "レダゼルトα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 128,
@@ -4790,7 +6508,13 @@
     19
    ],
    "armorSetId": 28,
-   "armorSetName": "レダゼルトα"
+   "armorSetName": "レダゼルトα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 129,
@@ -4830,7 +6554,13 @@
     7
    ],
    "armorSetId": 29,
-   "armorSetName": "護火竜α"
+   "armorSetName": "護火竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 130,
@@ -4870,7 +6600,13 @@
     7
    ],
    "armorSetId": 29,
-   "armorSetName": "護火竜α"
+   "armorSetName": "護火竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 131,
@@ -4914,7 +6650,13 @@
     7
    ],
    "armorSetId": 29,
-   "armorSetName": "護火竜α"
+   "armorSetName": "護火竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 132,
@@ -4954,7 +6696,13 @@
     7
    ],
    "armorSetId": 29,
-   "armorSetName": "護火竜α"
+   "armorSetName": "護火竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 133,
@@ -4994,7 +6742,13 @@
     7
    ],
    "armorSetId": 29,
-   "armorSetName": "護火竜α"
+   "armorSetName": "護火竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 134,
@@ -5032,7 +6786,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 30,
-   "armorSetName": "クラノダスα"
+   "armorSetName": "クラノダスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 135,
@@ -5074,7 +6834,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 31,
-   "armorSetName": "パピメルα"
+   "armorSetName": "パピメルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 136,
@@ -5116,7 +6882,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 31,
-   "armorSetName": "パピメルα"
+   "armorSetName": "パピメルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 137,
@@ -5158,7 +6930,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 31,
-   "armorSetName": "パピメルα"
+   "armorSetName": "パピメルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 138,
@@ -5200,7 +6978,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 31,
-   "armorSetName": "パピメルα"
+   "armorSetName": "パピメルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 139,
@@ -5242,7 +7026,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 31,
-   "armorSetName": "パピメルα"
+   "armorSetName": "パピメルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 140,
@@ -5276,7 +7066,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 32,
-   "armorSetName": "クラノダス"
+   "armorSetName": "クラノダス",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 141,
@@ -5312,7 +7104,9 @@
     10
    ],
    "armorSetId": 33,
-   "armorSetName": "護闢獣"
+   "armorSetName": "護闢獣",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 142,
@@ -5352,7 +7146,9 @@
     10
    ],
    "armorSetId": 33,
-   "armorSetName": "護闢獣"
+   "armorSetName": "護闢獣",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 143,
@@ -5388,7 +7184,9 @@
     10
    ],
    "armorSetId": 33,
-   "armorSetName": "護闢獣"
+   "armorSetName": "護闢獣",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 144,
@@ -5428,7 +7226,9 @@
     10
    ],
    "armorSetId": 33,
-   "armorSetName": "護闢獣"
+   "armorSetName": "護闢獣",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 145,
@@ -5468,7 +7268,9 @@
     10
    ],
    "armorSetId": 33,
-   "armorSetName": "護闢獣"
+   "armorSetName": "護闢獣",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 146,
@@ -5506,7 +7308,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 34,
-   "armorSetName": "タリオスα"
+   "armorSetName": "タリオスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 147,
@@ -5544,7 +7352,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 35,
-   "armorSetName": "ヒラバミα"
+   "armorSetName": "ヒラバミα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 148,
@@ -5582,7 +7396,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 35,
-   "armorSetName": "ヒラバミα"
+   "armorSetName": "ヒラバミα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 149,
@@ -5620,7 +7440,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 35,
-   "armorSetName": "ヒラバミα"
+   "armorSetName": "ヒラバミα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 150,
@@ -5654,7 +7480,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 35,
-   "armorSetName": "ヒラバミα"
+   "armorSetName": "ヒラバミα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 151,
@@ -5692,7 +7524,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 35,
-   "armorSetName": "ヒラバミα"
+   "armorSetName": "ヒラバミα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 152,
@@ -5732,7 +7570,13 @@
     18
    ],
    "armorSetId": 36,
-   "armorSetName": "トゥナムルβ"
+   "armorSetName": "トゥナムルβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 153,
@@ -5768,7 +7612,13 @@
     18
    ],
    "armorSetId": 36,
-   "armorSetName": "トゥナムルβ"
+   "armorSetName": "トゥナムルβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 154,
@@ -5808,7 +7658,13 @@
     18
    ],
    "armorSetId": 36,
-   "armorSetName": "トゥナムルβ"
+   "armorSetName": "トゥナムルβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 155,
@@ -5844,7 +7700,13 @@
     18
    ],
    "armorSetId": 36,
-   "armorSetName": "トゥナムルβ"
+   "armorSetName": "トゥナムルβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 156,
@@ -5880,7 +7742,13 @@
     18
    ],
    "armorSetId": 36,
-   "armorSetName": "トゥナムルβ"
+   "armorSetName": "トゥナムルβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 157,
@@ -5918,7 +7786,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 37,
-   "armorSetName": "インゴットα"
+   "armorSetName": "インゴットα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 158,
@@ -5956,7 +7830,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 37,
-   "armorSetName": "インゴットα"
+   "armorSetName": "インゴットα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 159,
@@ -5994,7 +7874,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 37,
-   "armorSetName": "インゴットα"
+   "armorSetName": "インゴットα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 160,
@@ -6032,7 +7918,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 37,
-   "armorSetName": "インゴットα"
+   "armorSetName": "インゴットα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 161,
@@ -6070,7 +7962,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 37,
-   "armorSetName": "インゴットα"
+   "armorSetName": "インゴットα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 162,
@@ -6106,7 +8004,9 @@
     19
    ],
    "armorSetId": 38,
-   "armorSetName": "レダゼルト"
+   "armorSetName": "レダゼルト",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 163,
@@ -6142,7 +8042,9 @@
     19
    ],
    "armorSetId": 38,
-   "armorSetName": "レダゼルト"
+   "armorSetName": "レダゼルト",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 164,
@@ -6178,7 +8080,9 @@
     19
    ],
    "armorSetId": 38,
-   "armorSetName": "レダゼルト"
+   "armorSetName": "レダゼルト",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 165,
@@ -6214,7 +8118,9 @@
     19
    ],
    "armorSetId": 38,
-   "armorSetName": "レダゼルト"
+   "armorSetName": "レダゼルト",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 166,
@@ -6254,7 +8160,9 @@
     19
    ],
    "armorSetId": 38,
-   "armorSetName": "レダゼルト"
+   "armorSetName": "レダゼルト",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 167,
@@ -6292,7 +8200,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 39,
-   "armorSetName": "バーラα"
+   "armorSetName": "バーラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 168,
@@ -6330,7 +8244,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 39,
-   "armorSetName": "バーラα"
+   "armorSetName": "バーラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 169,
@@ -6368,7 +8288,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 39,
-   "armorSetName": "バーラα"
+   "armorSetName": "バーラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 170,
@@ -6406,7 +8332,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 39,
-   "armorSetName": "バーラα"
+   "armorSetName": "バーラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 171,
@@ -6444,7 +8376,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 39,
-   "armorSetName": "バーラα"
+   "armorSetName": "バーラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 172,
@@ -6478,7 +8416,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 40,
-   "armorSetName": "ガライー"
+   "armorSetName": "ガライー",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 173,
@@ -6516,7 +8456,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 41,
-   "armorSetName": "メルホアα"
+   "armorSetName": "メルホアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 174,
@@ -6550,7 +8496,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 41,
-   "armorSetName": "メルホアα"
+   "armorSetName": "メルホアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 175,
@@ -6588,7 +8540,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 41,
-   "armorSetName": "メルホアα"
+   "armorSetName": "メルホアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 176,
@@ -6626,7 +8584,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 41,
-   "armorSetName": "メルホアα"
+   "armorSetName": "メルホアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 177,
@@ -6660,7 +8624,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 41,
-   "armorSetName": "メルホアα"
+   "armorSetName": "メルホアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 178,
@@ -6694,7 +8664,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 42,
-   "armorSetName": "ゲリョスβ"
+   "armorSetName": "ゲリョスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 179,
@@ -6728,7 +8704,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 42,
-   "armorSetName": "ゲリョスβ"
+   "armorSetName": "ゲリョスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 180,
@@ -6762,7 +8744,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 42,
-   "armorSetName": "ゲリョスβ"
+   "armorSetName": "ゲリョスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 181,
@@ -6796,7 +8784,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 42,
-   "armorSetName": "ゲリョスβ"
+   "armorSetName": "ゲリョスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 182,
@@ -6834,7 +8828,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 42,
-   "armorSetName": "ゲリョスβ"
+   "armorSetName": "ゲリョスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 183,
@@ -6874,7 +8874,13 @@
     22
    ],
    "armorSetId": 43,
-   "armorSetName": "シーウーα"
+   "armorSetName": "シーウーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 184,
@@ -6914,7 +8920,13 @@
     22
    ],
    "armorSetId": 43,
-   "armorSetName": "シーウーα"
+   "armorSetName": "シーウーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 185,
@@ -6950,7 +8962,13 @@
     22
    ],
    "armorSetId": 43,
-   "armorSetName": "シーウーα"
+   "armorSetName": "シーウーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 186,
@@ -6990,7 +9008,13 @@
     22
    ],
    "armorSetId": 43,
-   "armorSetName": "シーウーα"
+   "armorSetName": "シーウーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 187,
@@ -7030,7 +9054,13 @@
     22
    ],
    "armorSetId": 43,
-   "armorSetName": "シーウーα"
+   "armorSetName": "シーウーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 188,
@@ -7064,7 +9094,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 44,
-   "armorSetName": "スージャα"
+   "armorSetName": "スージャα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 189,
@@ -7098,7 +9134,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 45,
-   "armorSetName": "トリスβ"
+   "armorSetName": "トリスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 190,
@@ -7132,7 +9174,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 45,
-   "armorSetName": "トリスβ"
+   "armorSetName": "トリスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 191,
@@ -7166,7 +9214,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 45,
-   "armorSetName": "トリスβ"
+   "armorSetName": "トリスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 192,
@@ -7200,7 +9254,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 45,
-   "armorSetName": "トリスβ"
+   "armorSetName": "トリスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 193,
@@ -7234,7 +9294,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 45,
-   "armorSetName": "トリスβ"
+   "armorSetName": "トリスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    2
+   ]
   },
   {
    "id": 194,
@@ -7272,7 +9338,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 46,
-   "armorSetName": "クックα"
+   "armorSetName": "クックα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 195,
@@ -7310,7 +9382,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 46,
-   "armorSetName": "クックα"
+   "armorSetName": "クックα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 196,
@@ -7348,7 +9426,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 46,
-   "armorSetName": "クックα"
+   "armorSetName": "クックα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 197,
@@ -7386,7 +9470,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 46,
-   "armorSetName": "クックα"
+   "armorSetName": "クックα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 198,
@@ -7424,7 +9514,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 46,
-   "armorSetName": "クックα"
+   "armorSetName": "クックα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 199,
@@ -7458,7 +9554,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 47,
-   "armorSetName": "ラバラβ"
+   "armorSetName": "ラバラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 200,
@@ -7496,7 +9598,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 47,
-   "armorSetName": "ラバラβ"
+   "armorSetName": "ラバラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 201,
@@ -7530,7 +9638,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 47,
-   "armorSetName": "ラバラβ"
+   "armorSetName": "ラバラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 202,
@@ -7564,7 +9678,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 47,
-   "armorSetName": "ラバラβ"
+   "armorSetName": "ラバラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 203,
@@ -7598,7 +9718,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 47,
-   "armorSetName": "ラバラβ"
+   "armorSetName": "ラバラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    2
+   ]
   },
   {
    "id": 204,
@@ -7638,7 +9764,13 @@
     23
    ],
    "armorSetId": 48,
-   "armorSetName": "シュバルカα"
+   "armorSetName": "シュバルカα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 205,
@@ -7678,7 +9810,13 @@
     23
    ],
    "armorSetId": 48,
-   "armorSetName": "シュバルカα"
+   "armorSetName": "シュバルカα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 206,
@@ -7718,7 +9856,13 @@
     23
    ],
    "armorSetId": 48,
-   "armorSetName": "シュバルカα"
+   "armorSetName": "シュバルカα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 207,
@@ -7758,7 +9902,13 @@
     23
    ],
    "armorSetId": 48,
-   "armorSetName": "シュバルカα"
+   "armorSetName": "シュバルカα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    0,
+    0
+   ]
   },
   {
    "id": 208,
@@ -7798,7 +9948,13 @@
     23
    ],
    "armorSetId": 48,
-   "armorSetName": "シュバルカα"
+   "armorSetName": "シュバルカα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 209,
@@ -7832,7 +9988,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 49,
-   "armorSetName": "シーウー"
+   "armorSetName": "シーウー",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 210,
@@ -7866,7 +10024,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 49,
-   "armorSetName": "シーウー"
+   "armorSetName": "シーウー",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 211,
@@ -7900,7 +10060,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 49,
-   "armorSetName": "シーウー"
+   "armorSetName": "シーウー",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 212,
@@ -7938,7 +10100,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 49,
-   "armorSetName": "シーウー"
+   "armorSetName": "シーウー",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 213,
@@ -7972,7 +10136,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 49,
-   "armorSetName": "シーウー"
+   "armorSetName": "シーウー",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 214,
@@ -8008,7 +10174,13 @@
     24
    ],
    "armorSetId": 50,
-   "armorSetName": "グラビドβ"
+   "armorSetName": "グラビドβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 215,
@@ -8048,7 +10220,13 @@
     24
    ],
    "armorSetId": 50,
-   "armorSetName": "グラビドβ"
+   "armorSetName": "グラビドβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 216,
@@ -8084,7 +10262,13 @@
     24
    ],
    "armorSetId": 50,
-   "armorSetName": "グラビドβ"
+   "armorSetName": "グラビドβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 217,
@@ -8124,7 +10308,13 @@
     24
    ],
    "armorSetId": 50,
-   "armorSetName": "グラビドβ"
+   "armorSetName": "グラビドβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 218,
@@ -8164,7 +10354,13 @@
     24
    ],
    "armorSetId": 50,
-   "armorSetName": "グラビドβ"
+   "armorSetName": "グラビドβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 219,
@@ -8202,7 +10398,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 51,
-   "armorSetName": "ハナショウジョウα"
+   "armorSetName": "ハナショウジョウα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 220,
@@ -8240,7 +10442,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 52,
-   "armorSetName": "護竜セクレトβ"
+   "armorSetName": "護竜セクレトβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 221,
@@ -8280,7 +10488,9 @@
     7
    ],
    "armorSetId": 53,
-   "armorSetName": "護火竜"
+   "armorSetName": "護火竜",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 222,
@@ -8316,7 +10526,9 @@
     7
    ],
    "armorSetId": 53,
-   "armorSetName": "護火竜"
+   "armorSetName": "護火竜",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 223,
@@ -8352,7 +10564,9 @@
     7
    ],
    "armorSetId": 53,
-   "armorSetName": "護火竜"
+   "armorSetName": "護火竜",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 224,
@@ -8388,7 +10602,9 @@
     7
    ],
    "armorSetId": 53,
-   "armorSetName": "護火竜"
+   "armorSetName": "護火竜",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 225,
@@ -8424,7 +10640,9 @@
     7
    ],
    "armorSetId": 53,
-   "armorSetName": "護火竜"
+   "armorSetName": "護火竜",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 226,
@@ -8464,7 +10682,13 @@
     24
    ],
    "armorSetId": 54,
-   "armorSetName": "グラビドα"
+   "armorSetName": "グラビドα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 227,
@@ -8504,7 +10728,13 @@
     24
    ],
    "armorSetId": 54,
-   "armorSetName": "グラビドα"
+   "armorSetName": "グラビドα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 228,
@@ -8544,7 +10774,13 @@
     24
    ],
    "armorSetId": 54,
-   "armorSetName": "グラビドα"
+   "armorSetName": "グラビドα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 229,
@@ -8584,7 +10820,13 @@
     24
    ],
    "armorSetId": 54,
-   "armorSetName": "グラビドα"
+   "armorSetName": "グラビドα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 230,
@@ -8624,7 +10866,13 @@
     24
    ],
    "armorSetId": 54,
-   "armorSetName": "グラビドα"
+   "armorSetName": "グラビドα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 231,
@@ -8664,7 +10912,9 @@
     18
    ],
    "armorSetId": 55,
-   "armorSetName": "トゥナムル"
+   "armorSetName": "トゥナムル",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 232,
@@ -8700,7 +10950,9 @@
     18
    ],
    "armorSetId": 55,
-   "armorSetName": "トゥナムル"
+   "armorSetName": "トゥナムル",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 233,
@@ -8736,7 +10988,9 @@
     18
    ],
    "armorSetId": 55,
-   "armorSetName": "トゥナムル"
+   "armorSetName": "トゥナムル",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 234,
@@ -8776,7 +11030,9 @@
     18
    ],
    "armorSetId": 55,
-   "armorSetName": "トゥナムル"
+   "armorSetName": "トゥナムル",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 235,
@@ -8812,7 +11068,9 @@
     18
    ],
    "armorSetId": 55,
-   "armorSetName": "トゥナムル"
+   "armorSetName": "トゥナムル",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 236,
@@ -8850,7 +11108,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 56,
-   "armorSetName": "ガライーα"
+   "armorSetName": "ガライーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 237,
@@ -8886,7 +11150,13 @@
     16
    ],
    "armorSetId": 57,
-   "armorSetName": "ダハディラβ"
+   "armorSetName": "ダハディラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 238,
@@ -8926,7 +11196,13 @@
     16
    ],
    "armorSetId": 57,
-   "armorSetName": "ダハディラβ"
+   "armorSetName": "ダハディラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 239,
@@ -8966,7 +11242,13 @@
     16
    ],
    "armorSetId": 57,
-   "armorSetName": "ダハディラβ"
+   "armorSetName": "ダハディラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 240,
@@ -9006,7 +11288,13 @@
     16
    ],
    "armorSetId": 57,
-   "armorSetName": "ダハディラβ"
+   "armorSetName": "ダハディラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 241,
@@ -9042,7 +11330,13 @@
     16
    ],
    "armorSetId": 57,
-   "armorSetName": "ダハディラβ"
+   "armorSetName": "ダハディラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 242,
@@ -9076,7 +11370,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 58,
-   "armorSetName": "ラバラ"
+   "armorSetName": "ラバラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 243,
@@ -9110,7 +11406,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 58,
-   "armorSetName": "ラバラ"
+   "armorSetName": "ラバラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 244,
@@ -9144,7 +11442,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 58,
-   "armorSetName": "ラバラ"
+   "armorSetName": "ラバラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 245,
@@ -9178,7 +11478,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 58,
-   "armorSetName": "ラバラ"
+   "armorSetName": "ラバラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 246,
@@ -9212,7 +11514,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 58,
-   "armorSetName": "ラバラ"
+   "armorSetName": "ラバラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 247,
@@ -9246,7 +11550,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 59,
-   "armorSetName": "ホープ"
+   "armorSetName": "ホープ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 248,
@@ -9280,7 +11586,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 59,
-   "armorSetName": "ホープ"
+   "armorSetName": "ホープ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 249,
@@ -9314,7 +11622,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 59,
-   "armorSetName": "ホープ"
+   "armorSetName": "ホープ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 250,
@@ -9348,7 +11658,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 59,
-   "armorSetName": "ホープ"
+   "armorSetName": "ホープ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 251,
@@ -9382,7 +11694,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 59,
-   "armorSetName": "ホープ"
+   "armorSetName": "ホープ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 252,
@@ -9416,7 +11730,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 60,
-   "armorSetName": "レザー"
+   "armorSetName": "レザー",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 253,
@@ -9450,7 +11766,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 60,
-   "armorSetName": "レザー"
+   "armorSetName": "レザー",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 254,
@@ -9484,7 +11802,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 60,
-   "armorSetName": "レザー"
+   "armorSetName": "レザー",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 255,
@@ -9518,7 +11838,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 60,
-   "armorSetName": "レザー"
+   "armorSetName": "レザー",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 256,
@@ -9552,7 +11874,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 60,
-   "armorSetName": "レザー"
+   "armorSetName": "レザー",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 257,
@@ -9586,7 +11910,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 61,
-   "armorSetName": "チェーン"
+   "armorSetName": "チェーン",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 258,
@@ -9620,7 +11946,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 61,
-   "armorSetName": "チェーン"
+   "armorSetName": "チェーン",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 259,
@@ -9654,7 +11982,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 61,
-   "armorSetName": "チェーン"
+   "armorSetName": "チェーン",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 260,
@@ -9688,7 +12018,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 61,
-   "armorSetName": "チェーン"
+   "armorSetName": "チェーン",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 261,
@@ -9722,7 +12054,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 61,
-   "armorSetName": "チェーン"
+   "armorSetName": "チェーン",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 262,
@@ -9756,7 +12090,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 62,
-   "armorSetName": "ボーン"
+   "armorSetName": "ボーン",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 263,
@@ -9790,7 +12126,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 62,
-   "armorSetName": "ボーン"
+   "armorSetName": "ボーン",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 264,
@@ -9824,7 +12162,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 62,
-   "armorSetName": "ボーン"
+   "armorSetName": "ボーン",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 265,
@@ -9858,7 +12198,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 62,
-   "armorSetName": "ボーン"
+   "armorSetName": "ボーン",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 266,
@@ -9892,7 +12234,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 62,
-   "armorSetName": "ボーン"
+   "armorSetName": "ボーン",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 267,
@@ -9926,7 +12270,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 63,
-   "armorSetName": "アロイ"
+   "armorSetName": "アロイ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 268,
@@ -9960,7 +12306,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 63,
-   "armorSetName": "アロイ"
+   "armorSetName": "アロイ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 269,
@@ -9994,7 +12342,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 63,
-   "armorSetName": "アロイ"
+   "armorSetName": "アロイ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 270,
@@ -10028,7 +12378,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 63,
-   "armorSetName": "アロイ"
+   "armorSetName": "アロイ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 271,
@@ -10062,7 +12414,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 63,
-   "armorSetName": "アロイ"
+   "armorSetName": "アロイ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 272,
@@ -10096,7 +12450,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 64,
-   "armorSetName": "インゴット"
+   "armorSetName": "インゴット",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 273,
@@ -10130,7 +12486,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 64,
-   "armorSetName": "インゴット"
+   "armorSetName": "インゴット",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 274,
@@ -10164,7 +12522,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 64,
-   "armorSetName": "インゴット"
+   "armorSetName": "インゴット",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 275,
@@ -10198,7 +12558,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 64,
-   "armorSetName": "インゴット"
+   "armorSetName": "インゴット",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 276,
@@ -10232,7 +12594,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 64,
-   "armorSetName": "インゴット"
+   "armorSetName": "インゴット",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 277,
@@ -10266,7 +12630,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 65,
-   "armorSetName": "タリオス"
+   "armorSetName": "タリオス",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 278,
@@ -10300,7 +12666,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 66,
-   "armorSetName": "ブラチカ"
+   "armorSetName": "ブラチカ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 279,
@@ -10334,7 +12702,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 68,
-   "armorSetName": "献身のピアスα"
+   "armorSetName": "献身のピアスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 280,
@@ -10376,7 +12750,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 70,
-   "armorSetName": "ギルドクロスα"
+   "armorSetName": "ギルドクロスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 281,
@@ -10414,7 +12794,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 70,
-   "armorSetName": "ギルドクロスα"
+   "armorSetName": "ギルドクロスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 282,
@@ -10456,7 +12842,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 70,
-   "armorSetName": "ギルドクロスα"
+   "armorSetName": "ギルドクロスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 283,
@@ -10494,7 +12886,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 70,
-   "armorSetName": "ギルドクロスα"
+   "armorSetName": "ギルドクロスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 284,
@@ -10532,7 +12930,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 70,
-   "armorSetName": "ギルドクロスα"
+   "armorSetName": "ギルドクロスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    1
+   ]
   },
   {
    "id": 285,
@@ -10566,7 +12970,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 71,
-   "armorSetName": "封印の眼帯α"
+   "armorSetName": "封印の眼帯α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 286,
@@ -10604,7 +13014,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 72,
-   "armorSetName": "スクエアグラスα"
+   "armorSetName": "スクエアグラスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 287,
@@ -10638,7 +13054,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 74,
-   "armorSetName": "ラウンドアイα"
+   "armorSetName": "ラウンドアイα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 288,
@@ -10676,7 +13098,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 76,
-   "armorSetName": "健啖家の耳飾りα"
+   "armorSetName": "健啖家の耳飾りα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 289,
@@ -10712,7 +13140,13 @@
     26
    ],
    "armorSetId": 77,
-   "armorSetName": "ミツネβ"
+   "armorSetName": "ミツネβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 290,
@@ -10752,7 +13186,13 @@
     26
    ],
    "armorSetId": 77,
-   "armorSetName": "ミツネβ"
+   "armorSetName": "ミツネβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 291,
@@ -10792,7 +13232,13 @@
     26
    ],
    "armorSetId": 77,
-   "armorSetName": "ミツネβ"
+   "armorSetName": "ミツネβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 292,
@@ -10828,7 +13274,13 @@
     26
    ],
    "armorSetId": 77,
-   "armorSetName": "ミツネβ"
+   "armorSetName": "ミツネβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    1
+   ]
   },
   {
    "id": 293,
@@ -10864,7 +13316,13 @@
     26
    ],
    "armorSetId": 77,
-   "armorSetName": "ミツネβ"
+   "armorSetName": "ミツネβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 294,
@@ -10904,7 +13362,13 @@
     27
    ],
    "armorSetId": 78,
-   "armorSetName": "桜波α"
+   "armorSetName": "桜波α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 295,
@@ -10944,7 +13408,13 @@
     27
    ],
    "armorSetId": 78,
-   "armorSetName": "桜波α"
+   "armorSetName": "桜波α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 296,
@@ -10984,7 +13454,13 @@
     27
    ],
    "armorSetId": 78,
-   "armorSetName": "桜波α"
+   "armorSetName": "桜波α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 297,
@@ -11024,7 +13500,13 @@
     27
    ],
    "armorSetId": 78,
-   "armorSetName": "桜波α"
+   "armorSetName": "桜波α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 298,
@@ -11064,7 +13546,13 @@
     27
    ],
    "armorSetId": 78,
-   "armorSetName": "桜波α"
+   "armorSetName": "桜波α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 299,
@@ -11098,7 +13586,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 79,
-   "armorSetName": "知略の眼鏡α"
+   "armorSetName": "知略の眼鏡α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 300,
@@ -11136,7 +13630,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 80,
-   "armorSetName": "アワウタイズクα"
+   "armorSetName": "アワウタイズクα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 301,
@@ -11178,7 +13678,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 81,
-   "armorSetName": "クリークα"
+   "armorSetName": "クリークα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 302,
@@ -11216,7 +13722,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 81,
-   "armorSetName": "クリークα"
+   "armorSetName": "クリークα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 303,
@@ -11258,7 +13770,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 81,
-   "armorSetName": "クリークα"
+   "armorSetName": "クリークα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 304,
@@ -11296,7 +13814,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 81,
-   "armorSetName": "クリークα"
+   "armorSetName": "クリークα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 305,
@@ -11334,7 +13858,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 81,
-   "armorSetName": "クリークα"
+   "armorSetName": "クリークα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 306,
@@ -11368,7 +13898,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 83,
-   "armorSetName": "ブロッサムα"
+   "armorSetName": "ブロッサムα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 307,
@@ -11402,7 +13938,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 83,
-   "armorSetName": "ブロッサムα"
+   "armorSetName": "ブロッサムα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    2
+   ]
   },
   {
    "id": 308,
@@ -11436,7 +13978,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 83,
-   "armorSetName": "ブロッサムα"
+   "armorSetName": "ブロッサムα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    2
+   ]
   },
   {
    "id": 309,
@@ -11474,7 +14022,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 83,
-   "armorSetName": "ブロッサムα"
+   "armorSetName": "ブロッサムα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    1
+   ]
   },
   {
    "id": 310,
@@ -11512,7 +14066,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 83,
-   "armorSetName": "ブロッサムα"
+   "armorSetName": "ブロッサムα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 311,
@@ -11552,7 +14112,13 @@
     29
    ],
    "armorSetId": 84,
-   "armorSetName": "無垢ナル龍β"
+   "armorSetName": "無垢ナル龍β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 312,
@@ -11588,7 +14154,13 @@
     29
    ],
    "armorSetId": 84,
-   "armorSetName": "無垢ナル龍β"
+   "armorSetName": "無垢ナル龍β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 313,
@@ -11624,7 +14196,13 @@
     29
    ],
    "armorSetId": 84,
-   "armorSetName": "無垢ナル龍β"
+   "armorSetName": "無垢ナル龍β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 314,
@@ -11664,7 +14242,13 @@
     29
    ],
    "armorSetId": 84,
-   "armorSetName": "無垢ナル龍β"
+   "armorSetName": "無垢ナル龍β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 315,
@@ -11708,7 +14292,13 @@
     29
    ],
    "armorSetId": 84,
-   "armorSetName": "無垢ナル龍β"
+   "armorSetName": "無垢ナル龍β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 316,
@@ -11746,7 +14336,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 86,
-   "armorSetName": "封印の龍骸布α"
+   "armorSetName": "封印の龍骸布α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 317,
@@ -11784,7 +14380,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 87,
-   "armorSetName": "シャドウアイα"
+   "armorSetName": "シャドウアイα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 318,
@@ -11824,7 +14426,13 @@
     26
    ],
    "armorSetId": 88,
-   "armorSetName": "ミツネα"
+   "armorSetName": "ミツネα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 319,
@@ -11864,7 +14472,13 @@
     26
    ],
    "armorSetId": 88,
-   "armorSetName": "ミツネα"
+   "armorSetName": "ミツネα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 320,
@@ -11904,7 +14518,13 @@
     26
    ],
    "armorSetId": 88,
-   "armorSetName": "ミツネα"
+   "armorSetName": "ミツネα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 321,
@@ -11944,7 +14564,13 @@
     26
    ],
    "armorSetId": 88,
-   "armorSetName": "ミツネα"
+   "armorSetName": "ミツネα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 322,
@@ -11984,7 +14610,13 @@
     26
    ],
    "armorSetId": 88,
-   "armorSetName": "ミツネα"
+   "armorSetName": "ミツネα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 323,
@@ -12024,7 +14656,13 @@
     29
    ],
    "armorSetId": 89,
-   "armorSetName": "無垢ナル龍α"
+   "armorSetName": "無垢ナル龍α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 324,
@@ -12064,7 +14702,13 @@
     29
    ],
    "armorSetId": 89,
-   "armorSetName": "無垢ナル龍α"
+   "armorSetName": "無垢ナル龍α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    0,
+    0
+   ]
   },
   {
    "id": 325,
@@ -12104,7 +14748,13 @@
     29
    ],
    "armorSetId": 89,
-   "armorSetName": "無垢ナル龍α"
+   "armorSetName": "無垢ナル龍α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 326,
@@ -12144,7 +14794,13 @@
     29
    ],
    "armorSetId": 89,
-   "armorSetName": "無垢ナル龍α"
+   "armorSetName": "無垢ナル龍α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 327,
@@ -12188,7 +14844,13 @@
     29
    ],
    "armorSetId": 89,
-   "armorSetName": "無垢ナル龍α"
+   "armorSetName": "無垢ナル龍α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 328,
@@ -12232,7 +14894,13 @@
     19
    ],
    "armorSetId": 91,
-   "armorSetName": "レダゼルトγ"
+   "armorSetName": "レダゼルトγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 329,
@@ -12268,7 +14936,13 @@
     19
    ],
    "armorSetId": 91,
-   "armorSetName": "レダゼルトγ"
+   "armorSetName": "レダゼルトγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    0,
+    0
+   ]
   },
   {
    "id": 330,
@@ -12304,7 +14978,13 @@
     19
    ],
    "armorSetId": 91,
-   "armorSetName": "レダゼルトγ"
+   "armorSetName": "レダゼルトγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 331,
@@ -12344,7 +15024,13 @@
     19
    ],
    "armorSetId": 91,
-   "armorSetName": "レダゼルトγ"
+   "armorSetName": "レダゼルトγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 332,
@@ -12384,7 +15070,13 @@
     19
    ],
    "armorSetId": 91,
-   "armorSetName": "レダゼルトγ"
+   "armorSetName": "レダゼルトγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 333,
@@ -12422,7 +15114,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 92,
-   "armorSetName": "調査隊の耳飾りα"
+   "armorSetName": "調査隊の耳飾りα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 334,
@@ -12460,7 +15158,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 93,
-   "armorSetName": "ラバラα"
+   "armorSetName": "ラバラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 335,
@@ -12498,7 +15202,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 93,
-   "armorSetName": "ラバラα"
+   "armorSetName": "ラバラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 336,
@@ -12536,7 +15246,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 93,
-   "armorSetName": "ラバラα"
+   "armorSetName": "ラバラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 337,
@@ -12570,7 +15286,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 93,
-   "armorSetName": "ラバラα"
+   "armorSetName": "ラバラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 338,
@@ -12608,7 +15330,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 93,
-   "armorSetName": "ラバラα"
+   "armorSetName": "ラバラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 339,
@@ -12642,7 +15370,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 94,
-   "armorSetName": "バーラβ"
+   "armorSetName": "バーラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 340,
@@ -12676,7 +15410,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 94,
-   "armorSetName": "バーラβ"
+   "armorSetName": "バーラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    2
+   ]
   },
   {
    "id": 341,
@@ -12710,7 +15450,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 94,
-   "armorSetName": "バーラβ"
+   "armorSetName": "バーラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 342,
@@ -12744,7 +15490,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 94,
-   "armorSetName": "バーラβ"
+   "armorSetName": "バーラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 343,
@@ -12778,7 +15530,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 94,
-   "armorSetName": "バーラβ"
+   "armorSetName": "バーラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    2
+   ]
   },
   {
    "id": 344,
@@ -12814,7 +15572,13 @@
     10
    ],
    "armorSetId": 95,
-   "armorSetName": "護闢獣β"
+   "armorSetName": "護闢獣β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    1
+   ]
   },
   {
    "id": 345,
@@ -12850,7 +15614,13 @@
     10
    ],
    "armorSetId": 95,
-   "armorSetName": "護闢獣β"
+   "armorSetName": "護闢獣β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 346,
@@ -12886,7 +15656,13 @@
     10
    ],
    "armorSetId": 95,
-   "armorSetName": "護闢獣β"
+   "armorSetName": "護闢獣β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    1
+   ]
   },
   {
    "id": 347,
@@ -12922,7 +15698,13 @@
     10
    ],
    "armorSetId": 95,
-   "armorSetName": "護闢獣β"
+   "armorSetName": "護闢獣β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 348,
@@ -12962,7 +15744,13 @@
     10
    ],
    "armorSetId": 95,
-   "armorSetName": "護闢獣β"
+   "armorSetName": "護闢獣β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 349,
@@ -12998,7 +15786,13 @@
     31
    ],
    "armorSetId": 96,
-   "armorSetName": "護兇爪竜β"
+   "armorSetName": "護兇爪竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 350,
@@ -13034,7 +15828,13 @@
     31
    ],
    "armorSetId": 96,
-   "armorSetName": "護兇爪竜β"
+   "armorSetName": "護兇爪竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 351,
@@ -13074,7 +15874,13 @@
     31
    ],
    "armorSetId": 96,
-   "armorSetName": "護兇爪竜β"
+   "armorSetName": "護兇爪竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 352,
@@ -13110,7 +15916,13 @@
     31
    ],
    "armorSetId": 96,
-   "armorSetName": "護兇爪竜β"
+   "armorSetName": "護兇爪竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 353,
@@ -13150,7 +15962,13 @@
     31
    ],
    "armorSetId": 96,
-   "armorSetName": "護兇爪竜β"
+   "armorSetName": "護兇爪竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 354,
@@ -13190,7 +16008,13 @@
     10
    ],
    "armorSetId": 97,
-   "armorSetName": "ドシャグマβ"
+   "armorSetName": "ドシャグマβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 355,
@@ -13226,7 +16050,13 @@
     10
    ],
    "armorSetId": 97,
-   "armorSetName": "ドシャグマβ"
+   "armorSetName": "ドシャグマβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 356,
@@ -13266,7 +16096,13 @@
     10
    ],
    "armorSetId": 97,
-   "armorSetName": "ドシャグマβ"
+   "armorSetName": "ドシャグマβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 357,
@@ -13302,7 +16138,13 @@
     10
    ],
    "armorSetId": 97,
-   "armorSetName": "ドシャグマβ"
+   "armorSetName": "ドシャグマβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 358,
@@ -13342,7 +16184,13 @@
     10
    ],
    "armorSetId": 97,
-   "armorSetName": "ドシャグマβ"
+   "armorSetName": "ドシャグマβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 359,
@@ -13376,7 +16224,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 98,
-   "armorSetName": "ピラギルβ"
+   "armorSetName": "ピラギルβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 360,
@@ -13416,7 +16270,13 @@
     15
    ],
    "armorSetId": 99,
-   "armorSetName": "護鎖刃竜α"
+   "armorSetName": "護鎖刃竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 361,
@@ -13456,7 +16316,13 @@
     15
    ],
    "armorSetId": 99,
-   "armorSetName": "護鎖刃竜α"
+   "armorSetName": "護鎖刃竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 362,
@@ -13496,7 +16362,13 @@
     15
    ],
    "armorSetId": 99,
-   "armorSetName": "護鎖刃竜α"
+   "armorSetName": "護鎖刃竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    0,
+    0
+   ]
   },
   {
    "id": 363,
@@ -13536,7 +16408,13 @@
     15
    ],
    "armorSetId": 99,
-   "armorSetName": "護鎖刃竜α"
+   "armorSetName": "護鎖刃竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 364,
@@ -13576,7 +16454,13 @@
     15
    ],
    "armorSetId": 99,
-   "armorSetName": "護鎖刃竜α"
+   "armorSetName": "護鎖刃竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 365,
@@ -13614,7 +16498,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 100,
-   "armorSetName": "護竜セクレトα"
+   "armorSetName": "護竜セクレトα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 366,
@@ -13648,7 +16538,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 101,
-   "armorSetName": "チャタβ"
+   "armorSetName": "チャタβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 367,
@@ -13682,7 +16578,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 101,
-   "armorSetName": "チャタβ"
+   "armorSetName": "チャタβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    2
+   ]
   },
   {
    "id": 368,
@@ -13716,7 +16618,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 101,
-   "armorSetName": "チャタβ"
+   "armorSetName": "チャタβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 369,
@@ -13750,7 +16658,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 101,
-   "armorSetName": "チャタβ"
+   "armorSetName": "チャタβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 370,
@@ -13784,7 +16698,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 101,
-   "armorSetName": "チャタβ"
+   "armorSetName": "チャタβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 371,
@@ -13822,7 +16742,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 102,
-   "armorSetName": "ピラギルα"
+   "armorSetName": "ピラギルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 372,
@@ -13860,7 +16786,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 103,
-   "armorSetName": "トリスα"
+   "armorSetName": "トリスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 373,
@@ -13898,7 +16830,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 103,
-   "armorSetName": "トリスα"
+   "armorSetName": "トリスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 374,
@@ -13936,7 +16874,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 103,
-   "armorSetName": "トリスα"
+   "armorSetName": "トリスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 375,
@@ -13974,7 +16918,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 103,
-   "armorSetName": "トリスα"
+   "armorSetName": "トリスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 376,
@@ -14012,7 +16962,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 103,
-   "armorSetName": "トリスα"
+   "armorSetName": "トリスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 377,
@@ -14050,7 +17006,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 104,
-   "armorSetName": "調査団α"
+   "armorSetName": "調査団α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 378,
@@ -14088,7 +17050,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 104,
-   "armorSetName": "調査団α"
+   "armorSetName": "調査団α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 379,
@@ -14126,7 +17094,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 104,
-   "armorSetName": "調査団α"
+   "armorSetName": "調査団α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 380,
@@ -14164,7 +17138,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 104,
-   "armorSetName": "調査団α"
+   "armorSetName": "調査団α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 381,
@@ -14202,7 +17182,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 104,
-   "armorSetName": "調査団α"
+   "armorSetName": "調査団α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 382,
@@ -14242,7 +17228,13 @@
     32
    ],
    "armorSetId": 105,
-   "armorSetName": "エグゾルスβ"
+   "armorSetName": "エグゾルスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 383,
@@ -14278,7 +17270,13 @@
     32
    ],
    "armorSetId": 105,
-   "armorSetName": "エグゾルスβ"
+   "armorSetName": "エグゾルスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 384,
@@ -14318,7 +17316,13 @@
     32
    ],
    "armorSetId": 105,
-   "armorSetName": "エグゾルスβ"
+   "armorSetName": "エグゾルスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 385,
@@ -14354,7 +17358,13 @@
     32
    ],
    "armorSetId": 105,
-   "armorSetName": "エグゾルスβ"
+   "armorSetName": "エグゾルスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 386,
@@ -14394,7 +17404,13 @@
     32
    ],
    "armorSetId": 105,
-   "armorSetName": "エグゾルスβ"
+   "armorSetName": "エグゾルスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 387,
@@ -14428,7 +17444,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 106,
-   "armorSetName": "ネラチカ"
+   "armorSetName": "ネラチカ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 388,
@@ -14468,7 +17486,13 @@
     4
    ],
    "armorSetId": 107,
-   "armorSetName": "ブランゴα"
+   "armorSetName": "ブランゴα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 389,
@@ -14508,7 +17532,13 @@
     4
    ],
    "armorSetId": 107,
-   "armorSetName": "ブランゴα"
+   "armorSetName": "ブランゴα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 390,
@@ -14548,7 +17578,13 @@
     4
    ],
    "armorSetId": 107,
-   "armorSetName": "ブランゴα"
+   "armorSetName": "ブランゴα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 391,
@@ -14588,7 +17624,13 @@
     4
    ],
    "armorSetId": 107,
-   "armorSetName": "ブランゴα"
+   "armorSetName": "ブランゴα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 392,
@@ -14628,7 +17670,13 @@
     4
    ],
    "armorSetId": 107,
-   "armorSetName": "ブランゴα"
+   "armorSetName": "ブランゴα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 393,
@@ -14662,7 +17710,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 108,
-   "armorSetName": "クックβ"
+   "armorSetName": "クックβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 394,
@@ -14696,7 +17750,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 108,
-   "armorSetName": "クックβ"
+   "armorSetName": "クックβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 395,
@@ -14730,7 +17790,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 108,
-   "armorSetName": "クックβ"
+   "armorSetName": "クックβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    2
+   ]
   },
   {
    "id": 396,
@@ -14768,7 +17834,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 108,
-   "armorSetName": "クックβ"
+   "armorSetName": "クックβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 397,
@@ -14806,7 +17878,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 108,
-   "armorSetName": "クックβ"
+   "armorSetName": "クックβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 398,
@@ -14846,7 +17924,13 @@
     10
    ],
    "armorSetId": 109,
-   "armorSetName": "護闢獣α"
+   "armorSetName": "護闢獣α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 399,
@@ -14886,7 +17970,13 @@
     10
    ],
    "armorSetId": 109,
-   "armorSetName": "護闢獣α"
+   "armorSetName": "護闢獣α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 400,
@@ -14926,7 +18016,13 @@
     10
    ],
    "armorSetId": 109,
-   "armorSetName": "護闢獣α"
+   "armorSetName": "護闢獣α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 401,
@@ -14966,7 +18062,13 @@
     10
    ],
    "armorSetId": 109,
-   "armorSetName": "護闢獣α"
+   "armorSetName": "護闢獣α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 402,
@@ -15006,7 +18108,13 @@
     10
    ],
    "armorSetId": 109,
-   "armorSetName": "護闢獣α"
+   "armorSetName": "護闢獣α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 403,
@@ -15046,7 +18154,13 @@
     19
    ],
    "armorSetId": 110,
-   "armorSetName": "レダゼルトβ"
+   "armorSetName": "レダゼルトβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 404,
@@ -15086,7 +18200,13 @@
     19
    ],
    "armorSetId": 110,
-   "armorSetName": "レダゼルトβ"
+   "armorSetName": "レダゼルトβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 405,
@@ -15122,7 +18242,13 @@
     19
    ],
    "armorSetId": 110,
-   "armorSetName": "レダゼルトβ"
+   "armorSetName": "レダゼルトβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 406,
@@ -15162,7 +18288,13 @@
     19
    ],
    "armorSetId": 110,
-   "armorSetName": "レダゼルトβ"
+   "armorSetName": "レダゼルトβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 407,
@@ -15198,7 +18330,13 @@
     19
    ],
    "armorSetId": 110,
-   "armorSetName": "レダゼルトβ"
+   "armorSetName": "レダゼルトβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 408,
@@ -15234,7 +18372,9 @@
     31
    ],
    "armorSetId": 111,
-   "armorSetName": "護兇爪竜"
+   "armorSetName": "護兇爪竜",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 409,
@@ -15270,7 +18410,9 @@
     31
    ],
    "armorSetId": 111,
-   "armorSetName": "護兇爪竜"
+   "armorSetName": "護兇爪竜",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 410,
@@ -15306,7 +18448,9 @@
     31
    ],
    "armorSetId": 111,
-   "armorSetName": "護兇爪竜"
+   "armorSetName": "護兇爪竜",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 411,
@@ -15346,7 +18490,9 @@
     31
    ],
    "armorSetId": 111,
-   "armorSetName": "護兇爪竜"
+   "armorSetName": "護兇爪竜",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 412,
@@ -15382,7 +18528,9 @@
     31
    ],
    "armorSetId": 111,
-   "armorSetName": "護兇爪竜"
+   "armorSetName": "護兇爪竜",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 413,
@@ -15420,7 +18568,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 112,
-   "armorSetName": "ハイメタα"
+   "armorSetName": "ハイメタα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 414,
@@ -15458,7 +18612,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 112,
-   "armorSetName": "ハイメタα"
+   "armorSetName": "ハイメタα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 415,
@@ -15496,7 +18656,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 112,
-   "armorSetName": "ハイメタα"
+   "armorSetName": "ハイメタα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 416,
@@ -15534,7 +18700,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 112,
-   "armorSetName": "ハイメタα"
+   "armorSetName": "ハイメタα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 417,
@@ -15572,7 +18744,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 112,
-   "armorSetName": "ハイメタα"
+   "armorSetName": "ハイメタα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 418,
@@ -15606,7 +18784,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 113,
-   "armorSetName": "ホープα"
+   "armorSetName": "ホープα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 419,
@@ -15640,7 +18824,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 113,
-   "armorSetName": "ホープα"
+   "armorSetName": "ホープα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 420,
@@ -15674,7 +18864,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 113,
-   "armorSetName": "ホープα"
+   "armorSetName": "ホープα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 421,
@@ -15712,7 +18908,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 113,
-   "armorSetName": "ホープα"
+   "armorSetName": "ホープα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 422,
@@ -15746,7 +18948,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 113,
-   "armorSetName": "ホープα"
+   "armorSetName": "ホープα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 423,
@@ -15780,7 +18988,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 114,
-   "armorSetName": "コンガ"
+   "armorSetName": "コンガ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 424,
@@ -15814,7 +19024,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 114,
-   "armorSetName": "コンガ"
+   "armorSetName": "コンガ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 425,
@@ -15848,7 +19060,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 114,
-   "armorSetName": "コンガ"
+   "armorSetName": "コンガ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 426,
@@ -15882,7 +19096,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 114,
-   "armorSetName": "コンガ"
+   "armorSetName": "コンガ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 427,
@@ -15916,7 +19132,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 114,
-   "armorSetName": "コンガ"
+   "armorSetName": "コンガ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 428,
@@ -15950,7 +19168,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 115,
-   "armorSetName": "スキュラ"
+   "armorSetName": "スキュラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 429,
@@ -15988,7 +19208,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 115,
-   "armorSetName": "スキュラ"
+   "armorSetName": "スキュラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 430,
@@ -16022,7 +19244,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 115,
-   "armorSetName": "スキュラ"
+   "armorSetName": "スキュラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 431,
@@ -16060,7 +19284,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 115,
-   "armorSetName": "スキュラ"
+   "armorSetName": "スキュラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 432,
@@ -16094,7 +19320,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 115,
-   "armorSetName": "スキュラ"
+   "armorSetName": "スキュラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 433,
@@ -16128,7 +19356,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 116,
-   "armorSetName": "ランゴスタβ"
+   "armorSetName": "ランゴスタβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 434,
@@ -16162,7 +19396,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 116,
-   "armorSetName": "ランゴスタβ"
+   "armorSetName": "ランゴスタβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    2
+   ]
   },
   {
    "id": 435,
@@ -16196,7 +19436,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 116,
-   "armorSetName": "ランゴスタβ"
+   "armorSetName": "ランゴスタβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 436,
@@ -16230,7 +19476,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 116,
-   "armorSetName": "ランゴスタβ"
+   "armorSetName": "ランゴスタβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    2
+   ]
   },
   {
    "id": 437,
@@ -16264,7 +19516,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 116,
-   "armorSetName": "ランゴスタβ"
+   "armorSetName": "ランゴスタβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 438,
@@ -16298,7 +19556,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 117,
-   "armorSetName": "ブラチカβ"
+   "armorSetName": "ブラチカβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 439,
@@ -16336,7 +19600,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 118,
-   "armorSetName": "デスギアα"
+   "armorSetName": "デスギアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 440,
@@ -16374,7 +19644,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 118,
-   "armorSetName": "デスギアα"
+   "armorSetName": "デスギアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 441,
@@ -16412,7 +19688,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 118,
-   "armorSetName": "デスギアα"
+   "armorSetName": "デスギアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 442,
@@ -16450,7 +19732,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 118,
-   "armorSetName": "デスギアα"
+   "armorSetName": "デスギアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 443,
@@ -16488,7 +19776,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 118,
-   "armorSetName": "デスギアα"
+   "armorSetName": "デスギアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 444,
@@ -16528,7 +19822,13 @@
     10
    ],
    "armorSetId": 119,
-   "armorSetName": "ドシャグマα"
+   "armorSetName": "ドシャグマα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 445,
@@ -16568,7 +19868,13 @@
     10
    ],
    "armorSetId": 119,
-   "armorSetName": "ドシャグマα"
+   "armorSetName": "ドシャグマα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 446,
@@ -16608,7 +19914,13 @@
     10
    ],
    "armorSetId": 119,
-   "armorSetName": "ドシャグマα"
+   "armorSetName": "ドシャグマα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 447,
@@ -16644,7 +19956,13 @@
     10
    ],
    "armorSetId": 119,
-   "armorSetName": "ドシャグマα"
+   "armorSetName": "ドシャグマα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 448,
@@ -16684,7 +20002,13 @@
     10
    ],
    "armorSetId": 119,
-   "armorSetName": "ドシャグマα"
+   "armorSetName": "ドシャグマα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 449,
@@ -16718,7 +20042,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 120,
-   "armorSetName": "バトルα"
+   "armorSetName": "バトルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 450,
@@ -16756,7 +20086,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 120,
-   "armorSetName": "バトルα"
+   "armorSetName": "バトルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 451,
@@ -16790,7 +20126,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 120,
-   "armorSetName": "バトルα"
+   "armorSetName": "バトルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 452,
@@ -16828,7 +20170,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 120,
-   "armorSetName": "バトルα"
+   "armorSetName": "バトルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 453,
@@ -16866,7 +20214,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 120,
-   "armorSetName": "バトルα"
+   "armorSetName": "バトルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 454,
@@ -16908,7 +20262,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 121,
-   "armorSetName": "オウビートα"
+   "armorSetName": "オウビートα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 455,
@@ -16950,7 +20310,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 121,
-   "armorSetName": "オウビートα"
+   "armorSetName": "オウビートα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 456,
@@ -16992,7 +20358,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 121,
-   "armorSetName": "オウビートα"
+   "armorSetName": "オウビートα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 457,
@@ -17034,7 +20406,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 121,
-   "armorSetName": "オウビートα"
+   "armorSetName": "オウビートα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 458,
@@ -17076,7 +20454,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 121,
-   "armorSetName": "オウビートα"
+   "armorSetName": "オウビートα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 459,
@@ -17110,7 +20494,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 122,
-   "armorSetName": "ヒラバミβ"
+   "armorSetName": "ヒラバミβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 460,
@@ -17148,7 +20538,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 122,
-   "armorSetName": "ヒラバミβ"
+   "armorSetName": "ヒラバミβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 461,
@@ -17182,7 +20578,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 122,
-   "armorSetName": "ヒラバミβ"
+   "armorSetName": "ヒラバミβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 462,
@@ -17216,7 +20618,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 122,
-   "armorSetName": "ヒラバミβ"
+   "armorSetName": "ヒラバミβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 463,
@@ -17250,7 +20658,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 122,
-   "armorSetName": "ヒラバミβ"
+   "armorSetName": "ヒラバミβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 464,
@@ -17290,7 +20704,13 @@
     15
    ],
    "armorSetId": 123,
-   "armorSetName": "護鎖刃竜β"
+   "armorSetName": "護鎖刃竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 465,
@@ -17330,7 +20750,13 @@
     15
    ],
    "armorSetId": 123,
-   "armorSetName": "護鎖刃竜β"
+   "armorSetName": "護鎖刃竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 466,
@@ -17366,7 +20792,13 @@
     15
    ],
    "armorSetId": 123,
-   "armorSetName": "護鎖刃竜β"
+   "armorSetName": "護鎖刃竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 467,
@@ -17402,7 +20834,13 @@
     15
    ],
    "armorSetId": 123,
-   "armorSetName": "護鎖刃竜β"
+   "armorSetName": "護鎖刃竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 468,
@@ -17442,7 +20880,13 @@
     15
    ],
    "armorSetId": 123,
-   "armorSetName": "護鎖刃竜β"
+   "armorSetName": "護鎖刃竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 469,
@@ -17478,7 +20922,9 @@
     32
    ],
    "armorSetId": 124,
-   "armorSetName": "エグゾルス"
+   "armorSetName": "エグゾルス",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 470,
@@ -17518,7 +20964,9 @@
     32
    ],
    "armorSetId": 124,
-   "armorSetName": "エグゾルス"
+   "armorSetName": "エグゾルス",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 471,
@@ -17554,7 +21002,9 @@
     32
    ],
    "armorSetId": 124,
-   "armorSetName": "エグゾルス"
+   "armorSetName": "エグゾルス",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 472,
@@ -17590,7 +21040,9 @@
     32
    ],
    "armorSetId": 124,
-   "armorSetName": "エグゾルス"
+   "armorSetName": "エグゾルス",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 473,
@@ -17626,7 +21078,9 @@
     32
    ],
    "armorSetId": 124,
-   "armorSetName": "エグゾルス"
+   "armorSetName": "エグゾルス",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 474,
@@ -17660,7 +21114,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 125,
-   "armorSetName": "プポルβ"
+   "armorSetName": "プポルβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 475,
@@ -17694,7 +21154,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 125,
-   "armorSetName": "プポルβ"
+   "armorSetName": "プポルβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 476,
@@ -17728,7 +21194,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 125,
-   "armorSetName": "プポルβ"
+   "armorSetName": "プポルβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 477,
@@ -17762,7 +21234,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 125,
-   "armorSetName": "プポルβ"
+   "armorSetName": "プポルβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 478,
@@ -17796,7 +21274,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 125,
-   "armorSetName": "プポルβ"
+   "armorSetName": "プポルβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 479,
@@ -17834,7 +21318,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 126,
-   "armorSetName": "スキュラα"
+   "armorSetName": "スキュラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 480,
@@ -17872,7 +21362,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 126,
-   "armorSetName": "スキュラα"
+   "armorSetName": "スキュラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 481,
@@ -17910,7 +21406,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 126,
-   "armorSetName": "スキュラα"
+   "armorSetName": "スキュラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 482,
@@ -17948,7 +21450,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 126,
-   "armorSetName": "スキュラα"
+   "armorSetName": "スキュラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 483,
@@ -17986,7 +21494,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 126,
-   "armorSetName": "スキュラα"
+   "armorSetName": "スキュラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 484,
@@ -18020,7 +21534,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 127,
-   "armorSetName": "タリオスβ"
+   "armorSetName": "タリオスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 485,
@@ -18060,7 +21580,13 @@
     32
    ],
    "armorSetId": 128,
-   "armorSetName": "エグゾルスα"
+   "armorSetName": "エグゾルスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 486,
@@ -18100,7 +21626,13 @@
     32
    ],
    "armorSetId": 128,
-   "armorSetName": "エグゾルスα"
+   "armorSetName": "エグゾルスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 487,
@@ -18140,7 +21672,13 @@
     32
    ],
    "armorSetId": 128,
-   "armorSetName": "エグゾルスα"
+   "armorSetName": "エグゾルスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 488,
@@ -18180,7 +21718,13 @@
     32
    ],
    "armorSetId": 128,
-   "armorSetName": "エグゾルスα"
+   "armorSetName": "エグゾルスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 489,
@@ -18220,7 +21764,13 @@
     32
    ],
    "armorSetId": 128,
-   "armorSetName": "エグゾルスα"
+   "armorSetName": "エグゾルスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 490,
@@ -18254,7 +21804,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 129,
-   "armorSetName": "チャタ"
+   "armorSetName": "チャタ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 491,
@@ -18288,7 +21840,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 129,
-   "armorSetName": "チャタ"
+   "armorSetName": "チャタ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 492,
@@ -18322,7 +21876,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 129,
-   "armorSetName": "チャタ"
+   "armorSetName": "チャタ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 493,
@@ -18356,7 +21912,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 129,
-   "armorSetName": "チャタ"
+   "armorSetName": "チャタ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 494,
@@ -18390,7 +21948,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 129,
-   "armorSetName": "チャタ"
+   "armorSetName": "チャタ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 495,
@@ -18428,7 +21988,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 130,
-   "armorSetName": "アジャラ"
+   "armorSetName": "アジャラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 496,
@@ -18462,7 +22024,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 130,
-   "armorSetName": "アジャラ"
+   "armorSetName": "アジャラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 497,
@@ -18500,7 +22064,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 130,
-   "armorSetName": "アジャラ"
+   "armorSetName": "アジャラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 498,
@@ -18538,7 +22104,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 130,
-   "armorSetName": "アジャラ"
+   "armorSetName": "アジャラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 499,
@@ -18576,7 +22144,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 130,
-   "armorSetName": "アジャラ"
+   "armorSetName": "アジャラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 500,
@@ -18610,7 +22180,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 131,
-   "armorSetName": "クラノダスβ"
+   "armorSetName": "クラノダスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 501,
@@ -18648,7 +22224,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 132,
-   "armorSetName": "アジャラβ"
+   "armorSetName": "アジャラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 502,
@@ -18682,7 +22264,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 132,
-   "armorSetName": "アジャラβ"
+   "armorSetName": "アジャラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 503,
@@ -18720,7 +22308,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 132,
-   "armorSetName": "アジャラβ"
+   "armorSetName": "アジャラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 504,
@@ -18758,7 +22352,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 132,
-   "armorSetName": "アジャラβ"
+   "armorSetName": "アジャラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 505,
@@ -18792,7 +22392,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 132,
-   "armorSetName": "アジャラβ"
+   "armorSetName": "アジャラβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 506,
@@ -18832,7 +22438,13 @@
     33
    ],
    "armorSetId": 133,
-   "armorSetName": "護雷顎竜α"
+   "armorSetName": "護雷顎竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 507,
@@ -18872,7 +22484,13 @@
     33
    ],
    "armorSetId": 133,
-   "armorSetName": "護雷顎竜α"
+   "armorSetName": "護雷顎竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 508,
@@ -18912,7 +22530,13 @@
     33
    ],
    "armorSetId": 133,
-   "armorSetName": "護雷顎竜α"
+   "armorSetName": "護雷顎竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 509,
@@ -18952,7 +22576,13 @@
     33
    ],
    "armorSetId": 133,
-   "armorSetName": "護雷顎竜α"
+   "armorSetName": "護雷顎竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 510,
@@ -18992,7 +22622,13 @@
     33
    ],
    "armorSetId": 133,
-   "armorSetName": "護雷顎竜α"
+   "armorSetName": "護雷顎竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 511,
@@ -19032,7 +22668,13 @@
     31
    ],
    "armorSetId": 134,
-   "armorSetName": "護兇爪竜α"
+   "armorSetName": "護兇爪竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 512,
@@ -19072,7 +22714,13 @@
     31
    ],
    "armorSetId": 134,
-   "armorSetName": "護兇爪竜α"
+   "armorSetName": "護兇爪竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 513,
@@ -19112,7 +22760,13 @@
     31
    ],
    "armorSetId": 134,
-   "armorSetName": "護兇爪竜α"
+   "armorSetName": "護兇爪竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 514,
@@ -19152,7 +22806,13 @@
     31
    ],
    "armorSetId": 134,
-   "armorSetName": "護兇爪竜α"
+   "armorSetName": "護兇爪竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 515,
@@ -19192,7 +22852,13 @@
     31
    ],
    "armorSetId": 134,
-   "armorSetName": "護兇爪竜α"
+   "armorSetName": "護兇爪竜α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 516,
@@ -19230,7 +22896,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 135,
-   "armorSetName": "アーティアα"
+   "armorSetName": "アーティアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 517,
@@ -19268,7 +22940,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 135,
-   "armorSetName": "アーティアα"
+   "armorSetName": "アーティアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 518,
@@ -19306,7 +22984,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 135,
-   "armorSetName": "アーティアα"
+   "armorSetName": "アーティアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 519,
@@ -19344,7 +23028,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 135,
-   "armorSetName": "アーティアα"
+   "armorSetName": "アーティアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 520,
@@ -19382,7 +23072,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 135,
-   "armorSetName": "アーティアα"
+   "armorSetName": "アーティアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 521,
@@ -19418,7 +23114,13 @@
     23
    ],
    "armorSetId": 136,
-   "armorSetName": "シュバルカβ"
+   "armorSetName": "シュバルカβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 522,
@@ -19454,7 +23156,13 @@
     23
    ],
    "armorSetId": 136,
-   "armorSetName": "シュバルカβ"
+   "armorSetName": "シュバルカβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 523,
@@ -19490,7 +23198,13 @@
     23
    ],
    "armorSetId": 136,
-   "armorSetName": "シュバルカβ"
+   "armorSetName": "シュバルカβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 524,
@@ -19530,7 +23244,13 @@
     23
    ],
    "armorSetId": 136,
-   "armorSetName": "シュバルカβ"
+   "armorSetName": "シュバルカβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 525,
@@ -19570,7 +23290,13 @@
     23
    ],
    "armorSetId": 136,
-   "armorSetName": "シュバルカβ"
+   "armorSetName": "シュバルカβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 526,
@@ -19604,7 +23330,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 137,
-   "armorSetName": "バーラ"
+   "armorSetName": "バーラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 527,
@@ -19638,7 +23366,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 137,
-   "armorSetName": "バーラ"
+   "armorSetName": "バーラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 528,
@@ -19672,7 +23402,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 137,
-   "armorSetName": "バーラ"
+   "armorSetName": "バーラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 529,
@@ -19706,7 +23438,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 137,
-   "armorSetName": "バーラ"
+   "armorSetName": "バーラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 530,
@@ -19740,7 +23474,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 137,
-   "armorSetName": "バーラ"
+   "armorSetName": "バーラ",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 531,
@@ -19778,7 +23514,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 138,
-   "armorSetName": "ブラチカα"
+   "armorSetName": "ブラチカα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 532,
@@ -19814,7 +23556,13 @@
     33
    ],
    "armorSetId": 139,
-   "armorSetName": "護雷顎竜β"
+   "armorSetName": "護雷顎竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 533,
@@ -19850,7 +23598,13 @@
     33
    ],
    "armorSetId": 139,
-   "armorSetName": "護雷顎竜β"
+   "armorSetName": "護雷顎竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 534,
@@ -19886,7 +23640,13 @@
     33
    ],
    "armorSetId": 139,
-   "armorSetName": "護雷顎竜β"
+   "armorSetName": "護雷顎竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 535,
@@ -19922,7 +23682,13 @@
     33
    ],
    "armorSetId": 139,
-   "armorSetName": "護雷顎竜β"
+   "armorSetName": "護雷顎竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 536,
@@ -19962,7 +23728,13 @@
     33
    ],
    "armorSetId": 139,
-   "armorSetName": "護雷顎竜β"
+   "armorSetName": "護雷顎竜β",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 537,
@@ -19996,7 +23768,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 140,
-   "armorSetName": "ピラギル"
+   "armorSetName": "ピラギル",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 538,
@@ -20036,7 +23810,13 @@
     7
    ],
    "armorSetId": 141,
-   "armorSetName": "レウスα"
+   "armorSetName": "レウスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 539,
@@ -20076,7 +23856,13 @@
     7
    ],
    "armorSetId": 141,
-   "armorSetName": "レウスα"
+   "armorSetName": "レウスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 540,
@@ -20116,7 +23902,13 @@
     7
    ],
    "armorSetId": 141,
-   "armorSetName": "レウスα"
+   "armorSetName": "レウスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 541,
@@ -20156,7 +23948,13 @@
     7
    ],
    "armorSetId": 141,
-   "armorSetName": "レウスα"
+   "armorSetName": "レウスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 542,
@@ -20196,7 +23994,13 @@
     7
    ],
    "armorSetId": 141,
-   "armorSetName": "レウスα"
+   "armorSetName": "レウスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 543,
@@ -20232,7 +24036,13 @@
     22
    ],
    "armorSetId": 142,
-   "armorSetName": "シーウーβ"
+   "armorSetName": "シーウーβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 544,
@@ -20268,7 +24078,13 @@
     22
    ],
    "armorSetId": 142,
-   "armorSetName": "シーウーβ"
+   "armorSetName": "シーウーβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 545,
@@ -20304,7 +24120,13 @@
     22
    ],
    "armorSetId": 142,
-   "armorSetName": "シーウーβ"
+   "armorSetName": "シーウーβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    1
+   ]
   },
   {
    "id": 546,
@@ -20344,7 +24166,13 @@
     22
    ],
    "armorSetId": 142,
-   "armorSetName": "シーウーβ"
+   "armorSetName": "シーウーβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 547,
@@ -20380,7 +24208,13 @@
     22
    ],
    "armorSetId": 142,
-   "armorSetName": "シーウーβ"
+   "armorSetName": "シーウーβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    1
+   ]
   },
   {
    "id": 548,
@@ -20414,7 +24248,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 143,
-   "armorSetName": "レザーα"
+   "armorSetName": "レザーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 549,
@@ -20452,7 +24292,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 143,
-   "armorSetName": "レザーα"
+   "armorSetName": "レザーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 550,
@@ -20490,7 +24336,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 143,
-   "armorSetName": "レザーα"
+   "armorSetName": "レザーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 551,
@@ -20524,7 +24376,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 143,
-   "armorSetName": "レザーα"
+   "armorSetName": "レザーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 552,
@@ -20562,7 +24420,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 143,
-   "armorSetName": "レザーα"
+   "armorSetName": "レザーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 553,
@@ -20596,7 +24460,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 144,
-   "armorSetName": "アズズα"
+   "armorSetName": "アズズα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 554,
@@ -20630,7 +24500,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 144,
-   "armorSetName": "アズズα"
+   "armorSetName": "アズズα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 555,
@@ -20664,7 +24540,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 144,
-   "armorSetName": "アズズα"
+   "armorSetName": "アズズα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 556,
@@ -20702,7 +24584,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 145,
-   "armorSetName": "ダマスクα"
+   "armorSetName": "ダマスクα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 557,
@@ -20740,7 +24628,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 145,
-   "armorSetName": "ダマスクα"
+   "armorSetName": "ダマスクα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 558,
@@ -20778,7 +24672,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 145,
-   "armorSetName": "ダマスクα"
+   "armorSetName": "ダマスクα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 559,
@@ -20816,7 +24716,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 145,
-   "armorSetName": "ダマスクα"
+   "armorSetName": "ダマスクα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 560,
@@ -20854,7 +24760,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 145,
-   "armorSetName": "ダマスクα"
+   "armorSetName": "ダマスクα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 561,
@@ -20892,7 +24804,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 146,
-   "armorSetName": "アジャラα"
+   "armorSetName": "アジャラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 562,
@@ -20930,7 +24848,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 146,
-   "armorSetName": "アジャラα"
+   "armorSetName": "アジャラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 563,
@@ -20968,7 +24892,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 146,
-   "armorSetName": "アジャラα"
+   "armorSetName": "アジャラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 564,
@@ -21006,7 +24936,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 146,
-   "armorSetName": "アジャラα"
+   "armorSetName": "アジャラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 565,
@@ -21044,7 +24980,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 146,
-   "armorSetName": "アジャラα"
+   "armorSetName": "アジャラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 566,
@@ -21084,7 +25026,13 @@
     3
    ],
    "armorSetId": 147,
-   "armorSetName": "ゴアβ"
+   "armorSetName": "ゴアβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 567,
@@ -21120,7 +25068,13 @@
     3
    ],
    "armorSetId": 147,
-   "armorSetName": "ゴアβ"
+   "armorSetName": "ゴアβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 568,
@@ -21160,7 +25114,13 @@
     3
    ],
    "armorSetId": 147,
-   "armorSetName": "ゴアβ"
+   "armorSetName": "ゴアβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 569,
@@ -21196,7 +25156,13 @@
     3
    ],
    "armorSetId": 147,
-   "armorSetName": "ゴアβ"
+   "armorSetName": "ゴアβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 570,
@@ -21236,7 +25202,13 @@
     3
    ],
    "armorSetId": 147,
-   "armorSetName": "ゴアβ"
+   "armorSetName": "ゴアβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 571,
@@ -21270,7 +25242,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 148,
-   "armorSetName": "チェーンα"
+   "armorSetName": "チェーンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 572,
@@ -21308,7 +25286,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 148,
-   "armorSetName": "チェーンα"
+   "armorSetName": "チェーンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 573,
@@ -21346,7 +25330,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 148,
-   "armorSetName": "チェーンα"
+   "armorSetName": "チェーンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 574,
@@ -21384,7 +25374,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 148,
-   "armorSetName": "チェーンα"
+   "armorSetName": "チェーンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 575,
@@ -21418,7 +25414,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 148,
-   "armorSetName": "チェーンα"
+   "armorSetName": "チェーンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 576,
@@ -21452,7 +25454,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 149,
-   "armorSetName": "プポル"
+   "armorSetName": "プポル",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 577,
@@ -21486,7 +25490,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 149,
-   "armorSetName": "プポル"
+   "armorSetName": "プポル",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 578,
@@ -21524,7 +25530,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 149,
-   "armorSetName": "プポル"
+   "armorSetName": "プポル",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 579,
@@ -21562,7 +25570,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 149,
-   "armorSetName": "プポル"
+   "armorSetName": "プポル",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 580,
@@ -21596,7 +25606,9 @@
    },
    "setBonusIds": [],
    "armorSetId": 149,
-   "armorSetName": "プポル"
+   "armorSetName": "プポル",
+   "limitBreakable": false,
+   "slotsLimitBreak": null
   },
   {
    "id": 581,
@@ -21634,7 +25646,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 150,
-   "armorSetName": "ネラチカα"
+   "armorSetName": "ネラチカα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 582,
@@ -21668,7 +25686,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 151,
-   "armorSetName": "竜王の隻眼α"
+   "armorSetName": "竜王の隻眼α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 583,
@@ -21702,7 +25726,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 152,
-   "armorSetName": "プポルα"
+   "armorSetName": "プポルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 584,
@@ -21740,7 +25770,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 152,
-   "armorSetName": "プポルα"
+   "armorSetName": "プポルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 585,
@@ -21778,7 +25814,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 152,
-   "armorSetName": "プポルα"
+   "armorSetName": "プポルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 586,
@@ -21816,7 +25858,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 152,
-   "armorSetName": "プポルα"
+   "armorSetName": "プポルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 587,
@@ -21854,7 +25902,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 152,
-   "armorSetName": "プポルα"
+   "armorSetName": "プポルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 588,
@@ -21888,7 +25942,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 153,
-   "armorSetName": "豪鬼α"
+   "armorSetName": "豪鬼α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    1
+   ]
   },
   {
    "id": 589,
@@ -21922,7 +25982,10 @@
    },
    "setBonusIds": [],
    "armorSetId": 153,
-   "armorSetName": "豪鬼α"
+   "armorSetName": "豪鬼α",
+   "limitBreakable": true,
+   "slotsLimitBreak": null,
+   "slotsLimitBreakNote": "限界突破後のスロットが出典で食い違う (wiki ③②ー / Game8 ③②①)。同じく先頭が Lv3 のミツネ防具は両方の出典で「余りは次の枠に回らない」なので ③②ー の可能性が高いが、ゲームで確かめるまで空けておく"
   },
   {
    "id": 590,
@@ -21956,7 +26019,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 153,
-   "armorSetName": "豪鬼α"
+   "armorSetName": "豪鬼α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    1
+   ]
   },
   {
    "id": 591,
@@ -21990,7 +26059,10 @@
    },
    "setBonusIds": [],
    "armorSetId": 153,
-   "armorSetName": "豪鬼α"
+   "armorSetName": "豪鬼α",
+   "limitBreakable": true,
+   "slotsLimitBreak": null,
+   "slotsLimitBreakNote": "限界突破後のスロットが出典で食い違う (wiki ③②ー / Game8 ③②①)。同じく先頭が Lv3 のミツネ防具は両方の出典で「余りは次の枠に回らない」なので ③②ー の可能性が高いが、ゲームで確かめるまで空けておく"
   },
   {
    "id": 592,
@@ -22024,7 +26096,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 153,
-   "armorSetName": "豪鬼α"
+   "armorSetName": "豪鬼α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    1
+   ]
   },
   {
    "id": 593,
@@ -22058,7 +26136,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 154,
-   "armorSetName": "アイルーフェイクα"
+   "armorSetName": "アイルーフェイクα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 594,
@@ -22098,7 +26182,13 @@
     34
    ],
    "armorSetId": 155,
-   "armorSetName": "レギオスβ"
+   "armorSetName": "レギオスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 595,
@@ -22138,7 +26228,13 @@
     34
    ],
    "armorSetId": 155,
-   "armorSetName": "レギオスβ"
+   "armorSetName": "レギオスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 596,
@@ -22174,7 +26270,13 @@
     34
    ],
    "armorSetId": 155,
-   "armorSetName": "レギオスβ"
+   "armorSetName": "レギオスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 597,
@@ -22214,7 +26316,13 @@
     34
    ],
    "armorSetId": 155,
-   "armorSetName": "レギオスβ"
+   "armorSetName": "レギオスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 598,
@@ -22254,7 +26362,13 @@
     34
    ],
    "armorSetId": 155,
-   "armorSetName": "レギオスβ"
+   "armorSetName": "レギオスβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    0,
+    0
+   ]
   },
   {
    "id": 599,
@@ -22288,7 +26402,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 156,
-   "armorSetName": "アンダーリムグラスα"
+   "armorSetName": "アンダーリムグラスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 600,
@@ -22328,7 +26448,13 @@
     36
    ],
    "armorSetId": 158,
-   "armorSetName": "アーフィα"
+   "armorSetName": "アーフィα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 601,
@@ -22368,7 +26494,13 @@
     36
    ],
    "armorSetId": 158,
-   "armorSetName": "アーフィα"
+   "armorSetName": "アーフィα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 602,
@@ -22404,7 +26536,13 @@
     36
    ],
    "armorSetId": 158,
-   "armorSetName": "アーフィα"
+   "armorSetName": "アーフィα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 603,
@@ -22448,7 +26586,13 @@
     36
    ],
    "armorSetId": 158,
-   "armorSetName": "アーフィα"
+   "armorSetName": "アーフィα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 604,
@@ -22492,7 +26636,13 @@
     36
    ],
    "armorSetId": 158,
-   "armorSetName": "アーフィα"
+   "armorSetName": "アーフィα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 605,
@@ -22530,7 +26680,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 159,
-   "armorSetName": "旅立ちのホークハートα"
+   "armorSetName": "旅立ちのホークハートα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 606,
@@ -22568,7 +26724,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 160,
-   "armorSetName": "にくきゅうミトンα"
+   "armorSetName": "にくきゅうミトンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    0,
+    0
+   ]
   },
   {
    "id": 607,
@@ -22606,7 +26768,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 161,
-   "armorSetName": "一枚羽根の首飾りα"
+   "armorSetName": "一枚羽根の首飾りα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 608,
@@ -22650,7 +26818,13 @@
     10
    ],
    "armorSetId": 162,
-   "armorSetName": "ドシャグマフェイクα"
+   "armorSetName": "ドシャグマフェイクα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 609,
@@ -22686,7 +26860,13 @@
     37
    ],
    "armorSetId": 163,
-   "armorSetName": "ラギアβ"
+   "armorSetName": "ラギアβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 610,
@@ -22726,7 +26906,13 @@
     37
    ],
    "armorSetId": 163,
-   "armorSetName": "ラギアβ"
+   "armorSetName": "ラギアβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 611,
@@ -22766,7 +26952,13 @@
     37
    ],
    "armorSetId": 163,
-   "armorSetName": "ラギアβ"
+   "armorSetName": "ラギアβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 612,
@@ -22806,7 +26998,13 @@
     37
    ],
    "armorSetId": 163,
-   "armorSetName": "ラギアβ"
+   "armorSetName": "ラギアβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 613,
@@ -22846,7 +27044,13 @@
     37
    ],
    "armorSetId": 163,
-   "armorSetName": "ラギアβ"
+   "armorSetName": "ラギアβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    0,
+    0
+   ]
   },
   {
    "id": 614,
@@ -22886,7 +27090,13 @@
     18
    ],
    "armorSetId": 164,
-   "armorSetName": "トゥナムルγ"
+   "armorSetName": "トゥナムルγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 615,
@@ -22926,7 +27136,13 @@
     18
    ],
    "armorSetId": 164,
-   "armorSetName": "トゥナムルγ"
+   "armorSetName": "トゥナムルγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 616,
@@ -22966,7 +27182,13 @@
     18
    ],
    "armorSetId": 164,
-   "armorSetName": "トゥナムルγ"
+   "armorSetName": "トゥナムルγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 617,
@@ -23002,7 +27224,13 @@
     18
    ],
    "armorSetId": 164,
-   "armorSetName": "トゥナムルγ"
+   "armorSetName": "トゥナムルγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 618,
@@ -23042,7 +27270,13 @@
     18
    ],
    "armorSetId": 164,
-   "armorSetName": "トゥナムルγ"
+   "armorSetName": "トゥナムルγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 619,
@@ -23076,7 +27310,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 165,
-   "armorSetName": "ハートグラスα"
+   "armorSetName": "ハートグラスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 620,
@@ -23116,7 +27356,13 @@
     37
    ],
    "armorSetId": 166,
-   "armorSetName": "ラギアα"
+   "armorSetName": "ラギアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 621,
@@ -23160,7 +27406,13 @@
     37
    ],
    "armorSetId": 166,
-   "armorSetName": "ラギアα"
+   "armorSetName": "ラギアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 622,
@@ -23204,7 +27456,13 @@
     37
    ],
    "armorSetId": 166,
-   "armorSetName": "ラギアα"
+   "armorSetName": "ラギアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 623,
@@ -23248,7 +27506,13 @@
     37
    ],
    "armorSetId": 166,
-   "armorSetName": "ラギアα"
+   "armorSetName": "ラギアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 624,
@@ -23292,7 +27556,13 @@
     37
    ],
    "armorSetId": 166,
-   "armorSetName": "ラギアα"
+   "armorSetName": "ラギアα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 625,
@@ -23326,7 +27596,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 167,
-   "armorSetName": "ダイバーα"
+   "armorSetName": "ダイバーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 626,
@@ -23364,7 +27640,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 167,
-   "armorSetName": "ダイバーα"
+   "armorSetName": "ダイバーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 627,
@@ -23402,7 +27684,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 167,
-   "armorSetName": "ダイバーα"
+   "armorSetName": "ダイバーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 628,
@@ -23440,7 +27728,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 167,
-   "armorSetName": "ダイバーα"
+   "armorSetName": "ダイバーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    2
+   ]
   },
   {
    "id": 629,
@@ -23478,7 +27772,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 167,
-   "armorSetName": "ダイバーα"
+   "armorSetName": "ダイバーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 630,
@@ -23522,7 +27822,13 @@
     34
    ],
    "armorSetId": 168,
-   "armorSetName": "レギオスα"
+   "armorSetName": "レギオスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 631,
@@ -23566,7 +27872,13 @@
     34
    ],
    "armorSetId": 168,
-   "armorSetName": "レギオスα"
+   "armorSetName": "レギオスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    0,
+    0
+   ]
   },
   {
    "id": 632,
@@ -23606,7 +27918,13 @@
     34
    ],
    "armorSetId": 168,
-   "armorSetName": "レギオスα"
+   "armorSetName": "レギオスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 633,
@@ -23650,7 +27968,13 @@
     34
    ],
    "armorSetId": 168,
-   "armorSetName": "レギオスα"
+   "armorSetName": "レギオスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 634,
@@ -23694,7 +28018,13 @@
     34
    ],
    "armorSetId": 168,
-   "armorSetName": "レギオスα"
+   "armorSetName": "レギオスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 635,
@@ -23732,7 +28062,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 169,
-   "armorSetName": "ハーベストα"
+   "armorSetName": "ハーベストα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 636,
@@ -23770,7 +28106,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 169,
-   "armorSetName": "ハーベストα"
+   "armorSetName": "ハーベストα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 637,
@@ -23812,7 +28154,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 169,
-   "armorSetName": "ハーベストα"
+   "armorSetName": "ハーベストα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 638,
@@ -23854,7 +28202,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 169,
-   "armorSetName": "ハーベストα"
+   "armorSetName": "ハーベストα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 639,
@@ -23892,7 +28246,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 169,
-   "armorSetName": "ハーベストα"
+   "armorSetName": "ハーベストα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 640,
@@ -23932,7 +28292,13 @@
     38
    ],
    "armorSetId": 170,
-   "armorSetName": "オメガコスチュームα"
+   "armorSetName": "オメガコスチュームα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 641,
@@ -23968,7 +28334,13 @@
     38
    ],
    "armorSetId": 170,
-   "armorSetName": "オメガコスチュームα"
+   "armorSetName": "オメガコスチュームα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 642,
@@ -24008,7 +28380,13 @@
     38
    ],
    "armorSetId": 170,
-   "armorSetName": "オメガコスチュームα"
+   "armorSetName": "オメガコスチュームα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 643,
@@ -24048,7 +28426,13 @@
     38
    ],
    "armorSetId": 170,
-   "armorSetName": "オメガコスチュームα"
+   "armorSetName": "オメガコスチュームα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 644,
@@ -24084,7 +28468,13 @@
     38
    ],
    "armorSetId": 170,
-   "armorSetName": "オメガコスチュームα"
+   "armorSetName": "オメガコスチュームα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 645,
@@ -24122,7 +28512,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 172,
-   "armorSetName": "スカルフェイスα"
+   "armorSetName": "スカルフェイスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 646,
@@ -24164,7 +28560,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 173,
-   "armorSetName": "ゼレドロα"
+   "armorSetName": "ゼレドロα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 647,
@@ -24206,7 +28608,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 173,
-   "armorSetName": "ゼレドロα"
+   "armorSetName": "ゼレドロα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 648,
@@ -24242,7 +28650,13 @@
     32
    ],
    "armorSetId": 174,
-   "armorSetName": "エグゾルスγ"
+   "armorSetName": "エグゾルスγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 649,
@@ -24278,7 +28692,13 @@
     32
    ],
    "armorSetId": 174,
-   "armorSetName": "エグゾルスγ"
+   "armorSetName": "エグゾルスγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 650,
@@ -24314,7 +28734,13 @@
     32
    ],
    "armorSetId": 174,
-   "armorSetName": "エグゾルスγ"
+   "armorSetName": "エグゾルスγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 651,
@@ -24354,7 +28780,13 @@
     32
    ],
    "armorSetId": 174,
-   "armorSetName": "エグゾルスγ"
+   "armorSetName": "エグゾルスγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 652,
@@ -24398,7 +28830,13 @@
     32
    ],
    "armorSetId": 174,
-   "armorSetName": "エグゾルスγ"
+   "armorSetName": "エグゾルスγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 653,
@@ -24438,7 +28876,13 @@
     39
    ],
    "armorSetId": 176,
-   "armorSetName": "ベイルアーマーα"
+   "armorSetName": "ベイルアーマーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 654,
@@ -24478,7 +28922,13 @@
     39
    ],
    "armorSetId": 176,
-   "armorSetName": "ベイルアーマーα"
+   "armorSetName": "ベイルアーマーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 655,
@@ -24522,7 +28972,13 @@
     39
    ],
    "armorSetId": 176,
-   "armorSetName": "ベイルアーマーα"
+   "armorSetName": "ベイルアーマーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 656,
@@ -24562,7 +29018,13 @@
     39
    ],
    "armorSetId": 176,
-   "armorSetName": "ベイルアーマーα"
+   "armorSetName": "ベイルアーマーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 657,
@@ -24602,7 +29064,13 @@
     39
    ],
    "armorSetId": 176,
-   "armorSetName": "ベイルアーマーα"
+   "armorSetName": "ベイルアーマーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 658,
@@ -24644,7 +29112,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 177,
-   "armorSetName": "キトゥンアイα"
+   "armorSetName": "キトゥンアイα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 659,
@@ -24688,7 +29162,13 @@
     40
    ],
    "armorSetId": 178,
-   "armorSetName": "ゴストゥラα"
+   "armorSetName": "ゴストゥラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 660,
@@ -24732,7 +29212,13 @@
     40
    ],
    "armorSetId": 178,
-   "armorSetName": "ゴストゥラα"
+   "armorSetName": "ゴストゥラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 661,
@@ -24772,7 +29258,13 @@
     40
    ],
    "armorSetId": 178,
-   "armorSetName": "ゴストゥラα"
+   "armorSetName": "ゴストゥラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 662,
@@ -24812,7 +29304,13 @@
     40
    ],
    "armorSetId": 178,
-   "armorSetName": "ゴストゥラα"
+   "armorSetName": "ゴストゥラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 663,
@@ -24852,7 +29350,13 @@
     40
    ],
    "armorSetId": 178,
-   "armorSetName": "ゴストゥラα"
+   "armorSetName": "ゴストゥラα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 664,
@@ -24890,7 +29394,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 179,
-   "armorSetName": "ティアドロップグラスα"
+   "armorSetName": "ティアドロップグラスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 665,
@@ -24924,7 +29434,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 180,
-   "armorSetName": "オリオンα"
+   "armorSetName": "オリオンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    1
+   ]
   },
   {
    "id": 666,
@@ -24962,7 +29478,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 180,
-   "armorSetName": "オリオンα"
+   "armorSetName": "オリオンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    2
+   ]
   },
   {
    "id": 667,
@@ -25000,7 +29522,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 180,
-   "armorSetName": "オリオンα"
+   "armorSetName": "オリオンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 668,
@@ -25038,7 +29566,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 180,
-   "armorSetName": "オリオンα"
+   "armorSetName": "オリオンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    2
+   ]
   },
   {
    "id": 669,
@@ -25076,7 +29610,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 180,
-   "armorSetName": "オリオンα"
+   "armorSetName": "オリオンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 670,
@@ -25117,7 +29657,13 @@
     29
    ],
    "armorSetId": 181,
-   "armorSetName": "ゴグα"
+   "armorSetName": "ゴグα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 671,
@@ -25162,7 +29708,13 @@
     22
    ],
    "armorSetId": 181,
-   "armorSetName": "ゴグα"
+   "armorSetName": "ゴグα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 672,
@@ -25203,7 +29755,13 @@
     33
    ],
    "armorSetId": 181,
-   "armorSetName": "ゴグα"
+   "armorSetName": "ゴグα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 673,
@@ -25244,7 +29802,13 @@
     31
    ],
    "armorSetId": 181,
-   "armorSetName": "ゴグα"
+   "armorSetName": "ゴグα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 674,
@@ -25285,7 +29849,13 @@
     10
    ],
    "armorSetId": 181,
-   "armorSetName": "ゴグα"
+   "armorSetName": "ゴグα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 675,
@@ -25326,7 +29896,13 @@
     15
    ],
    "armorSetId": 182,
-   "armorSetName": "ゴグβ"
+   "armorSetName": "ゴグβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 676,
@@ -25371,7 +29947,13 @@
     7
    ],
    "armorSetId": 182,
-   "armorSetName": "ゴグβ"
+   "armorSetName": "ゴグβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 677,
@@ -25412,7 +29994,13 @@
     4
    ],
    "armorSetId": 182,
-   "armorSetName": "ゴグβ"
+   "armorSetName": "ゴグβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 678,
@@ -25453,7 +30041,13 @@
     26
    ],
    "armorSetId": 182,
-   "armorSetName": "ゴグβ"
+   "armorSetName": "ゴグβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 679,
@@ -25494,7 +30088,13 @@
     24
    ],
    "armorSetId": 182,
-   "armorSetName": "ゴグβ"
+   "armorSetName": "ゴグβ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 680,
@@ -25536,7 +30136,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 183,
-   "armorSetName": "はりきりモリバーα"
+   "armorSetName": "はりきりモリバーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 681,
@@ -25574,7 +30180,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 184,
-   "armorSetName": "祝福の腰飾りα"
+   "armorSetName": "祝福の腰飾りα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 682,
@@ -25610,7 +30222,13 @@
     16
    ],
    "armorSetId": 185,
-   "armorSetName": "ダハディラγ"
+   "armorSetName": "ダハディラγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 683,
@@ -25646,7 +30264,13 @@
     16
    ],
    "armorSetId": 185,
-   "armorSetName": "ダハディラγ"
+   "armorSetName": "ダハディラγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 684,
@@ -25686,7 +30310,13 @@
     16
    ],
    "armorSetId": 185,
-   "armorSetName": "ダハディラγ"
+   "armorSetName": "ダハディラγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 685,
@@ -25726,7 +30356,13 @@
     16
    ],
    "armorSetId": 185,
-   "armorSetName": "ダハディラγ"
+   "armorSetName": "ダハディラγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    0,
+    0
+   ]
   },
   {
    "id": 686,
@@ -25766,7 +30402,13 @@
     16
    ],
    "armorSetId": 185,
-   "armorSetName": "ダハディラγ"
+   "armorSetName": "ダハディラγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 687,
@@ -25800,7 +30442,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 186,
-   "armorSetName": "アナライズアイα"
+   "armorSetName": "アナライズアイα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    0
+   ]
   },
   {
    "id": 688,
@@ -25834,7 +30482,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 188,
-   "armorSetName": "ミラーバイザーα"
+   "armorSetName": "ミラーバイザーα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 689,
@@ -25874,7 +30528,13 @@
     41
    ],
    "armorSetId": 189,
-   "armorSetName": "セレモニアルα"
+   "armorSetName": "セレモニアルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   },
   {
    "id": 690,
@@ -25918,7 +30578,13 @@
     41
    ],
    "armorSetId": 189,
-   "armorSetName": "セレモニアルα"
+   "armorSetName": "セレモニアルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    1
+   ]
   },
   {
    "id": 691,
@@ -25958,7 +30624,13 @@
     41
    ],
    "armorSetId": 189,
-   "armorSetName": "セレモニアルα"
+   "armorSetName": "セレモニアルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 692,
@@ -26002,7 +30674,13 @@
     41
    ],
    "armorSetId": 189,
-   "armorSetName": "セレモニアルα"
+   "armorSetName": "セレモニアルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 693,
@@ -26042,7 +30720,13 @@
     41
    ],
    "armorSetId": 189,
-   "armorSetName": "セレモニアルα"
+   "armorSetName": "セレモニアルα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 694,
@@ -26086,7 +30770,13 @@
     37
    ],
    "armorSetId": 190,
-   "armorSetName": "蒼世ノ侍α"
+   "armorSetName": "蒼世ノ侍α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    1
+   ]
   },
   {
    "id": 695,
@@ -26130,7 +30820,13 @@
     37
    ],
    "armorSetId": 190,
-   "armorSetName": "蒼世ノ侍α"
+   "armorSetName": "蒼世ノ侍α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 696,
@@ -26174,7 +30870,13 @@
     37
    ],
    "armorSetId": 190,
-   "armorSetName": "蒼世ノ侍α"
+   "armorSetName": "蒼世ノ侍α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    0,
+    0
+   ]
   },
   {
    "id": 697,
@@ -26218,7 +30920,13 @@
     37
    ],
    "armorSetId": 190,
-   "armorSetName": "蒼世ノ侍α"
+   "armorSetName": "蒼世ノ侍α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 698,
@@ -26262,7 +30970,13 @@
     37
    ],
    "armorSetId": 190,
-   "armorSetName": "蒼世ノ侍α"
+   "armorSetName": "蒼世ノ侍α",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 699,
@@ -26300,7 +31014,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 191,
-   "armorSetName": "ププロフェイクα"
+   "armorSetName": "ププロフェイクα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 700,
@@ -26336,7 +31056,13 @@
     3
    ],
    "armorSetId": 192,
-   "armorSetName": "クイーンα"
+   "armorSetName": "クイーンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    1
+   ]
   },
   {
    "id": 701,
@@ -26380,7 +31106,13 @@
     3
    ],
    "armorSetId": 192,
-   "armorSetName": "クイーンα"
+   "armorSetName": "クイーンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 702,
@@ -26424,7 +31156,13 @@
     3
    ],
    "armorSetId": 192,
-   "armorSetName": "クイーンα"
+   "armorSetName": "クイーンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    0,
+    0
+   ]
   },
   {
    "id": 703,
@@ -26464,7 +31202,13 @@
     3
    ],
    "armorSetId": 192,
-   "armorSetName": "クイーンα"
+   "armorSetName": "クイーンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    0,
+    0,
+    0
+   ]
   },
   {
    "id": 704,
@@ -26504,7 +31248,13 @@
     3
    ],
    "armorSetId": 192,
-   "armorSetName": "クイーンα"
+   "armorSetName": "クイーンα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 705,
@@ -26540,7 +31290,13 @@
     23
    ],
    "armorSetId": 193,
-   "armorSetName": "シュバルカγ"
+   "armorSetName": "シュバルカγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    1,
+    0
+   ]
   },
   {
    "id": 706,
@@ -26580,7 +31336,13 @@
     23
    ],
    "armorSetId": 193,
-   "armorSetName": "シュバルカγ"
+   "armorSetName": "シュバルカγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 707,
@@ -26620,7 +31382,13 @@
     23
    ],
    "armorSetId": 193,
-   "armorSetName": "シュバルカγ"
+   "armorSetName": "シュバルカγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 708,
@@ -26660,7 +31428,13 @@
     23
    ],
    "armorSetId": 193,
-   "armorSetName": "シュバルカγ"
+   "armorSetName": "シュバルカγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 709,
@@ -26700,7 +31474,13 @@
     23
    ],
    "armorSetId": 193,
-   "armorSetName": "シュバルカγ"
+   "armorSetName": "シュバルカγ",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    3,
+    0
+   ]
   },
   {
    "id": 710,
@@ -26738,7 +31518,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 194,
-   "armorSetName": "フルドレスα"
+   "armorSetName": "フルドレスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    0
+   ]
   },
   {
    "id": 711,
@@ -26776,7 +31562,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 194,
-   "armorSetName": "フルドレスα"
+   "armorSetName": "フルドレスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    2,
+    2,
+    1
+   ]
   },
   {
    "id": 712,
@@ -26814,7 +31606,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 194,
-   "armorSetName": "フルドレスα"
+   "armorSetName": "フルドレスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    1,
+    1,
+    0
+   ]
   },
   {
    "id": 713,
@@ -26852,7 +31650,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 194,
-   "armorSetName": "フルドレスα"
+   "armorSetName": "フルドレスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    1,
+    0
+   ]
   },
   {
    "id": 714,
@@ -26890,7 +31694,13 @@
    },
    "setBonusIds": [],
    "armorSetId": 194,
-   "armorSetName": "フルドレスα"
+   "armorSetName": "フルドレスα",
+   "limitBreakable": true,
+   "slotsLimitBreak": [
+    3,
+    2,
+    1
+   ]
   }
  ]
 }

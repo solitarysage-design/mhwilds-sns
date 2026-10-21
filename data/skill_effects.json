@@ -9,7 +9,7 @@
    "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/database-20261020-070700-4a99b26/MHWS-in-json/natives/STM/GameDesign/Enemy/CommonData/Data/EmCommonData.user.3.json",
    "data/skills.json"
   ],
-  "generatedAt": "2026-10-21T03:14:38Z",
+  "generatedAt": "2026-10-21T06:04:35Z",
   "gameVersion": "1.042",
   "gameDataBuild": "1.42.0.2",
   "license": "ゲームデータの抽出は dzxrly/MHWS-in-json (MIT)。数値はカプコンのゲームデータ由来。",
@@ -27,8 +27,8 @@
   "criticalNegative": 0.75,
   "affinityMin": -100,
   "affinityMax": 100,
-  "elementCapRate": 2.3,
-  "elementCapAdd": 400.0,
+  "elementRateLimit": 2.3,
+  "elementAddLimit": 400.0,
   "physicalRateLimit": 4.0,
   "physicalAddLimit": 400.0,
   "weakPointMinHitzone": 45,
@@ -70,7 +70,486 @@
    "element": "表示値 (ダメージ計算では /10)。elementAdd も表示値",
    "affinity": "%"
   },
-  "note": "属性の上限は max(元の値 + elementCapAdd, 元の値 × elementCapRate) と扱う (PlayerStatusParam._ElementAttack_RateLimit / _ElementAttack_AddLimit)。"
+  "conditionGroups": [
+   {
+    "id": "hpFull",
+    "label": "体力が満タン",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [
+     "redHp",
+     "hpLow"
+    ],
+    "note": "体力が満タンのときは赤ゲージも体力 35% 以下も起きないので、同時には発動しない扱い。",
+    "skills": [
+     {
+      "skillId": 154,
+      "name": "フルチャージ"
+     }
+    ]
+   },
+   {
+    "id": "redHp",
+    "label": "体力ゲージに赤い部分がある",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [
+     "hpFull"
+    ],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 123,
+      "name": "逆恨み"
+     }
+    ]
+   },
+   {
+    "id": "hpLow",
+    "label": "体力が 35% 以下",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [
+     "hpFull"
+    ],
+    "note": "赤ゲージありとは同時に起きてよい (体力が満タンでないときだけ起きる)。",
+    "skills": [
+     {
+      "skillId": 87,
+      "name": "火事場力"
+     }
+    ]
+   },
+   {
+    "id": "enraged",
+    "label": "モンスターが怒っている",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 144,
+      "name": "挑戦者"
+     },
+     {
+      "skillId": 178,
+      "name": "巨戟龍の黙示録"
+     }
+    ]
+   },
+   {
+    "id": "chain",
+    "label": "連撃の段階",
+    "type": "categorical",
+    "states": [
+     {
+      "id": "none",
+      "label": "未発動"
+     },
+     {
+      "id": "hit1to4",
+      "label": "1〜4 ヒット段"
+     },
+     {
+      "id": "hit5plus",
+      "label": "5 ヒット以降段"
+     }
+    ],
+    "offState": "none",
+    "defaultUptime": {
+     "hit1to4": 0.5,
+     "hit5plus": 0.5
+    },
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "既定の値 (各 50%) は仮置きで、攻撃を当て続けている前提です。当てていない時間があるなら、その分を未発動に回してください。",
+    "skills": [
+     {
+      "skillId": 95,
+      "name": "連撃"
+     },
+     {
+      "skillId": 115,
+      "name": "兇爪竜の力"
+     }
+    ]
+   },
+   {
+    "id": "frenzy",
+    "label": "狂竜症",
+    "type": "categorical",
+    "states": [
+     {
+      "id": "none",
+      "label": "かかっていない"
+     },
+     {
+      "id": "infected",
+      "label": "感染中"
+     },
+     {
+      "id": "overcome",
+      "label": "克服した後"
+     }
+    ],
+    "offState": "none",
+    "defaultUptime": {
+     "infected": 0.5,
+     "overcome": 0.5
+    },
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "黒蝕竜の力は感染中と克服後で効果が違う。無我の境地は克服後だけ。黒蝕竜の力も狂竜症を使う相手もいないときは、かかっていない (0%) として計算する。",
+    "sources": {
+     "skillIds": [
+      106
+     ],
+     "monsterStatus": [
+      "frenzy"
+     ],
+     "label": "黒蝕竜の力か、狂竜症を使う相手 (ゴア・マガラ・狂竜化した個体)",
+     "inactiveText": "黒蝕竜の力を装備しておらず、相手も狂竜症を使わない (ゴア・マガラや狂竜化した個体ではない) ので、狂竜症にはかからない (0%) として計算しています。"
+    },
+    "skills": [
+     {
+      "skillId": 18,
+      "name": "無我の境地"
+     },
+     {
+      "skillId": 106,
+      "name": "黒蝕竜の力"
+     }
+    ]
+   },
+   {
+    "id": "latentPower",
+    "label": "力の解放が発動中",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 142,
+      "name": "力の解放"
+     }
+    ]
+   },
+   {
+    "id": "staminaFull",
+    "label": "スタミナ満タンをしばらく保っている",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 99,
+      "name": "渾身"
+     }
+    ]
+   },
+   {
+    "id": "afterDraw",
+    "label": "武器を出した直後",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 103,
+      "name": "抜刀術【技】"
+     }
+    ]
+   },
+   {
+    "id": "justGuard",
+    "label": "ジャストガードの後",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 66,
+      "name": "攻めの守勢"
+     }
+    ]
+   },
+   {
+    "id": "afterKnockback",
+    "label": "ふきとばされた後",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 81,
+      "name": "逆襲"
+     }
+    ]
+   },
+   {
+    "id": "monsterPoisonPara",
+    "label": "モンスターが毒か麻痺",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 75,
+      "name": "攻勢"
+     }
+    ]
+   },
+   {
+    "id": "afterAilmentCure",
+    "label": "状態異常・属性やられを治した後",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 13,
+      "name": "災禍転福"
+     }
+    ]
+   },
+   {
+    "id": "afterDodge",
+    "label": "回避でモンスターの攻撃をかわした後",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 120,
+      "name": "巧撃"
+     }
+    ]
+   },
+   {
+    "id": "afterDodgeRepeat",
+    "label": "巧撃の発動中にもう一度かわした後",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "「回避でかわした後」の中の一部。別の条件として入れる (本当は回避の後より短い)。",
+    "skills": [
+     {
+      "skillId": 167,
+      "name": "千刃竜の闘志"
+     }
+    ]
+   },
+   {
+    "id": "afterAmbush",
+    "label": "奇襲攻撃が成功した後",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 67,
+      "name": "急襲"
+     }
+    ]
+   },
+   {
+    "id": "afterSlide",
+    "label": "坂をすべった後",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 89,
+      "name": "革細工の滑性"
+     }
+    ]
+   },
+   {
+    "id": "hunterAilment",
+    "label": "自分が状態異常",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 155,
+      "name": "ヌシの憤激"
+     }
+    ]
+   },
+   {
+    "id": "afterClash",
+    "label": "鍔迫り合い・相殺の後",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 70,
+      "name": "闢獣の力"
+     }
+    ]
+   },
+   {
+    "id": "afterBindOrClash",
+    "label": "拘束・凍結から回復した後、または鍔迫り合いの後",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 62,
+      "name": "凍峰竜の反逆"
+     }
+    ]
+   },
+   {
+    "id": "afterMeal",
+    "label": "こんがり肉などを食べた後",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 25,
+      "name": "暗器蛸の力"
+     }
+    ]
+   },
+   {
+    "id": "wet",
+    "label": "水に濡れている",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 39,
+      "name": "濡れ刃紋"
+     }
+    ]
+   },
+   {
+    "id": "afterDischarge",
+    "label": "追加の雷ダメージが出た後",
+    "type": "binary",
+    "defaultUptime": 0.5,
+    "placeholder": true,
+    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 162,
+      "name": "海竜の渦雷"
+     }
+    ]
+   },
+   {
+    "id": "beforeGuts",
+    "label": "根性【果敢】がまだ発動していない",
+    "type": "binary",
+    "defaultUptime": 1.0,
+    "placeholder": false,
+    "uptimeBasis": "根性が発動するまでは常に有効。発動後は攻撃上昇が消えるので、被弾が多い人は下げる",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 131,
+      "name": "ヌシの魂"
+     }
+    ]
+   },
+   {
+    "id": "festival",
+    "label": "季節の儀式の期間中",
+    "type": "binary",
+    "defaultUptime": 1.0,
+    "placeholder": false,
+    "uptimeBasis": "儀式 (イベント) の期間中のみ。期間外は 0 にする",
+    "exclusiveWith": [],
+    "note": "",
+    "skills": [
+     {
+      "skillId": 34,
+      "name": "花舞の祈り"
+     },
+     {
+      "skillId": 161,
+      "name": "踊火の祈り"
+     },
+     {
+      "skillId": 170,
+      "name": "夢灯の祈り"
+     },
+     {
+      "skillId": 180,
+      "name": "祝謡の祈り"
+     }
+    ]
+   }
+  ],
+  "note": "属性の上限は攻撃と同じく倍率と加算を別々に切る: 元の値 × min(倍率, elementRateLimit) + min(加算, elementAddLimit) (PlayerStatusParam._ElementAttack_RateLimit / _ElementAttack_AddLimit。_PhysicalAttack_RateLimit / _AddLimit と同じ形の名前なので同じ切り方と読んだ。確度 medium)。条件つきスキルの発動率は conditionGroups (条件ごと) に持つ。"
  },
  "effects": {
   "3": {
@@ -79,6 +558,8 @@
    "gameId": -2096489472,
    "gameSkill": "HunterSkill_001",
    "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 1.0,
    "uptimeBasis": "",
    "condition": "",
@@ -211,6 +692,8 @@
    "gameId": -1946345856,
    "gameSkill": "HunterSkill_030",
    "conditional": true,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 0.0,
    "uptimeBasis": "武器出し攻撃だけに効く。代表コンボには含めない",
    "condition": "武器出し攻撃のみ",
@@ -286,6 +769,10 @@
    "gameId": -1700743296,
    "gameSkill": "HunterSkill_113",
    "conditional": true,
+   "conditionGroup": "afterAilmentCure",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "状態異常・属性やられを解除した後の一定時間",
@@ -361,6 +848,10 @@
    "gameId": -1662120192,
    "gameSkill": "HunterSkill_195",
    "conditional": true,
+   "conditionGroup": "frenzy",
+   "activeStates": [
+    "overcome"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "狂竜症の克服状態 (黒蝕竜の力などで感染しているとき)",
@@ -451,6 +942,8 @@
    "gameId": -1607763456,
    "gameSkill": "HunterSkill_002",
    "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 1.0,
    "uptimeBasis": "",
    "condition": "",
@@ -595,6 +1088,8 @@
    "gameId": -1475134080,
    "gameSkill": "HunterSkill_048",
    "conditional": true,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 0.0,
    "uptimeBasis": "未対応",
    "condition": "溜め攻撃",
@@ -670,6 +1165,10 @@
    "gameId": -1468066176,
    "gameSkill": "HunterSkill_188",
    "conditional": true,
+   "conditionGroup": "afterMeal",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "こんがり肉などを食べた後 (_value[0]=180 秒)",
@@ -739,6 +1238,10 @@
    "gameId": -911441792,
    "gameSkill": "HunterSkill_207",
    "conditional": true,
+   "conditionGroup": "festival",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 1.0,
    "uptimeBasis": "儀式 (イベント) の期間中のみ。期間外は 0 にする",
    "condition": "季節の儀式の期間中",
@@ -795,6 +1298,8 @@
    "gameId": -856322816,
    "gameSkill": "HunterSkill_146",
    "conditional": true,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 0.0,
    "uptimeBasis": "未対応 (蓄積しきい値が非公開)",
    "condition": "攻撃でダメージを蓄積させると追加の無属性ダメージ",
@@ -918,6 +1423,10 @@
    "gameId": -847539392,
    "gameSkill": "HunterSkill_202",
    "conditional": true,
+   "conditionGroup": "wet",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "水に濡れている (泡状態なら altAffinityAdd)",
@@ -941,7 +1450,6 @@
      "weakPointAffinity": 0,
      "woundAffinity": 0,
      "critElementMul": null,
-     "whenInactive": {},
      "altAffinityAdd": 7
     },
     {
@@ -962,7 +1470,6 @@
      "weakPointAffinity": 0,
      "woundAffinity": 0,
      "critElementMul": null,
-     "whenInactive": {},
      "altAffinityAdd": 14
     },
     {
@@ -983,7 +1490,6 @@
      "weakPointAffinity": 0,
      "woundAffinity": 0,
      "critElementMul": null,
-     "whenInactive": {},
      "altAffinityAdd": 21
     }
    ],
@@ -999,6 +1505,8 @@
    "gameId": -776946176,
    "gameSkill": "HunterSkill_009",
    "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 1.0,
    "uptimeBasis": "",
    "condition": "",
@@ -1110,6 +1618,8 @@
    "gameId": -562534336,
    "gameSkill": "HunterSkill_005",
    "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 1.0,
    "uptimeBasis": "",
    "condition": "",
@@ -1221,6 +1731,8 @@
    "gameId": -397570464,
    "gameSkill": "HunterSkill_062",
    "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 1.0,
    "uptimeBasis": "",
    "condition": "",
@@ -1382,6 +1894,10 @@
    "gameId": -215826112,
    "gameSkill": "HunterSkill_179",
    "conditional": true,
+   "conditionGroup": "afterBindOrClash",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "拘束・凍結からの回復、鍔迫り合いの後 (_value[0]=90 秒)",
@@ -1451,6 +1967,10 @@
    "gameId": -181127504,
    "gameSkill": "HunterSkill_028",
    "conditional": true,
+   "conditionGroup": "justGuard",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "ジャストガード成功後の一定時間",
@@ -1541,6 +2061,10 @@
    "gameId": -171796848,
    "gameSkill": "HunterSkill_116",
    "conditional": true,
+   "conditionGroup": "afterAmbush",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "奇襲攻撃が成功した後の一定時間 (_value[1]=30 秒)",
@@ -1616,6 +2140,10 @@
    "gameId": -62248528,
    "gameSkill": "HunterSkill_175",
    "conditional": true,
+   "conditionGroup": "afterClash",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "鍔迫り合い・相殺の成功後 (_value[1]=180 秒)",
@@ -1672,6 +2200,8 @@
    "gameId": -3666104,
    "gameSkill": "HunterSkill_180",
    "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 1.0,
    "uptimeBasis": "",
    "condition": "",
@@ -1703,6 +2233,11 @@
       "elementType": "fire",
       "cooldownSec": 2.4,
       "appliesTo": "additionalDamageHits"
+     },
+     "extraDamageAlt": {
+      "fixed": 20.0,
+      "element": 240.0,
+      "reading": "_ScorchingHeatData[3, 4] を (固定, 火属性内部値) と読んだ場合。計算には使わない"
      }
     },
     {
@@ -1731,12 +2266,17 @@
       "elementType": "fire",
       "cooldownSec": 2.4,
       "appliesTo": "additionalDamageHits"
+     },
+     "extraDamageAlt": {
+      "fixed": 30.0,
+      "element": 600.0,
+      "reading": "_ScorchingHeatData[5, 6] を (固定, 火属性内部値) と読んだ場合。計算には使わない"
      }
     }
    ],
-   "source": "SkillData HunterSkill_180 _value[0]=発生確率%。固定/火属性は PlayerSkillParam._ScorchingHeatData[7..10] (上位)",
-   "confidence": "medium",
-   "note": "_ScorchingHeatData=[2.4, 50.0, 100.0, 20.0, 24.0, 30.0, 60.0, 20.0, 60.0, 40.0, 120.0]。[7,8]/[9,10] を上位Ⅰ/Ⅱ の (固定, 火属性内部値) と読んだ (調査値と一致)。先頭 2.4 は再発生までの秒数の候補 (調査値は 2 秒)。SkillData _value[1]=[24, 60] と [1..6] の意味は未確定 (下位の値の可能性)。追加ダメージ = 固定 + 火属性(内部値) × 火肉質/100。クールタイムは秒数が無いので計算に入れていない (多段の技ほど過大評価)。対象ヒットは RCOL の _UseSkillAdditionalDamage が true のものと推定。",
+   "source": "SkillData HunterSkill_180 _value[0]=発生確率%。固定/火属性は PlayerSkillParam._ScorchingHeatData[7..10] (上位) と読んだ",
+   "confidence": "low",
+   "note": "_ScorchingHeatData=[2.4, 50.0, 100.0, 20.0, 24.0, 30.0, 60.0, 20.0, 60.0, 40.0, 120.0]。採用した読み: [7,8]/[9,10] を Ⅰ/Ⅱ の (固定, 火属性内部値) = Ⅰ 20+60 / Ⅱ 40+120 (調査値と一致)。別の読み: [3,4]/[5,6] を Ⅰ/Ⅱ とする = Ⅰ 20+24 / Ⅱ 30+60 (SkillData _value[1]=[24, 60] がこちらの火の値と同じ)。どちらが正しいか決め手が無いので確度は low。levels[].extraDamageAlt に別の読みの値を残した。先頭 2.4 は再発生までの秒数の候補 (調査値は 2 秒)。追加ダメージ = 固定 + 火属性(内部値) × 火肉質/100。クールタイムは秒数が無いので計算に入れていない (多段の技ほど過大評価)。対象ヒットは RCOL の _UseSkillAdditionalDamage が true のものと推定。",
    "verification": [
     {
      "item": "灼熱化 確率",
@@ -1783,6 +2323,8 @@
    "gameId": 1,
    "gameSkill": "HunterSkill_000",
    "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 1.0,
    "uptimeBasis": "",
    "condition": "",
@@ -1945,6 +2487,10 @@
    "gameId": 27684744,
    "gameSkill": "HunterSkill_111",
    "conditional": true,
+   "conditionGroup": "monsterPoisonPara",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "大型モンスターが毒または麻痺状態",
@@ -2058,6 +2604,10 @@
    "gameId": 280489184,
    "gameSkill": "HunterSkill_110",
    "conditional": true,
+   "conditionGroup": "afterKnockback",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "ふきとばされた後の一定時間",
@@ -2148,6 +2698,8 @@
    "gameId": 313598432,
    "gameSkill": "HunterSkill_003",
    "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 1.0,
    "uptimeBasis": "",
    "condition": "",
@@ -2238,6 +2790,8 @@
    "gameId": 397306144,
    "gameSkill": "HunterSkill_020",
    "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 1.0,
    "uptimeBasis": "",
    "condition": "",
@@ -2319,6 +2873,8 @@
    "gameId": 402237312,
    "gameSkill": "HunterSkill_055",
    "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 1.0,
    "uptimeBasis": "",
    "condition": "",
@@ -2357,6 +2913,10 @@
    "gameId": 422666624,
    "gameSkill": "HunterSkill_100",
    "conditional": true,
+   "conditionGroup": "hpLow",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "体力が最大値の 35% 以下",
@@ -2470,6 +3030,10 @@
    "gameId": 451472896,
    "gameSkill": "HunterSkill_165",
    "conditional": true,
+   "conditionGroup": "afterSlide",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "地形を利用したスライディングの後 (_value[0]=60 秒)",
@@ -2507,6 +3071,8 @@
    "gameId": 508916704,
    "gameSkill": "HunterSkill_006",
    "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 1.0,
    "uptimeBasis": "",
    "condition": "",
@@ -2618,6 +3184,8 @@
    "gameId": 539707072,
    "gameSkill": "HunterSkill_176",
    "conditional": true,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 0.0,
    "uptimeBasis": "未対応",
    "condition": "力の解放の発動時間を延長",
@@ -2674,9 +3242,13 @@
    "gameId": 565867136,
    "gameSkill": "HunterSkill_114",
    "conditional": true,
+   "conditionGroup": "chain",
+   "activeStates": [
+    "hit5plus"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
-   "condition": "5 ヒット継続後の強化状態 (非発動側は 1〜4 ヒット目の効果)",
+   "condition": "攻撃を当て続けると段階的に上がる (1〜4 ヒット段 / 5 ヒット以降段)",
    "supported": true,
    "levels": [
     {
@@ -2697,9 +3269,11 @@
      "weakPointAffinity": 0,
      "woundAffinity": 0,
      "critElementMul": null,
-     "whenInactive": {
-      "attackAdd": 5,
-      "elementAdd": 50
+     "byState": {
+      "hit1to4": {
+       "attackAdd": 5,
+       "elementAdd": 50
+      }
      }
     },
     {
@@ -2720,9 +3294,11 @@
      "weakPointAffinity": 0,
      "woundAffinity": 0,
      "critElementMul": null,
-     "whenInactive": {
-      "attackAdd": 5,
-      "elementAdd": 50
+     "byState": {
+      "hit1to4": {
+       "attackAdd": 5,
+       "elementAdd": 50
+      }
      }
     },
     {
@@ -2743,9 +3319,11 @@
      "weakPointAffinity": 0,
      "woundAffinity": 0,
      "critElementMul": null,
-     "whenInactive": {
-      "attackAdd": 5,
-      "elementAdd": 50
+     "byState": {
+      "hit1to4": {
+       "attackAdd": 5,
+       "elementAdd": 50
+      }
      }
     },
     {
@@ -2766,9 +3344,11 @@
      "weakPointAffinity": 0,
      "woundAffinity": 0,
      "critElementMul": null,
-     "whenInactive": {
-      "attackAdd": 5,
-      "elementAdd": 50
+     "byState": {
+      "hit1to4": {
+       "attackAdd": 5,
+       "elementAdd": 50
+      }
      }
     },
     {
@@ -2789,15 +3369,17 @@
      "weakPointAffinity": 0,
      "woundAffinity": 0,
      "critElementMul": null,
-     "whenInactive": {
-      "attackAdd": 5,
-      "elementAdd": 50
+     "byState": {
+      "hit1to4": {
+       "attackAdd": 5,
+       "elementAdd": 50
+      }
      }
     }
    ],
    "source": "PlayerSkillParam._ContinuousAttackWp01Data。並び [?, 初期攻撃, 初期属性, Lv1強化攻撃, Lv1強化属性, ...] は MHWS-in-json の解釈",
    "confidence": "medium",
-   "note": "元データ [4, 5, 5, 8, 6, 10, 8, 12, 10, 15, 12, 18, 14]。先頭 4 の意味は未確定 (強化までのヒット数の可能性)。属性は内部値なので表示値に直すため ×10。whenInactive は強化前 (1〜4 ヒット目) の効果で、攻撃を当てている前提。",
+   "note": "元データ [4, 5, 5, 8, 6, 10, 8, 12, 10, 15, 12, 18, 14]。先頭 4 の意味は未確定 (強化までのヒット数の可能性)。属性は内部値なので表示値に直すため ×10。levels[] の値は 5 ヒット以降段、byState.hit1to4 は 1〜4 ヒット段の効果。",
    "verification": [
     {
      "item": "連撃 強化後の攻撃",
@@ -2856,6 +3438,8 @@
    "gameId": 576193792,
    "gameSkill": "HunterSkill_204",
    "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 1.0,
    "uptimeBasis": "",
    "condition": "",
@@ -2893,6 +3477,10 @@
    "gameId": 632127488,
    "gameSkill": "HunterSkill_064",
    "conditional": true,
+   "conditionGroup": "staminaFull",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "スタミナ満タンをしばらく維持",
@@ -2983,6 +3571,10 @@
    "gameId": 686533440,
    "gameSkill": "HunterSkill_029",
    "conditional": true,
+   "conditionGroup": "afterDraw",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "武器出し行動の後の一定時間 (騎乗中は無効)",
@@ -3058,9 +3650,13 @@
    "gameId": 722735744,
    "gameSkill": "HunterSkill_183",
    "conditional": true,
+   "conditionGroup": "frenzy",
+   "activeStates": [
+    "overcome"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
-   "condition": "狂竜症を克服した状態 (会心 +15% は 60 秒)。非発動側は感染中",
+   "condition": "狂竜症の感染中 / 克服した後 (克服後の会心 +15% は 60 秒)",
    "supported": true,
    "levels": [
     {
@@ -3081,8 +3677,10 @@
      "weakPointAffinity": 0,
      "woundAffinity": 0,
      "critElementMul": null,
-     "whenInactive": {
-      "attackAdd": 0
+     "byState": {
+      "infected": {
+       "attackAdd": 0
+      }
      }
     },
     {
@@ -3103,8 +3701,10 @@
      "weakPointAffinity": 0,
      "woundAffinity": 0,
      "critElementMul": null,
-     "whenInactive": {
-      "attackAdd": 10
+     "byState": {
+      "infected": {
+       "attackAdd": 10
+      }
      }
     }
    ],
@@ -3133,6 +3733,8 @@
    "gameId": 741102208,
    "gameSkill": "HunterSkill_182",
    "conditional": true,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 0.0,
    "uptimeBasis": "未対応",
    "condition": "ジェスチャー「雄叫び」の後",
@@ -3189,9 +3791,14 @@
    "gameId": 918165056,
    "gameSkill": "HunterSkill_186",
    "conditional": true,
+   "conditionGroup": "chain",
+   "activeStates": [
+    "hit1to4",
+    "hit5plus"
+   ],
    "defaultUptime": 1.0,
-   "uptimeBasis": "連撃が発動している間 (攻撃を当て続けている間) は常に有効。連撃が無ければ効かない",
-   "condition": "「連撃」スキルの発動中",
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "「連撃」スキルの発動中 (1〜4 ヒット段・5 ヒット以降段のどちらでも)",
    "supported": true,
    "levels": [
     {
@@ -3258,6 +3865,10 @@
    "gameId": 1174975744,
    "gameSkill": "HunterSkill_115",
    "conditional": true,
+   "conditionGroup": "afterDodge",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "回避でモンスターの攻撃が重なった後の一定時間",
@@ -3371,6 +3982,8 @@
    "gameId": 1268070400,
    "gameSkill": "HunterSkill_007",
    "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 1.0,
    "uptimeBasis": "",
    "condition": "",
@@ -3482,6 +4095,10 @@
    "gameId": 1359821952,
    "gameSkill": "HunterSkill_060",
    "conditional": true,
+   "conditionGroup": "redHp",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "体力ゲージに赤い部分がある",
@@ -3614,6 +4231,8 @@
    "gameId": 1452140672,
    "gameSkill": "HunterSkill_008",
    "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 1.0,
    "uptimeBasis": "",
    "condition": "",
@@ -3725,6 +4344,8 @@
    "gameId": 1470960256,
    "gameSkill": "HunterSkill_091",
    "conditional": true,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 0.0,
    "uptimeBasis": "未対応",
    "condition": "傷口の破壊・部位破壊",
@@ -3800,8 +4421,12 @@
    "gameId": 1484575872,
    "gameSkill": "HunterSkill_205",
    "conditional": true,
+   "conditionGroup": "beforeGuts",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 1.0,
-   "uptimeBasis": "根性が発動するまでは常時有効。発動後は攻撃上昇が消えるので、被弾が多い人は下げる",
+   "uptimeBasis": "根性が発動するまでは常に有効。発動後は攻撃上昇が消えるので、被弾が多い人は下げる",
    "condition": "根性【果敢】の発動前",
    "supported": true,
    "levels": [
@@ -3848,6 +4473,8 @@
    "gameId": 1594792704,
    "gameSkill": "HunterSkill_018",
    "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 1.0,
    "uptimeBasis": "",
    "condition": "",
@@ -3929,6 +4556,8 @@
    "gameId": 1639440000,
    "gameSkill": "HunterSkill_145",
    "conditional": true,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 0.0,
    "uptimeBasis": "未対応",
    "condition": "クエスト経過時間",
@@ -3966,6 +4595,10 @@
    "gameId": 1763191040,
    "gameSkill": "HunterSkill_063",
    "conditional": true,
+   "conditionGroup": "latentPower",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "発動条件を満たした後の一定時間",
@@ -4098,6 +4731,10 @@
    "gameId": 1865909632,
    "gameSkill": "HunterSkill_058",
    "conditional": true,
+   "conditionGroup": "enraged",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "戦闘中の大型モンスターが怒り状態",
@@ -4248,6 +4885,8 @@
    "gameId": 1980404096,
    "gameSkill": "HunterSkill_178",
    "conditional": true,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 0.0,
    "uptimeBasis": "未対応",
    "condition": "逆恨み発動中",
@@ -4304,6 +4943,8 @@
    "gameId": 1998066176,
    "gameSkill": "HunterSkill_168",
    "conditional": true,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 0.0,
    "uptimeBasis": "未対応",
    "condition": "力尽きる度 (最大 2 回)",
@@ -4341,6 +4982,8 @@
    "gameId": 2083363072,
    "gameSkill": "HunterSkill_191",
    "conditional": true,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 0.0,
    "uptimeBasis": "未対応",
    "condition": "属性攻撃を受けた後",
@@ -4416,6 +5059,10 @@
    "gameId": 2106877312,
    "gameSkill": "HunterSkill_059",
    "conditional": true,
+   "conditionGroup": "hpFull",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "体力が最大",
@@ -4548,6 +5195,10 @@
    "gameId": 2107855744,
    "gameSkill": "HunterSkill_171",
    "conditional": true,
+   "conditionGroup": "hunterAilment",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "ハンターが状態異常中",
@@ -4585,6 +5236,10 @@
    "gameId": 8694,
    "gameSkill": "HunterSkill_221",
    "conditional": true,
+   "conditionGroup": "festival",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 1.0,
    "uptimeBasis": "儀式 (イベント) の期間中のみ。期間外は 0 にする",
    "condition": "季節の儀式の期間中",
@@ -4641,6 +5296,10 @@
    "gameId": 16835,
    "gameSkill": "HunterSkill_212",
    "conditional": true,
+   "conditionGroup": "afterDischarge",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "蓄積で追加の雷ダメージが出た後の一定時間 (_value[2]=20/30 秒)",
@@ -4697,6 +5356,8 @@
    "gameId": 28385,
    "gameSkill": "HunterSkill_229",
    "conditional": true,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 0.0,
    "uptimeBasis": "未対応",
    "condition": "鉱石の入手後",
@@ -4734,6 +5395,10 @@
    "gameId": 30992,
    "gameSkill": "HunterSkill_215",
    "conditional": true,
+   "conditionGroup": "afterDodgeRepeat",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "「巧撃」発動中に再び条件を満たしたとき (Ⅱ)",
@@ -4790,6 +5455,10 @@
    "gameId": 11709,
    "gameSkill": "HunterSkill_223",
    "conditional": true,
+   "conditionGroup": "festival",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 1.0,
    "uptimeBasis": "儀式 (イベント) の期間中のみ。期間外は 0 にする",
    "condition": "季節の儀式の期間中",
@@ -4846,6 +5515,8 @@
    "gameId": 16931,
    "gameSkill": "HunterSkill_231",
    "conditional": true,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 0.0,
    "uptimeBasis": "未対応",
    "condition": "肉焼きの後",
@@ -4883,6 +5554,8 @@
    "gameId": 31540,
    "gameSkill": "HunterSkill_237",
    "conditional": true,
+   "conditionGroup": null,
+   "activeStates": null,
    "defaultUptime": 0.0,
    "uptimeBasis": "未対応",
    "condition": "レゾナンス",
@@ -4939,6 +5612,10 @@
    "gameId": 5590,
    "gameSkill": "HunterSkill_239",
    "conditional": true,
+   "conditionGroup": "enraged",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 0.5,
    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
    "condition": "戦闘中の大型モンスターが怒り状態",
@@ -5020,6 +5697,10 @@
    "gameId": 30815,
    "gameSkill": "HunterSkill_225",
    "conditional": true,
+   "conditionGroup": "festival",
+   "activeStates": [
+    "on"
+   ],
    "defaultUptime": 1.0,
    "uptimeBasis": "儀式 (イベント) の期間中のみ。期間外は 0 にする",
    "condition": "季節の儀式の期間中",

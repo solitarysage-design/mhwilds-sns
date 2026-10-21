@@ -7,9 +7,9 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import {
-  DEFAULT_RULES, clampAffinity, critExpectation, critElementExpectation, elementCap, effectiveElement,
+  DEFAULT_RULES, clampAffinity, critExpectation, critElementExpectation, effectiveElement, effectiveAttack,
   sharpnessMultipliers, hitDamage, computeStats, aggregateModifiers, enumeratePatterns, comboExpected,
-  skillContribution, resolveSkills,
+  skillContribution, resolveSkills, resolveConditions, isWoundOnlyHit,
 } from '../app/model/damage.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -34,6 +34,8 @@ function fx(levels, extra = {}) {
     levels: levels.map((l, i) => ({ level: i + 1, ...l })), ...extra };
 }
 const HIT = { mv: 100, count: 1, type: 'slash', usesElement: true, elementRate: 1, canCrit: true, sharpnessMul: true };
+const ONE_HIT_EARLY = { moves: [{ id: 'm', name: 'm', hits: [HIT] }] };
+const ONE_PHYS_HIT_EARLY = { moves: [{ id: 'm', name: 'm', hits: [{ ...HIT, usesElement: false, elementRate: 0 }] }] };
 const stats = (weapon, effectList = []) => computeStats(weapon, aggregateModifiers(effectList, weapon.element?.type), DEFAULT_RULES);
 
 test('会心率は -100〜100 で切る (上限クリップ)', () => {
@@ -56,14 +58,26 @@ test('マイナス会心は 0.75 倍。属性には掛からない', () => {
   close(critElementExpectation(-50, 1.15), 1);
 });
 
-test('属性値の上限は max(元+400, 元×2.3)', () => {
-  // 元 100: 上限 max(500, 230) = 500。100 + 500 = 600 → 500
-  assert.equal(elementCap(100), 500);
+test('属性値の上限は攻撃と同じく倍率 (2.3) と加算 (表示400) を別々に切る', () => {
+  // ゲームデータ: PlayerStatusParam._ElementAttack_RateLimit=2.3 / _ElementAttack_AddLimit=40 (表示 400)
+  assert.equal(EFFECTS.rules.elementRateLimit, 2.3);
+  assert.equal(EFFECTS.rules.elementAddLimit, 400);
+  assert.equal(EFFECTS.rules.elementCapRate, undefined);   // 旧い名前は残さない
+  // 元 100、加算 500 → 加算だけ 400 に切る: 100 + 400 = 500
   assert.equal(effectiveElement(100, 1, 500), 500);
-  // 元 400: 上限 max(800, 920) = 920。400 × 2 = 800 は上限以下
+  // 元 400 × 2 = 800 (倍率は上限以下)
   assert.equal(effectiveElement(400, 2, 0), 800);
-  // 400 × 2.5 = 1000 → 920
+  // 元 400 × 2.5 → 倍率を 2.3 に切る: 920
   close(effectiveElement(400, 2.5, 0), 920);
+  // 倍率と加算を別々に切る: 100 × min(3, 2.3) + min(300, 400) = 530
+  //   (旧い読み min(元×乗算+加算, max(元+400, 元×2.3)) なら 500 になる)
+  close(effectiveElement(100, 3, 300), 530);
+  // 300 × min(2.5, 2.3) + 100 = 790 (旧い読みなら max(700, 690) = 700)
+  close(effectiveElement(300, 2.5, 100), 790);
+  // 攻撃も同じ形: 100 × min(5, 4) + min(500, 400) = 800
+  close(effectiveAttack(100, 5, 500), 800);
+  // rules を実データにしても同じ
+  close(effectiveElement(300, 2.5, 100, EFFECTS.rules), 790);
 });
 
 test('弱点特効は物理肉質 45 以上で効く (44 は効かない)', () => {
@@ -84,11 +98,17 @@ test('傷口では弱点特効の追加分が乗る', () => {
   close(hitDamage(HIT, st, { hitzone: { slash: 44 }, isWound: true, sharpness: 'white' }).physical, 60.984);
 });
 
-test('条件つきスキルは発動率で加重平均 (独立と仮定)', () => {
-  const effects = { effects: {
-    1: fx([{ attackAdd: 20, affinityAdd: 15 }], { name: '挑戦者', conditional: true, defaultUptime: 0.5 }),
-    2: fx([{ attackAdd: 20 }], { name: 'フルチャージ', conditional: true, defaultUptime: 0.25 }),
-  } };
+// 合成の条件グループ (テスト専用)
+const G = (id, extra = {}) => ({ id, label: id, type: 'binary', defaultUptime: 0.5, exclusiveWith: [], ...extra });
+
+test('条件つきスキルは条件グループの発動率で加重平均 (関係の無い条件は独立と仮定)', () => {
+  const effects = {
+    rules: { conditionGroups: [G('angry', { defaultUptime: 0.5 }), G('full', { defaultUptime: 0.25 })] },
+    effects: {
+      1: fx([{ attackAdd: 20, affinityAdd: 15 }], { name: '挑戦者', conditional: true, conditionGroup: 'angry' }),
+      2: fx([{ attackAdd: 20 }], { name: 'フルチャージ', conditional: true, conditionGroup: 'full' }),
+    },
+  };
   const motions = { moves: [{ id: 'm', name: 'm', hits: [{ ...HIT, usesElement: false, elementRate: 0 }] }] };
   const base = { weapon: { attack: 200, affinity: 0, element: null }, sharpness: 'yellow', effects, motions,
     combo: ['m'], target: { hitzone: { slash: 100 } } };
@@ -99,8 +119,128 @@ test('条件つきスキルは発動率で加重平均 (独立と仮定)', () =>
   const r = comboExpected({ ...base, skills: [{ skillId: 1, level: 1 }, { skillId: 2, level: 1 }] });
   close(r.total, 219.21875);
   assert.equal(r.patterns, 4);
-  // 発動率を人が上書き: 挑戦者 1.0 → 228.25
-  close(comboExpected({ ...base, skills: [{ skillId: 1, level: 1, uptime: 1 }] }).total, 228.25);
+  assert.deepEqual(r.conditions.map((c) => [c.id, c.uptime, c.fromInput]), [['angry', 0.5, false], ['full', 0.25, false]]);
+  // 発動率を人が条件ごとに上書き: angry 1.0 → 228.25
+  close(comboExpected({ ...base, skills: [{ skillId: 1, level: 1 }], uptimes: { angry: 1 } }).total, 228.25);
+  // スキルに uptime を付けても使わない (発動率は条件ごと)
+  close(comboExpected({ ...base, skills: [{ skillId: 1, level: 1, uptime: 1 }] }).total, 214.125);
+  // 条件グループの無い条件つきスキルは、そのスキルだけのグループ skill:<id> (既定はスキルの defaultUptime)
+  const loose = { effects: { 1: fx([{ attackAdd: 20 }], { name: 'x', conditional: true, defaultUptime: 0.25 }) } };
+  const rl = comboExpected({ ...base, effects: loose, skills: [{ skillId: 1, level: 1 }] });
+  close(rl.total, 205);                                             // 200 + 20 × 0.25
+  assert.equal(rl.conditions[0].id, 'skill:1');
+  close(comboExpected({ ...base, effects: loose, skills: [{ skillId: 1, level: 1 }], uptimes: { 'skill:1': 1 } }).total, 220);
+});
+
+test('同じ条件で動くスキルは一緒に発動する (挑戦者と巨戟龍の黙示録 = モンスターが怒っている)', () => {
+  const enraged = EFFECTS.rules.conditionGroups.find((g) => g.id === 'enraged');
+  assert.deepEqual(enraged.skills.map((s) => s.name).sort(), ['巨戟龍の黙示録', '挑戦者'].sort());
+  assert.equal(EFFECTS.effects[skillIdByName('挑戦者')].conditionGroup, 'enraged');
+  assert.equal(EFFECTS.effects[skillIdByName('巨戟龍の黙示録')].conditionGroup, 'enraged');
+  const input = {
+    weapon: { attack: 200, affinity: 0, element: { type: 'fire', value: 300 } }, sharpness: 'yellow',
+    skills: [{ skillId: skillIdByName('挑戦者'), level: 5 }, { skillId: skillIdByName('巨戟龍の黙示録'), level: 2 },
+      { skillId: skillIdByName('会心撃【属性】'), level: 3 }],
+    effects: EFFECTS, motions: ONE_HIT_EARLY, combo: ['m'], target: { hitzone: { slash: 100, fire: 100 } },
+  };
+  // 怒り中: 攻撃 220・会心 15% → 物理 220 × (1 + 0.15 × 0.25) = 228.25
+  //   属性 300 × 1.3 + 40 = 430 → 43 × 0.75 (黄) × (1 + 0.15 × 0.15) = 32.975625 → 計 261.225625
+  // 怒っていない: 物理 200、属性 30 × 0.75 = 22.5 → 計 222.5
+  // 発動率 0.5 (既定・仮置き): (261.225625 + 222.5) / 2 = 241.8628125
+  //   (スキルごとに独立と扱うと 4 パターンで 241.80796875 になる)
+  const r = comboExpected(input);
+  close(r.total, 241.8628125, 1e-9);
+  assert.equal(r.patterns, 2);
+  assert.equal(r.conditions.length, 1);
+  assert.equal(r.conditions[0].placeholder, true);
+  close(comboExpected({ ...input, uptimes: { enraged: 1 } }).total, 261.225625, 1e-9);
+  close(comboExpected({ ...input, uptimes: { enraged: 0 } }).total, 222.5, 1e-9);
+});
+
+test('同時に起きない条件 (exclusive) は「両方発動」に重みを付けず、各条件の発動率は保つ', () => {
+  // 攻撃 +20 (満タン) と 会心 +40% (赤ゲージ) は掛け算で効き合うので、両方発動の有無で期待値が変わる
+  const effects = {
+    rules: { conditionGroups: [G('full', { exclusiveWith: ['red'] }), G('red')] },   // 片側だけ書いても両側に効く
+    effects: {
+      1: fx([{ attackAdd: 20 }], { name: 'フルチャージ', conditional: true, conditionGroup: 'full' }),
+      2: fx([{ affinityAdd: 40 }], { name: '逆恨み', conditional: true, conditionGroup: 'red' }),
+    },
+  };
+  const base = { weapon: { attack: 200, affinity: 0, element: null }, sharpness: 'yellow', effects,
+    motions: ONE_PHYS_HIT_EARLY, combo: ['m'], target: { hitzone: { slash: 100 } },
+    skills: [{ skillId: 1, level: 1 }, { skillId: 2, level: 1 }] };
+  // 0.5 / 0.5: 満タンだけ 0.5 → 220、赤だけ 0.5 → 200 × 1.1 = 220 → 220
+  //   (独立なら 両方 0.25 × 242 + 220 × 0.25 + 220 × 0.25 + 200 × 0.25 = 220.5)
+  const r = comboExpected(base);
+  close(r.total, 220);
+  assert.equal(r.patterns, 2);
+  assert.deepEqual(r.warnings, []);
+  // 0.3 / 0.4: 満タン 0.3 → 220、赤 0.4 → 220、どちらも無し 0.3 → 200 = 214
+  close(comboExpected({ ...base, uptimes: { full: 0.3, red: 0.4 } }).total, 214);
+  // 合計が 100% を超えたら後の条件 (赤) を減らして警告: 赤は 1 − 0.7 = 0.3 まで
+  const over = comboExpected({ ...base, uptimes: { full: 0.7, red: 0.5 } });
+  close(over.total, 0.7 * 220 + 0.3 * 220);
+  assert.deepEqual(over.warnings.map((w) => w.code), ['exclusive-conflict']);
+});
+
+test('同時に起きない条件の合計が 100% を超えたら、仮置きの条件から減らし、本人が入れた条件は保つ (並びに関係なく)', () => {
+  // full (仮置き) が並びで先でも、本人が入れた red を保つ
+  const effects = {
+    rules: { conditionGroups: [G('full', { exclusiveWith: ['red'], placeholder: true }), G('red', { placeholder: true })] },
+    effects: {
+      1: fx([{ attackAdd: 20 }], { name: 'フルチャージ', conditional: true, conditionGroup: 'full' }),
+      2: fx([{ affinityAdd: 40 }], { name: '逆恨み', conditional: true, conditionGroup: 'red' }),
+    },
+  };
+  const skills = [{ skillId: 1, level: 1 }, { skillId: 2, level: 1 }];
+  const res = resolveSkills(skills, effects);
+  const cond = resolveConditions(res.active, effects, { red: 0.8 });
+  const { patterns, warnings } = enumeratePatterns(cond.groups);
+  const prob = (f) => patterns.filter((p) => f(p.states)).reduce((t, p) => t + p.weight, 0);
+  close(prob((s) => s.red === 'on'), 0.8, 1e-12);       // 入れた値のまま
+  close(prob((s) => s.full === 'on'), 0.2, 1e-12);      // 仮置き 0.5 → 残りの 0.2 まで減らす
+  assert.deepEqual(warnings.map((w) => [w.code, w.groupId]), [['exclusive-conflict', 'full']]);
+});
+
+test('条件のもと (sources): もとのスキルも相手の状態異常も無ければ 0%。相手が分からない (monsterStatus なし) なら決めつけない', () => {
+  const effects = {
+    rules: { conditionGroups: [G('fz', { sources: { skillIds: [9], monsterStatus: ['frenzy'], label: 'もと' } })] },
+    effects: { 1: fx([{ attackAdd: 20 }], { name: '無我', conditional: true, conditionGroup: 'fz' }), 9: fx([{ attackAdd: 0 }], { name: 'もと' }) },
+  };
+  const base = { weapon: { attack: 200, affinity: 0, element: null }, sharpness: 'yellow', effects,
+    motions: ONE_PHYS_HIT_EARLY, combo: ['m'], target: { hitzone: { slash: 100 } }, uptimes: { fz: 1 } };
+  close(comboExpected({ ...base, skills: [{ skillId: 1, level: 1 }] }).total, 220);
+  const off = comboExpected({ ...base, skills: [{ skillId: 1, level: 1 }], monsterStatus: [] });
+  close(off.total, 200);
+  assert.equal(off.conditions[0].inactive, true);
+  close(comboExpected({ ...base, skills: [{ skillId: 1, level: 1 }], monsterStatus: ['frenzy'] }).total, 220);
+  close(comboExpected({ ...base, skills: [{ skillId: 1, level: 1 }, { skillId: 9, level: 1 }], monsterStatus: [] }).total, 220);
+});
+
+test('実データ: 体力満タンと赤ゲージ・体力35%以下は同時に起きない。赤ゲージと35%以下は同時に起きてよい', () => {
+  const groups = Object.fromEntries(EFFECTS.rules.conditionGroups.map((g) => [g.id, g]));
+  assert.deepEqual(groups.hpFull.exclusiveWith.sort(), ['hpLow', 'redHp']);
+  assert.deepEqual(groups.redHp.exclusiveWith, ['hpFull']);
+  assert.deepEqual(groups.hpLow.exclusiveWith, ['hpFull']);
+  assert.equal(EFFECTS.effects[skillIdByName('フルチャージ')].conditionGroup, 'hpFull');
+  assert.equal(EFFECTS.effects[skillIdByName('逆恨み')].conditionGroup, 'redHp');
+  assert.equal(EFFECTS.effects[skillIdByName('火事場力')].conditionGroup, 'hpLow');
+  const skills = ['フルチャージ', '逆恨み', '火事場力'].map((n) => ({ skillId: skillIdByName(n), level: 5 }));
+  const res = resolveSkills(skills, EFFECTS);
+  const cond = resolveConditions(res.active, EFFECTS, { hpFull: 0.3, redHp: 0.5, hpLow: 0.4 });
+  const { patterns, warnings } = enumeratePatterns(cond.groups);
+  assert.deepEqual(warnings, []);
+  close(patterns.reduce((t, p) => t + p.weight, 0), 1, 1e-12);
+  const prob = (f) => patterns.filter((p) => f(p.states)).reduce((t, p) => t + p.weight, 0);
+  // 両方発動の重みは 0
+  assert.equal(prob((s) => s.hpFull === 'on' && s.redHp === 'on'), 0);
+  assert.equal(prob((s) => s.hpFull === 'on' && s.hpLow === 'on'), 0);
+  // 各条件の発動率は入れた値のまま
+  close(prob((s) => s.hpFull === 'on'), 0.3, 1e-12);
+  close(prob((s) => s.redHp === 'on'), 0.5, 1e-12);
+  close(prob((s) => s.hpLow === 'on'), 0.4, 1e-12);
+  // 赤ゲージと 35% 以下は満タンでないときに独立: 0.5 × 0.4 / 0.7
+  close(prob((s) => s.redHp === 'on' && s.hpLow === 'on'), 0.5 * 0.4 / 0.7, 1e-12);
 });
 
 test('会心撃【属性】が無ければ会心は属性に掛からない', () => {
@@ -158,18 +298,85 @@ test('斬れ味補正: 白は物理 1.32 / 属性 1.15。盾は属性 0 だが�
   close(hitDamage({ ...HIT, sharpnessMul: false }, st, { hitzone: { slash: 50 }, sharpness: 'white' }).physical, 50);
 });
 
-test('連撃: 非発動側は 1〜4 ヒット目の効果 (whenInactive)', () => {
+test('連撃は段階のある条件 (未発動 / 1〜4 ヒット段 / 5 ヒット以降段)', () => {
   const id = skillIdByName('連撃');
   const lv5 = EFFECTS.effects[id].levels[4];
-  assert.deepEqual([lv5.attackAdd, lv5.elementAdd, lv5.whenInactive], [18, 140, { attackAdd: 5, elementAdd: 50 }]);
+  assert.deepEqual([lv5.attackAdd, lv5.elementAdd, lv5.byState], [18, 140, { hit1to4: { attackAdd: 5, elementAdd: 50 } }]);
+  assert.equal(lv5.whenInactive, undefined);
+  const chain = EFFECTS.rules.conditionGroups.find((g) => g.id === 'chain');
+  assert.equal(chain.type, 'categorical');
+  assert.deepEqual(chain.states.map((s) => s.id), ['none', 'hit1to4', 'hit5plus']);
+  assert.equal(chain.offState, 'none');
   const motions = { moves: [{ id: 'm', name: 'm', hits: [HIT] }] };
-  const r = comboExpected({
+  const base = {
     weapon: { attack: 100, affinity: 0, element: { type: 'fire', value: 200 } }, sharpness: 'yellow',
-    skills: [{ skillId: id, level: 5, uptime: 0.5 }], effects: EFFECTS, motions, combo: ['m'],
+    skills: [{ skillId: id, level: 5 }], effects: EFFECTS, motions, combo: ['m'],
     target: { hitzone: { slash: 100, fire: 100 } },
+  };
+  // 未発動: 100 + 200/10 × 0.75 = 115
+  // 1〜4 ヒット段: 105 + 250/10 × 0.75 = 123.75
+  // 5 ヒット以降段: 118 + 340/10 × 0.75 = 143.5
+  // 既定 (仮置き) 1〜4 段 0.5 / 5 段以降 0.5 → 133.625
+  close(comboExpected(base).total, 133.625);
+  // 1〜4 段 0.3 / 5 段以降 0.5 / 未発動 0.2 → 23 + 37.125 + 71.75 = 131.875
+  const r = comboExpected({ ...base, uptimes: { chain: { hit1to4: 0.3, hit5plus: 0.5 } } });
+  close(r.total, 131.875);
+  assert.equal(r.patterns, 3);
+  // 兇爪竜の力Ⅱ (+18) は連撃が発動している段 (1〜4 段・5 段以降) ならいつでも: + 0.8 × 18 = 146.275
+  const kyo = skillIdByName('兇爪竜の力');
+  assert.deepEqual(EFFECTS.effects[kyo].activeStates, ['hit1to4', 'hit5plus']);
+  close(comboExpected({ ...base, skills: [...base.skills, { skillId: kyo, level: 2 }],
+    uptimes: { chain: { hit1to4: 0.3, hit5plus: 0.5 } } }).total, 146.275);
+  // 段の割合の合計が 100% を超えたら縮めて警告: 0.6 / 0.6 → 0.5 / 0.5
+  const over = comboExpected({ ...base, uptimes: { chain: { hit1to4: 0.6, hit5plus: 0.6 } } });
+  close(over.total, 133.625);
+  assert.deepEqual(over.warnings.map((w) => w.code), ['uptime-over-100']);
+  // 平らなキー "chain.<段 id>" でも渡せる (数だけを保存する画面の入れ物向け)。渡さない段は 0
+  close(comboExpected({ ...base, uptimes: { 'chain.hit1to4': 0.3, 'chain.hit5plus': 0.5 } }).total, 131.875);
+  close(comboExpected({ ...base, uptimes: { 'chain.hit5plus': 1 } }).total, 143.5);
+  // 入れ子の形があればそちらが優先
+  close(comboExpected({ ...base, uptimes: { chain: { hit5plus: 1 }, 'chain.hit1to4': 1 } }).total, 143.5);
+  // 数で渡すなど読めない値は既定値で計算して警告
+  const bad = comboExpected({ ...base, uptimes: { chain: 0.9 } });
+  close(bad.total, 133.625);
+  assert.deepEqual(bad.warnings.map((w) => w.code), ['bad-uptime']);
+});
+
+test('狂竜症: 黒蝕竜の力は感染中と克服後で効果が違い、無我の境地は克服後だけ', () => {
+  const koku = skillIdByName('黒蝕竜の力');
+  const muga = skillIdByName('無我の境地');
+  const lv2 = EFFECTS.effects[koku].levels[1];
+  assert.deepEqual([lv2.attackAdd, lv2.affinityAdd, lv2.byState], [15, 15, { infected: { attackAdd: 10 } }]);
+  assert.equal(EFFECTS.effects[muga].levels[2].affinityAdd, 10);
+  const r = comboExpected({
+    weapon: { attack: 200, affinity: 0, element: null }, sharpness: 'yellow',
+    skills: [{ skillId: koku, level: 2 }, { skillId: muga, level: 3 }], effects: EFFECTS,
+    motions: ONE_PHYS_HIT_EARLY, combo: ['m'], target: { hitzone: { slash: 100 } },
+    uptimes: { frenzy: { infected: 0.3, overcome: 0.5 } },
   });
-  // 発動: 118 + 340/10 × 0.75 = 143.5、非発動: 105 + 250/10 × 0.75 = 123.75 → 平均 133.625
-  close(r.total, 133.625);
+  // かかっていない 0.2: 200 / 感染中 0.3: 210 / 克服後 0.5: 215 × (1 + 0.25 × 0.25) = 228.4375
+  //   = 40 + 63 + 114.21875 = 217.21875
+  close(r.total, 217.21875);
+  assert.equal(r.patterns, 3);
+});
+
+test('条件グループのデータ: 条件つきで計算するスキルは全部どれかのグループにあり、根拠の無い既定値は仮置きと書く', () => {
+  const groups = EFFECTS.rules.conditionGroups;
+  const ids = new Set(groups.map((g) => g.id));
+  for (const [sid, e] of Object.entries(EFFECTS.effects)) {
+    if (!e.conditional || e.supported === false) continue;
+    assert.ok(ids.has(e.conditionGroup), `${e.name} (${sid}) の conditionGroup ${e.conditionGroup}`);
+    const g = groups.find((x) => x.id === e.conditionGroup);
+    assert.ok(g.skills.some((s) => s.skillId === Number(sid)), `${g.id} の skills に ${e.name} が無い`);
+  }
+  for (const g of groups) {
+    assert.ok(g.label && g.uptimeBasis, g.id);
+    if (g.placeholder) assert.match(g.uptimeBasis, /仮置き/, g.id);
+    for (const o of g.exclusiveWith) assert.ok(groups.find((x) => x.id === o).exclusiveWith.includes(g.id), `${g.id}↔${o}`);
+  }
+  // 根拠のある既定値 (ヌシの魂・祈り) は仮置きではない
+  assert.equal(groups.find((g) => g.id === 'beforeGuts').placeholder, false);
+  assert.equal(groups.find((g) => g.id === 'festival').placeholder, false);
 });
 
 test('モーション値はゲームデータどおり (ジャストラッシュ・集中急所突き・溜め斬り落とし)', () => {
@@ -244,15 +451,24 @@ test('兇爪竜の力は連撃が無いと効かない。未対応スキルは�
   assert.equal(resolveSkills({ [ren]: 3 }, EFFECTS).active[0].level, 3);
 });
 
-test('パターンの重みの合計は 1。発動率 0/1 は列挙しない', () => {
-  const active = [
-    { conditional: true, uptime: 0.3 }, { conditional: true, uptime: 0.6 },
-    { conditional: false, uptime: 1 }, { conditional: true, uptime: 0 }, { conditional: true, uptime: 1 },
-  ];
-  const p = enumeratePatterns(active);
-  assert.equal(p.length, 4);
-  close(p.reduce((s, x) => s + x.weight, 0), 1, 1e-12);
-  assert.ok(p.every((x) => x.on[2] === true && x.on[3] === false && x.on[4] === true));
+test('パターンの重みの合計は 1。発動率 0/1 の条件は分岐しない', () => {
+  const effects = {
+    rules: { conditionGroups: [G('a'), G('b'), G('c'), G('d')] },
+    effects: {
+      1: fx([{ attackAdd: 1 }], { conditional: true, conditionGroup: 'a' }),
+      2: fx([{ attackAdd: 1 }], { conditional: true, conditionGroup: 'b' }),
+      3: fx([{ attackAdd: 1 }], { conditional: false }),
+      4: fx([{ attackAdd: 1 }], { conditional: true, conditionGroup: 'c' }),
+      5: fx([{ attackAdd: 1 }], { conditional: true, conditionGroup: 'd' }),
+    },
+  };
+  const skills = [1, 2, 3, 4, 5].map((skillId) => ({ skillId, level: 1 }));
+  const cond = resolveConditions(resolveSkills(skills, effects).active, effects, { a: 0.3, b: 0.6, c: 0, d: 1 });
+  assert.deepEqual(cond.groups.map((g) => g.id), ['a', 'b', 'c', 'd']);
+  const { patterns } = enumeratePatterns(cond.groups);
+  assert.equal(patterns.length, 4);
+  close(patterns.reduce((s, x) => s + x.weight, 0), 1, 1e-12);
+  assert.ok(patterns.every((x) => x.states.c === 'off' && x.states.d === 'on'));
 });
 
 test('集中弱点攻撃のコンボは傷口の肉質と傷口の会心補正で計算する', () => {
@@ -332,8 +548,9 @@ test('手計算 (c): 挑戦者5 を発動率 0.5、他は (a) と同じ', () => 
   const r = comboExpected({
     weapon: { attack: 200, affinity: 10, element: null }, sharpness: 'white',
     skills: [...baseSkills(), { skillId: skillIdByName('弱点特効'), level: 5 },
-      { skillId: skillIdByName('挑戦者'), level: 5, uptime: 0.5 }],
+      { skillId: skillIdByName('挑戦者'), level: 5 }],
     effects: EFFECTS, motions: MOTIONS, combo: JUST_RUSH(), target: { hitzone: { slash: 60, blunt: 60 } },
+    uptimes: { enraged: 0.5 },
   });
   close(r.total, 867.28584096, 1e-6);
   assert.equal(r.patterns, 2);
@@ -341,13 +558,14 @@ test('手計算 (c): 挑戦者5 を発動率 0.5、他は (a) と同じ', () => 
 
 test('乗算どうしは掛け合わせる (攻撃5 ×1.04 とヌシの魂 ×1.05、属性攻撃強化3 ×1.2 と巨戟龍の黙示録Ⅱ ×1.3)', () => {
   // 攻撃力 200 × 1.04 × 1.05 + 9 = 227.4
-  // 属性値 300 × 1.2 × 1.3 + 60 + 40 = 568 (上限 max(700, 690) = 700 以下)
+  // 属性値 300 × (1.2 × 1.3 = 1.56 ≤ 2.3) + (60 + 40 = 100 ≤ 400) = 568
   // 1 ヒット (MV100・属性補正1・黄・肉質 100・会心 0%): 物理 227.4 / 属性 56.8 × 0.75 = 42.6
   const r = comboExpected({
     weapon: { attack: 200, affinity: 0, element: { type: 'fire', value: 300 } }, sharpness: 'yellow',
-    skills: [{ skillId: skillIdByName('攻撃'), level: 5 }, { skillId: skillIdByName('ヌシの魂'), level: 1, uptime: 1 },
-      { skillId: skillIdByName('火属性攻撃強化'), level: 3 }, { skillId: skillIdByName('巨戟龍の黙示録'), level: 2, uptime: 1 }],
+    skills: [{ skillId: skillIdByName('攻撃'), level: 5 }, { skillId: skillIdByName('ヌシの魂'), level: 1 },
+      { skillId: skillIdByName('火属性攻撃強化'), level: 3 }, { skillId: skillIdByName('巨戟龍の黙示録'), level: 2 }],
     effects: EFFECTS, motions: ONE_HIT, combo: ['m'], target: { hitzone: { slash: 100, fire: 100 } },
+    uptimes: { beforeGuts: 1, enraged: 1 },
   });
   close(r.physical, 227.4);
   close(r.element, 42.6);
@@ -406,4 +624,77 @@ test('Lv を最大より大きく渡すと最大 Lv で計算する (攻撃 Lv7 
     skills: [{ skillId: skillIdByName('攻撃'), level: 7 }], effects: EFFECTS, motions: ONE_PHYS_HIT, combo: ['m'],
     target: { hitzone: { slash: 100 } },
   }).total, 217);
+});
+
+// ------------------------------------------------------------------ 検証役の指摘への対応 (model-fix) で足したテスト
+
+test('傷口の無い部位 (wound: null) に傷口の段を当てると、傷口専用ヒットも弱点特効の傷口分も入れず警告する', () => {
+  const combo = COMBOS.combos.find((c) => c.id === 'focus_wound');
+  assert.equal(combo.steps[0].onWound, true);
+  const wex = skillIdByName('弱点特効');
+  const base = {
+    weapon: { attack: 200, affinity: 0, element: null }, sharpness: 'white',
+    skills: [{ skillId: wex, level: 5 }], effects: EFFECTS, motions: MOTIONS, combo,
+  };
+  // 物理肉質 30 (弱点でない): 集中急所突きの 1 ヒット目 (MV15) だけ、会心 0%
+  //   200 × 0.15 × 0.30 × 1.32 = 11.88 (傷口の追加ヒットを数えると 23.76、傷口の会心 20% を入れると 12.474)
+  const r = comboExpected({ ...base, target: { hitzone: { slash: 30 }, wound: null } });
+  close(r.physical, 11.88);
+  assert.equal(r.steps[0].isWound, false);
+  assert.deepEqual(r.warnings.map((w) => w.code), ['no-wound']);
+  assert.match(r.warnings[0].message, /この部位には傷口ができません/);
+  // 物理肉質 50 (弱点): 弱点特効の有効部位の 30% だけ → 1.075。200 × 0.15 × 0.50 × 1.32 × 1.075 = 21.285
+  close(comboExpected({ ...base, target: { hitzone: { slash: 50 }, wound: null } }).physical, 21.285);
+  // wound を渡さない (undefined) のも傷口なし扱い
+  close(comboExpected({ ...base, target: { hitzone: { slash: 30 } } }).physical, 11.88);
+  // isWound (全段を傷口で) でも、部位に傷口が無ければ同じ
+  const iw = comboExpected({ ...base, combo: ['aim_attack_wound'], target: { hitzone: { slash: 30 }, wound: null, isWound: true } });
+  close(iw.physical, 11.88);
+  assert.deepEqual(iw.warnings.map((w) => w.code), ['no-wound']);
+  // 傷口がある部位なら今までどおり: (15 + 15) × 2 × 0.60 × 1.32 × 1.125 = 53.46、警告なし
+  const ok = comboExpected({ ...base, target: { hitzone: { slash: 30 }, wound: { slash: 60 } } });
+  close(ok.physical, 53.46);
+  assert.deepEqual(ok.warnings, []);
+});
+
+test('傷口に当てない段では、傷口でだけ出るヒットを数えない', () => {
+  const hits = (id) => MOTIONS.moves.find((m) => m.id === id).hits;
+  assert.deepEqual(hits('aim_attack_wound').map(isWoundOnlyHit), [false, true]);
+  assert.deepEqual(hits('aim_attack_old_scar').map(isWoundOnlyHit), [false, true, true]);
+  assert.ok(MOTIONS.moves.filter((m) => !m.id.startsWith('aim_attack')).every((m) => !m.hits.some(isWoundOnlyHit)));
+  // woundOnly の項目があればラベルより優先
+  assert.equal(isWoundOnlyHit({ label: '傷口の追加ヒット', woundOnly: false }), false);
+  assert.equal(isWoundOnlyHit({ label: '', woundOnly: true }), true);
+  // onWound の無い段: 200 × 0.15 × 0.50 × 1.32 = 19.8 (1 ヒットだけ)
+  const r = comboExpected({
+    weapon: { attack: 200, affinity: 0, element: null }, sharpness: 'white', skills: [], effects: EFFECTS,
+    motions: MOTIONS, combo: ['aim_attack_wound'], target: { hitzone: { slash: 50 }, wound: { slash: 60 } },
+  });
+  close(r.physical, 19.8);
+  assert.deepEqual(r.warnings.map((w) => w.code), ['wound-only-hits-skipped']);
+});
+
+test('火竜の力 (灼熱化) は値の読みが 2 通りあるので確度 low。計算に使うと lowConfidence に必ず入る', () => {
+  const id = skillIdByName('火竜の力');
+  const e = EFFECTS.effects[id];
+  assert.equal(e.confidence, 'low');
+  // 別の読み (Ⅰ 固定20+火24 / Ⅱ 固定30+火60。火は内部値) を note と extraDamageAlt に残す
+  assert.match(e.note, /20\+24/);
+  assert.match(e.note, /30\+60/);
+  assert.deepEqual(e.levels.map((l) => [l.extraDamageAlt.fixed, l.extraDamageAlt.element]), [[20, 240], [30, 600]]);
+  // 計算は採用した読み (Ⅱ 固定40+火1200) のまま
+  assert.deepEqual([e.levels[1].extraDamage.fixed, e.levels[1].extraDamage.element], [40, 1200]);
+  const input = {
+    weapon: { attack: 200, affinity: 0, element: null }, sharpness: 'white', skills: [{ skillId: id, level: 2 }],
+    effects: EFFECTS, motions: MOTIONS, combo: COMBOS.combos.find((c) => c.id === 'ground_basic'),
+    target: { hitzone: { slash: 50, fire: 20 } },
+  };
+  const r = comboExpected(input);
+  assert.ok(r.extra > 0);
+  assert.deepEqual(r.lowConfidence.map((x) => [x.skillId, x.confidence]), [[id, 'low']]);
+  assert.ok(r.lowConfidence[0].reason.length > 0);
+  assert.deepEqual(skillContribution(input).lowConfidence.map((x) => x.skillId), [id]);
+  // 効果 (Lv) 側に low が付いているだけでも lowConfidence に入る
+  const fxs = { effects: { 9: fx([{ attackAdd: 1, confidence: 'low' }], { name: 'y', confidence: 'high' }) } };
+  assert.equal(resolveSkills([{ skillId: 9, level: 1 }], fxs).lowConfidence.length, 1);
 });

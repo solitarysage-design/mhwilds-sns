@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>片手剣ビルド</title>
+<meta name="description" content="モンハンワイルズ (PS5) の片手剣のビルドを組む非公式ツール">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f2f4f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101316" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="片手剣ビルド">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<!-- URL はすべて相対パス (GitHub Pages では /mhwilds-sns/ の下に置かれる。先頭 / は使わない) -->
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="./app/icons/icon-192.png">
+<link rel="apple-touch-icon" href="./app/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="./app/ui/styles.css">
+<!-- 同梱のライブラリ (app/vendor) を名前で import できるようにする。iOS 16.4 以降が対応 -->
+<script type="importmap">
+{
+  "imports": {
+    "preact": "./app/vendor/preact.module.js",
+    "preact/hooks": "./app/vendor/hooks.module.js",
+    "htm": "./app/vendor/htm.module.js"
+  }
+}
+</script>
+<script type="module" src="./app/main.js"></script>
+</head>
+<body>
+<div id="app"><div class="boot" id="boot">読み込み中…</div></div>
+<noscript><div class="boot">JavaScript を有効にしてください。</div></noscript>
+<script>
+  // 起動できないときの案内 (このスクリプトは古いブラウザでも動く書き方にしてある)
+  (function () {
+    var boot = document.getElementById('boot');
+    function show(msg) {
+      if (document.documentElement.getAttribute('data-booted') === '1' || !boot) return;
+      boot.innerHTML = '';
+      var p = document.createElement('p');
+      p.textContent = msg;
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = '再読み込み';
+      b.onclick = function () { location.reload(); };
+      boot.appendChild(p);
+      boot.appendChild(b);
+    }
+    var hasImportMap = window.HTMLScriptElement && HTMLScriptElement.supports && HTMLScriptElement.supports('importmap');
+    if (!hasImportMap) {
+      show('この iPhone の iOS が古いため動きません。設定から iOS 16.4 以降に更新してください。');
+      return;
+    }
+    // 20 秒たっても起動しなければ案内を出す (通信が途切れた・ファイルが壊れたなど)
+    setTimeout(function () {
+      show('起動できませんでした。電波の良い所で再読み込みしてください。');
+    }, 20000);
+  })();
+</script>
+</body>
+</html>

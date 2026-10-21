@@ -30,6 +30,7 @@ node --test tests/monsters.test.mjs
 | クエストの日本語名・体力倍率 | 同 release の DATABASE ja-JP / en-US の `MissionData.xlsx` | MIT | 同上 |
 | 咆哮・風圧・振動・属性やられ・状態異常 | monsterhunterwiki.org Bucket API `monsters_games` | **CC BY-SA 4.0** | 取得時点 |
 | クエスト (名前・★・種類・対象・乱入・装備) | monsterhunterwiki.org Bucket API `quests` (`where game = MHWilds`) | **CC BY-SA 4.0** | 取得時点 |
+| アリーナ受付のクエストの節分け (装備固定の判定) | monsterhunterwiki.org のページ `MHWilds/Quests/Arena Counter` (MediaWiki API の parse) | **CC BY-SA 4.0** | 取得時点 |
 | 防御スキルの規則のしきい値 | monsterhunterwiki.org `Status Effects (MHWilds)` | **CC BY-SA 4.0** | 取得時点 |
 | 防御スキルの id とレベルごとの効果文 | wilds.mhdb.io `/ja/skills`, `/en/skills` | データ API | 取得時点 |
 
@@ -50,7 +51,7 @@ node --test tests/monsters.test.mjs
 | wiki `monsters_games` | 全 2,729 行を 6 ページでめくり、Wilds は 53 行 (うち 34 体に対応 34、それ以外 19 は `otherMonsters`) |
 | wiki `quests` (game = MHWilds) | 220 件 (1 ページ) |
 | 多頭クエスト (multi) | 34 件 |
-| 装備固定 | true 17 / false 198 / null 5 |
+| 装備固定 | true 17 / false 203 / null 0 (2026-10-21 data-fix でフリーチャレンジ 5 件を null → false) |
 | MissionData と名前で結合できたクエスト | 206 / 220 (あいまい一致 1: 「Awakening From a Dream」→「Awaking From a Dream」) |
 
 ## monsters.json の作り方
@@ -92,13 +93,21 @@ node --test tests/monsters.test.mjs
   1. 主要部位 = 名前のある部位 (unknownPart 以外) のうち **斬撃肉質 45 以上** (弱点特効が効く肉質) の部位。
   2. 主要部位が 2 部位未満なら、斬撃肉質の上位 3 部位 (同値は ordinal 順) を主要部位にする
      (グラビモス・タマミツネ・ゴグマジオスが該当。`basis` に方式を書いてある)。
-  3. 主要部位の属性肉質を**単純平均** (左右の脚などはそれぞれ 1 部位として数える) し、最大の属性を `best` (同値は全部)。
+  3. 主要部位の属性肉質を**単純平均** (左右の脚などはそれぞれ 1 部位として数える) し、最大の属性を `best`。
      `order` は平均の高い順。`allPartsAvg` は名前のある全部位の平均 (参考)。
+  4. **同点の崩し方** (2026-10-21 data-fix): 平均が同点なら、(a) 主要部位の**傷口の肉質**の平均 (傷口のある主要部位だけで平均)
+     → (b) 名前のある**全部位**の平均 の順で比べる。それでも同点なら全部を `best` に残す。比べるのは丸める前の値。
+     経過は `tieBreak` = `{tied, by: "woundAvg"|"allPartsAvg"|"unresolved", woundAvg, woundParts}` (同点が無ければ null)。
+     `order` の同点も同じ順で並べる (`order[0]` = `best[0]`)。
+     同点だったのは 4 体: アルシュベルド・護竜アルシュベルド (5 属性 → 傷口で**龍**。鎖翼刃の傷口が龍 38・他 30)、
+     護竜ドシャグマ (火・龍 → 傷口で**龍**。頭と前脚の傷口が火 25・龍 30)、イャンクック (雷・氷 → 傷口も同点 → 全部位で**氷**)。
+     Game8 の「推奨属性」(照合のみ。2026-10-21 時点のキャッシュ) と比べると、アルシュベルド・護竜アルシュベルドは龍で一致。
+     護竜ドシャグマは Game8 が 火・雷・氷・龍、イャンクックは 水・雷・氷 と複数を並べており、こちらの 1 つはその中に入っている。
 - 参考値 `stateMaxAvg` / `bestStateMax`: 主要部位ごとに通常と states の中で一番高い値を取って平均したもの。
   通常肉質だけの推奨とずれるのは 護竜ドシャグマ (火・龍 → 火)、護竜アンジャナフ亜種 (氷 → 水)、
   ゴグマジオス (火 → 龍) の 3 体。形態で肉質が大きく変わるので、画面では states を見られるようにすること。
-- アルシュベルド/護竜アルシュベルドは主要部位の属性肉質がほぼ全属性同じ (平均 2.5) なので `best` に 5 属性すべてが並ぶ
-  (= 属性で差が付かない)。
+- アルシュベルド/護竜アルシュベルドは主要部位の通常の属性肉質が全属性同じ (平均 2.5)。以前は `best` に 5 属性すべてが
+  並んでいたが、上の同点の崩し方で龍になる (通常肉質では属性の差はほぼ無く、差が出るのは傷口)。
 
 ### 破壊・切断
 
@@ -122,6 +131,12 @@ node --test tests/monsters.test.mjs
 - `windPressure`: none / minor (風圧【小】) / major (風圧【大】) / dragon (龍風圧)。
 - `tremor`: none / minor (振動【小】) / major (振動【大】)。
 - `attackElements` は wiki の `elements`、`blights` (属性やられ) は wiki の `status_effects` のうち Fire/Water/Thunder/Ice/Dragon。
+- `blightsUncertain` (2026-10-21 data-fix): `attackElements` にあるのに `blights` に無い属性。`{element, name, reason}`。
+  wiki の書き漏れか本当にやられにならないのか分からないので、**`blights` には足さない (自動で埋めない)**。画面では
+  「属性やられになるか未確認」と出す想定。該当は 5 体: ババコンガ (火)・ヒラバミ (氷)・アジャラカン (火)・ジン・ダハド (氷)・
+  オメガ・プラネテス (氷)。wiki の個別ページでは、アジャラカンの状態異常は爆破やられだけ、ジン・ダハドとオメガ・プラネテスは
+  凍結 (Frostblight。氷属性やられとは別物) だけ、ババコンガの火は「食べたキノコか歴戦かによる」と注記がある。
+  34 体以外 (`otherMonsters`) には該当なし。
 - `statusEffects` は残りの状態異常。日本語名はゲーム内テキストで確認したもの。確度は `nameConfidence`。
 - `rules`: 防御スキルの規則。
   - 属性やられ: **属性耐性 20 以上でその属性のやられ無効、属性やられ耐性 (skillId 49) Lv3 で全属性無効**、Lv1/2 は時間短縮
@@ -148,10 +163,14 @@ node --test tests/monsters.test.mjs
 - `fixedEquipment`:
   - true (17): `arena_info` に装備セット (Set 1〜3) の記載がある (アリーナ/チャレンジ。説明文に
     「pre-determined set of equipment」とあるものは確度 high、ほかは medium)。悪鬼 (Akuma Set) のクエストを含む。
-  - null (5): タイムランキング付きのチャレンジ (Burn in Blackest Hell / The Cold Path to Oblivion / The Daunting Downpour /
-    The Proud Child of the Wilds / The Shining Storm Rages)。wiki 本文では「Free Challenge Quest」と呼ばれており (The Proud Child of the Wilds で確認)
-    持ち込み装備と思われるが、Bucket の項目からは判断できないので null。
-  - false (198): それ以外の通常クエスト。
+  - false・確度 medium (5、2026-10-21 data-fix で null から変更): タイムランキング付きのチャレンジ (Burn in Blackest Hell /
+    The Cold Path to Oblivion / The Daunting Downpour / The Proud Child of the Wilds / The Shining Storm Rages)。
+    根拠は wiki のページ `MHWilds/Quests/Arena Counter` の節分け: 装備セット (Set 1〜3) が付く「Arena Quests」(4 件)・
+    「Challenge Quests」(13 件) とは別の「**Free Challenge Quests**」の節 (5 件) に載っており、説明文も
+    「特に手強いモンスターに挑む・期間中の最速タイムで報酬」で、Arena/Challenge の説明文にある「pre-determined set of equipment」
+    (決められた装備) が無い。ゲーム内では未確認なので medium。判定は節の見出しで行う (`monsters_wiki.FREE_CHALLENGE_SECTION`)。
+    節の 22 件は Bucket の quests と名前で全件結合できることを生成時に確かめている (`arenaSectionNotInBucket` が空)。
+  - false・確度 high (198): それ以外の通常クエスト。
 - `mission`: 結合できた MissionData の行。対象ごとの `health` (体力倍率)・`attack`・`partsVital`・`soloHealth`
   (ソロ時の体力の候補値)・`legendaryId` (NONE / NORMAL = 歴戦の個体 / KING = 歴戦王)。
 
@@ -172,7 +191,8 @@ node --test tests/monsters.test.mjs
 | wiki の「Snowman」 | 雪だるま | low | ゲーム内テキストで確認できなかった |
 | wiki の「Frostblight」 | 凍結 (拘束の一種、拘束耐性で防ぐ) | high | 氷属性やられ (Iceblight) とは別物。wiki の `Ice` が氷属性やられ |
 | 乱入 (`intruders`) | wiki の other_large_monsters | medium | 「同じフィールドに出る大型」であって、必ず乱入するわけではない。MissionData の `_SubBossInfoArray` も同じ趣旨と思われるが使っていない |
-| フリーチャレンジ 5 件の装備 | null | low | 上記の通り |
+| フリーチャレンジ 5 件の装備 | false (持ち込み) | medium | 上記の通り。wiki の Arena Counter ページの節分けと説明文から。ゲーム内では未確認 |
+| 属性やられの抜け (`blightsUncertain`) | 未確認として分けて持つ | low | 5 体。ゲームで確かめたら wiki 側の値が直るのを待つか、ここに例外を足す |
 | 日本語名の無いクエスト 14 件 | 英語名 | - | MissionData に無い (タイムアタック系・一部イベント)。Boundless Blades / Burn in Blackest Hell / Congalala Cravings / Doshaguma of the Hollow / Fleeting Bubbles / Gravios Blockade / Peak Nerscylla / Romping Around / Stalking Supper / The Cold Path to Oblivion / The Daunting Downpour / The Proud Child of the Wilds / The Shining Storm Rages / Where You'd Least Expect |
 | オメガ・プラネテスの個体 | 解消 (通常個体) | high | 「Invader from the Stars」「Planetes Protocol」の 2 件は wiki のアイコン種別も N/A で、MissionData も NONE。以前 tempered になっていたのは、MHDB の歴戦の個体名が基本種と同じ「Omega Planetes」なので要約のリンク表示名から歴戦と誤判定していたため (2026-10-21 検証で修正。基本種と同名の個体名は手がかりにしない)。歴戦/歴戦王は MissionData の `_LegendaryID` と全件一致 |
 | `hide` の部位名 | 部位不明 | - | PartNames.json に名前が無い。damage_calculator (中国語) では「外皮」。27 部位、推奨の計算から除外 |

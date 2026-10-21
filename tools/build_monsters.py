@@ -90,7 +90,9 @@ def main() -> None:
                       elementRecommendation=("部位ごとの bestElement は通常肉質で最も高い属性 (同値は全部)。"
                                              "elementRecommendation.best は名前のある部位のうち斬撃肉質 45 以上の部位"
                                              " (2 部位未満なら斬撃上位 3 部位) の属性肉質の単純平均が最大の属性。"
-                                             "部位不明 (unknownPart) は対象外。")),
+                                             "部位不明 (unknownPart) は対象外。同点は 主要部位の傷口の肉質の平均 "
+                                             "(傷口のある主要部位だけ) → 名前のある全部位の平均 の順で崩す "
+                                             "(経過は tieBreak。同点が無ければ null)。")),
         "monsters": monsters,
     })
     _write("monster_threats.json", {
@@ -99,7 +101,9 @@ def main() -> None:
                       license=LICENSE,
                       note=("咆哮 roar: none/weak(咆哮【小】)/strong(咆哮【大】)。風圧 windPressure: none/minor(風圧【小】)/"
                             "major(風圧【大】)/dragon(龍風圧)。振動 tremor: none/minor(振動【小】)/major(振動【大】)。"
-                            "wiki に値が無いものは null。blights は wiki の status_effects の属性 (属性やられ)。"),
+                            "wiki に値が無いものは null。blights は wiki の status_effects の属性 (属性やられ)。"
+                            "blightsUncertain は攻撃属性 (attackElements) にあるのに blights に無いもの "
+                            "(属性やられになるか未確認。blights には足していない)。"),
                       wiki={"rowsScanned": trep["wikiRowsScanned"], "pages": trep["wikiPages"],
                             "wildsRows": trep["wildsRows"]}),
         "rules": rules(),
@@ -107,11 +111,14 @@ def main() -> None:
         "otherMonsters": others,
     })
     _write("quests.json", {
-        "meta": _meta(["wiki_quests_mhwilds.json", "db_ja-JP/MissionData.xlsx", "db_en-US/MissionData.xlsx"],
+        "meta": _meta(["wiki_quests_mhwilds.json", "wiki_arena_counter.json",
+                       "db_ja-JP/MissionData.xlsx", "db_en-US/MissionData.xlsx"],
                       license=LICENSE,
                       note=("クエストの一覧と狩猟対象・乱入 (intruders = wiki の other_large_monsters)・装備固定は wiki "
                             "(CC BY-SA 4.0)。日本語名と mission (体力倍率など) は MissionData.xlsx (MHWS-in-json, MIT) を"
-                            "英語名で突き合わせたもの。multi は大型の狩猟対象が 2 体以上。" + mhws_note)),
+                            "英語名で突き合わせたもの。multi は大型の狩猟対象が 2 体以上。"
+                            "装備固定の判定には wiki のページ MHWilds/Quests/Arena Counter の節分けも使う "
+                            "(Free Challenge Quests の節 = 持ち込み装備)。" + mhws_note)),
         "quests": quests,
     })
 
@@ -134,6 +141,13 @@ def main() -> None:
     print("  MissionData で解決できない名前:", qrep["unmappedMissionMonsters"])
     print("  乱入で解決できない名前:", qrep["unmappedIntruders"])
     print("  歴戦/歴戦王の食い違い (wiki / MissionData):", qrep["variantMismatch"])
+    print("  Arena Counter の節:", qrep["arenaSections"], "Bucket に無い:", qrep["arenaSectionNotInBucket"])
+    ties = [(m["name"], m["elementRecommendation"]["tieBreak"]["tied"], m["elementRecommendation"]["best"],
+             m["elementRecommendation"]["tieBreak"]["by"]) for m in monsters if m["elementRecommendation"]["tieBreak"]]
+    print("推奨属性の同点:", ties)
+    print("属性やられ未確認 (blightsUncertain):",
+          [(x["name"], [b["element"] for b in x["blightsUncertain"]]) for x in threats if x["blightsUncertain"]],
+          [(x["nameEn"], [b["element"] for b in x["blightsUncertain"]]) for x in others if x["blightsUncertain"]])
 
 
 def Counter_(it):

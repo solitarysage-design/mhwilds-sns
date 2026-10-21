@@ -303,7 +303,12 @@ def build_monsters() -> tuple[list[dict], dict]:
 
 def recommend_element(parts: list[dict]) -> dict:
     """推奨属性: 主要部位 (名前のある部位のうち斬撃肉質 45 以上。2 部位未満なら斬撃上位 3 部位) の
-    属性肉質の単純平均が最も高い属性。全部位 (名前のある部位) 平均も併記する。"""
+    属性肉質の単純平均が最も高い属性。全部位 (名前のある部位) 平均も併記する。
+
+    同点は (1) 主要部位の傷口の肉質の平均 (傷口のある主要部位だけで平均) → (2) 名前のある全部位の平均
+    の順で崩す。それでも同点なら全部を best に残す。崩した経過は tieBreak に残す (同点が無ければ null)。
+    例: アルシュベルドは主要部位の属性肉質が全属性同じ (平均 2.5) だが、鎖翼刃の傷口が龍 38・他 30 なので龍になる。
+    """
     named = [p for p in parts if not p["unknownPart"]]
     basis = [p for p in named if p["hitzone"]["slash"] >= MAJOR_SLASH]
     method = f"slash>={MAJOR_SLASH}"
@@ -311,23 +316,50 @@ def recommend_element(parts: list[dict]) -> dict:
         basis = sorted(named, key=lambda p: (-p["hitzone"]["slash"], p["ordinal"]))[:MAJOR_FALLBACK_TOP]
         method = f"slash上位{MAJOR_FALLBACK_TOP}部位"
 
-    def avg(ps):
-        return {e: round(sum(p["hitzone"][e] for p in ps) / len(ps), 1) for e in ELEMENTS}
+    def raw_avg(ps, key="hitzone"):
+        # 比べるときは丸める前の値を使う (丸めで別々の値が同点に見えないように)
+        return {e: sum(p[key][e] for p in ps) / len(ps) for e in ELEMENTS}
 
-    a = avg(basis)
-    order = sorted(ELEMENTS, key=lambda e: (-a[e], ELEMENTS.index(e)))
-    top = a[order[0]]
+    def rnd(v):
+        return {e: round(x, 1) for e, x in v.items()} if v is not None else None
+
+    a_raw = raw_avg(basis)
+    all_raw = raw_avg(named)
+    wounded = [p for p in basis if p["wound"] is not None]
+    w_raw = raw_avg(wounded, "wound") if wounded else None
+    a, all_avg = rnd(a_raw), rnd(all_raw)
+    top = max(a_raw.values())
+    tied = [e for e in ELEMENTS if a_raw[e] == top] if top > 0 else []
+    best, tie = tied, None
+    if len(tied) > 1:
+        tie = {"tied": tied, "by": None, "woundAvg": rnd(w_raw), "woundParts": [p["key"] for p in wounded]}
+        cand = tied
+        for by, vals in (("woundAvg", w_raw), ("allPartsAvg", all_raw)):
+            if vals is None:
+                continue
+            m = max(vals[e] for e in cand)
+            cand = [e for e in cand if vals[e] == m]
+            if len(cand) == 1:
+                tie["by"] = by
+                break
+        best = cand
+        if len(cand) > 1:
+            tie["by"] = "unresolved"
+    # order は平均の高い順。同点は同じ順 (傷口の平均 → 全部位の平均) で並べる
+    order = sorted(ELEMENTS, key=lambda e: (-a_raw[e], -(w_raw[e] if w_raw else 0), -all_raw[e],
+                                            ELEMENTS.index(e)))
     # 参考: 主要部位ごとに「通常と states (custom/break/weakPoint) の中で一番高い値」を取った平均。
     # 形態で肉質が大きく変わるモンスター (ゴグマジオス等) で通常肉質だけの推奨とずれることがある
     smax = {e: round(sum(max([p["hitzone"][e]] + [s[e] for s in p["states"].values()]) for p in basis)
                      / len(basis), 1) for e in ELEMENTS}
     stop = max(smax.values())
     return {
-        "best": [e for e in ELEMENTS if a[e] == top] if top > 0 else [],
+        "best": best,
         "order": [{"type": e, "avg": a[e]} for e in order],
         "basis": method,
         "basisParts": [p["key"] for p in basis],
-        "allPartsAvg": avg(named),
+        "tieBreak": tie,
+        "allPartsAvg": all_avg,
         "stateMaxAvg": smax,
         "bestStateMax": [e for e in ELEMENTS if smax[e] == stop] if stop > 0 else [],
     }

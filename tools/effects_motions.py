@@ -190,24 +190,30 @@ def build_motions() -> tuple[dict, list[str]]:
     return {"moves": out_moves, "unusedHits": unused}, warnings
 
 
+# description = 画面に出す短い説明 (やさしい日本語)。note = データの根拠 (画面では「くわしく」の中にだけ出す)。
 COMBOS = [
     {"id": "just_rush_perfect", "name": "ジャストラッシュ1周 (全段ジャスト成功)",
      "steps": [{"move": "just_rush_1_just"}, {"move": "just_rush_2_just"}, {"move": "just_rush_3_just"}],
      "confidence": "medium",
-     "note": "ラッシュ部分だけ (入り口の飛び込み斬りは含めない)。3段目の盾ヒット (MV25) は対応が推定。"},
+     "description": "ジャストラッシュの 3 段を全部ジャストで決めたときの 1 周分です。入り口の飛び込み斬りは入れていません。",
+     "note": "ラッシュ部分だけ (入り口の飛び込み斬りは含めない)。3 段目の盾のヒット (モーション値 25) は、"
+             "ゲームデータの技との対応を推定で決めた。"},
     {"id": "focus_wound", "name": "集中弱点攻撃で傷を突く",
      "steps": [{"move": "aim_attack_wound", "onWound": True}],
      "confidence": "high",
-     "note": "全ヒットを傷口の肉質で計算する (傷口の会心補正も乗る)。"},
+     "description": "集中モードで傷口を突く攻撃 1 回分です。全部のヒットを傷口の肉質で計算します。",
+     "note": "全ヒットを傷口の肉質で計算する (弱点特効などの傷口の会心も乗る)。"},
     {"id": "ground_basic", "name": "通常の地上コンボ (△連携)",
      "steps": [{"move": "slash_1"}, {"move": "slash_2"}, {"move": "slash_3"}, {"move": "slash_4"}],
      "confidence": "medium",
-     "note": "斬り下ろし→横斬り→斜め斬り上げ→斜め斬り下ろし。入力の並びはゲーム内ガイドの『威力の高い連携』を参考にした代表例。"
-             "MV7 の追加ヒット (A#40) は発生条件不明なので含めない。"},
+     "description": "斬り下ろし → 横斬り → 斜め斬り上げ → 斜め斬り下ろし の 4 回の連携です。",
+     "note": "入力の並びはゲーム内ガイドの『威力の高い連携』を参考にした代表例。"
+             "モーション値 7 の追加のヒット (ゲームデータの番号 A#40) は、出る条件が分からないので入れていない。"},
     {"id": "charged_chop", "name": "溜め斬り落とし (単発)",
      "steps": [{"move": "finish_slash"}],
      "confidence": "medium",
-     "note": "子弾は通常 (MV14×4・属性補正0.3) の側。"},
+     "description": "溜め斬り落とし 1 回分です。",
+     "note": "あとから出る 4 回のヒットは、ふつうの方の値 (モーション値 14 × 4 回・属性の補正 0.3) で計算している。"},
 ]
 
 

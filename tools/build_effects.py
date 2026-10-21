@@ -20,6 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from effects_conditions import groups_with_skills, validate as validate_conditions  # noqa: E402
 from effects_motions import build_combos, build_motions  # noqa: E402
 from effects_skills import build_specs  # noqa: E402
 from effects_source import (  # noqa: E402
@@ -96,6 +97,10 @@ def build_skill_effects() -> tuple[dict, list[str]]:
         entry["requiresSkillId"] = req_id
         effects[str(sk["id"])] = entry
     effects = dict(sorted(effects.items(), key=lambda kv: int(kv[0])))
+    # 条件グループとスキルの対応が崩れていたら出力しない (発動率が静かに効かなくなるのを防ぐ)
+    errors = validate_conditions(effects)
+    if errors:
+        raise SystemExit("条件グループの食い違い: " + " / ".join(errors))
 
     st, sp = status_param(), skill_param()
     rules = {
@@ -103,8 +108,8 @@ def build_skill_effects() -> tuple[dict, list[str]]:
         "criticalNegative": st["_NegativeAttackRate"],
         "affinityMin": -100,
         "affinityMax": 100,
-        "elementCapRate": st["_ElementAttack_RateLimit"],
-        "elementCapAdd": st["_ElementAttack_AddLimit"] * 10,
+        "elementRateLimit": st["_ElementAttack_RateLimit"],
+        "elementAddLimit": st["_ElementAttack_AddLimit"] * 10,
         "physicalRateLimit": st["_PhysicalAttack_RateLimit"],
         "physicalAddLimit": st["_PhysicalAttack_AddLimit"],
         "weakPointMinHitzone": int(sp["_WeakAttackMeatThreshold"]),
@@ -117,8 +122,11 @@ def build_skill_effects() -> tuple[dict, list[str]]:
             "element": "表示値 (ダメージ計算では /10)。elementAdd も表示値",
             "affinity": "%",
         },
-        "note": "属性の上限は max(元の値 + elementCapAdd, 元の値 × elementCapRate) と扱う "
-                "(PlayerStatusParam._ElementAttack_RateLimit / _ElementAttack_AddLimit)。",
+        "conditionGroups": groups_with_skills(effects),
+        "note": "属性の上限は攻撃と同じく倍率と加算を別々に切る: 元の値 × min(倍率, elementRateLimit) + "
+                "min(加算, elementAddLimit) (PlayerStatusParam._ElementAttack_RateLimit / _ElementAttack_AddLimit。"
+                "_PhysicalAttack_RateLimit / _AddLimit と同じ形の名前なので同じ切り方と読んだ。確度 medium)。"
+                "条件つきスキルの発動率は conditionGroups (条件ごと) に持つ。",
     }
     urls, hashes = _raw_sources(["SkillCommonData", "SkillData", "PlayerSkillParam", "PlayerStatusParam", "EmCommonData"])
     sources = [f"https://github.com/dzxrly/MHWS-in-json/releases/tag/{MHWS_TAG}", *urls]

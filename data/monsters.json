@@ -52,7 +52,7 @@
     "confidence": "low"
    }
   },
-  "elementRecommendation": "部位ごとの bestElement は通常肉質で最も高い属性 (同値は全部)。elementRecommendation.best は名前のある部位のうち斬撃肉質 45 以上の部位 (2 部位未満なら斬撃上位 3 部位) の属性肉質の単純平均が最大の属性。部位不明 (unknownPart) は対象外。"
+  "elementRecommendation": "部位ごとの bestElement は通常肉質で最も高い属性 (同値は全部)。elementRecommendation.best は名前のある部位のうち斬撃肉質 45 以上の部位 (2 部位未満なら斬撃上位 3 部位) の属性肉質の単純平均が最大の属性。部位不明 (unknownPart) は対象外。同点は 主要部位の傷口の肉質の平均 (傷口のある主要部位だけ) → 名前のある全部位の平均 の順で崩す (経過は tieBreak。同点が無ければ null)。"
  },
  "monsters": [
   {
@@ -915,6 +915,7 @@
      "left-front-leg",
      "right-front-leg"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 10.3,
      "water": 5.0,
@@ -1311,16 +1312,15 @@
    ],
    "elementRecommendation": {
     "best": [
-     "fire",
      "dragon"
     ],
     "order": [
      {
-      "type": "fire",
+      "type": "dragon",
       "avg": 21.7
      },
      {
-      "type": "dragon",
+      "type": "fire",
       "avg": 21.7
      },
      {
@@ -1342,6 +1342,25 @@
      "right-front-leg",
      "left-front-leg"
     ],
+    "tieBreak": {
+     "tied": [
+      "fire",
+      "dragon"
+     ],
+     "by": "woundAvg",
+     "woundAvg": {
+      "fire": 25.0,
+      "water": 5.0,
+      "thunder": 15.0,
+      "ice": 10.0,
+      "dragon": 30.0
+     },
+     "woundParts": [
+      "head",
+      "right-front-leg",
+      "left-front-leg"
+     ]
+    },
     "allPartsAvg": {
      "fire": 17.1,
      "water": 5.0,
@@ -1896,6 +1915,7 @@
      "left-wing",
      "right-wing"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 5.0,
      "water": 7.9,
@@ -2437,6 +2457,7 @@
      "right-hind-leg",
      "petal"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 17.5,
      "water": 0.0,
@@ -2856,6 +2877,7 @@
      "right-front-leg",
      "tail"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 15.7,
      "water": 9.3,
@@ -3952,6 +3974,7 @@
      "stomach",
      "mantle"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 15.5,
      "water": 0.0,
@@ -4637,6 +4660,7 @@
      "antennae",
      "neck"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 13.8,
      "water": 0.0,
@@ -5203,6 +5227,7 @@
      "stomach",
      "back"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 0.0,
      "water": 26.1,
@@ -5770,13 +5795,17 @@
    ],
    "elementRecommendation": {
     "best": [
-     "fire",
-     "water",
-     "thunder",
-     "ice",
      "dragon"
     ],
     "order": [
+     {
+      "type": "dragon",
+      "avg": 2.5
+     },
+     {
+      "type": "thunder",
+      "avg": 2.5
+     },
      {
       "type": "fire",
       "avg": 2.5
@@ -5786,15 +5815,7 @@
       "avg": 2.5
      },
      {
-      "type": "thunder",
-      "avg": 2.5
-     },
-     {
       "type": "ice",
-      "avg": 2.5
-     },
-     {
-      "type": "dragon",
       "avg": 2.5
      }
     ],
@@ -5805,6 +5826,29 @@
      "left-wing-blade",
      "right-wing-blade"
     ],
+    "tieBreak": {
+     "tied": [
+      "fire",
+      "water",
+      "thunder",
+      "ice",
+      "dragon"
+     ],
+     "by": "woundAvg",
+     "woundAvg": {
+      "fire": 17.5,
+      "water": 17.5,
+      "thunder": 18.8,
+      "ice": 17.5,
+      "dragon": 24.0
+     },
+     "woundParts": [
+      "head",
+      "tail",
+      "left-wing-blade",
+      "right-wing-blade"
+     ]
+    },
     "allPartsAvg": {
      "fire": 2.1,
      "water": 2.1,
@@ -6223,6 +6267,7 @@
      "head",
      "tail"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 0.0,
      "water": 17.1,
@@ -6620,11 +6665,11 @@
       "avg": 10.0
      },
      {
-      "type": "water",
+      "type": "ice",
       "avg": 6.7
      },
      {
-      "type": "ice",
+      "type": "water",
       "avg": 6.7
      },
      {
@@ -6638,6 +6683,7 @@
      "right-front-leg",
      "left-front-leg"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 15.7,
      "water": 5.7,
@@ -7079,6 +7125,7 @@
      "neck",
      "tail"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 6.9,
      "water": 0.0,
@@ -7482,6 +7529,7 @@
      "left-wing",
      "right-wing"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 0.0,
      "water": 6.4,
@@ -8020,6 +8068,7 @@
      "ass",
      "tongue"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 6.2,
      "water": 3.8,
@@ -8639,6 +8688,7 @@
      "tail",
      "dorsal-fin"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 5.3,
      "water": 0.0,
@@ -9341,6 +9391,7 @@
      "right-wing",
      "tail"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 9.4,
      "water": 20.0,
@@ -9797,6 +9848,7 @@
      "left-hind-leg",
      "tail"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 13.8,
      "water": 6.2,
@@ -10218,16 +10270,15 @@
    ],
    "elementRecommendation": {
     "best": [
-     "thunder",
      "ice"
     ],
     "order": [
      {
-      "type": "thunder",
+      "type": "ice",
       "avg": 20.0
      },
      {
-      "type": "ice",
+      "type": "thunder",
       "avg": 20.0
      },
      {
@@ -10251,6 +10302,27 @@
      "right-wing",
      "left-wing"
     ],
+    "tieBreak": {
+     "tied": [
+      "thunder",
+      "ice"
+     ],
+     "by": "allPartsAvg",
+     "woundAvg": {
+      "fire": 6.0,
+      "water": 13.0,
+      "thunder": 20.0,
+      "ice": 20.0,
+      "dragon": 0.0
+     },
+     "woundParts": [
+      "head",
+      "torso",
+      "tail",
+      "right-wing",
+      "left-wing"
+     ]
+    },
     "allPartsAvg": {
      "fire": 6.2,
      "water": 12.5,
@@ -10743,6 +10815,7 @@
      "back",
      "tail"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 6.9,
      "water": 18.1,
@@ -11316,13 +11389,17 @@
    ],
    "elementRecommendation": {
     "best": [
-     "fire",
-     "water",
-     "thunder",
-     "ice",
      "dragon"
     ],
     "order": [
+     {
+      "type": "dragon",
+      "avg": 2.5
+     },
+     {
+      "type": "thunder",
+      "avg": 2.5
+     },
      {
       "type": "fire",
       "avg": 2.5
@@ -11332,15 +11409,7 @@
       "avg": 2.5
      },
      {
-      "type": "thunder",
-      "avg": 2.5
-     },
-     {
       "type": "ice",
-      "avg": 2.5
-     },
-     {
-      "type": "dragon",
       "avg": 2.5
      }
     ],
@@ -11351,6 +11420,29 @@
      "left-wing-blade",
      "right-wing-blade"
     ],
+    "tieBreak": {
+     "tied": [
+      "fire",
+      "water",
+      "thunder",
+      "ice",
+      "dragon"
+     ],
+     "by": "woundAvg",
+     "woundAvg": {
+      "fire": 17.5,
+      "water": 17.5,
+      "thunder": 18.8,
+      "ice": 17.5,
+      "dragon": 24.0
+     },
+     "woundParts": [
+      "head",
+      "tail",
+      "left-wing-blade",
+      "right-wing-blade"
+     ]
+    },
     "allPartsAvg": {
      "fire": 2.1,
      "water": 2.1,
@@ -11968,6 +12060,7 @@
      "left-front-leg",
      "tail-tip"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 0.0,
      "water": 18.9,
@@ -12420,6 +12513,7 @@
      "torso",
      "tail"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 18.8,
      "water": 6.9,
@@ -12979,6 +13073,7 @@
      "right-hind-arm",
      "mouth"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 7.3,
      "water": 4.2,
@@ -13420,6 +13515,7 @@
      "left-leg",
      "right-leg"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 0.0,
      "water": 8.8,
@@ -14286,6 +14382,7 @@
      "waterfilm-tail",
      "waterfilm-left-tail"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 3.8,
      "water": 0.0,
@@ -14968,6 +15065,7 @@
      "frozen-core-waist",
      "frozen-bigcore-after"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 7.7,
      "water": 4.5,
@@ -15781,6 +15879,7 @@
      "right-hind-arm",
      "mouth"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 0.0,
      "water": 15.5,
@@ -16423,6 +16522,7 @@
      "head",
      "tail-tip"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 17.5,
      "water": 30.5,
@@ -16900,6 +17000,7 @@
      "right-leg",
      "tail"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 0.0,
      "water": 6.2,
@@ -17323,6 +17424,7 @@
      "right-hind-leg",
      "tail"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 17.9,
      "water": 5.0,
@@ -18135,6 +18237,7 @@
      "chest",
      "back"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 13.1,
      "water": 0.0,
@@ -18637,6 +18740,7 @@
      "left-leg",
      "right-leg"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 0.0,
      "water": 6.2,
@@ -19233,6 +19337,7 @@
      "periscope",
      "back"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 0.0,
      "water": 5.6,
@@ -20434,6 +20539,7 @@
      "left-wing-legs",
      "right-wing-legs"
     ],
+    "tieBreak": null,
     "allPartsAvg": {
      "fire": 7.1,
      "water": 0.0,

@@ -63,6 +63,15 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
 ]}
 ```
 - `slots` は常に長さ 3 (空きは 0)。
+- (追記 2026-10-21) 上の例に無い項目:
+  - `setBonusIds`: その部位が数に入る全シリーズスキルの id の配列 (ふつうは 0〜1 個)。ゴグα/β は 2 個で、先頭がシリーズの
+    全部位に共通のもの (= `setBonusId`)。build.js はこれがあれば全部数える (無ければ `setBonusId`)。
+  - `armorSetId` / `armorSetName`: 防具シリーズ (MHDB の armor set の id と名前。例 `"護火竜β"`)。
+  - `limitBreakable`: 限界突破 (TU4) できるか。上位 = レア5〜8 で true、下位は false。
+  - `slotsLimitBreak`: 限界突破**後**のスロット (長さ 3。`slots` は限界突破前)。下位は null。
+    上位でも出典が食い違って決められない防具は null で、理由を `slotsLimitBreakNote` (文字列。この場合だけある) に持つ。
+    規則 (レア5 = 全枠 +1、レア6 = 先頭 2 枠 +1、上限 Lv3、レア7・8 は変わらない)・照合の結果・例は `meta.limitBreak`
+    (`ruleAdd[レア度]` = 各枠に足す Lv、`cap` = 上限)。出典と判断は `docs/sources/equip.md`。
 
 ### data/bonuses.json (シリーズスキル・グループスキル)
 ```json
@@ -91,6 +100,8 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
 - `attack` は**係数なしの値** (片手剣で 1.4 を掛けた表示値ではない)。
 - `element` は無ければ null。属性値は表示値 (ダメージ計算では /10)。
 - 巨戟アーティア (破滅のキリエヴェルド×3 = 攻撃/会心/属性の激化3種) は除外しない。属性値・ランダムスキルは手入力の対象 (`data/my_weapons.json`)。
+- (追記 2026-10-21) 巨戟アーティア 3 本 (id 1180〜1182) は名前が同じなので、見分けるための項目を持つ (ほかの武器には無い):
+  `variant` = `"攻撃激化" | "会心激化" | "属性激化"`、`displayName` = 画面に出す名前 (例 `"破滅のキリエヴェルド (攻撃激化)"`)。
 
 ### data/charms_fixed.json (固定護石)
 ```json
@@ -105,6 +116,10 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
                     "skillSlots": [{"groups": [1, 2], "kinds": ["weapon"]}]}},
  "groups": {"1": [{"skillId": 1, "level": 3}]}}
 ```
+- (追記 2026-10-21) 各レア度は `patterns` も持ち、**検証はこちらで行う** (スロット構成とスキル群は独立でないため。
+  `slotPatterns` / `skillSlots` は枠ごとにまとめた要約で、枠どうしの組み合わせを表さない):
+  `"patterns": [{"slotPt": 4, "armor": [2,0,0], "weapon": [0], "skillGroups": [3, 10, 0], "weight": 1}]`
+  = 抽選表の 1 行。`skillGroups[i]` はスキル枠 i の群番号 (`groups` のキー。0 = その枠なし)、`weight` は同じ行が載っている回数。
 
 ### data/charms.json (所持護石・人が増やす)
 ```json
@@ -141,8 +156,13 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
 ```
 - 値の根拠と確度を必ず持つ。確度が low のものは画面にも「未確定」と出す。
 
+- (追記 2026-10-21) `rules.conditionGroups[]` は条件ごとの発動率の定義 (`docs/MODEL_API.md`)。条件のもとがある条件
+  (狂竜症) は `sources: {skillIds, monsterStatus, label, inactiveText}` を持ち、もとのスキルも相手の状態異常も無いときは 0% で計算する。
+
 ### data/motions_sns.json と data/combos_sns.json
 技ごとのモーション値と属性補正、代表コンボ (技とヒット数の並び)。日本語の技名。
+- (追記 2026-10-21) コンボは `description` (画面に出す短い説明。やさしい日本語) と `note` (データの根拠。画面では「くわしく」の
+  中にだけ出す) を分けて持つ。どちらも `tools/effects_motions.py` の `COMBOS` で書く。
 
 ### data/monsters.json
 ```json
@@ -156,12 +176,77 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
 ```
 - 肉質は 0〜100 の整数 (MHDB の 0〜1 小数は 100 倍する)。
 - 名前の無い部位 ('hide' 等) は捨てずに `name` を「部位不明 (内部名)」として持ち、既定では推奨の対象外にする。
+  画面では内部名を出さず「部位不明 1」のように番号にする (`app/ui/tabs/target_mix.js` の `partLabel`)。
+- (追記 2026-10-21) 上の例に無い主な項目 (詳細は `docs/sources/monsters.md`):
+  - モンスター: `gameId`, `emId` (`"EM0160_00_0"`), `species`, `variantNames` (`{tempered: "歴戦の個体", ...}`),
+    `legendaryParams` (歴戦/歴戦王の倍率。内部名の群 `normal`/`king`/`hard`/`kingHard` のまま),
+    `itemEffects` (`{flash: {effective: true|false|null, conditions: []}, noise: {...}}`)。
+    `variants` には `"frenzied"` (狂竜化) と `"alpha"` (ボス個体) も入る。`statusWeakness` / `immune` は契約どおり (★ 0〜3、無効は 0)。
+  - 部位: `slug` (MHDB の部位名)、`unknownPart` (名前が無い部位なら true)、`internalType` (`"HEAD"` など)、`ordinal` (並び順)、
+    `health` (部位の体力)、`breakReward` (MHDB の部位破壊報酬が付いているか。特定できなければ null)、
+    `bestElement` (`{types: ["fire"], value: 25}` = 通常肉質で一番高い属性。同値は全部、最大が 0 なら types は [])、
+    `note` (あるときだけ)。`wound` は傷口の無い部位では null。`states` のキーは `break` / `custom1`〜`custom5` / `weakPoint` など
+    (意味と確度は `meta.stateKeys`)。
+  - `elementRecommendation`: `{best: ["dragon"], order: [{type, avg}], basis, basisParts: [部位 key], tieBreak, allPartsAvg,
+    stateMaxAvg, bestStateMax}`。`best` は主要部位 (斬撃肉質 45 以上。2 部位未満なら斬撃上位 3 部位) の属性肉質の平均が最大の属性。
+    同点は 主要部位の傷口の平均 → 全部位の平均 で崩し、経過を `tieBreak` (`{tied, by, woundAvg, woundParts}`。同点が無ければ null)
+    に持つ。崩せなければ `best` に複数残る。
 
 ### data/monster_threats.json (CC BY-SA 4.0)
 咆哮・風圧・振動・属性やられ・状態異常の種類。防御スキルを勧めるかの判定に使う。欠損は null。
 
+(追記 2026-10-21) 形:
+```json
+{"meta": {..., "license": {"name": "CC BY-SA 4.0", "url": "...", "attribution": "..."}},
+ "rules": {"elementalBlight": {"resistanceThreshold": 20, "skill": {"skillId": 49, "negateLevel": 3, "mitigateLevel": 1, ...}},
+           "roar": {"weak": {"skill": "耳栓", "skillId": 80, "negateLevel": 2, "mitigateLevel": 1, "levelText": {"1": "..."}}, "strong": {...}},
+           "windPressure": {"minor": {...}, "major": {...}, "dragon": {...}}, "tremor": {"minor": {...}, "major": {...}},
+           "status": {"poison": {...}, "paralysis": {...}}, "noSkill": {"frenzy": "..."}},
+ "monsters": [
+  {"monsterId": 3, "name": "レ・ダウ", "nameEn": "Rey Dau", "wikiPage": "...", "wikiUrl": "...",
+   "roar": "none|weak|strong|null", "windPressure": "none|minor|major|dragon|null", "tremor": "none|minor|major|null",
+   "attackElements": ["thunder"],
+   "blights": [{"element": "thunder", "name": "雷属性やられ"}],
+   "blightsUncertain": [{"element": "fire", "name": "火属性やられ", "reason": "..."}],
+   "statusEffects": [{"key": "paralysis", "name": "麻痺", "wiki": "Paralysis", "nameConfidence": "high|medium|low|null"}],
+   "issues": ["..."]}],
+ "otherMonsters": [{"nameEn": "Baunos", ...monsters と同じ項目 (monsterId と name が無い)}]}
+```
+- `monsters` は monsters.json の大型 34 体と同じ数 (`monsterId` で結合)。`otherMonsters` は 34 体以外の Wilds の行 (小型など)。
+- `blights` は wiki が属性やられを起こすとしている属性。`blightsUncertain` は攻撃属性 (`attackElements`) にあるのに `blights` に
+  無い属性で、属性やられになるか**未確認** (自動で `blights` に足していない。画面では「未確認」と出す)。
+- 防御スキルの判定は `rules` を使う (属性耐性 `resistanceThreshold` 以上ならその属性やられは無効、など)。
+- 画面でこのファイルの内容を出すときは出典 (Monster Hunter Wiki) とライセンス (CC BY-SA 4.0) を表示する。
+
 ### data/quests.json
 クエスト名・★・種類・狩猟対象・装備固定かどうか。
+
+(追記 2026-10-21) 形:
+```json
+{"meta": {..., "license": {"name": "CC BY-SA 4.0", ...}},
+ "quests": [
+  {"id": "A Flash of Brilliance", "name": "閃電猛りて、その粋やよし！", "nameLang": "ja|en", "nameEn": "A Flash of Brilliance",
+   "stars": 8, "rank": "low|high", "type": "hunt|slay|capture|arena|special|delivery", "category": "optional|event|assignment|challenge|arena",
+   "targets": [{"monsterId": 31, "name": "ラギアクルス", "nameEn": "Lagiacrus",
+                "variant": "tempered|arch-tempered|frenzied|alpha|null", "count": 1, "large": true}],
+   "largeTargetCount": 2, "multi": true, "variant": "tempered|arch-tempered|frenzied|alpha|mixed|null",
+   "intruders": [{"monsterId": 12, "name": "...", "nameEn": "...", "variant": null}],
+   "fixedEquipment": true, "fixedEquipmentReason": "...", "fixedEquipmentConfidence": "high|medium|low",
+   "locale": "Wounded Hollow", "timeLimit": 50, "requirements": "HR 41+", "wikiUrl": "...",
+   "mission": {"missionId": "MISSION_650008", "match": "exact|fuzzy:...", "questLv": 8, "questType": "HUNTING",
+               "version": "...", "stage": "ST401",
+               "targets": [{"monsterId": 31, "nameJa": "ラギアクルス", "variant": "tempered|arch-tempered|null",
+                            "legendaryId": "NONE|NORMAL|KING", "targetType": "...", "health": 5.2, "attack": 4.9,
+                            "partsVital": 6.25, "soloHealth": [27956, 28538, 29120, 29703, 30285]}]}}]}
+```
+- `id` は wiki の英語のクエスト名 (一意)。`name` は日本語名 (MissionData と結合できない 14 件は英語名のままで `nameLang: "en"`)。
+- `targets` の `monsterId` は monsters.json の id。小型の討伐は `large: false`・`monsterId: null`。
+  `multi` = 大型の狩猟対象が 2 体以上 (`largeTargetCount >= 2`)。
+- `intruders` は同じフィールドに出る大型 (乱入の可能性。必ず乱入するわけではない)。
+- `fixedEquipment`: true = 決められた装備で挑む (アリーナ/チャレンジ)、false = 持ち込み装備、null = 判断できない。
+  確度と根拠を `fixedEquipmentConfidence` / `fixedEquipmentReason` に持つ。
+- `mission` は MissionData (MHWS-in-json) と結合できたときだけ (できなければ null)。`health` などは体力倍率。
+- 画面でこのファイルの内容を出すときは出典 (Monster Hunter Wiki) とライセンス (CC BY-SA 4.0) を表示する。
 
 ## 計算モデルの方針 (app/model/damage.js)
 
@@ -171,7 +256,9 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
 - 条件つきスキル (挑戦者・連撃・フルチャージ・逆恨み・力の解放 など) は発動率 (0〜1) を人が入れる。
   組み合わせは独立と仮定し、発動/非発動の全パターンで加重平均する。
 - 「DPS」は秒数が公開されていないので出さない。**代表コンボ1回の期待値**と、**スキルなし比の上昇率 (%)** を出す。
-- 弱点特効は肉質 45 以上 (弱点) で効く。傷口には追加分。
+- 弱点特効は肉質 45 以上 (弱点) で効く。ヒットごとに、そのヒットの物理肉質で決める (剣 = 切断・盾 = 打撃。傷口を狙う段は
+  傷口の肉質)。傷口には追加分。
+- 斬れ味が「自動」のときは、スキルの組ごとに斬れ味の色を決め直す (匠を外すと色が下がる。スキルなし比のスキルなしは匠なしの色)。
 - 灼熱化などシリーズ由来の追加ダメージは、肉質に依存する部分と固定部分を分けて持つ。
 
 ## 段階

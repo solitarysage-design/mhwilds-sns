@@ -1,5 +1,5 @@
 // モンスター担当のデータ (data/monsters.json, data/monster_threats.json, data/quests.json) の構造検査。
-// 実行: node --test tests/
+// 実行: node --test tests/*.test.mjs  (Node 24 では tests/ とディレクトリで渡すと落ちる)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -17,7 +17,7 @@ const monsters = monstersDoc.monsters;
 const byId = new Map(monsters.map((m) => [m.id, m]));
 
 // 取り込み時点 (2026-10-21, Ver.1.042) の件数。生データを取り直したら見直す。
-const EXPECT = { monsters: 34, quests: 220, multiQuests: 34, fixedTrue: 17 };
+const EXPECT = { monsters: 34, quests: 220, multiQuests: 34, fixedTrue: 17, fixedFalse: 203 };
 
 const HZ_KEYS = ['slash', 'blunt', 'shot', 'fire', 'water', 'thunder', 'ice', 'dragon', 'stun'];
 const ELEMENTS = ['fire', 'water', 'thunder', 'ice', 'dragon'];
@@ -262,4 +262,105 @@ test('クエスト: 乱入の個体名つきの名前を解決・歴戦の判定
   assert.equal(byEn('Event: Unchained Arkveld').fixedEquipment, true);
   assert.equal(byEn('Event: Unchained Arkveld').targets[0].variant, 'arch-tempered');
   assert.equal(byEn('Event: Unpierceable and Unstoppable').fixedEquipment, true);
+});
+
+// ---- 2026-10-21 data-fix で足した検査 ----
+// (防具の限界突破スロットは armor.json だが、この段の担当ファイルがここなので一緒に置く)
+
+test('推奨属性の同点は 主要部位の傷口の平均 → 全部位の平均 で崩す (アルシュベルド系は龍)', () => {
+  for (const name of ['アルシュベルド', '護竜アルシュベルド']) {
+    const r = mon(name).elementRecommendation;
+    assert.deepEqual(r.best, ['dragon'], name);
+    assert.equal(r.tieBreak.by, 'woundAvg', name);
+    assert.deepEqual(r.tieBreak.tied, ELEMENTS, `${name} 5 属性が同点のはず`);
+  }
+  assert.deepEqual(mon('イャンクック').elementRecommendation.best, ['ice']);
+  assert.equal(mon('イャンクック').elementRecommendation.tieBreak.by, 'allPartsAvg');
+  for (const m of monsters) {
+    const r = m.elementRecommendation;
+    const basis = m.parts.filter((p) => r.basisParts.includes(p.key));
+    const avg = (ps, k, e) => ps.reduce((s, p) => s + p[k][e], 0) / ps.length;
+    const top = Math.max(...ELEMENTS.map((e) => avg(basis, 'hitzone', e)));
+    const tied = ELEMENTS.filter((e) => avg(basis, 'hitzone', e) === top);
+    if (tied.length <= 1) {
+      assert.equal(r.tieBreak, null, `${m.name} 同点が無いのに tieBreak がある`);
+      assert.deepEqual(r.best, top > 0 ? tied : [], m.name);
+      continue;
+    }
+    // 同点を自分で崩して best と一致するか確かめる
+    let cand = tied;
+    const wounded = basis.filter((p) => p.wound !== null);
+    const named = m.parts.filter((p) => !p.unknownPart);
+    for (const [ps, k] of [[wounded, 'wound'], [named, 'hitzone']]) {
+      if (ps.length === 0 || cand.length === 1) continue;
+      const mx = Math.max(...cand.map((e) => avg(ps, k, e)));
+      cand = cand.filter((e) => avg(ps, k, e) === mx);
+    }
+    assert.deepEqual(r.best, cand, m.name);
+    assert.deepEqual(r.tieBreak.tied, tied, m.name);
+    assert.equal(r.order[0].type, r.best[0], `${m.name} order の先頭が best と違う`);
+  }
+});
+
+test('属性やられの抜けは blightsUncertain に分けて持つ (blights には足さない)', () => {
+  for (const x of [...threatsDoc.monsters, ...threatsDoc.otherMonsters]) {
+    const b = new Set(x.blights.map((y) => y.element));
+    const expect = x.attackElements.filter((e) => !b.has(e));
+    assert.deepEqual(x.blightsUncertain.map((y) => y.element), expect, x.name ?? x.nameEn);
+    for (const y of x.blightsUncertain) assert.ok(y.name && y.reason, `${x.name} 理由が無い`);
+  }
+  assert.deepEqual(threat('アジャラカン').blightsUncertain.map((b) => b.element), ['fire']);
+  assert.deepEqual(threat('ジン・ダハド').blightsUncertain.map((b) => b.element), ['ice']);
+  assert.deepEqual(threat('アジャラカン').blights, []);
+  assert.deepEqual(threat('リオレウス').blightsUncertain, []);
+});
+
+test('フリーチャレンジ 5 件は持ち込み装備 (fixedEquipment=false・確度 medium)', () => {
+  const q = questsDoc.quests;
+  const FREE = ['Burn in Blackest Hell', 'The Cold Path to Oblivion', 'The Daunting Downpour',
+    'The Proud Child of the Wilds', 'The Shining Storm Rages'];
+  for (const n of FREE) {
+    const x = q.find((y) => y.nameEn === n);
+    assert.equal(x.fixedEquipment, false, n);
+    assert.equal(x.fixedEquipmentConfidence, 'medium', n);
+    assert.match(x.fixedEquipmentReason, /Free Challenge/, n);
+  }
+  assert.equal(q.filter((x) => x.fixedEquipment === null).length, 0, '装備固定が未判定のクエストが残っている');
+  assert.equal(q.filter((x) => x.fixedEquipment === false).length, EXPECT.fixedFalse);
+  assert.ok(questsDoc.meta.source.some((u) => u.includes('Arena+Counter') || u.includes('Arena%20Counter')),
+    'Arena Counter のページが出典に無い');
+});
+
+test('防具の限界突破スロット: 規則 (レア5 全枠+1・レア6 先頭 2 枠+1・上限 3・レア7/8 そのまま) と抜き取り', () => {
+  const armorDoc = load('armor.json');
+  const lb = armorDoc.meta.limitBreak;
+  assert.deepEqual(lb.rarities, [5, 6, 7, 8]);
+  assert.equal(lb.checks.wiki.mismatches.length, 0, 'wiki と規則が食い違う防具がある');
+  assert.ok(lb.checks.wiki.compared >= 500, `wiki と比べた数が少ない: ${lb.checks.wiki.compared}`);
+  const disputed = new Set(lb.disputed.map((d) => d.id));
+  for (const a of armorDoc.armor) {
+    if (a.rarity <= 4) {
+      assert.equal(a.limitBreakable, false, a.name);
+      assert.equal(a.slotsLimitBreak, null, a.name);
+      continue;
+    }
+    assert.equal(a.limitBreakable, true, a.name);
+    if (disputed.has(a.id)) {
+      assert.equal(a.slotsLimitBreak, null, `${a.name} は出典が食い違うので null のはず`);
+      assert.ok(a.slotsLimitBreakNote, a.name);
+      continue;
+    }
+    const add = lb.ruleAdd[String(a.rarity)];
+    assert.deepEqual(a.slotsLimitBreak, a.slots.map((s, i) => Math.min(lb.cap, s + add[i])), a.name);
+  }
+  const byName = (n) => armorDoc.armor.find((a) => a.name === n);
+  // Game8 の片手剣の最強装備にある「(限界突破強化)」の 3 部位
+  assert.deepEqual(byName('護火竜アームβ').slotsLimitBreak, [3, 2, 1]);
+  assert.deepEqual(byName('護火竜グリーヴβ').slotsLimitBreak, [3, 1, 0]);
+  assert.deepEqual(byName('護兇爪竜メイルβ').slotsLimitBreak, [3, 3, 0]);
+  // 上限に当たる例 (余りは次の枠に回らない)・レア5・レア8
+  assert.deepEqual(byName('ミツネヘルムα').slotsLimitBreak, [3, 1, 0]);
+  assert.deepEqual(byName('コンガヘルムα').slotsLimitBreak, [2, 1, 1]);
+  assert.deepEqual(byName('ゴグヘルムα').slotsLimitBreak, byName('ゴグヘルムα').slots);
+  assert.deepEqual([...disputed].sort(), [589, 591]);
 });

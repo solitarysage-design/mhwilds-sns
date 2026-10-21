@@ -26,6 +26,10 @@ LICENSE = {
 ELEMENT_EN = {"Fire": "fire", "Water": "water", "Thunder": "thunder", "Ice": "ice", "Dragon": "dragon"}
 BLIGHT_JA = {"fire": "火属性やられ", "water": "水属性やられ", "thunder": "雷属性やられ",
              "ice": "氷属性やられ", "dragon": "龍属性やられ"}
+BLIGHT_UNCERTAIN_REASON = ("wiki の攻撃属性 (elements) にはこの属性があるが、状態異常 (status_effects) に"
+                           "この属性やられが無い。属性やられになるかは未確認")
+# Arena Counter のページ (クエストの節分け) で、装備を持ち込む「フリーチャレンジ」の節の見出し
+FREE_CHALLENGE_SECTION = "Free Challenge Quests"
 # wiki の状態異常名 → (キー, 日本語名, 確度)。日本語名はゲーム内テキスト (MHWS-in-json FullText) で確認したもの
 STATUS_EN = {
     "Poison": ("poison", "毒", "high"),
@@ -162,11 +166,16 @@ def build_threats(monsters: list[dict]) -> tuple[list[dict], list[dict], dict]:
         for f, v in (("roar", roar), ("windPressure", wind), ("tremor", tremor)):
             if v is None:
                 notes.append(f"{f} が wiki に無い (null)")
+        attack = [ELEMENT_EN[e] for e in (r.get("elements") or []) if e in ELEMENT_EN]
         entry = {
             "wikiPage": page, "wikiUrl": WIKI_BASE + page.replace(" ", "_"),
             "roar": roar, "windPressure": wind, "tremor": tremor,
-            "attackElements": [ELEMENT_EN[e] for e in (r.get("elements") or []) if e in ELEMENT_EN],
+            "attackElements": attack,
             "blights": [{"element": e, "name": BLIGHT_JA[e]} for e in blights],
+            # 攻撃属性にあるのに属性やられに無いもの。wiki の書き漏れか、本当にやられにならないのか分からないので
+            # blights には足さず (自動で埋めない)、ここに分けて持つ
+            "blightsUncertain": [{"element": e, "name": BLIGHT_JA[e], "reason": BLIGHT_UNCERTAIN_REASON}
+                                 for e in attack if e not in blights],
             "statusEffects": status,
             "issues": notes,
         }
@@ -181,7 +190,7 @@ def build_threats(monsters: list[dict]) -> tuple[list[dict], list[dict], dict]:
     for mid in sorted(set(by_id) - seen):
         out.append({"monsterId": mid, "name": by_id[mid]["name"], "nameEn": None, "wikiPage": None, "wikiUrl": None,
                     "roar": None, "windPressure": None, "tremor": None, "attackElements": [], "blights": [],
-                    "statusEffects": [], "issues": ["wiki に Wilds の行が無い"]})
+                    "blightsUncertain": [], "statusEffects": [], "issues": ["wiki に Wilds の行が無い"]})
     out.sort(key=lambda x: x["monsterId"])
     summary = {"wikiRowsScanned": mg["totalRowsScanned"], "wikiPages": mg["pages"], "wildsRows": len(mg["rows"]),
                "matched": len(seen), "missing": missing, "issues": issues}
@@ -313,8 +322,27 @@ def _wiki_link_names(summary: str) -> list[tuple[str, str]]:
     return out
 
 
-def _fixed_equipment(r: dict) -> tuple[bool | None, str, str]:
-    """装備固定か (値, 根拠, 確度)。"""
+def arena_sections() -> dict[str, str]:
+    """wiki の「MHWilds/Quests/Arena Counter」ページの節分け: クエスト名 (表示名) → 節の見出し。
+
+    節は Arena Quests / Challenge Quests (どちらも装備セット Set 1〜3 の記載あり) と
+    Free Challenge Quests (タイムランキング付き。装備セットの記載が無い) の 3 つ。
+    """
+    d = _load("wiki_arena_counter.json")
+    text = d["parse"]["wikitext"]["*"]
+    out = {}
+    secs = re.split(r"^==([^=\n]+)==\s*$", text, flags=re.M)
+    for i in range(1, len(secs), 2):
+        head = secs[i].strip()
+        for name in re.findall(r"\|Quest Name\s*=\s*\[\[[^|\]]*\|([^\]]+)\]\]", secs[i + 1]):
+            out[name.strip()] = head
+    if FREE_CHALLENGE_SECTION not in out.values():
+        raise ValueError(f"Arena Counter のページに「{FREE_CHALLENGE_SECTION}」の節が無い (ページの構成が変わった?)")
+    return out
+
+
+def _fixed_equipment(r: dict, section: str | None = None) -> tuple[bool | None, str, str]:
+    """装備固定か (値, 根拠, 確度)。section は Arena Counter ページでそのクエストが載っている節の見出し。"""
     ai = r.get("arena_info") or ""
     notes = r.get("notes") or ""
     desc = r.get("description") or ""
@@ -324,9 +352,14 @@ def _fixed_equipment(r: dict) -> tuple[bool | None, str, str]:
     if "Akuma Set" in notes:
         return True, "notes に「Equipped with Akuma Set」", "high"
     if r.get("quest_type") == "Arena":
+        if section == FREE_CHALLENGE_SECTION and not re.search(r"pre-?determined|set of equipment", desc):
+            return False, ("wiki の Arena Counter ページで、装備セット (Set 1〜3) が付く Arena/Challenge の節とは別の"
+                           "「Free Challenge Quests」の節に載っており、説明文も「特に手強いモンスターに挑む・"
+                           "期間中の最速タイムで報酬」で固定装備の記載が無い (= 持ち込み装備のフリーチャレンジ)。"
+                           "ゲーム内では未確認"), "medium"
         if "Time Ranking" in ai:
-            return None, ("タイムランキング付きのチャレンジ (wiki 本文では Free Challenge Quest)。"
-                          "Bucket の項目からは装備固定か判断できない"), "low"
+            return None, ("タイムランキング付きのチャレンジ。"
+                          "Bucket の項目と Arena Counter の節からは装備固定か判断できない"), "low"
         return None, "アリーナ種別だが装備の記載が無い", "low"
     return False, "通常のクエスト (持ち込み装備)", "high"
 
@@ -342,6 +375,7 @@ def build_quests(monsters: list[dict]) -> tuple[list[dict], dict]:
         for k, n in m["variantNames"].items():
             ja2id.setdefault(n, m["id"])
     missions = load_missions()
+    sections = arena_sections()
     by_norm: dict[str, list[dict]] = {}
     for ms in missions.values():
         by_norm.setdefault(_norm(ms["nameEn"]), []).append(ms)
@@ -407,7 +441,7 @@ def build_quests(monsters: list[dict]) -> tuple[list[dict], dict]:
             intr.append({"monsterId": mid, "name": by_id[mid]["name"] if mid else None, "nameEn": n,
                          "variant": ivar})
 
-        fixed, fixed_reason, fixed_conf = _fixed_equipment(r)
+        fixed, fixed_reason, fixed_conf = _fixed_equipment(r, sections.get(r["name"]))
         ms, how = match_mission(r, by_norm, norms)
         mission = None
         if ms:
@@ -471,4 +505,7 @@ def build_quests(monsters: list[dict]) -> tuple[list[dict], dict]:
     report["unmappedTargets"] = dict(report["unmappedTargets"])
     report["unmappedMissionMonsters"] = dict(report["unmappedMissionMonsters"])
     report["unmappedIntruders"] = dict(report["unmappedIntruders"])
+    # Arena Counter のページに載っているのに Bucket の quests に無いクエスト (名前の付け方のずれの検出用)
+    report["arenaSectionNotInBucket"] = sorted(set(sections) - set(names))
+    report["arenaSections"] = dict(Counter(sections.values()))
     return out, report

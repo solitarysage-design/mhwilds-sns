@@ -284,3 +284,103 @@ test('実データ: ガード性能 Lv3 (護石) + 鉄壁珠 は上限 3 で切�
   assert.equal(s.level, 3);
   assert.equal(s.overLimit, true);
 });
+
+// ---------------------------------------------------------------- 検証役の指摘への対応 (model-fix) で足したテスト
+
+test('setBonusIds と setBonusId を合わせて数える (片方だけ・空配列・重複でも取りこぼさない)', () => {
+  // setBonusIds が空配列でも setBonusId を数える
+  const headEmpty = { id: 90, name: '頭E', part: 'head', slots: [0, 0, 0], skills: [], setBonusId: 3, setBonusIds: [], groupBonusId: null };
+  const r1 = computeBuild({ armor: { head: headEmpty, chest: 2 } }, idx);
+  assert.equal(r1.setBonuses.find((b) => b.bonusId === 3).pieces, 2);
+  assert.equal(lv(r1, 10), 1);
+  // setBonusIds に無い setBonusId も足す (42 と 3 の両方に 1 部位)
+  const headMix = { id: 91, name: '頭F', part: 'head', slots: [0, 0, 0], skills: [], setBonusId: 3, setBonusIds: [42], groupBonusId: null };
+  const r2 = computeBuild({ armor: { head: headMix, chest: 2 } }, idx);
+  assert.equal(r2.setBonuses.find((b) => b.bonusId === 3).pieces, 2);
+  assert.equal(r2.setBonuses.find((b) => b.bonusId === 42).pieces, 1);
+  // 両方に同じ id があっても 1 部位
+  const headDup = { id: 92, name: '頭G2', part: 'head', slots: [0, 0, 0], skills: [], setBonusId: 3, setBonusIds: [3, 42], groupBonusId: null };
+  const r3 = computeBuild({ armor: { head: headDup } }, idx);
+  assert.equal(r3.setBonuses.find((b) => b.bonusId === 3).pieces, 1);
+  // setBonusIds だけ (setBonusId 無し)
+  const headOnlyIds = { id: 93, name: '頭H', part: 'head', slots: [0, 0, 0], skills: [], setBonusIds: [3], groupBonusId: null };
+  assert.equal(computeBuild({ armor: { head: headOnlyIds } }, idx).setBonuses.find((b) => b.bonusId === 3).pieces, 1);
+  // 武器 (巨戟アーティア) も同じ
+  const w = { id: 'w9', name: '巨戟X', baseWeaponId: 1059, slots: [3, 3, 3], skills: [], setBonusId: 3, setBonusIds: [] };
+  assert.equal(lv(computeBuild({ weapon: w, armor: { head: 1 } }, idx), 10), 1);
+});
+
+test('my_weapons の要素 (object) を渡しても baseWeaponId からスロット・スキルを補う', () => {
+  const elem = { id: 'w0002', name: '巨戟 (スロット未入力)', baseWeaponId: 1059, setBonusId: null, groupBonusId: null };
+  const r = computeBuild({ weapon: elem, decorations: { weapon: [101] } }, idx);
+  assert.equal(r.ok, true, JSON.stringify(r.errors));
+  assert.deepEqual(r.slots.weapon.map((s) => s.size), [3, 1, 0]);   // 元の武器 1059 のスロット
+  assert.equal(lv(r, 1), 4);                                          // 元の武器の 攻撃1 + 攻撃珠Ⅲ3
+  // 要素にスロット・スキルがあればそちらが優先
+  const own = { ...elem, slots: [2, 2, 0], skills: [{ skillId: 2, level: 1 }] };
+  const r2 = computeBuild({ weapon: own }, idx);
+  assert.deepEqual(r2.slots.weapon.map((s) => s.size), [2, 2, 0]);
+  assert.equal(lv(r2, 1), 0);
+  assert.equal(lv(r2, 2), 1);
+  // id 指定 (文字列) と同じ結果
+  const byId = computeBuild({ weapon: 'w0001' }, idx);
+  const byObj = computeBuild({ weapon: { ...fx.myWeapons.weapons[0] } }, idx);
+  assert.deepEqual(byObj.skillLevels, byId.skillLevels);
+  // 元の武器が見つからないときは補えないと警告 (落ちない)
+  const lost = computeBuild({ weapon: { id: 'w0003', name: '迷子', baseWeaponId: 9999 } }, idx);
+  assert.deepEqual(lost.warnings.map((w) => w.code), ['unknown-base-weapon']);
+  assert.deepEqual(lost.slots.weapon.map((s) => s.size), [0, 0, 0]);
+  // weapons_sns の要素 (baseWeaponId 無し) はそのまま
+  assert.deepEqual(computeBuild({ weapon: fx.weapons[0] }, idx).slots.weapon.map((s) => s.size), [3, 1, 0]);
+});
+
+test('防具の限界突破: 真の部位は slotsLimitBreak を使う (全体の真偽値 / 部位ごと)', () => {
+  const lbFx = indexEquipData({
+    ...fx,
+    armor: [
+      ...fx.armor.filter((a) => a.id !== 1 && a.id !== 2),
+      { ...fx.armor[0], slotsLimitBreak: [3, 2, 1] },          // 頭A: [3,1,0] → [3,2,1]
+      { ...fx.armor[1], slotsLimitBreak: null },               // 胴A: 対象外・不明
+    ],
+  });
+  // 指定なし: 通常のスロット。Lv2 の珠は頭の 2 番目 (Lv1) に入らない
+  const plain = computeBuild({ armor: { head: 1 }, decorations: { head: [null, 103] } }, lbFx);
+  assert.deepEqual(codes(plain), ['deco-too-large']);
+  assert.deepEqual(plain.slots.head.map((s) => s.size), [3, 1, 0]);
+  assert.deepEqual(plain.limitBreak, { head: false, chest: false, arms: false, waist: false, legs: false });
+  // 全体 true: 頭は [3,2,1] になり Lv2 の珠が入る
+  const all = computeBuild({ armor: { head: 1, chest: 2 }, limitBreak: true, decorations: { head: [null, 103, 102] } }, lbFx);
+  assert.equal(all.ok, true, JSON.stringify(all.errors));
+  assert.deepEqual(all.slots.head.map((s) => s.size), [3, 2, 1]);
+  assert.equal(lv(all, 3), 3);                                         // 体術珠Ⅱ2 + 体術珠1
+  assert.equal(all.limitBreak.head, true);
+  // 胴は slotsLimitBreak が null → 通常のスロットのまま、警告
+  assert.equal(all.limitBreak.chest, false);
+  assert.deepEqual(all.slots.chest.map((s) => s.size), [1, 0, 0]);
+  assert.deepEqual(all.warnings.map((w) => [w.code, w.target]), [['limit-break-unknown', 'chest']]);
+  assert.equal(all.slotSummary.armor.total, 4);                        // 頭 3 + 胴 1
+  // 部位ごと: 頭だけ false なら通常のスロット
+  const per = computeBuild({ armor: { head: 1 }, limitBreak: { head: false, chest: true } }, lbFx);
+  assert.deepEqual(per.slots.head.map((s) => s.size), [3, 1, 0]);
+  assert.deepEqual(per.warnings, []);                                  // 胴は装備していないので警告しない
+  const per2 = computeBuild({ armor: { head: 1 }, limitBreak: { head: true } }, lbFx);
+  assert.deepEqual(per2.slots.head.map((s) => s.size), [3, 2, 1]);
+  // slotsLimitBreak の項目がまだ無いデータでも落ちない (通常のスロット + 警告)
+  const old = computeBuild({ armor: { head: 1, legs: 5 }, limitBreak: true }, idx);
+  assert.equal(old.ok, true);
+  assert.deepEqual(old.slots.head.map((s) => s.size), [3, 1, 0]);
+  assert.deepEqual(old.warnings.map((w) => w.code), ['limit-break-unknown', 'limit-break-unknown']);
+});
+
+test('実データ: 限界突破を全部位に指定しても落ちない (slotsLimitBreak があればそれ、無ければ通常のスロット)', () => {
+  const parts = { head: 'ゴグヘルムα', chest: 'ゴグメイルα', arms: 'ゴグアームα', waist: 'ゴグコイルα', legs: 'ゴググリーヴα' };
+  const armor = Object.fromEntries(Object.entries(parts).map(([p, n]) => [p, armorByName(n).id]));
+  const r = computeBuild({ armor, limitBreak: true }, ridx);
+  assert.equal(r.ok, true, JSON.stringify(r.errors));
+  for (const [p, n] of Object.entries(parts)) {
+    const a = armorByName(n);
+    const want = Array.isArray(a.slotsLimitBreak) ? a.slotsLimitBreak : a.slots;
+    assert.deepEqual(r.slots[p].map((s) => s.size), want, p);
+    assert.equal(r.limitBreak[p], Array.isArray(a.slotsLimitBreak), p);
+  }
+});

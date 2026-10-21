@@ -23,6 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import equip_fetch  # noqa: E402
+import equip_limitbreak  # noqa: E402
 import equip_talisman  # noqa: E402
 
 ROOT = equip_fetch.ROOT
@@ -38,6 +39,9 @@ LICENSES = {
     "mhdb": "wilds.mhdb.io (LartTyler/mhdb-wilds-data)。ゲームデータの数値と名前のみ使用",
     "mhwsInJson": "MIT (dzxrly/MHWS-in-json)",
 }
+# armor.json の限界突破スロットの照合に使う wiki の表記 (値は規則で計算し、wiki は照合にだけ使う)
+WIKI_LICENSE = ("CC BY-SA 4.0 (Monster Hunter Wiki, monsterhunterwiki.org の寄稿者)。"
+                "防具シリーズのページの Transcend N Deco を限界突破後のスロットの照合に使用")
 
 PARTS = ["head", "chest", "arms", "waist", "legs"]
 RESISTS = ["fire", "water", "thunder", "ice", "dragon"]
@@ -490,10 +494,22 @@ def main(argv: list[str] | None = None) -> int:
 
     armor, armor_checks = build_armor(m_armor, m_sets, set_b, grp_b,
                                       load_xlsx_sheet("mhws/db/EquipCollection.xlsx", "Armor"))
+    # 限界突破後のスロット (規則で計算し、wiki の全部位と照合する。食い違う防具は null)
+    limit_break = equip_limitbreak.apply_limit_break(
+        armor, load("mhdb/armor_en.json"), load(equip_fetch.WIKI_ARMOR_PAGES)["pages"],
+        vals("mhws/raw/ArmorUpgradeData.user.3.json"), vals("mhws/raw/ArmorSpUpgradeCostData.user.3.json"))
     sizes["armor.json"] = write_json("armor.json", {
-        "meta": make_meta(manifest, ["mhdb/armor.json", "mhdb/armor_sets.json", "mhws/db/EquipCollection.xlsx"],
+        "meta": make_meta(manifest, ["mhdb/armor.json", "mhdb/armor_sets.json", "mhws/db/EquipCollection.xlsx",
+                                     "mhdb/armor_en.json", "mhws/raw/ArmorUpgradeData.user.3.json",
+                                     "mhws/raw/ArmorSpUpgradeCostData.user.3.json",
+                                     equip_fetch.WIKI_ARMOR_BUCKET, equip_fetch.WIKI_ARMOR_PAGES],
                           checks=armor_checks,
-                          note="slots は限界突破前。setBonusIds はその部位が数に入る全シリーズスキル "
+                          license={**LICENSES, "wiki": WIKI_LICENSE},
+                          limitBreak=limit_break,
+                          note="slots は限界突破前、slotsLimitBreak は限界突破後 (limitBreak に規則と照合結果)。"
+                               "限界突破できない防具 (下位) は limitBreakable=false・slotsLimitBreak=null。"
+                               "出典が食い違って決められない防具は slotsLimitBreak=null で理由を slotsLimitBreakNote に書く。"
+                               "setBonusIds はその部位が数に入る全シリーズスキル "
                                "(ゴグα/β は 2 つ。先頭がシリーズ共通のもの = setBonusId)"),
         "armor": armor})
 
@@ -546,6 +562,12 @@ def main(argv: list[str] | None = None) -> int:
           "/ weapons", weapon_checks["mhwsCompared"], "件比較 不一致", len(weapon_checks["mismatches"]))
     for mm in weapon_checks["mismatches"] + armor_checks["mismatches"] + deco_checks["mismatches"]:
         print("  不一致:", json.dumps(mm, ensure_ascii=False))
+    lw = limit_break["checks"]["wiki"]
+    print("限界突破: レア", limit_break["rarities"], "/ slotsLimitBreak あり", limit_break["filled"],
+          "/ wiki と比較", lw["compared"], "件 一致", lw["matched"], "/ wiki に無い", len(lw["notInWiki"]),
+          "/ 欄なし", lw["noTranscendField"], "/ 出典の食い違い (null)", [d["name"] for d in limit_break["disputed"]])
+    for mm in lw["mismatches"] + lw["baseSlotMismatch"]:
+        print("  限界突破の不一致 (null にした):", json.dumps(mm, ensure_ascii=False))
     print("talisman checks:", json.dumps(rules_checks, ensure_ascii=False))
     print("サイズ:", {k: f"{v / 1024:.0f}KB" for k, v in sizes.items()})
     return 0

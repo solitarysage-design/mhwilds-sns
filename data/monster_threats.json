@@ -14,7 +14,7 @@
    "url": "https://creativecommons.org/licenses/by-sa/4.0/",
    "attribution": "Monster Hunter Wiki (monsterhunterwiki.org) の寄稿者。Bucket API の monsters_games / quests と Status Effects (MHWilds) を加工。このファイルも同じ CC BY-SA 4.0 で提供する。"
   },
-  "note": "咆哮 roar: none/weak(咆哮【小】)/strong(咆哮【大】)。風圧 windPressure: none/minor(風圧【小】)/major(風圧【大】)/dragon(龍風圧)。振動 tremor: none/minor(振動【小】)/major(振動【大】)。wiki に値が無いものは null。blights は wiki の status_effects の属性 (属性やられ)。",
+  "note": "咆哮 roar: none/weak(咆哮【小】)/strong(咆哮【大】)。風圧 windPressure: none/minor(風圧【小】)/major(風圧【大】)/dragon(龍風圧)。振動 tremor: none/minor(振動【小】)/major(振動【大】)。wiki に値が無いものは null。blights は wiki の status_effects の属性 (属性やられ)。blightsUncertain は攻撃属性 (attackElements) にあるのに blights に無いもの (属性やられになるか未確認。blights には足していない)。",
   "wiki": {
    "rowsScanned": 2729,
    "pages": 6,
@@ -297,6 +297,7 @@
      "name": "火属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": [
     "wiki の値がマークアップの生文字列だったため 'Dragon Wind Pressure' を読み取った"
@@ -313,6 +314,7 @@
    "tremor": "minor",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -334,6 +336,7 @@
      "name": "雷属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -348,6 +351,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "paralysis",
@@ -371,6 +375,13 @@
     "fire"
    ],
    "blights": [],
+   "blightsUncertain": [
+    {
+     "element": "fire",
+     "name": "火属性やられ",
+     "reason": "wiki の攻撃属性 (elements) にはこの属性があるが、状態異常 (status_effects) にこの属性やられが無い。属性やられになるかは未確認"
+    }
+   ],
    "statusEffects": [
     {
      "key": "poison",
@@ -410,6 +421,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "sleep",
@@ -443,6 +455,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "frenzy",
@@ -471,6 +484,7 @@
      "name": "火属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "sleep",
@@ -505,6 +519,7 @@
      "name": "龍属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -526,6 +541,7 @@
      "name": "火属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": [
     "roar が wiki に無い (null)",
@@ -544,6 +560,7 @@
    "tremor": "minor",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -565,6 +582,7 @@
      "name": "水属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -586,6 +604,7 @@
      "name": "火属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "poison",
@@ -607,6 +626,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -633,6 +653,7 @@
      "name": "火属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "bubbleblight-major",
@@ -667,6 +688,7 @@
      "name": "雷属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -683,6 +705,13 @@
     "ice"
    ],
    "blights": [],
+   "blightsUncertain": [
+    {
+     "element": "ice",
+     "name": "氷属性やられ",
+     "reason": "wiki の攻撃属性 (elements) にはこの属性があるが、状態異常 (status_effects) にこの属性やられが無い。属性やられになるかは未確認"
+    }
+   ],
    "statusEffects": [
     {
      "key": "frostblight",
@@ -711,6 +740,7 @@
      "name": "火属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -725,6 +755,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "poison",
@@ -753,6 +784,7 @@
      "name": "龍属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -769,6 +801,13 @@
     "fire"
    ],
    "blights": [],
+   "blightsUncertain": [
+    {
+     "element": "fire",
+     "name": "火属性やられ",
+     "reason": "wiki の攻撃属性 (elements) にはこの属性があるが、状態異常 (status_effects) にこの属性やられが無い。属性やられになるかは未確認"
+    }
+   ],
    "statusEffects": [
     {
      "key": "blast",
@@ -790,6 +829,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "poison",
@@ -817,6 +857,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -838,6 +879,7 @@
      "name": "火属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "poison",
@@ -866,6 +908,7 @@
      "name": "水属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -882,6 +925,13 @@
     "ice"
    ],
    "blights": [],
+   "blightsUncertain": [
+    {
+     "element": "ice",
+     "name": "氷属性やられ",
+     "reason": "wiki の攻撃属性 (elements) にはこの属性があるが、状態異常 (status_effects) にこの属性やられが無い。属性やられになるかは未確認"
+    }
+   ],
    "statusEffects": [
     {
      "key": "frostblight",
@@ -910,6 +960,7 @@
      "name": "火属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -931,6 +982,7 @@
      "name": "龍属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "bleeding",
@@ -959,6 +1011,7 @@
      "name": "火属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "poison",
@@ -987,6 +1040,7 @@
      "name": "氷属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "frostblight",
@@ -1015,6 +1069,7 @@
      "name": "雷属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -1029,6 +1084,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "bleeding",
@@ -1056,6 +1112,13 @@
     {
      "element": "fire",
      "name": "火属性やられ"
+    }
+   ],
+   "blightsUncertain": [
+    {
+     "element": "ice",
+     "name": "氷属性やられ",
+     "reason": "wiki の攻撃属性 (elements) にはこの属性があるが、状態異常 (status_effects) にこの属性やられが無い。属性やられになるかは未確認"
     }
    ],
    "statusEffects": [
@@ -1086,6 +1149,7 @@
      "name": "火属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   }
@@ -1100,6 +1164,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -1119,6 +1184,7 @@
      "name": "氷属性やられ"
     }
    ],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "snowman",
@@ -1138,6 +1204,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -1150,6 +1217,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -1162,6 +1230,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "sleep",
@@ -1181,6 +1250,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "stench",
@@ -1200,6 +1270,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -1212,6 +1283,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -1224,6 +1296,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -1236,6 +1309,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -1248,6 +1322,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -1260,6 +1335,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -1272,6 +1348,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -1284,6 +1361,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -1296,6 +1374,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -1308,6 +1387,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -1320,6 +1400,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "paralysis",
@@ -1339,6 +1420,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [],
    "issues": []
   },
@@ -1351,6 +1433,7 @@
    "tremor": "none",
    "attackElements": [],
    "blights": [],
+   "blightsUncertain": [],
    "statusEffects": [
     {
      "key": "paralysis",

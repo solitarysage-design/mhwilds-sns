@@ -72,9 +72,29 @@ export function decorationFitError(deco, kind, slotSize) {
   return null;
 }
 
-function resolveWeapon(ref, idx, errors) {
+/**
+ * 所持アーティア武器 (my_weapons.json の要素): slots / skills が無ければ元の武器 (baseWeaponId) から補う。
+ * baseWeaponId の無い要素 (weapons_sns.json の要素) はそのまま返す。
+ */
+function withBaseWeapon(w, idx, warnings) {
+  if (w.baseWeaponId == null || (w.slots != null && w.skills != null)) return w;
+  const base = idx.weapons.get(w.baseWeaponId);
+  if (!base) {
+    warnings.push({
+      code: 'unknown-base-weapon', target: 'weapon',
+      message: `${w.name || '武器'} の元の武器 (id ${w.baseWeaponId}) が weapons_sns.json に無いので、スロット・スキルを補えない`,
+    });
+  }
+  return {
+    ...w,
+    slots: w.slots ?? base?.slots ?? [0, 0, 0],
+    skills: w.skills ?? base?.skills ?? [],
+  };
+}
+
+function resolveWeapon(ref, idx, errors, warnings) {
   if (ref == null) return null;
-  if (typeof ref === 'object') return ref;
+  if (typeof ref === 'object') return withBaseWeapon(ref, idx, warnings);
   if (typeof ref === 'number') {
     const w = idx.weapons.get(ref);
     if (!w) errors.push({ code: 'unknown-weapon', message: `武器 id ${ref} が weapons_sns.json に無い`, target: 'weapon' });
@@ -85,13 +105,13 @@ function resolveWeapon(ref, idx, errors) {
     errors.push({ code: 'unknown-weapon', message: `武器 id ${ref} が my_weapons.json に無い`, target: 'weapon' });
     return null;
   }
-  // 所持アーティア武器: 足りない項目は元の武器 (baseWeaponId) から補う
-  const base = w.baseWeaponId != null ? idx.weapons.get(w.baseWeaponId) : null;
-  return {
-    ...w,
-    slots: w.slots ?? base?.slots ?? [0, 0, 0],
-    skills: w.skills ?? base?.skills ?? [],
-  };
+  return withBaseWeapon(w, idx, warnings);
+}
+
+/** 限界突破の指定 (全体の真偽値 / 部位ごとの {head: true, ...}) から、その部位を限界突破するか。 */
+function wantsLimitBreak(limitBreak, part) {
+  if (limitBreak && typeof limitBreak === 'object') return !!limitBreak[part];
+  return !!limitBreak;
 }
 
 function resolveArmor(part, ref, idx, errors) {
@@ -128,15 +148,18 @@ function resolveCharm(ref, idx, errors) {
  *   - charm: charms.json の要素 / charms_fixed.json の要素 / id (文字列=charms, 数値=charms_fixed) / null
  *   - decorations: { weapon: [..], head: [..], ..., charmArmor: [..], charmWeapon: [..] }
  *       配列の i 番目 = その装備の i 番目のスロットに入れる装飾品 (id か要素)。空きは null。
+ *   - limitBreak: 防具の限界突破。true / false (全部位) か { head: true, legs: false, ... } (部位ごと)。
+ *       真の部位で armor.json の slotsLimitBreak (限界突破後のスロット) があればそれを使う。
+ *       slotsLimitBreak が無い・null (対象外か不明) なら通常の slots のまま (警告 limit-break-unknown)。
  * @param {object} data indexEquipData の結果、または indexEquipData に渡すのと同じもの
- * @returns {object} { ok, errors, warnings, skills, skillLevels, setBonuses, groupBonuses, slots, slotSummary }
+ * @returns {object} { ok, errors, warnings, skills, skillLevels, setBonuses, groupBonuses, slots, slotSummary, limitBreak }
  */
 export function computeBuild(build = {}, data = {}) {
   const idx = indexEquipData(data);
   const errors = [];
   const warnings = [];
 
-  const weapon = resolveWeapon(build.weapon, idx, errors);
+  const weapon = resolveWeapon(build.weapon, idx, errors, warnings);
   const armor = {};
   for (const p of ARMOR_PARTS) armor[p] = resolveArmor(p, build.armor?.[p], idx, errors);
   const charm = resolveCharm(build.charm, idx, errors);
@@ -165,7 +188,21 @@ export function computeBuild(build = {}, data = {}) {
     charmArmor: charm && !charmIsFixed ? padSlots(charm.armorSlots, 3) : [],
     charmWeapon: charm && !charmIsFixed ? padSlots(charm.weaponSlots, 1) : [],
   };
-  for (const p of ARMOR_PARTS) slotSizes[p] = armor[p] ? padSlots(armor[p].slots, 3) : [];
+  // 防具のスロット: 限界突破の指定があり、限界突破後のスロットが分かる部位はそちらを使う
+  const limitBreak = {};
+  for (const p of ARMOR_PARTS) {
+    const a = armor[p];
+    const want = !!a && wantsLimitBreak(build.limitBreak, p);
+    const lbSlots = a && Array.isArray(a.slotsLimitBreak) ? a.slotsLimitBreak : null;
+    limitBreak[p] = want && lbSlots != null;
+    if (want && lbSlots == null) {
+      warnings.push({
+        code: 'limit-break-unknown', target: p, armorId: a.id,
+        message: `${a.name} (${TARGET_LABEL[p]}) は限界突破後のスロットが分からない (対象外の可能性) ので、通常のスロットで計算しました`,
+      });
+    }
+    slotSizes[p] = a ? padSlots(limitBreak[p] ? lbSlots : a.slots, 3) : [];
+  }
   const present = {
     weapon: !!weapon, charmArmor: !!charm, charmWeapon: !!charm,
     ...Object.fromEntries(ARMOR_PARTS.map((p) => [p, !!armor[p]])),
@@ -241,9 +278,11 @@ export function computeBuild(build = {}, data = {}) {
     e.pieces += 1;
     e.from.push(from);
   };
+  // setBonusIds (配列) と setBonusId を合わせ、重複と null を除いて数える
+  // (setBonusIds が空配列で setBonusId だけある、などの食い違いがあっても取りこぼさない)
   const setIdsOf = (x) => {
-    const ids = Array.isArray(x.setBonusIds) ? x.setBonusIds : x.setBonusId != null ? [x.setBonusId] : [];
-    return [...new Set(ids)];
+    const ids = [...(Array.isArray(x.setBonusIds) ? x.setBonusIds : []), x.setBonusId];
+    return [...new Set(ids.filter((id) => id != null))];
   };
   for (const p of ARMOR_PARTS) {
     if (!armor[p]) continue;
@@ -322,7 +361,7 @@ export function computeBuild(build = {}, data = {}) {
 
   return {
     ok: errors.length === 0, errors, warnings,
-    skills, skillLevels, setBonuses, groupBonuses, slots, slotSummary,
+    skills, skillLevels, setBonuses, groupBonuses, slots, slotSummary, limitBreak,
   };
 }
 

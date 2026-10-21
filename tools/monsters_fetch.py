@@ -9,7 +9,8 @@
 - GitHub LartTyler/mhdb-wilds-data (部位スラッグの日本語名・英語名つきモンスター一覧) ※コミット固定
 - GitHub dzxrly/MHWS-in-json (MIT) の release PROCESSED_DATA (damage_calculator) と
   natives の生ファイル (EnemyData / Resident / ParamPack / Param_Parts / PartsLost) ※コミット固定
-- monsterhunterwiki.org Bucket API (CC BY-SA 4.0) の monsters_games と quests
+- monsterhunterwiki.org Bucket API (CC BY-SA 4.0) の monsters_games と quests、
+  ページ「MHWilds/Quests/Arena Counter」のウィキテキスト (クエストの節分け)
 """
 from __future__ import annotations
 
@@ -45,6 +46,8 @@ MHWS_RAW = f"https://raw.githubusercontent.com/dzxrly/MHWS-in-json/{MHWS_SHA}/MH
 
 WIKI_API = "https://monsterhunterwiki.org/api.php"
 WIKI_PAGE = 500  # Bucket API の 1 回の上限
+WIKI_ARENA_COUNTER_URL = WIKI_API + "?" + urllib.parse.urlencode(
+    {"action": "parse", "page": "MHWilds/Quests/Arena Counter", "prop": "wikitext", "format": "json"})
 
 MG_FIELDS = ["page_name", "page_name_sub", "overview_page", "size_class", "elements",
              "status_effects", "weakest_to", "roar", "wind_pressure", "tremor"]
@@ -295,6 +298,8 @@ def fetch_all(refresh: bool = False) -> None:
     fetch_natives(ems, manifest, refresh)
     fetch_wiki_monsters_games(manifest, refresh)
     fetch_wiki_quests(manifest, refresh)
+    # Arena Counter のページ (クエストの節分け: Arena / Challenge / Free Challenge)。フリーチャレンジの装備の判定に使う
+    _fetch("wiki_arena_counter.json", WIKI_ARENA_COUNTER_URL, manifest, refresh)
 
 
 def enemy_id_map(path: Path) -> dict[int, str]:
