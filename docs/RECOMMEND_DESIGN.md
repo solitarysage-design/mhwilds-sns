@@ -523,6 +523,10 @@ w_i ∝ H_i / D_ref_i²        (= 基準の装備での「その相手にかか�
   戻ったら続ける。
 - 計算中に装備・相手を変えてもよい (探索は始めた時の条件の写しで続く。終わったら「条件が変わりました」)。
 - 結果は端末に保存し、次に開いたときも出す (5.7 節)。
+- (実装 2026-10-21 3e) 上の表と 4.3 節の画面は `app/ui/tabs/search*.js` に入れた。`buildPlan` が置き場 (null) の間は、
+  相手に合わせたおすすめ (守りのスキルの行・武器 2 本・相手ごとの回数) は Plan が来たら出る形で、段階 2 (相手の肉質・
+  武器の範囲・狙う部位・倒していない歴戦王の γ の除外は画面の側で作る) で探す。「試す」(火力の差) と「守りのスキルのために火力 −x%」・
+  結果からのマイセットへの保存はまだ (`docs/UI_API.md` の「まだ無いもの」)。
 
 ### 4.6 文言
 
@@ -657,6 +661,9 @@ const runner = createPlanRunner(job, data, { createSearch, optimizeWeaponSide })
 | Worker → 画面 | `partial` / `done` | `result` は 5.3 節の形 (plan のとき) |
 
 - Worker は core データだけを読む (相手のデータは読まない)。肉質・体力・重みは Job に数値で入っている。
+- (実装 2026-10-21 画面の側) `start` は `{id, job, input}` (`job.kind === 'search'` なら `input` にも同じ入力)。各 run の入力には
+  画面が `charms.extra` (端末の護石)・`extraWeapons`・`budget: {ms, activeMs}`・`current` (いまの装備) を足す。
+  画面のつなぎ方・保存・作り物の Worker は `docs/UI_API.md` の「探すタブ」節。
 - 同時に 1 つだけ。新しい `start` が来たら前の job を捨てる (今の決まりのまま)。
 
 ### 5.6 state.js に足すもの (足すだけなので `STATE_SCHEMA` は 1 のまま)

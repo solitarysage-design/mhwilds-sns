@@ -1,3 +1,140 @@
 /* 探すタブ (段階 2・3) の見た目。担当: ui-search (3e)。class は sr-* にする (ほかのタブとぶつけない)。
    決まりは styles.css と同じ: 色は :root の変数だけ (ダーク表示は変数が変わる)・タップできるものは 44px 以上・
    マウスを重ねたときの見た目は @media (hover: hover) の中に書く・vh を使うなら dvh も書く。index.html が styles.css の後に読む。 */
+
+/* ---------------------------------------------------------------- 条件のカード */
+
+.sr-target-name { font-size: 17px; font-weight: 700; overflow-wrap: anywhere; }
+.sr-target-line { font-size: 14px; color: var(--text-sub); margin-top: 2px; overflow-wrap: anywhere; }
+[data-sr] .segmented + .hint,
+[data-sr] .field + .hint { margin-top: 6px; }
+[data-sr] .toggle { margin-top: 8px; }
+.sr-rows { margin-top: 8px; border-top: 1px solid var(--border); }
+.sr-rows .row { padding-left: 0; padding-right: 0; }
+
+.sr-list { margin: 4px 0 0; padding-left: 1.2em; }
+.sr-list li + li { margin-top: 4px; }
+.sr-small { font-size: 13px; color: var(--text-sub); }
+
+/* 守りのスキルの行 */
+.sr-req-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.sr-req-list li + li { border-top: 1px solid var(--border); }
+
+/* 自分で決める必須スキルの行: 名前 [−] Lv [＋] [×] */
+.sr-req-rows { list-style: none; margin: 0; padding: 0; }
+.sr-req-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: var(--tap);
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+.sr-req-row:last-child { border-bottom: 0; }
+.sr-req-name { min-width: 0; flex: 1 1 auto; overflow-wrap: anywhere; }
+.sr-req-ctrl { display: flex; align-items: center; gap: 4px; flex: none; }
+.sr-req-lv { min-width: 44px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* 探すボタンのまわり */
+.sr-start { display: flex; flex-direction: column; gap: 8px; }
+.sr-start .notice { margin-top: 0; }
+.sr-start .hint { margin-top: 0; }
+.sr-start-hint { text-align: center; }
+.sr-start .btn-primary { min-height: 52px; font-size: 17px; font-weight: 700; }
+
+/* ---------------------------------------------------------------- 計算中 */
+
+.sr-run {
+  border-radius: var(--radius-small);
+  background: var(--surface-2);
+  padding: 12px;
+}
+.sr-run-head { display: flex; align-items: center; gap: 10px; }
+.sr-run-phase { font-size: 16px; }
+.sr-run-meta { font-size: 14px; color: var(--text-sub); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.sr-progress { height: 8px; border-radius: 4px; background: var(--surface-3); margin-top: 10px; overflow: hidden; }
+.sr-progress > span { display: block; height: 100%; background: var(--accent); transition: width 0.3s ease-out; }
+@media (prefers-reduced-motion: reduce) { .sr-progress > span { transition: none; } }
+.sr-run .btn-row { margin-top: 10px; }
+
+/* ---------------------------------------------------------------- 結果 */
+
+.sr-note { margin-top: 12px; }
+.sr-note:first-child { margin-top: 0; }
+.sr-partial-note { font-size: 14px; font-weight: 600; color: var(--accent); margin-top: 10px; }
+
+.sr-results-list { list-style: none; margin: 12px 0 0; padding: 0; border-top: 1px solid var(--border); }
+.sr-result {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  width: 100%;
+  min-height: var(--tap);
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sr-result:active { background: var(--surface-2); }
+.sr-result-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
+.sr-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 13px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 14px;
+  align-self: center;
+}
+.sr-value { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sr-diff { font-size: 14px; color: var(--text-sub); font-variant-numeric: tabular-nums; }
+.sr-diff.is-up { color: var(--ok); font-weight: 700; }
+.sr-diff.is-down { color: var(--danger); font-weight: 700; }
+.sr-change { font-size: 14px; overflow-wrap: anywhere; }
+.sr-skills { font-size: 13px; color: var(--text-sub); overflow-wrap: anywhere; }
+.sr-marks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+
+/* ---------------------------------------------------------------- 1 件の詳しく (シート) */
+
+.sr-sheet-lead { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.sr-sheet-lead .sr-diff { font-size: 16px; }
+.sr-parts { list-style: none; margin: 10px 0 0; padding: 0; border-top: 1px solid var(--border); }
+.sr-parts li {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.sr-parts li.is-changed .sr-part-label { color: var(--accent); font-weight: 700; }
+.sr-part-label { flex: none; width: 2.6em; color: var(--text-sub); font-size: 14px; }
+.sr-part-body { min-width: 0; display: flex; flex-direction: column; }
+.sr-part-name { overflow-wrap: anywhere; }
+.sr-part-sub { font-size: 13px; color: var(--text-sub); overflow-wrap: anywhere; }
+.sr-second { margin-top: 4px; }
+.sr-gamma { margin-top: 10px; font-size: 14px; }
+
+.sr-skill-diff { list-style: none; margin: 0; padding: 0; }
+.sr-skill-diff li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; padding: 3px 0; }
+.sr-sign { width: 1.2em; flex: none; font-weight: 700; text-align: center; }
+.sr-skill-diff li.is-plus .sr-sign { color: var(--ok); }
+.sr-skill-diff li.is-minus .sr-sign { color: var(--danger); }
+.sr-skill-name { font-weight: 600; }
+.sr-skill-before { font-size: 13px; color: var(--text-sub); }
+.sr-skill-same { font-size: 13px; color: var(--text-sub); padding-left: calc(1.2em + 8px); }
+
+.sr-sheet-foot { display: flex; flex-direction: column; gap: 8px; }
+
+@media (hover: hover) {
+  .sr-result:hover { background: var(--surface-2); }
+}

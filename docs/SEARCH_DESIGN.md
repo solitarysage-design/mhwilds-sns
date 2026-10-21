@@ -386,8 +386,15 @@ search.extend({ ms: 6000 });        // 「続けて探す」: B&B の続きと�
   SharedArrayBuffer は使わない (GitHub Pages では COOP/COEP のヘッダを付けられない)。止まらないときの最後の手段は
   `worker.terminate()` (作り直してデータを読み直す)。
 - 同時に走らせるのは 1 つだけ。新しい `start` が来たら前の探索は捨てる。
+- (実装 2026-10-21 画面の側・`app/ui/tabs/search_client.js`) 画面は `start` に `{id, job, input}` を送る (`job` は
+  `docs/RECOMMEND_DESIGN.md` 5.5 節の形。`job.kind === 'search'` のときは同じ入力を `input` にも入れる)。予算は
+  `budget: {ms, activeMs}` (同じ値。`activeMs` を知らなければ `ms` で切る)。`cancel` のあとは `done` (`status: 'cancelled'`) を
+  返してほしい (2.5 秒で来なければ画面が Worker を作り直す)。`progress` の `best` は数の配列でも `[{value}]` でも読む。
+  Worker を読み込めない・一度も返事をしないまま落ちたときは、画面のスレッドで `createSearch` を 16ms ずつ回す。
 
 ### 3.6 画面 (次の段で決める。ここでは約束だけ)
+
+(実装 2026-10-21) 画面は `docs/RECOMMEND_DESIGN.md` 4.3〜4.6 節、使い方は `docs/UI_API.md` の「探すタブ」節。
 
 - 入力は state から作る (武器・相手・コンボ・発動率・限界突破は「装備」「相手」「火力」タブの値)。必須スキルと「使わない防具」は
   探索の画面で入れる。
