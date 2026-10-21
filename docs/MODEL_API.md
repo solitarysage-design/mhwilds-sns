@@ -330,6 +330,7 @@ const hz = hitzoneFor(monster, 'head', 'arch-tempered', { useUncertain: state.ta
 import { buildPlan, planToJob, createPlanRunner, rerankMulti, defenseCheck, resistTotals, jobKey,
          collectThreats, requirementsFrom, elementPlan, elementView, partsTargets, multiWeights, subjectHealths,
          gammaExclusions, gammaIndex, searchUptimes, evaluateBuild, defenseSkillChoices, stableHash,
+         baselineView, vsBaselinePct, planBaseline,
          PRESETS, PRESET_LABEL, DEFAULT_PRESET, ELEMENT_LABEL, DEFENSE_SKILL_NAMES, TWO_WEAPON_TOP, RUN_SHARE,
          DEFAULT_HITZONE, DEFAULT_HITZONE_TEXT } from './app/model/recommend.js';
 
@@ -346,8 +347,11 @@ const inputKey = jobKey(job, { dataVersion });   // 結果の保存 (search-last
 
 // Worker の中で (createSearch と同じ形)
 const runner = createPlanRunner(job, data, { createSearch, optimizeWeaponSide });
-while (!runner.step(80)) { const p = runner.progress(); /* p.run = {index, count, label, key} */ }
+while (!runner.step(80)) { const p = runner.progress(); /* p.run = {index, count, label, key}・p.best・p.bestKind */ }
 const r = runner.result();   // r.results[] に score / perSubject / weapons / builds / defense / baseline / gamma
+
+// 画面のスレッドで、いまの装備の基準を Worker と同じ式で出し直す (結果の組を装備に入れたあとの「いまより」)
+const base = planBaseline(job, state.build, { index, skillEffects, motions });   // baselineView の形 | null
 ```
 
 ### Plan (`buildPlan` の返り値)
@@ -404,6 +408,8 @@ const r = runner.result();   // r.results[] に score / perSubject / weapons / b
   武器 2 本の案は `clear` の 1 位の属性が 2 種類以上 (3 種類以上なら `time` の和の大きい 2 つ)。`elementView` は target_mix.js の `recommendationView` と同じ。
 - `partsTargets(monster, kind, policy, memo, isWound, {useUncertain})` → `[{weight, label, partKey, target: {hitzone, wound, isWound}, woundSource, woundMark}]`。
   `memo = {[monsterId]: {partKey, mix: {on, weights}}}` (`tabs.target.memo` と、いまの相手の `partKey` / `tabs.target.mix`)。傷口は `hunt.hitzoneFor`。
+  弱点 1 か所 (`weak1` と memo の無い相手) と主な部位 3 か所 (`main3`) は、一時的な部位 (monsters.json の `transient: true`。
+  ウズ・トゥナの水膜) を選ばない (2026-10-22。前は切断 90 の水膜が弱点 1 か所になり、『英雄の証』の T を約 11% 少なく見積もっていた)。
 - `subjectHealths(subjects)` → 相手ごとの T 用の体力 (分からない相手は分かっている相手の平均・全員分からなければ 1)。人数の倍率は全員分かるときだけ掛ける。
 - `multiWeights(subjects, dRef)` → `[{key, name, weight (足して 1), time = H/D_ref, timeShare, health, healthAssumed, healthBasis, dRef, dRefAssumed, reason}]`。
   `weight ∝ H_i / D_ref_i²`。D_ref はいまの装備の期待値 (武器が無ければ候補の先頭の武器のスキルなし)。
@@ -428,7 +434,10 @@ const r = runner.result();   // r.results[] に score / perSubject / weapons / b
 - `createPlanRunner(job, data, {createSearch, optimizeWeaponSide, now})`: `step(ms)` / `progress()` / `result()` / `cancel()` / `extend({ms} | {activeMs})`。
   `data` は Worker の data (生データ + `index`)。索引には入力の `extraWeapons`・`charms.extra` (端末の所持アーティア・護石) を足して使う
   (守りのチェック・いまの装備の値・相手ごとの値の計算し直し)。`extend` は `activeMs` (計算した時間) か `ms` (始めてからの時間) を回の数で分ける。
-  `runs` を順に回し (`progress().run = {index, count, label, key}`、`phase` は探索の段か `'merge'` / `'twoWeapons'` / `'cost'` / `'done'`)、
+  `runs` を順に回し (`progress().run = {index, count, label, key}`。`count` は火力の差を測る回 (`costRun`) も数える (その回は `index` が最後)。
+  `phase` は探索の段か `'merge'` / `'twoWeapons'` / `'cost'` / `'done'`。`best` (いまの最良) は 1 体の探索の回ならその回の上位、
+  それ以外 (多頭の探索の回 = 重み付きの期待値で T ではない・火力の差の回 = 守りなし・合わせ) は合わせた結果の上位で、
+  `bestKind` は `'damage'` か `'combos'` (多頭の T))、
   合わせる → 武器 2 本 (上位 `TWO_WEAPON_TOP` = 5 件の防具の組に、その回の候補の武器から 2 本目と 1 本目を `optimizeWeaponSide` で選び直す。
   計算し直しは省き (`check: false`)、同じ回の入力の物を使い回して下ごしらえを 1 回にする) → `costRun`。
   `partialReady` は 1 回目の探索の途中の結果 (仕上げ 1) が出たとき。`extend` は終わった回 (満たせなかった回を除く) を延長してもう一度合わせる。
@@ -438,11 +447,21 @@ const r = runner.result();   // r.results[] に score / perSubject / weapons / b
   - `result()` = `{status: 'partial'|'done'|'stopped'|'cancelled'|'infeasible'|'error'|'blocked', results, infeasible, warnings, stats: {elapsedMs, mergeMs, twoWeaponsMs, extended, runs: [{key, label, status, ms, stats}]}, quality: 'heuristic', merge, costOfDefense, singleWeapon, twoWeaponsGain}`。
   - `results[]` = 探索の結果に `score: {kind: 'damage'|'combos', value, better}`・`perSubject: [{key, name, value, combos, weapon: 1|2}]`・`combosTotal`・
     `perGroup` (無ければ計算し直す)・`weapons`・`builds` (武器 2 本なら 2 つ。防具・護石は共通)・`defense` (`defenseCheck`。2 本目は `defense2`)・
-    `gamma: [{part, monsterId, name}]`・`baseline: {value, combos}`・`vsBaselinePct`・`run` を足したもの。守りを満たす組を先に、その中で score の順
+    `gamma: [{part, monsterId, name}]`・`baseline` (`baselineView` の形 `{kind, value, T, combos, perGroup}`)・`vsBaselinePct`・`run` を足したもの。守りを満たす組を先に、その中で score の順
     (属性やられの耐性が 20 に届かない組は下)。同じ組 (武器・防具・護石。武器 2 本は 2 本とも) は 1 件にまとめる (珠だけ違う組は良い方)。
   - `baseline` (いまの装備) は、探索が返した `baseline` → 無ければ `runs[0].input.current` を探索と同じ式 (`evaluateBuild`・同じ発動率) で計算 →
-    それも無ければ Plan の `current` の順に使う。多頭は `baseline.value` = いまの装備の T。
+    それも無ければ Plan の `current` の順に使う。`baseline.value` は `score.value` と同じ単位: 1 体 = 期待値、多頭 = いまの装備の T、
+    体力が全員分からない多頭 = 期待値の調和平均 (= 相手の数 / T。2026-10-22 に直した。前は T を入れていて、画面の差が桁違いになった)。
+    `combos` = 相手ごとに切り上げた回数の合計 (体力の分からない相手がいれば null。人数の倍率を掛けた体力で数える。結果の `combosTotal` と同じ)。
+  - `vsBaselinePct` = `vsBaselinePct(score, baseline)`: 期待値は「結果 / 基準 − 1」(+ なら火力が高い)、回数は「基準の T / 結果の T − 1」
+    (+ なら回数が少ない)。画面は `resultRows` で、いまの装備が探し始めた時のままのときだけ行の `baseline` を使う (`docs/UI_API.md`)。
+  - 探索の警告 `weapons-sieved` (武器を絞った本数) は回ごとに数が違うので 1 行にまとめる (`keptMin`〜`keptMax`。「1〜3 本に絞って (回ごとに違います)」)。
   - `costOfDefense = {kind, main, free, pct (≤ 0 = 火力 −x%), rawPct, approx: true}`。`twoWeaponsGain = {combos, text: '武器 1 本で通すと 約 +n 回'}`。
+    `pct` は期待値なら「守りあり / 守りなし − 1」、回数なら「守りなしの T / 守りありの T − 1」(どちらも守りのぶん悪くなると負)。
+- `baselineView(subjects, {value, perGroup})` → 結果の `baseline` の形 (上)。計算できない相手がいれば null。
+  `vsBaselinePct(score, baseline)` → 差 (%) か null (単位が違う)。`planBaseline(job, build, {index, effects | skillEffects, motions})` →
+  `build` の基準を Job の 1 回目の入力 (相手・発動率・コンボ) で `evaluateBuild` して `baselineView` にしたもの (画面のスレッドで、
+  結果の組を装備に入れたあとの「いまより」を出し直すのに使う。索引には入力の端末の武器・護石を足す)。
 - `rerankMulti(results, subjects, {twoWeapons})`: T = Σ 体力_i / 期待値_i (武器 2 本は相手ごとに良い方) の小さい順。1 体なら期待値の高い順 (`score.kind: 'damage'`)。
   全員の体力が分からなければ期待値の調和平均を `damage` として出す (並びは T と同じ)。
 - `defenseCheck(build, requirements, index, effects)` → `{ok, rows: [{key, label, kind, status: 'ok'|'mitigated'|'missing', meets, have, need, negateLevel, mitigateLevel, on, via, elements: [{element, total, ok, short}], text}], resist}`。
@@ -512,7 +531,8 @@ search.extend({ ms: 6000 });       // 続けて探す (B&B の続き + 仕上げ
 
 警告のコード: `placeholder-uptimes` (仮置きの発動率で探した。`groups` に条件の id) / `exclusive-over-100` / `blunt-handicraft` /
 `non-monotone` (`skillIds`。Lv を上げると火力が下がるスキルがある) / `budget-stopped` / `evaluator-mismatch` (`count`。comboExpected の
-値で並べ直した) / `weapons-sieved` (`kept`・`rest`。武器も探すとき、見込みの高い武器に絞って dfs を回した。続けて探すと残りも回す) /
+値で並べ直した) / `weapons-sieved` (`kept`・`rest`・`total` (探した武器の数)・`before` (同じ性能かそれ以下の武器を除く前の数。画面の
+「n 本から探します」と同じ)。武器も探すとき、見込みの高い武器に絞って dfs を回した。続けて探すと残りも回す) /
 `unknown-skill` / `unknown-weapon` / `required-over-max` / `unknown-sharpness` / `realize-failed` / `check-failed` (comboExpected が例外に
 なった候補を外した) / `error`。`message` はそのまま画面に出せる日本語。
 - `exclusive-over-100`・`blunt-handicraft`・`non-monotone` は上界の前提が崩れる入力 (`PREMISE_WARNINGS`。`docs/SEARCH_DESIGN.md` 4 章の 6)。
@@ -571,7 +591,7 @@ Worker のメッセージ (`app/search_worker.js`。`docs/SEARCH_DESIGN.md` 3.5 
 | 画面 → Worker | `start` | `{id, job}` (`job = {kind: 'search', input}` か planToJob の Job `{kind: 'plan', runs, costRun, merge, K, subjects, requirements, gamma, baseline, ...}`)。`{id, input}` だけでもよい (= search) |
 | 画面 → Worker | `cancel` / `extend` | `{id}` / `{id, budget}` |
 | Worker → 画面 | `ready` | 作られたらすぐ data/*.json を読み、索引を作り終えたら 1 回 (以後の探索で使い回す) |
-| Worker → 画面 | `progress` | `{id, phase, elapsedMs, best: [値...], run?}` (段階か plan の回 `run.index` が変わったときと 0.5 秒ごと) |
+| Worker → 画面 | `progress` | `{id, phase, elapsedMs, best: [値...], bestKind?, run?}` (段階か plan の回 `run.index` が変わったときと 0.5 秒ごと。`bestKind` は plan のとき `'damage'` / `'combos'`) |
 | Worker → 画面 | `partial` / `done` | `{id, result}`。同じ区切りで終わったら partial は送らず done だけ。cancel の後も done (status `cancelled`)。続ける所の無い extend には今の結果で done をもう一度 |
 | Worker → 画面 | `error` | `{id, message}` (データを読めない・入力の誤り・知らない探し方) |
 

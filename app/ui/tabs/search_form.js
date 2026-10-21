@@ -53,10 +53,20 @@ export const PHASE_TEXT = Object.freeze({
   // 相手に合わせて探すとき (recommend.js の createPlanRunner の段階)
   merge: 'まとめています', twoWeapons: '武器 2 本の組み合わせを合わせています', cost: '守りのスキルの火力の差を測っています',
 });
+/** くわしくに出す段階の短い名前 (段階の時間の一覧。内部の名前は出さない) */
+export const PHASE_SHORT = Object.freeze({
+  prepare: '準備', beam1: '候補を絞る', beam2: '候補を絞る', sieve: '武器を絞る', polish1: '仕上げ', dfs: 'もっと良い組を探す',
+  polish2: '仕上げ', done: '終わり', merge: 'まとめ', twoWeapons: '武器 2 本の合わせ', cost: '守りの火力の差',
+});
 /** 進み具合の帯の目安: 段階が始まった時点の割合 (dfs の間は予算に対する経過で伸ばす) */
 const PHASE_AT = Object.freeze({
   prepare: 0, beam1: 0.08, beam2: 0.25, polish1: 0.45, dfs: 0.55, polish2: 0.9, done: 1, merge: 0.9, twoWeapons: 0.92, cost: 0.95,
 });
+/**
+ * 相手に合わせて探す Job (回が 2 つ以上) の、1 つの回の中での割合。まとめ・武器 2 本の合わせは最後の探索の回の終わりの近く、
+ * 火力の差を測る回 (最後の回。途中の結果で止める) は半分とする
+ */
+const RUN_PHASE_AT = Object.freeze({ ...PHASE_AT, merge: 0.95, twoWeapons: 0.97, cost: 0.5 });
 
 // ---------------------------------------------------------------- 仮置きの発動率
 
@@ -174,9 +184,14 @@ export function gammaMarksOf(build, gamma) {
 
 // ---------------------------------------------------------------- 相手 (狙う部位)
 
-/** 主な部位: 名前のある部位で切断 45 以上の上位 3 か所 (無ければ []) */
+/**
+ * 主な部位: 名前のある部位で切断 45 以上の上位 3 か所 (無ければ [])。一時的な部位 (transient。水膜など) は除く
+ * (recommend.js の partsTargets の main3 と同じ。それしか無ければ除かない)
+ */
 export function mainParts(monster) {
-  return visibleParts(monster, { sort: 'slash' })
+  const named = visibleParts(monster, { sort: 'slash' });
+  const stable = named.filter((p) => p.transient !== true);
+  return (stable.length ? stable : named)
     .filter((p) => (Number(p.hitzone && p.hitzone.slash) || 0) >= WEAK_POINT_MIN).slice(0, 3);
 }
 
@@ -573,18 +588,60 @@ export function requiredPickerItems(skills, required = [], bonuses = null) {
 
 // ---------------------------------------------------------------- 結果の見せ方
 
+const objs = (x) => (Array.isArray(x) ? x.filter(isObj) : []);
+
+/** 装備一式の形をそろえる (壊れた保存データで画面を落とさない。正しい装備はそのまま) */
+function cleanBuild(b) {
+  const decorations = {};
+  for (const [k, v] of Object.entries(isObj(b.decorations) ? b.decorations : {})) decorations[k] = Array.isArray(v) ? v : [];
+  return {
+    ...b, armor: isObj(b.armor) ? b.armor : {}, limitBreak: isObj(b.limitBreak) ? b.limitBreak : {}, decorations,
+  };
+}
+
+/** 守りのチェック ({ok, rows}) の形をそろえる (行は物だけ) */
+function cleanDefense(d) {
+  return isObj(d) && Array.isArray(d.rows) ? { ...d, rows: objs(d.rows) } : null;
+}
+
+/** 結果の 1 件の形をそろえる (行の中の配列は物だけ・装備の形。search-last に壊れた値があっても画面を落とさない) */
+function cleanRow(r) {
+  const out = { ...r, build: cleanBuild(r.build) };
+  if ('skills' in r) out.skills = objs(r.skills);
+  if ('perSubject' in r) out.perSubject = objs(r.perSubject);
+  if ('builds' in r) out.builds = objs(r.builds).map(cleanBuild);
+  if ('defense' in r) out.defense = cleanDefense(r.defense);
+  if ('defense2' in r) out.defense2 = cleanDefense(r.defense2);
+  if ('alternatives' in r) {
+    out.alternatives = isObj(r.alternatives) ? Object.fromEntries(Object.entries(r.alternatives)
+      .filter(([, v]) => Array.isArray(v)).map(([k, v]) => [k, v.filter((x) => typeof x === 'number' || typeof x === 'string')])) : {};
+  }
+  for (const k of ['score', 'baseline', 'check', 'freeSlots']) if (k in r && !isObj(r[k])) out[k] = null;
+  return out;
+}
+
 /** 保存してあった結果・Worker の結果を、画面で使える形にそろえる (壊れた値で画面を落とさない) */
 export function normalizeResult(raw) {
   if (!isObj(raw)) return null;
   const results = (Array.isArray(raw.results) ? raw.results : [])
-    .filter((r) => isObj(r) && isObj(r.build) && num(Number(isObj(r.score) ? r.score.value : r.value)) != null);
+    .filter((r) => isObj(r) && isObj(r.build) && num(Number(isObj(r.score) ? r.score.value : r.value)) != null)
+    .map(cleanRow);
+  // 満たせない理由: 段階 2 は {missing}、相手に合わせて探す Job は回ごとの配列 ([{run, missing}]。同じスキルは 1 つに)
+  const seen = new Set();
+  const inf = isObj(raw.infeasible) ? raw.infeasible : Array.isArray(raw.infeasible) ? {
+    missing: raw.infeasible.flatMap((x) => (isObj(x) ? objs(x.missing) : []))
+      .filter((m) => { const k = `${m.skillId}:${m.level}`; if (seen.has(k)) return false; seen.add(k); return true; }),
+    runs: objs(raw.infeasible),
+  } : null;
   return {
     ...raw,
     status: typeof raw.status === 'string' ? raw.status : 'done',
     results,
     warnings: (Array.isArray(raw.warnings) ? raw.warnings : []).filter((w) => isObj(w) && typeof w.message === 'string'),
-    infeasible: isObj(raw.infeasible) ? raw.infeasible : null,
+    infeasible: inf ? { ...inf, ...('missing' in inf ? { missing: objs(inf.missing) } : {}) } : null,
     stats: isObj(raw.stats) ? raw.stats : {},
+    costOfDefense: isObj(raw.costOfDefense) ? raw.costOfDefense : null,
+    twoWeaponsGain: isObj(raw.twoWeaponsGain) ? raw.twoWeaponsGain : null,
   };
 }
 
@@ -732,22 +789,57 @@ export function decoNamesOf(idx, build, target) {
 }
 
 /**
+ * 比べる基準の種類 (recommend.js の baselineView の kind)。前の版で保存した結果 (kind が無い) は、回数の行なら T (回数)、
+ * 1 体の行なら期待値。体力が全員分からない多頭の行 (期待値の行で相手が 2 体以上) は、前の版の基準が T で単位が違うので使わない。
+ */
+function baseKindOf(b, r, scoreKind) {
+  if (!isObj(b)) return null;
+  if (b.kind === 'combos' || b.kind === 'damage') return b.kind;
+  if (scoreKind === 'combos') return 'combos';
+  return Array.isArray(r.perSubject) && r.perSubject.length > 1 ? null : 'damage';
+}
+
+/** いまの装備の基準 (数か baselineView の形) → {kind, value, T, combos} | null */
+function baseObjOf(baseline) {
+  if (isObj(baseline)) return num(baseline.value) != null ? baseline : null;
+  return num(baseline) != null && baseline > 0 ? { kind: 'damage', value: baseline, T: null, combos: null } : null;
+}
+
+/**
  * 結果の一覧の行。
+ * 「いまより」の基準: 探し始めた時の装備 (startBuild) のままなら、結果の行の baseline (探索と同じ式で Worker が計算したもの)。
+ * 結果の組を装備に入れたなどで装備が変わっていたら、いまの装備で計算し直した baseline (ctx.baseline) を使う
+ * (探し始めた時の装備と比べた「いまより +30%」を、入れたあとも出し続けないように)。
  * @param result normalizeResult の結果
- * @param ctx {idx, currentBuild, currentSkills (computeBuild(いまの装備).skills), baseline (いまの装備の値 | null), gamma}
+ * @param ctx {idx, currentBuild, currentSkills (computeBuild(いまの装備).skills),
+ *             baseline (いまの装備の基準: 数 (1 コンボの期待値) か recommend.js の baselineView の形 {kind, value, T, combos} | null),
+ *             startBuild (探し始めた時の装備 = summary.startBuild。無ければ結果の行の baseline を使う), gamma}
+ * @returns 行 [{rank, value, scoreKind, diffPct (期待値の差 %), diffCombos (回数の差), diffTPct (回数の差 %。回数を切り上げて
+ *   数えられないとき。+ なら少ない), combosTotal, killCombos (1 体の討伐までの回数), baseValue / baseCombos / baseKind (比べた基準),
+ *   sameAsTop (1 位と同じ値), ...}]
  */
 export function resultRows(result, ctx) {
-  const { idx, currentBuild, currentSkills = [], baseline = null, gamma = null } = ctx;
+  const { idx, currentBuild, currentSkills = [], baseline = null, startBuild = null, gamma = null } = ctx;
   if (!result) return [];
+  const fresh = !isObj(startBuild) || buildDiff(startBuild, currentBuild).same;
+  const nowBase = baseObjOf(baseline);
+  const top = result.results.length ? valueOf(result.results[0]) : null;
   return result.results.map((r, i) => {
     const value = valueOf(r);
     const scoreKind = isObj(r.score) && r.score.kind === 'combos' ? 'combos' : 'damage';
-    const base = isObj(r.baseline) && num(r.baseline.value) != null ? r.baseline.value : baseline;
-    const diffPct = scoreKind === 'damage' && base > 0 && value != null ? (value / base - 1) * 100 : null;
+    const rowBase = fresh ? baseObjOf(r.baseline) : null;
+    const b = rowBase || nowBase;
+    const baseKind = baseKindOf(b, r, scoreKind);
+    const diffPct = scoreKind === 'damage' && baseKind === 'damage' && b.value > 0 && value != null ? (value / b.value - 1) * 100 : null;
     // 多頭 (全部倒すまでの回数): いまの装備の回数との差 (相手ごとに切り上げた回数の合計どうし)
-    const baseCombos = scoreKind === 'combos' && isObj(r.baseline) ? num(r.baseline.combos) : null;
+    const baseCombos = baseKind != null ? num(b.combos) : null;
     const combosTotal = num(r.combosTotal);
-    const diffCombos = baseCombos != null && combosTotal != null ? combosTotal - baseCombos : null;
+    const diffCombos = scoreKind === 'combos' && baseKind === 'combos' && baseCombos != null && combosTotal != null
+      ? combosTotal - baseCombos : null;
+    // 体力の分からない相手がいて回数を切り上げて数えられないときは、T どうしの割合 (+ なら回数が少ない)
+    const baseT = baseKind === 'combos' ? num(b.T) ?? num(b.value) : null;
+    const diffTPct = scoreKind === 'combos' && diffCombos == null && baseT > 0 && value > 0 ? (1 - value / baseT) * 100 : null;
+    const perSubject = Array.isArray(r.perSubject) ? r.perSubject : [];
     let br = null;
     try {
       br = computeBuild(r.build, idx);
@@ -760,7 +852,10 @@ export function resultRows(result, ctx) {
     const second = Array.isArray(r.builds) && isObj(r.builds[1]) ? r.builds[1] : null;
     const w2 = second && second.weapon != null ? resolveWeaponRef(second.weapon, idx) : null;
     return {
-      rank: Number(r.rank) || i + 1, index: i, value, scoreKind, diffPct, diffCombos, combosTotal, diff, changeText: changeText(diff),
+      rank: Number(r.rank) || i + 1, index: i, value, scoreKind, diffPct, diffCombos, diffTPct, combosTotal, diff, changeText: changeText(diff),
+      killCombos: perSubject.length === 1 ? num(perSubject[0].combos) : null,
+      baseKind, baseValue: baseKind != null ? num(b.value) : null, baseCombos,
+      sameAsTop: i > 0 && top != null && value != null && Math.abs(value - top) <= 1e-9 * Math.max(1, Math.abs(top)),
       skills, skillsText: mainSkillsText(skills), skillDiff: skillDiff(currentSkills, skills),
       freeSlots: isObj(r.freeSlots) ? r.freeSlots : (br ? freeSlotsOf(br) : null),
       weaponName: w ? weaponName(w) : '武器なし',
@@ -769,11 +864,37 @@ export function resultRows(result, ctx) {
       errors: br ? br.errors : [],
       check: isObj(r.check) ? r.check : null, exact: r.exact !== false,
       alternatives: isObj(r.alternatives) ? r.alternatives : {},
-      perSubject: Array.isArray(r.perSubject) ? r.perSubject : [],
+      perSubject,
       defense: defenseView(r.defense, r.defense2),
       raw: r,
     };
   });
+}
+
+/** 1 位と同じ値の行の数 (1 位を含む。2 件以上同じなら「同じ値の組が n 件」と出す) */
+export function tiesWithTop(rows) {
+  return rows.length ? 1 + rows.filter((r) => r.sameAsTop).length : 0;
+}
+
+/**
+ * 比べた基準の文 (詳しくのシート)。「いまの装備 約 269 回 (仮の条件は 0%)」/「いまの装備 1,021.5」。
+ * zeroed = 0% にした仮置きの条件の数 (0 なら注を付けない)。players = 人数 (2 人以上なら回数に添える)
+ */
+export function baseText(row, { zeroed = 0, players = 1 } = {}) {
+  if (!row || row.baseKind == null) return '';
+  const note = zeroed > 0 ? ' (仮の条件は 0% で計算)' : '';
+  if (row.baseKind === 'combos') {
+    const n = row.baseCombos ?? (row.baseValue != null ? Math.ceil(row.baseValue) : null);
+    return n != null ? `いまの装備 約 ${formatNumber(n, 0)} 回${playersText(players)}${note}` : '';
+  }
+  if (row.baseValue == null) return '';
+  const kill = row.killCombos != null && row.baseCombos != null ? `・討伐まで 約 ${formatNumber(row.baseCombos, 0)} 回${playersText(players)}` : '';
+  return `いまの装備 ${formatNumber(row.baseValue, 1)}${kill}${note}`;
+}
+
+/** 人数の添え書き (2 人以上: 回数は人数ぶんの体力を 1 人の装備で割った値) */
+export function playersText(players) {
+  return Number(players) > 1 ? ` (${players} 人のとき)` : '';
 }
 
 /**
@@ -839,22 +960,40 @@ export function alternativeNames(alternatives, idx, key) {
   return list.map((id) => (key === 'charm' ? charmNameOf(idx, id) : armorNameOf(idx, id)));
 }
 
+/** 1 つの探索の中の進み具合 (0〜1)。dfs の間は予算 (ms) に対する経過で伸ばす */
+function innerShare(table, phase, el, budgetMs) {
+  let share = table[phase];
+  if (phase === 'dfs' && budgetMs > 0 && el != null) {
+    share = table.dfs + (table.polish2 - table.dfs) * Math.min(1, Math.max(0, el / budgetMs));
+  }
+  return share;
+}
+
 /**
- * 計算中の見せ方。p = progress (phase / elapsedMs / best / run)。budgetMs は予算 (dfs の伸びに使う)。
- * @returns {{text, share (0〜1), seconds, best, runText}}
+ * 計算中の見せ方。p = progress (phase / elapsedMs / best / bestKind / run)。budgetMs は予算 (dfs の伸びに使う)。
+ * 回が 2 つ以上の Job (属性やられの 2 回・守りの火力の差の回) は、帯を Job 全体で数える (回が変わっても 0% に戻らない)。
+ * best は 1 体なら期待値、多頭 (bestKind 'combos') は全部倒すまでの回数 (T)。
+ * @returns {{text, share (0〜1), seconds, best, bestKind, bestText, runText}}
  */
 export function progressView(p, budgetMs) {
   const phase = p && Object.prototype.hasOwnProperty.call(PHASE_AT, p.phase) ? p.phase : 'prepare';
-  let share = PHASE_AT[phase];
   const el = p && num(p.elapsedMs);
-  if (phase === 'dfs' && budgetMs > 0 && el != null) {
-    share = PHASE_AT.dfs + (PHASE_AT.polish2 - PHASE_AT.dfs) * Math.min(1, el / budgetMs);
+  const run = p && isObj(p.run) && p.run.count > 1 && num(p.run.index) != null ? p.run : null;
+  let share;
+  if (run) {
+    // 回ごとの予算は全体の予算を回の数で分けた目安 (経過は Job の最初から数えているので、前の回の分を引く)
+    const per = budgetMs > 0 ? budgetMs / run.count : 0;
+    const local = el != null ? el - run.index * per : null;
+    share = (Math.min(run.index, run.count - 1) + innerShare(RUN_PHASE_AT, phase, local, per)) / run.count;
+  } else {
+    share = innerShare(PHASE_AT, phase, el, budgetMs);
   }
-  const run = p && isObj(p.run) && p.run.count > 1 ? p.run : null;
+  const best = p ? num(p.best) : null;
+  const bestKind = p && p.bestKind === 'combos' ? 'combos' : 'damage';
   return {
-    text: PHASE_TEXT[phase] || '探しています', share, seconds: el != null ? el / 1000 : null,
-    best: p ? num(p.best) : null,
-    runText: run ? `${run.index + 1} / ${run.count} 回目${run.label ? `: ${run.label}` : ''}` : '',
+    text: PHASE_TEXT[phase] || '探しています', share: Math.min(1, Math.max(0, share)), seconds: el != null ? el / 1000 : null,
+    best, bestKind, bestText: best == null ? '' : bestKind === 'combos' ? `全部倒すまで ${valueText(best, 'combos')}` : formatNumber(best, 1),
+    runText: run ? `${Math.min(run.index + 1, run.count)} / ${run.count} 回目${run.label ? `: ${run.label}` : ''}` : '',
   };
 }
 

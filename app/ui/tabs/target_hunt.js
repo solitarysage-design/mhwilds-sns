@@ -261,6 +261,7 @@ function QuestCard({ td, monster, target, ctx }) {
           <${Segmented} label="人数" value=${ctx.players} onChange=${(n) => setPlayers(n)}
             options=${Array.from({ length: ctx.maxPlayers }, (_, i) => ({ value: i + 1, label: `${i + 1} 人` }))} />
         </div>`}
+      ${!(ctx && ctx.fixed) && html`<${SearchButton} ctx=${ctx} quick />`}
     </${Card}>`;
 }
 
@@ -560,7 +561,11 @@ function PlanCard({ plan, skillLevels, weaponElem, search, children }) {
     </${Card}>`;
 }
 
-function SearchButton({ ctx }) {
+/**
+ * 「この相手で装備を探す」。quick = 「個体とクエスト」のカードの下にも出す方 (個体を選んだ所から 1 画面の中で押せるように。
+ * おすすめのカードの下のものと同じ動き。テストの目印は data-th-search-quick)
+ */
+function SearchButton({ ctx, quick = false }) {
   if (ctx && ctx.fixed) {
     return html`
       <div data-th-search-blocked>
@@ -572,6 +577,9 @@ function SearchButton({ ctx }) {
     requestSearch({ from: 'target' });
     goToTab('search', { top: true });
   };
+  if (quick) {
+    return html`<div class="btn-col th-search-quick"><${Button} block data-th-search-quick onClick=${start}>${label}</${Button}></div>`;
+  }
   return html`<div class="btn-col"><${Button} variant="primary" block data-th-search onClick=${start}>${label}</${Button}></div>`;
 }
 
@@ -663,7 +671,7 @@ function ArchTemperedCard({ monster, kind, info, data, target }) {
               ${blocks.filter((h) => h.note).map((h) => html`<li key=${`n-${h.key}`}>${h.text}: ${h.note}</li>`)}
             </ul>
           </details>`}
-        <p class="hint">
+        <p class="hint th-source">
           出典: ${v && v.source ? html`<a href=${v.source} target="_blank" rel="noopener noreferrer">Monster Hunter Wiki</a>` : 'Monster Hunter Wiki'} (CC BY-SA 4.0)${rewards ? '・報酬は MHDB' : ''}。
         </p>
       </div>

@@ -1,7 +1,7 @@
 // 装備探索のベンチ (docs/SEARCH_DESIGN.md 5 章)。node --test には入れない (手で回す)。
 //
 //   node --expose-gc tools/bench_search.mjs [--cases B1,B2,B3,B4,B4x,B5] [--runs 3] [--mode time|work|both]
-//                                           [--ms 2500] [--work 60000] [--out 結果.jsonl]
+//                                           [--ms 2500] [--budget-kind activeMs|ms] [--work 60000] [--out 結果.jsonl]
 //   node --expose-gc tools/bench_search.mjs --make-ref [--cases B1,B2,B3,B5] [--ref-ms 120000]
 //   node --expose-gc tools/bench_search.mjs --weapon-side [--runs 3]   (武器の側だけを選び直す optimizeWeaponSide。WS / WSz)
 //   node --expose-gc tools/bench_search.mjs --plans [--cases S1,S1z,S2,S2z,S3,S3z] [--runs 3] [--ms 2500]
@@ -9,7 +9,9 @@
 //        --ms は Job 全体の時間の予算 (計算した時間。回の数で分ける))
 //
 // - ケースごとに毎回新しいプロセス (同じ node) で走らせる (前のケースの覚えやキャッシュを持ち越さない)。
-// - 時間 (--mode time): 予算は時間 (--ms。画面と同じ「始めてからの時間」)。partial / done の時刻・段階ごとの時刻。
+// - 時間 (--mode time): 予算は時間 (--ms)。数え方 (--budget-kind) の既定は activeMs (計算した時間。画面の budgetOf と同じ)。
+//   ms (始めてからの時間) は 2026-10-21 までの測り方 (activeMs は下ごしらえ・途中の結果・まとめを数えないので done が遅い)。
+//   partial / done の時刻・段階ごとの時刻。
 //   値 (--mode work): 予算は仕事量 (--work = B&B の中で上界を求めた回数)。端末の速さで結果が変わらないので、基準と比べる。
 // - メモリ: ヒープの増え (探索の前に gc した値からの最大。step ごとに測る) と、終わって gc した後に残った分。
 // - 基準 (tests/fixtures/search_ref.json) はデータのハッシュと一緒に持つ。データが変わっていたら「基準が古い」と出す (失敗にしない)。
@@ -42,7 +44,7 @@ const KNOWN_BEST = {
 
 function args() {
   const a = process.argv.slice(2);
-  const o = { cases: null, runs: 3, mode: 'both', ms: 2500, work: 60000, out: null, makeRef: false, refMs: 120000, child: null };
+  const o = { cases: null, runs: 3, mode: 'both', ms: 2500, budgetKind: 'activeMs', work: 60000, out: null, makeRef: false, refMs: 120000, child: null };
   for (let i = 0; i < a.length; i++) {
     const k = a[i];
     const v = () => a[++i];
@@ -50,6 +52,7 @@ function args() {
     else if (k === '--runs') o.runs = Number(v());
     else if (k === '--mode') o.mode = v();
     else if (k === '--ms') o.ms = Number(v());
+    else if (k === '--budget-kind') o.budgetKind = v() === 'ms' ? 'ms' : 'activeMs';
     else if (k === '--work') o.work = Number(v());
     else if (k === '--out') o.out = v();
     else if (k === '--make-ref') o.makeRef = true;
@@ -309,7 +312,7 @@ async function main() {
   }
 
   if (o.plans) {
-    console.log(JSON.stringify({ env: { node: process.version, cpus: os.cpus().length, otherNodesBefore: otherNodes() }, budget: { ms: o.ms }, runs: o.runs }));
+    console.log(JSON.stringify({ env: { node: process.version, cpus: os.cpus().length, otherNodesBefore: otherNodes() }, budget: { activeMs: o.ms }, runs: o.runs }));
     const lines = [];
     for (const name of o.cases || ['S1', 'S1z', 'S2', 'S2z', 'S3', 'S3z']) {
       const meter = cpuMeter();
@@ -339,13 +342,13 @@ async function main() {
   const names = o.cases || ['B1', 'B2', 'B3', 'B4', 'B4x', 'B5'];
   const modes = o.mode === 'both' ? ['time', 'work'] : [o.mode];
   const env = { node: process.version, cpus: os.cpus().length, otherNodesBefore: otherNodes(), refStale: !!stale };
-  console.log(JSON.stringify({ env, budget: { ms: o.ms, work: o.work }, runs: o.runs }));
+  console.log(JSON.stringify({ env, budget: { [o.budgetKind]: o.ms, work: o.work }, runs: o.runs }));
   if (stale) console.log('注意: データが基準 (tests/fixtures/search_ref.json) を作った時と違う。値の比較は参考 (--make-ref で作り直す)');
   const lines = [];
   for (const name of names) {
     const objectiveNone = name === 'B4' || name === 'B4x';
     for (const mode of objectiveNone ? ['time'] : modes) {
-      const override = mode === 'time' ? (objectiveNone ? {} : { budget: { ms: o.ms } }) : { budget: { work: o.work } };
+      const override = mode === 'time' ? (objectiveNone ? {} : { budget: { [o.budgetKind]: o.ms } }) : { budget: { work: o.work } };
       const meter = cpuMeter();
       const runs = [];
       for (let i = 0; i < o.runs; i++) runs.push(runChild({ case: name, mode, override }));

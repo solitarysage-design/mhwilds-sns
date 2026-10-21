@@ -1708,6 +1708,20 @@ def _same_build(a: dict, b: dict) -> bool:
     return all(json.dumps(a.get(k), sort_keys=True) == json.dumps(b.get(k), sort_keys=True) for k in keys)
 
 
+# 1 位の行の位置 (画面の中か)。タブバーより上に、行の上の 40px が見えていればよい
+JS_FIRST_ROW_BOX = """() => { const el = document.querySelector('[data-tab-panel="search"] .sr-result'); if (!el) return null;
+  const r = el.getBoundingClientRect(); const bar = document.querySelector('.tabbar');
+  return { top: r.top, limit: bar ? bar.getBoundingClientRect().top : innerHeight, scrollY: scrollY }; }"""
+
+
+def _first_row_visible(page, ctx: Ctx, where: str):
+    """終わった直後に 1 位の行が画面の中にあるか (知らせの山の下に押し出されて見えなくならない。2026-10-22 の点検)。"""
+    page.wait_for_timeout(500)  # 探し始めたときのスクロール (smooth) が止まるまで
+    box = page.evaluate(JS_FIRST_ROW_BOX)
+    if not box or not (0 <= box["top"] and box["top"] + 40 <= box["limit"]):
+        ctx.fail(f"{where}: 終わった直後に 1 位の行が画面の中にありません: {box}")
+
+
 def search_walkthrough(browser, ctx_opts, server, base_url) -> Ctx:
     """1. 通し: 探す → 途中の結果 → 終わり → 装備に入れる → 元に戻す → 続けて探す → 保存して開き直す → やめる → タブを移る など。"""
     # 段階は 0.4 秒ずつ (途中の結果が出ている間に、計算中の画面の確かめとスクリーンショットを撮り終えるため。
@@ -1761,6 +1775,7 @@ def search_walkthrough(browser, ctx_opts, server, base_url) -> Ctx:
                 ctx.fail(f"探す: 結果に「{word}」がありません")
         if not page.locator(f'{P} .sr-result .badge', has_text="γ").count():
             ctx.fail("探す: 歴戦王の素材が要る防具の印 (γ) が出ていません")
+        _first_row_visible(page, ctx, "探す (結果)")
         check_layout(page, ctx, "探す (結果)")
         ctx.shot("search-results")
 
@@ -2123,6 +2138,15 @@ def search_real_arch_tempered(browser, ctx_opts, server, base_url) -> Ctx:
         _th_pick_monster(page, "あるしゅべるど", "アルシュベルド")
         _th_individual(page, "歴戦王")
         page.wait_for_selector(f"{TARGET_PANEL} [data-th-search]", timeout=15000)
+        # 個体を選んだ所から 1 画面の中に「この相手で装備を探す」がある (「個体とクエスト」のカードの下。2026-10-22 の点検)
+        ind = page.locator(f"{TARGET_PANEL} [data-th-individual]").bounding_box()
+        quick = page.locator(f"{TARGET_PANEL} [data-th-search-quick]")
+        qb = quick.bounding_box() if quick.count() == 1 else None
+        vh = page.viewport_size["height"]
+        if not ind or not qb or qb["y"] + qb["height"] - ind["y"] > vh or qb["height"] < 44:
+            ctx.fail(f"探す (本物): 個体の欄から 1 画面の中に「この相手で装備を探す」がありません: 個体 {ind} / ボタン {qb} / 画面 {vh}")
+        elif "この相手で装備を探す" not in quick.inner_text():
+            ctx.fail(f"探す (本物): 個体とクエストのカードのボタンの文が違います: {quick.inner_text()!r}")
         # 置き換わった傷口 (確度の低い woundOverrides) を使い、置き換えのある部位の傷口を狙う
         part = page.evaluate("""async () => { const D = await import('./app/data.js');
           const m = D.getTargetData().lists.monsters.find((x) => x.name === 'アルシュベルド');
@@ -2161,9 +2185,10 @@ def search_real_arch_tempered(browser, ctx_opts, server, base_url) -> Ctx:
         if not snap["n"] or not all(snap["defenseOk"]):
             ctx.fail(f"探す (本物): 結果が無いか、守り (龍属性やられ) を満たさない組があります: {snap['n']} / {snap['defenseOk']}")
         text = page.inner_text(SEARCH_RESULTS)
-        for word in ["近似", "守り", "いまより"]:
+        for word in ["近似", "守り", "いまより", "討伐まで"]:
             if word not in text:
                 ctx.fail(f"探す (本物): 結果に「{word}」がありません")
+        _first_row_visible(page, ctx, "探す (本物・歴戦王の結果)")
         check_layout(page, ctx, "探す (本物・歴戦王の結果)")
         ctx.shot("real-arch-results")
         top = _search_top(page)
@@ -2192,6 +2217,10 @@ def search_real_arch_tempered(browser, ctx_opts, server, base_url) -> Ctx:
         page.wait_for_timeout(300)
         if page.locator(f'{P} [data-sr-note="stale"]').count():
             ctx.fail("探す (本物): 結果の組を装備に入れただけで「条件が変わりました」が出ます")
+        # 入れたあとの 1 位の行は「いまの装備と同じ」で、「いまより」もいまの装備 (= 1 位) と比べる (前は探す前の装備のまま +x% と出た)
+        row1 = page.inner_text(f"{P} .sr-result >> nth=0")
+        if "いまの装備と同じ" not in row1 or "いまと同じくらい" not in row1 or "いまより +" in row1:
+            ctx.fail(f"探す (本物): 1 位を装備に入れたあとの 1 位の行が、いまの装備と比べていません: {row1!r}")
         check_errors(ctx, "探す (本物・歴戦王)")
     except Exception as e:
         ctx.fail(f"探す (本物・歴戦王) が途中で止まりました: {_search_err(e)}")
@@ -2245,8 +2274,14 @@ def search_real_multi_two_weapons(browser, ctx_opts, server, base_url) -> Ctx:
         if used & set(gnu["armorIds"] + gnu["charmFixedIds"]) or gnu["monsterId"] in snap["gamma"]:
             ctx.fail("探す (本物): 倒していない歴戦王の γ 防具・護石が結果に出ています")
         rows = page.locator(f"{P} .sr-result")
-        if not rows.count() or "回" not in page.inner_text(f"{P} .sr-result >> nth=0"):
+        if not rows.count() or "全部倒すまで" not in page.inner_text(f"{P} .sr-result >> nth=0") \
+                or "回" not in page.inner_text(f"{P} .sr-result >> nth=0"):
             ctx.fail("探す (本物): 多頭の結果が「全部倒すまで 約 n 回」になっていません")
+        # 相手ごとの狙う部位を出す。ウズ・トゥナの一時的な部位 (水膜) は自動では選ばない (2026-10-22 の点検)
+        parts_text = page.inner_text(f"{P} [data-sr-subject-parts]") if page.locator(f"{P} [data-sr-subject-parts]").count() else ""
+        if "ウズ・トゥナ" not in parts_text or "水膜" in parts_text:
+            ctx.fail(f"探す (本物): 多頭の相手ごとの狙う部位が出ていないか、水膜を選んでいます: {parts_text!r}")
+        _first_row_visible(page, ctx, "探す (本物・多頭の結果)")
         if not page.locator(f"{P} [data-sr-row-second]").count():
             ctx.fail("探す (本物): 結果の行に 2 本目の武器が出ていません")
         if "回数の少ない順" not in page.inner_text(f"{P} #sr-results"):
@@ -2277,6 +2312,83 @@ def search_real_multi_two_weapons(browser, ctx_opts, server, base_url) -> Ctx:
     return ctx
 
 
+def search_offline_retry(browser, ctx_opts, server, base_url) -> Ctx:
+    """8. 電波が無くて探す処理 (Worker も画面の処理も) を読み込めない → 日本語の文と「再読み込み」→ 電波が戻れば「もう一度」で探せる。
+    (前は画面の処理に切り替えたままになり、再読み込みするまで英語の文で失敗し続けた。2026-10-22 の点検)"""
+    context, page, ctx = _real_open(browser, ctx_opts, server, base_url, "search-offline")
+    P = SEARCH_PANEL
+    try:
+        page.evaluate(JS_SEARCH_SETUP)
+        open_tab(page, "search")
+        server.offline = True
+        try:
+            _search_start(page)
+            _search_status(page, "error", timeout=20000)
+        finally:
+            server.offline = False
+        ctx.take_errors()  # 読み込めなかったこと自体のコンソールの出力は数えない
+        note = page.locator(f'{P} [data-sr-note="error"]')
+        text = note.inner_text()
+        if "読み込めませんでした" not in text or "Importing" in text.split("くわしく")[0]:
+            ctx.fail(f"探す (電波なし): 読み込めなかったときの文が日本語になっていません: {text[:160]!r}")
+        if not note.locator('[data-sr-action="reload"]').count():
+            ctx.fail("探す (電波なし): 「再読み込み」のボタンがありません")
+        ctx.shot("search-offline-error", full_page=False)
+        note.locator("button", has_text="もう一度").click()
+        _real_wait_finished(page)
+        snap = page.evaluate(JS_REAL_SNAP)
+        if snap["inline"] or not snap["n"]:
+            ctx.fail(f"探す (電波なし): 電波が戻っても「もう一度」で Worker で探せません: inline {snap['inline']} / {snap['n']} 件")
+        check_errors(ctx, "探す (電波なし → もう一度)")
+    except Exception as e:
+        ctx.fail(f"探す (電波なし) が途中で止まりました: {_search_err(e)}")
+    finally:
+        server.offline = False
+        context.close()
+    return ctx
+
+
+def _broken_last_variants() -> list[tuple[str, dict, bool]]:
+    """(説明, mhwilds-sns:search-last の result, 行を開いて確かめるか)"""
+    b = {"weapon": None, "armor": {"head": None}, "charm": None, "decorations": {}, "limitBreak": {}}
+    return [
+        ("スキルに null", {"status": "done", "results": [{"build": b, "value": 900, "skills": [None]}]}, True),
+        ("足りないスキルに null", {"status": "infeasible", "results": [], "infeasible": {"missing": [None, 5]}}, False),
+        ("相手ごとに null", {"status": "done", "results": [{"build": b, "value": 900, "perSubject": [None, 5],
+                                                         "builds": [None, 3], "defense": {"ok": True, "rows": [None]}}]}, True),
+        ("装飾品の形が違う", {"status": "done", "results": [{"build": {**b, "decorations": {"weapon": 5}, "armor": "x"},
+                                                          "value": 900, "score": 3, "baseline": "x"}]}, True),
+    ]
+
+
+def search_broken_last(browser, ctx_opts, server, base_url) -> Ctx:
+    """9. 保存した最後の結果 (search-last) の中が壊れていても、探すタブが開ける・行を開ける (前は開くたびに落ちた)。"""
+    context, page, ctx = _search_open(browser, ctx_opts, server, base_url, "search-broken-last", fake="step=20")
+    P = SEARCH_PANEL
+    try:
+        for label, result, open_row in _broken_last_variants():
+            page.evaluate("""async (result) => { const D = await import('./app/store.js');
+              await D.kvSet('mhwilds-sns:search-last', { savedAt: '2026-10-22T00:00:00Z', inputKey: 'k0', summary: null, result }); }""", result)
+            page.reload(wait_until="load")
+            wait_app_ready(page)
+            open_tab(page, "search")
+            page.wait_for_timeout(500)
+            broken = page.evaluate(JS_BROKEN, ["search", BROKEN_TITLES])
+            if broken:
+                ctx.fail(f"探す (壊れた search-last: {label}): エラーの表示 {broken[:2]}")
+                continue
+            if open_row and page.locator(f"{P} .sr-result").count():
+                page.locator(f"{P} .sr-result").first.click()
+                page.wait_for_selector('[data-sr-sheet="result"]', timeout=5000)
+                _close_sheets(page)
+            check_errors(ctx, f"探す (壊れた search-last: {label})")
+    except Exception as e:
+        ctx.fail(f"探す (壊れた search-last) が途中で止まりました: {_search_err(e)}")
+    finally:
+        context.close()
+    return ctx
+
+
 def run_search(browser, device: dict, bname: str, server: Server, base_url: str, args, failures: list, notes: list):
     """探すタブの流れを全部動かし、失敗とメモを failures / notes に足す (--robust-only か、--only に search が無ければ何もしない)。"""
     if args.robust_only or (args.only and "search" not in args.only.split(",")):
@@ -2292,6 +2404,9 @@ def run_search(browser, device: dict, bname: str, server: Server, base_url: str,
         # 本物の Worker でつなぐ (3f)
         ("search-real-arch", lambda: search_real_arch_tempered(browser, light, server, base_url)),
         ("search-real-multi", lambda: search_real_multi_two_weapons(browser, dark, server, base_url)),
+        # 2026-10-22 の点検の直し: 電波が無くて読み込めない → もう一度・壊れた search-last
+        ("search-offline", lambda: search_offline_retry(browser, light, server, base_url)),
+        ("search-broken-last", lambda: search_broken_last(browser, light, server, base_url)),
     ]
     for name, fn in runs:
         print(f"--- {bname} {name}", flush=True)

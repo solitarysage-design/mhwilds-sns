@@ -4,7 +4,8 @@
 //
 // - 探索は 1 つだけ (コントローラはモジュールに 1 つ。タブを隠しても・描き直しても続く)。新しく始めると前のものは捨てる。
 // - Worker が作れない端末では、画面のスレッドで 16ms ずつ区切って回す (遅いが動く。結果に「画面の処理で探しました」と出す)。
-// - 一度も返事をしないまま Worker が落ちた (読み込めなかった) ときも、画面のスレッドで回し直す。
+// - 一度も返事をしないまま Worker が落ちた (読み込めなかった) ときも、画面のスレッドで回し直す。それも失敗したら
+//   (電波が無いなど)、「もう一度」と次に本人が始めたときに Worker から作り直す (再読み込みしなくても、電波が戻れば探せる)。
 // - 「やめる」は Worker に cancel を送り、止まらなければ (CANCEL_GRACE_MS) Worker を作り直す。
 // - 返事が STALL_MS 来ない (画面が見えている間だけ数える) ときは、止まったものとして知らせる。
 // - 終わったら、結果を store.js の search-last に、かかった時間を search-timing (この端末だけ) に残す。
@@ -32,20 +33,34 @@ const isObj = (x) => x != null && typeof x === 'object' && !Array.isArray(x);
 const num = (x) => (typeof x === 'number' && Number.isFinite(x) ? x : null);
 const messageOf = (e) => (e && e.message ? e.message : String(e ?? ''));
 
+/** 探す処理 (search.js など) を読み込めなかったときの文 (英語のまま出さない。くわしくに元の文を出す) */
+export const LOAD_ERROR_TEXT = '探す処理を読み込めませんでした。電波の良い所で「もう一度」を押すか、アプリを再読み込みしてください。';
+
 /** 探索の結果の status → 画面の状態 */
 const STATUS_OF = { done: 'done', partial: 'done', stopped: 'stopped', cancelled: 'cancelled', infeasible: 'infeasible' };
+
+/**
+ * 計算中の「いまの最良」を、1 つの探索の中で悪くならないように残す (期待値は大きい方、回数は小さい方)。
+ * 回をまたぐと上位が上下する (属性やられの 2 回目の方が低いなど) ため。種類が変わったら新しい値にする。
+ */
+export function keepBest(prev, prevKind, next, nextKind) {
+  const kind = nextKind === 'combos' ? 'combos' : 'damage';
+  if (next == null) return { best: prev, kind: prevKind };
+  if (prev == null || (prevKind || 'damage') !== kind) return { best: next, kind };
+  return { best: kind === 'combos' ? Math.min(prev, next) : Math.max(prev, next), kind };
+}
 
 /** 何もしていないときの状態 */
 export const IDLE = Object.freeze({
   status: 'idle',        // 'idle' | 'running' | 'cancelling' | 'done' | 'stopped' | 'cancelled' | 'infeasible' | 'error'
   busy: false,           // running か cancelling
   id: null, job: null, inputKey: null, summary: null,
-  phase: null, elapsedMs: null, best: null, run: null,
+  phase: null, elapsedMs: null, best: null, bestKind: null, run: null,
   result: null,          // いま出す結果 (normalizeResult の形。途中の結果のこともある)
   partial: false,        // result が途中の結果 (まだ続いている)
   improved: false,       // 途中の結果 (または「続けて探す」の前) から 1 位が変わった
   extended: 0, extending: false, canExtend: false,
-  error: null,           // {message, detail}
+  error: null,           // {message, detail, code ('load' = 探す処理を読み込めなかった)}
   inline: false,         // 画面のスレッドで回した
   phases: [],            // [{name, atMs}] 段階が変わった時刻 (計算した時間。裏に回っていた時間は数えない)
   partialMs: null, doneMs: null, startedAt: null,
@@ -152,10 +167,10 @@ export function createModelEngine(post, { loadModules = defaultModules, getData 
     if (c && c.timer) clearTimeout(c.timer);
     if (c) c.timer = null;
   };
-  const fail = (c, e) => {
+  const fail = (c, e, extra = null) => {
     stop(c);
     if (cur === c) cur = null;
-    post({ type: 'error', id: c.id, message: messageOf(e) });
+    post({ type: 'error', id: c.id, message: messageOf(e), ...(extra || {}) });
   };
   const loop = (c) => {
     if (disposed || cur !== c) return;
@@ -178,6 +193,7 @@ export function createModelEngine(post, { loadModules = defaultModules, getData 
         post({
           type: 'progress', id: c.id, phase: p.phase, elapsedMs: p.elapsedMs,
           best: (Array.isArray(p.best) ? p.best : []).map((b) => (isObj(b) ? b.value : b)), run: p.run,
+          ...(p.bestKind ? { bestKind: p.bestKind } : {}),
         });
       }
       if (p.partialReady && !c.partialSent && !finished) {
@@ -212,7 +228,8 @@ export function createModelEngine(post, { loadModules = defaultModules, getData 
         try {
           mods = await loadModules();
         } catch (e) {
-          fail(c, e);
+          // 動的 import の失敗 (電波が無いなど)。WebKit の文は英語なので、日本語の文にして元の文はくわしくへ
+          fail(c, new Error(LOAD_ERROR_TEXT), { code: 'load', detail: messageOf(e) });
           return;
         }
         if (cur !== c || disposed) return;
@@ -402,11 +419,11 @@ export function createSearchController({
     }, watchEveryMs);
   }
 
-  function fail(message, detail = null) {
+  function fail(message, detail = null, code = null) {
     clearTimers();
     set({
       status: 'error', busy: false, partial: false, extending: false, canExtend: false,
-      error: { message: message || '探せませんでした。', detail },
+      error: { message: message || '探せませんでした。', detail, code },
     });
     finished();
   }
@@ -448,8 +465,9 @@ export function createSearchController({
     if (msg.type === 'progress') {
       const el = num(msg.elapsedMs) ?? activeMs();
       const phase = typeof msg.phase === 'string' ? msg.phase : snap.phase;
+      const b = keepBest(snap.best, snap.bestKind, bestOfProgress(msg.best), msg.bestKind);
       set({
-        phase, elapsedMs: el, best: bestOfProgress(msg.best) ?? snap.best, run: isObj(msg.run) ? msg.run : snap.run,
+        phase, elapsedMs: el, best: b.best, bestKind: b.kind, run: isObj(msg.run) ? msg.run : snap.run,
         phases: phase !== snap.phase && !snap.extending ? [...snap.phases, { name: phase, atMs: activeMs() }] : snap.phases,
       });
     } else if (msg.type === 'partial') {
@@ -460,7 +478,8 @@ export function createSearchController({
     } else if (msg.type === 'done') {
       finish(msg.result);
     } else if (msg.type === 'error') {
-      fail(typeof msg.message === 'string' && msg.message ? msg.message : '探せませんでした。');
+      fail(typeof msg.message === 'string' && msg.message ? msg.message : '探せませんでした。',
+        typeof msg.detail === 'string' ? msg.detail : null, typeof msg.code === 'string' ? msg.code : null);
     }
   }
 
@@ -472,7 +491,7 @@ export function createSearchController({
       // 一度も返事をしないまま落ちた = Worker を読み込めなかった → 画面のスレッドで回し直す
       console.warn('探す処理 (Worker) を読み込めなかったので、画面の処理で探します', e && e.message);
       fellBack = true;
-      start(snap.job, { inputKey: snap.inputKey, summary: snap.summary });
+      begin(snap.job, { inputKey: snap.inputKey, summary: snap.summary });
       return;
     }
     fail('探す処理でエラーが起きました。もう一度試してください。', e && e.message ? e.message : null);
@@ -485,7 +504,19 @@ export function createSearchController({
     return transport;
   }
 
-  function start(job, { inputKey = null, summary = null } = {}) {
+  /**
+   * 本人が始めた探索。画面の処理に切り替えたあと (Worker を読み込めなかった) でも、それも失敗していたら
+   * (電波が無かったなど) Worker から作り直す (電波が戻れば、再読み込みしなくても探せるように)
+   */
+  function start(job, meta = {}) {
+    if (fellBack && snap.status === 'error') {
+      fellBack = false;
+      dropTransport();
+    }
+    return begin(job, meta);
+  }
+
+  function begin(job, { inputKey = null, summary = null } = {}) {
     if (!isObj(job)) return null;
     clearTimers();
     prevResult = null;
@@ -554,11 +585,12 @@ export function createSearchController({
     start,
     cancel,
     extend,
-    /** 同じ条件でもう一度 (エラーのあと)。つなぎ方は作り直す */
+    /** 同じ条件でもう一度 (エラーのあと)。つなぎ方は Worker から作り直す */
     retry() {
       if (!snap.job) return null;
       dropTransport();
-      return start(snap.job, { inputKey: snap.inputKey, summary: snap.summary });
+      fellBack = false;
+      return begin(snap.job, { inputKey: snap.inputKey, summary: snap.summary });
     },
     /** 保存してあった結果 (store.js の loadSearchLast) を出す。探していないときだけ */
     restore(last) {

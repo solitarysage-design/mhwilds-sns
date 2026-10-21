@@ -135,6 +135,16 @@ function namedPartsBySlash(monster) {
       || (b.wound?.slash ?? -1) - (a.wound?.slash ?? -1) || (a.ordinal ?? 0) - (b.ordinal ?? 0));
 }
 
+/**
+ * 部位を自動で選ぶときの候補 (弱点 1 か所・主な部位 3 か所)。一時的な部位 (transient。ウズ・トゥナの水膜など、部位の体力が
+ * 小さく傷口も無い層) は除く (それしか無ければ全部)。target_mix.js の defaultPartKey と同じ決まり
+ */
+function autoPickParts(monster) {
+  const named = namedPartsBySlash(monster);
+  const stable = named.filter((p) => p.transient !== true);
+  return stable.length ? stable : named;
+}
+
 /** 武器の参照 (数値 / 文字列 / 要素) → 武器 (所持武器は元の武器で補う)。見つからなければ null */
 function weaponOf(ref, index) {
   if (ref == null || !index) return null;
@@ -612,7 +622,8 @@ export function elementPlan(subjects, current, index, opts = {}) {
  * 狙う部位 (docs/RECOMMEND_DESIGN.md 2.6 節) と、個体の傷口の置き換え (hunt.hitzoneFor) を入れたソルバの targets。
  * @param monster monsters.json の 1 件
  * @param kind 個体 (null = 通常)
- * @param policy 'asSelected' (相手タブで選んだ部位・割合。memo に無ければ weak1) | 'weak1' (弱点 1 か所) | 'main3' (主な部位 3 か所・仮)
+ * @param policy 'asSelected' (相手タブで選んだ部位・割合。memo に無ければ weak1) | 'weak1' (弱点 1 か所) | 'main3' (主な部位 3 か所・仮)。
+ *   weak1 と main3 は一時的な部位 (transient。水膜など) を選ばない (autoPickParts)
  * @param memo {[monsterId]: {partKey, mix: {on, weights}}} 相手タブで選んだ部位 (tabs.target.memo といまの相手)
  * @param isWound 傷口を狙うか (全部の相手に同じに使う)
  * @param opts {useUncertain} 確度の低い傷口の置き換え (歴戦王アルシュベルド) を使うか
@@ -636,11 +647,11 @@ export function partsTargets(monster, kind, policy, memo, isWound, opts = {}) {
     if (!shares && sel.partKey && byKey(sel.partKey)) shares = [{ part: byKey(sel.partKey), share: 1 }];
   }
   if (!shares && policy === 'main3') {
-    const main = namedPartsBySlash(monster).filter((p) => (Number(p.hitzone?.slash) || 0) >= WEAK_POINT_MIN).slice(0, 3);
+    const main = autoPickParts(monster).filter((p) => (Number(p.hitzone?.slash) || 0) >= WEAK_POINT_MIN).slice(0, 3);
     if (main.length) shares = main.map((p) => ({ part: p, share: 1 / main.length }));
   }
   if (!shares) {
-    const first = namedPartsBySlash(monster)[0];
+    const first = autoPickParts(monster)[0];
     if (first) shares = [{ part: first, share: 1 }];
   }
   if (!shares) return [];
@@ -1305,6 +1316,67 @@ export function jobKey(job, { dataVersion = null } = {}) {
   });
 }
 
+// ---------------------------------------------------------------- いまの装備との比べ
+
+/**
+ * いまの装備との比べの基準 (結果の baseline の形)。base = {value (1 コンボの期待値), perGroup ({相手の key: 期待値})}。
+ * 相手が 1 体なら value をそのまま (kind 'damage')、多頭は T = Σ 体力_i / 期待値_i (kind 'combos'。全部倒すまでの回数)。
+ * 体力が全員分からない多頭は、結果の score (rerankMulti) と同じく期待値の調和平均 (= 相手の数 / T。kind 'damage') にする
+ * (value は score.value と同じ単位で比べられる)。
+ * @param subjects job.subjects ([{key, health: {mid}, healthAssumed}])
+ * @returns {{kind: 'damage'|'combos', value, T (回数の目安。体力が分からなければ null), combos (相手ごとに切り上げた回数の合計。
+ *            体力が分からない相手がいれば null), perGroup}} | null  (計算できない相手がいれば null)
+ */
+export function baselineView(subjects, base) {
+  const subs = Array.isArray(subjects) ? subjects : [];
+  if (!isObj(base)) return null;
+  const pg = isObj(base.perGroup) ? base.perGroup : null;
+  if (subs.length <= 1) {
+    const s = subs[0] || null;
+    const v = finite(base.value) > 0 ? base.value : (s && pg ? finite(pg[s.key]) : null);
+    if (!(v > 0)) return null;
+    const H = s && s.health && !s.healthAssumed ? finite(s.health.mid) : null;
+    return {
+      kind: 'damage', value: v, T: H != null ? H / v : null, combos: H != null ? Math.ceil(H / v) : null,
+      perGroup: s ? { [s.key]: v } : null,
+    };
+  }
+  if (!pg || !subs.every((s) => finite(pg[s.key]) > 0)) return null;
+  const T = subs.reduce((a, s) => a + s.health.mid / pg[s.key], 0);
+  const combos = subs.every((s) => !s.healthAssumed) ? subs.reduce((a, s) => a + Math.ceil(s.health.mid / pg[s.key]), 0) : null;
+  if (subs.every((s) => s.healthAssumed)) {
+    return { kind: 'damage', value: subs.length / T, T: null, combos: null, perGroup: { ...pg } };
+  }
+  return { kind: 'combos', value: T, T, combos, perGroup: { ...pg } };
+}
+
+/**
+ * 結果の score と基準 (baselineView) の差 (%)。期待値 (kind 'damage') は「結果 / 基準 − 1」(+ なら火力が高い)、
+ * 回数 (kind 'combos') は「基準の回数 / 結果の回数 − 1」(+ なら回数が少ない = 速く倒せる)。単位が違えば null。
+ */
+export function vsBaselinePct(score, baseline) {
+  if (!isObj(score) || !isObj(baseline) || !(finite(score.value) > 0) || !(finite(baseline.value) > 0)) return null;
+  if ((score.kind || 'damage') !== (baseline.kind || 'damage')) return null;
+  return score.kind === 'combos' ? (baseline.value / score.value - 1) * 100 : (score.value / baseline.value - 1) * 100;
+}
+
+/**
+ * 装備 (build) の基準を Job の入力 (1 回目の入力の相手・発動率・コンボ。createPlanRunner の「いまの装備」と同じ式 = evaluateBuild)
+ * で計算する。画面のスレッドで、結果の組を装備に入れたあとの「いまより」を、入れたあとの装備で出し直すのに使う。
+ * @param data {index, effects | skillEffects, motions} (index は画面の索引でよい。入力の端末の武器・護石も足す)
+ * @returns baselineView の結果 | null (武器が無い・計算できない)
+ */
+export function planBaseline(job, build, data) {
+  const input = job && Array.isArray(job.runs) && job.runs[0] ? job.runs[0].input : null;
+  if (!input || !build || build.weapon == null || !data) return null;
+  const index = indexWithExtras(data.index, input);
+  const ev = evaluateBuild(build, input.targets, {
+    index, effects: data.effects || data.skillEffects, motions: data.motions, combo: input.combo, uptimes: input.uptimes,
+    monsterStatus: input.monsterStatus, sharpness: input.sharpness, buffs: input.buffs,
+  });
+  return ev ? baselineView(job.subjects, { value: ev.value, perGroup: ev.perGroup }) : null;
+}
+
 // ---------------------------------------------------------------- 並べ直し (多頭は T)
 
 /**
@@ -1354,6 +1426,27 @@ export function rerankMulti(results, subjects, { twoWeapons = false } = {}) {
 }
 
 // ---------------------------------------------------------------- 探索を順に回す (Worker の中で使う)
+
+/**
+ * 探索の警告 weapons-sieved (武器を見込みの高い何本かに絞った) を 1 行にまとめる。属性やられの 2 回や「続けて探す」の回で
+ * 絞った本数が違うと、同じ種類の警告が並ぶため。kept は大きい方、keptMin〜keptMax に範囲を残す。
+ * 文の形は search.js の weapons-sieved と同じ (total = 探した武器の数、before = 同じ性能かそれ以下の武器を除く前の数)。
+ */
+function mergeSieved(a, b) {
+  const lo = Math.min(Number(a.keptMin ?? a.kept), Number(b.keptMin ?? b.kept));
+  const hi = Math.max(Number(a.keptMax ?? a.kept), Number(b.keptMax ?? b.kept));
+  if (!Number.isFinite(lo) || !Number.isFinite(hi)) return a; // 形の違う警告は前のまま
+  if (lo === hi && a.message === b.message) return a;
+  const total = Math.max(Number(a.total) || 0, Number(b.total) || 0) || null;
+  const before = Math.max(Number(a.before) || 0, Number(b.before) || 0) || null;
+  const totalText = total == null ? '' : before != null && before > total
+    ? `${before} 本 (同じ性能かそれ以下の武器を除くと ${total} 本) のうち、` : `${total} 本のうち、`;
+  return {
+    ...b, kept: hi, keptMin: lo, keptMax: hi,
+    message: `武器は ${totalText}見込みの高い ${lo === hi ? lo : `${lo}〜${hi}`} 本に絞ってくわしく探しました`
+      + `${lo === hi ? '' : ' (回ごとに違います)'} (「続けて探す」でほかの武器もくわしく探します)`,
+  };
+}
 
 /** 結果の装備に入っている γ 防具・狩猟証γ の護石 → 「歴戦王〇〇の素材が要ります」 */
 function gammaMarksOf(build, gamma) {
@@ -1424,7 +1517,10 @@ export function createPlanRunner(job, data, deps = {}) {
     monsterStatus: input.monsterStatus, sharpness: input.sharpness, buffs: input.buffs,
   });
   const addWarning = (list, w) => {
-    if (!list.some((x) => x.code === w.code && x.message === w.message)) list.push(w);
+    // 回ごとに数の変わる警告 (武器を絞った本数) は 1 行にまとめる
+    const i = w && w.code === 'weapons-sieved' ? list.findIndex((x) => x.code === 'weapons-sieved') : -1;
+    if (i >= 0) list[i] = mergeSieved(list[i], w);
+    else if (!list.some((x) => x.code === w.code && x.message === w.message)) list.push(w);
   };
 
   /** 探索の結果 1 件に、相手ごとの値・守りのチェック・γ の印などを足す */
@@ -1473,20 +1569,11 @@ export function createPlanRunner(job, data, deps = {}) {
       baselineOwn(),
       job.baseline ? { value: job.baseline.value, perGroup: job.baseline.perSubject } : null,
     ];
-    const baseline = candidates.find(usable) || null;
+    const found = candidates.find(usable) || null;
+    // baseline.value は score.value と同じ単位 (1 体 = 期待値、多頭 = T、体力が全員分からない多頭 = 期待値の調和平均)
+    const baseline = found ? baselineView(subjects, found) : null;
     if (!baseline) return { ...r, baseline: null, vsBaselinePct: null };
-    if (!multi) {
-      const v = baseline.value;
-      const combos = subjects[0] && !subjects[0].healthAssumed ? Math.ceil(subjects[0].health.mid / v) : null;
-      return { ...r, baseline: { value: v, combos }, vsBaselinePct: r.score.value != null ? (r.score.value / v - 1) * 100 : null };
-    }
-    const pg = baseline.perGroup;
-    const T = subjects.reduce((a, s) => a + s.health.mid / pg[s.key], 0);
-    const combos = subjects.every((s) => !s.healthAssumed)
-      ? subjects.reduce((a, s) => a + Math.ceil(s.health.mid / pg[s.key]), 0) : null;
-    let pct = null;
-    if (r.score.value != null) pct = r.score.kind === 'combos' ? (T / r.score.value - 1) * 100 : (r.score.value * T / subjects.length - 1) * 100;
-    return { ...r, baseline: { value: T, combos }, vsBaselinePct: pct };
+    return { ...r, baseline, vsBaselinePct: vsBaselinePct(r.score, baseline) };
   };
 
   /** 守りを満たす組を先に (属性やられの耐性が 20 に届かない組は下へ)、その中で score の順。武器 2 本は 2 本とも満たすか */
@@ -1801,15 +1888,23 @@ export function createPlanRunner(job, data, deps = {}) {
     const firstDone = st.runs.length && st.runs[0].result;
     const partialReady = !!(firstDone || (st.runIndex === 0 && sub && sub.partialReady) || st.merged);
     const idx = run ? Math.max(0, st.runs.indexOf(run)) : st.runs.length - 1;
+    // 回の数は火力の差を測る回も数える (「3 / 3 回目: 守りのスキルの火力の差を…」。count より大きい回目を出さない)
+    const count = st.runs.length + (st.cost ? 1 : 0);
+    // いまの最良: 探索の回の途中の上位 (1 体の期待値)。多頭はその回の重み付きの期待値で T ではないので出さず、合わせた結果 (T) を出す。
+    // 火力の差の回 (守りなしの探索) の上位も出さない (守りありの結果より上下するので、合わせた結果のまま)
+    const merged = st.merged ? st.merged.results.map((r) => ({ value: r.score.value, exact: true })) : [];
+    const searching = st.phase === 'runs' || st.phase === 'extend';
+    const best = searching && !multi && sub && Array.isArray(sub.best) ? sub.best : merged;
+    const top = st.merged && st.merged.results[0] ? st.merged.results[0].score : null;
     return {
-      phase: st.phase === 'runs' || st.phase === 'extend' ? (sub ? sub.phase : 'prepare')
+      phase: searching ? (sub ? sub.phase : 'prepare')
         : st.phase === 'two' ? 'twoWeapons' : st.phase === 'cost' ? 'cost' : st.phase === 'done' ? 'done' : 'merge',
       elapsedMs: st.activeMs,
-      best: sub && Array.isArray(sub.best) ? sub.best : (st.merged ? st.merged.results.map((r) => ({ value: r.score.value, exact: true })) : []),
+      best, bestKind: top ? top.kind : (multi ? 'combos' : 'damage'),
       partialReady,
       run: run === st.cost && run
-        ? { index: st.runs.length, count: st.runs.length, label: st.cost.label, key: 'cost' }
-        : { index: idx, count: st.runs.length, label: (st.runs[idx] || {}).label || '', key: (st.runs[idx] || {}).key || null },
+        ? { index: st.runs.length, count, label: st.cost.label, key: 'cost' }
+        : { index: idx, count, label: (st.runs[idx] || {}).label || '', key: (st.runs[idx] || {}).key || null },
       stats: sub ? sub.stats || null : null,
     };
   }

@@ -10,6 +10,9 @@
 
 /* 個体・人数の欄 (中の .field は先頭なので上の余白が無くなる。囲いの方で空ける) */
 .th-field { margin-top: 12px; }
+
+/* 出典のリンク (歴戦王で変わること): 指で押せる高さ (44px) にする */
+.th-source a { display: inline-flex; align-items: center; min-height: var(--tap); }
 .th-field:first-child { margin-top: 0; }
 
 /* モンスターのカードの「クエストの名前から選ぶ」(PickerField の行と左右をそろえる) */

@@ -32,6 +32,10 @@ DC_MEAT = {"slash": "slash", "blunt": "blow", "shot": "shot", "fire": "fire", "w
 MHDB_MEAT = {"slash": "slash", "blunt": "blunt", "shot": "pierce", "fire": "fire", "water": "water",
              "thunder": "thunder", "ice": "ice", "dragon": "dragon", "stun": "stun"}
 
+# 一時的な部位 (transient) とみなす内部の部位の種類の接頭辞。いまはウズ・トゥナの水膜だけ
+# (ほかの部位 (口・露出前の核など) が一時的かはデータから分からないので入れない)
+TRANSIENT_TYPE_PREFIXES = ("WATERFILM_",)
+
 # 推奨属性の計算で「主要部位」とみなす斬撃肉質のしきい値 (弱点特効と同じ 45)
 MAJOR_SLASH = 45
 MAJOR_FALLBACK_TOP = 3
@@ -250,6 +254,10 @@ def build_monsters() -> tuple[list[dict], dict]:
             }
             if note:
                 part["note"] = " / ".join(note)
+            # 一時的な層 (ウズ・トゥナの水膜 WATERFILM_*。部位の体力 130・傷口なしで、いつもある部位ではない)。
+            # 弱点 1 か所・主な部位 3 か所の自動の選び方では選ばない (画面で自分で選ぶことはできる)
+            if str(q["type"]).startswith(TRANSIENT_TYPE_PREFIXES):
+                part["transient"] = True
             if unknown:
                 report["unknownParts"].append(f"{m['name']} {key}")
             parts_out.append(part)

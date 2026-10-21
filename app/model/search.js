@@ -377,9 +377,12 @@ export function createSearch(input, data) {
       }
       // 武器も探すときの 2 段のふるい (docs/SEARCH_DESIGN.md 2.7 節): 外した武器が残っていれば知らせる
       if (S && S.stats.sieve && S.sieveRest && S.sieveRest.length) {
-        ws.push({ code: 'weapons-sieved', kept: S.stats.sieve.weapons.length, rest: S.sieveRest.length,
-          message: `武器は ${P.weapons.length} 本のうち、見込みの高い ${S.stats.sieve.weapons.length} 本に絞ってくわしく探しました`
-            + ' (「続けて探す」でほかの武器もくわしく探します)' });
+        // 武器の数は 2 つある: 探す武器 (同じ性能かそれ以下の武器を除いた後) と、画面が数えた本数 (除く前)
+        const total = P.weapons.length;
+        const before = P.weaponsBefore;
+        ws.push({ code: 'weapons-sieved', kept: S.stats.sieve.weapons.length, rest: S.sieveRest.length, total, before,
+          message: `武器は ${before > total ? `${before} 本 (同じ性能かそれ以下の武器を除くと ${total} 本) のうち、` : `${total} 本のうち、`}`
+            + `見込みの高い ${S.stats.sieve.weapons.length} 本に絞ってくわしく探しました (「続けて探す」でほかの武器もくわしく探します)` });
       }
       if (failed) ws.push({ code: 'error', message: `探索の途中でエラーが起きました: ${failed}` });
       let baseline = null;

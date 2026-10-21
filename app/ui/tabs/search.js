@@ -16,7 +16,7 @@ import {
   setArchTemperedHunted, setArmorExcluded, setBuild, takeSearchRequest, resolveCombo,
 } from '../../state.js';
 import { useTargetData } from '../../data.js';
-import { loadSearchTiming } from '../../store.js';
+import { loadSearchTiming, clearSearchLast } from '../../store.js';
 import { computeBuild } from '../../model/build.js';
 import { questById } from '../../model/hunt.js';
 import * as R from '../../model/recommend.js';
@@ -24,7 +24,7 @@ import { useEquipIndex } from './equip_index.js';
 import * as F from './search_form.js';
 import { useSearchRun } from './search_client.js';
 import { ResultsCard, ResultSheet } from './search_results.js';
-import { goToTab } from '../shell.js';
+import { goToTab, reloadPage } from '../shell.js';
 
 /** テストだけの予算の差し替え (window.__mhwSearchBudget = {work: 3000})。画面には出さない */
 function budgetTest() {
@@ -60,7 +60,9 @@ function TargetCard({ form, search, target, targetData }) {
             ${target.isWound ? '・傷口を狙う' : ''}</p>
           ${form.plan && form.plan.mode === 'multi' && search.useTarget && html`
             <p class="sr-target-line" data-sr-multi=${form.plan.subjects.length}>このクエストの相手 ${form.plan.subjects.length} 体
-              (${form.plan.subjects.map((x) => x.name).join('・')}) を、全部倒すまでの回数が少ない順に探します。</p>`}`
+              (${form.plan.subjects.map((x) => x.name).join('・')}) を、全部倒すまでの回数が少ない順に探します。</p>
+            <p class="hint" data-sr-subject-parts>相手ごとの狙う部位: ${form.plan.subjects.map((x) => `${x.name} ${(x.targets || []).map((t) => t.label).join('・') || '—'}`).join(' / ')}。
+              相手タブで部位を選んでいない相手は、弱点 1 か所 (切断の肉質が一番高い部位) で数えます。相手タブで相手をタップすると変えられます。</p>`}`
           : tg.source === 'manual' ? html`
             <p class="sr-target-name" data-sr-target-label>${tg.label} (手入力の肉質)</p>`
             : html`
@@ -126,7 +128,7 @@ function DefenseCard({ form, search }) {
               ${reqs.map((q) => html`
                 <li key=${q.key} data-sr-req=${q.key} data-sr-req-on=${q.on ? '1' : '0'}>
                   <${Toggle} label=${html`${q.label} ${q.provisional && html`<${Badge} kind="warn">仮</${Badge}>`} ${q.unconfirmed && html`<${Badge} kind="warn">未確認</${Badge}>`}`}
-                    checked=${!!q.on} hint=${(q.why || []).map((x) => x.text).filter(Boolean).join('、') || (q.tier === 'ref' ? '参考' : '')}
+                    checked=${!!q.on} hint=${`${q.tier === 'ref' ? '参考・' : ''}${(q.why || []).map((x) => x.text).filter(Boolean).join('、')}`.replace(/・$/, '')}
                     onChange=${(on) => setSearchToggle(q.key, on)} />
                 </li>`)}
             </ul>`}
@@ -386,20 +388,42 @@ export default function SearchTab({ data, active }) {
 
   const currentResult = useMemo(() => computeBuild(build, idx), [build, idx]);
   const stale = !!(snap.result && snap.inputKey && currentKey && snap.inputKey !== currentKey);
-  // 「いまより +x%」の基準: 探した時の条件 (Job の入力) で、いまの装備を計算する。保存から戻した結果は条件が同じときだけ
-  const runInput = useMemo(() => {
-    const job = snap.job || (!stale && snap.result ? form.job : null);
-    if (!job) return null;
-    return job.kind === 'search' ? job.input : (job.runs && job.runs[0] ? job.runs[0].input : null);
-  }, [snap.job, stale, snap.result, form.job]);
-  const baseline = useMemo(() => (runInput ? F.baselineValue(runInput, build, idx, data) : null), [runInput, build, idx, data]);
-  const rows = useMemo(() => F.resultRows(snap.result, {
-    idx, currentBuild: build, currentSkills: currentResult.skills, baseline, gamma: form.gamma,
-  }), [snap.result, idx, build, currentResult, baseline, form.gamma]);
-  const sheetRow = openRow != null ? rows.find((r) => r.index === openRow) || null : null;
+  // 「いまより」の基準: 探した時の条件 (Job の入力) で、いまの装備を計算する。保存から戻した結果は条件が同じときだけ。
+  // 相手に合わせて探した Job は recommend.js の planBaseline (Worker の「いまの装備」と同じ式。多頭は全部倒すまでの回数)。
+  // 結果の行の baseline (探し始めた時の装備) は、装備が探し始めた時のままのときだけ使う (resultRows の startBuild)
+  const baseJob = snap.job || (!stale && snap.result ? form.job : null);
+  const baseline = useMemo(() => {
+    if (!baseJob) return null;
+    try {
+      if (baseJob.kind === 'plan') return R.planBaseline(baseJob, build, { index: idx, effects: data.skillEffects, motions: data.motions });
+      return F.baselineValue(baseJob.input, build, idx, data);
+    } catch {
+      return null;
+    }
+  }, [baseJob, build, idx, data]);
+  const players = baseJob && baseJob.kind === 'plan' ? Number(baseJob.players) || 1 : 1;
+  const rows = useMemo(() => {
+    try {
+      return F.resultRows(snap.result, {
+        idx, currentBuild: build, currentSkills: currentResult.skills, baseline, startBuild, gamma: form.gamma,
+      });
+    } catch (e) {
+      // 保存してあった結果が壊れていて行を作れない: 前回の結果を捨てる (開くたびに落ちないように)
+      console.warn('結果の行を作れませんでした', e);
+      return null;
+    }
+  }, [snap.result, idx, build, currentResult, baseline, startBuild, form.gamma]);
+  useEffect(() => {
+    if (rows !== null || snap.busy) return;
+    Promise.resolve().then(() => clearSearchLast()).catch(() => {});
+    ctrl.clear();
+  }, [rows, snap.busy]);
+  const rowList = rows || [];
+  const sheetRow = openRow != null ? rowList.find((r) => r.index === openRow) || null : null;
   const requiredIds = useMemo(() => new Set(search.required.map((r) => r.skillId)), [search.required]);
   const zeroed = snap.summary && snap.summary.placeholders === 'zero' ? (snap.summary.zeroed || 0) : 0;
   const budgetMs = (Number(search.budgetSec) || 6) * 1000;
+  const K = (snap.summary && Number(snap.summary.K)) || Number(search.K) || 10;
 
   const apply = (row, which) => {
     const next = which === 2 && row.second ? row.second.build : row.raw.build;
@@ -408,6 +432,11 @@ export default function SearchTab({ data, active }) {
     setApplied({ rank: row.rank, which, prev });
     setOpenRow(null);
     toast('装備に入れました', { action: { label: '元に戻す', onClick: () => { setBuild(prev); setApplied(null); } } });
+    // 「元に戻す」「火力タブで見る」のある知らせ (結果のカードの先頭) を見える所へ
+    requestAnimationFrame(() => {
+      const el = document.getElementById('sr-results');
+      if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    });
   };
   const undo = () => {
     if (!applied) return;
@@ -440,13 +469,14 @@ export default function SearchTab({ data, active }) {
         </${Button}>
         <p class="hint sr-start-hint" data-sr-time-hint>${snap.busy ? '探しています…' : F.startHintText(form, search)}</p>
       </div>
-      <${ResultsCard} snap=${snap} rows=${rows} stale=${stale} zeroed=${zeroed} budgetMs=${budgetMs} timings=${timings}
-        requiredIds=${requiredIds}
-        onCancel=${() => ctrl.cancel()} onRetry=${() => { setApplied(null); ctrl.retry(); }}
+      <${ResultsCard} snap=${snap} rows=${rowList} stale=${stale} zeroed=${zeroed} budgetMs=${budgetMs} timings=${timings}
+        requiredIds=${requiredIds} players=${players} K=${K}
+        onCancel=${() => ctrl.cancel()} onRetry=${() => { setApplied(null); ctrl.retry(); }} onReload=${() => reloadPage()}
         onExtend=${() => ctrl.extend(F.budgetOf(search.budgetSec, budgetTest()))}
         onOpen=${(row) => setOpenRow(row.index)}
         onRemoveRequired=${(id) => { removeRequired(id); setPendingStart(true); }}
         applied=${applied} onUndo=${undo} onShowPower=${() => goToTab('power', { top: true })} />
-      <${ResultSheet} open=${sheetRow != null} row=${sheetRow} idx=${idx} onClose=${() => setOpenRow(null)} onApply=${apply} />
+      <${ResultSheet} open=${sheetRow != null} row=${sheetRow} idx=${idx} onClose=${() => setOpenRow(null)} onApply=${apply}
+        zeroed=${zeroed} players=${players} />
     </div>`;
 }

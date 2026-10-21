@@ -480,7 +480,7 @@ search_results.js (一覧・詳しくのシート)  →「装備に入れる」=
 | 関数 | 中身 |
 |---|---|
 | `buildJob(ctx)` | `ctx = {state: {build, target, search, uptimes, sharpness, tabs}, core, idx (useEquipIndex), targetData, combo (resolveCombo の結果), localCharms, localWeapons, recommend (recommend.js の名前空間), budgetTest}` → `{ok, loading, blockers, notes, job, inputKey, summary, targets, weapon, weaponText, weaponMode, placeholders, exclusions, gamma, plan, planError}`。`blockers` があれば探せない (`no-weapon` = 段階 2 でいまの武器で探すのに武器が無い・`fixed-equipment` = 装備固定のクエスト・`no-combo`)。モンスターを選んでいて `useTarget` なら `recommend.buildPlan` → `planToJob` の Job をそのまま使う (端末の護石・所持武器・いまの装備・予算を `planToJob` に渡す。武器が無くても Plan が武器を選ぶので止めない)。それ以外・Plan を作れない (null・例外) ときは段階 2 の `search` の Job (入力に γ の表 `gamma` も入れる)。`weaponText` / `weaponMode` は実際に使う武器の決め方 (Plan があれば `plan.element`) |
-| `searchTargets({target, tabTarget, targetData, policy})` | 狙う部位 (`asSelected` = 相手タブの部位・割合 / `weak1` / `main3`)。個体の傷口は hunt.js の `hitzoneFor` で置き換える。部位を選んでいなければ弱点 1 か所 (`fallback: 'no-part'`)、相手が無ければ既定の肉質 |
+| `searchTargets({target, tabTarget, targetData, policy})` | 狙う部位 (`asSelected` = 相手タブの部位・割合 / `weak1` / `main3`)。個体の傷口は hunt.js の `hitzoneFor` で置き換える。部位を選んでいなければ弱点 1 か所 (`fallback: 'no-part'`)、相手が無ければ既定の肉質。弱点 1 か所 (`target_mix.js` の `defaultPartKey`)・主な部位 3 か所 (`mainParts`) は一時的な部位 (`transient`。ウズ・トゥナの水膜) を選ばない (2026-10-22。自分で選べば狙える) |
 | `weaponChoice({mode, build, idx, weapons, myWeapons, monster, kind})` | 武器の範囲 (`docs/RECOMMEND_DESIGN.md` 2.3 節の 1 体の行)。おまかせ: 武器が無い → 片手剣すべて、おすすめがはっきりで属性が違う → おすすめの属性 (1 位と差 2 以内の属性の片手剣 + 所持武器 + いまの武器)、ほかはいまの武器 |
 | `placeholderConditions(effects, uptimes)` / `searchUptimes(effects, uptimes, policy)` | 仮置きの発動率の条件の一覧 (本人が火力タブで入れたものは `fromInput`) / 探すときの発動率 (`zero` = 仮のまま条件を 0%。段階のある条件は `{}`) |
 | `gammaInfo(targetData)` / `huntedExclusions(gamma, hunted)` / `gammaMarksOf(build, gamma)` | 歴戦王の素材が要る γ 防具・狩猟証γ の護石 (表は hunt.js の `archTemperedRewards` / `gammaIndex`。`index` に探索の入力用の表) / 倒していない歴戦王の分を外す (`armorExclude`・`charms.fixedExclude`) / 結果の印 |
@@ -488,9 +488,11 @@ search_results.js (一覧・詳しくのシート)  →「装備に入れる」=
 | `inputKeyOf(job, dataVersion)` / `dataVersionOf(core)` | 条件の短いハッシュ (予算といまの装備は入れない。「装備に入れる」で「条件が変わりました」にならないように) / データの版 (各ファイルの generatedAt + 持っている護石・武器の id) |
 | `isResultBuild(result, build)` | いまの装備が結果の組 (2 本目の武器の組も) と同じか。同じなら、武器の範囲・限界突破 (いまの装備から決まる) は `summary.startBuild` (探し始めた時の装備。search-last にも入る) で作り直した条件で比べる (結果を入れただけで「条件が変わりました」にしない) |
 | `requiredRows` / `requiredPickerItems(skills, required, bonuses)` / `bonusLevelsText` | 自分で足す必須スキルの行・「スキルを足す」の一覧。シリーズ/グループも選べる (Lv は段。「Lv1 = 2 部位・Lv2 = 4 部位」を添える。探索が 2b で対応したので 3f で選べるようにした。`docs/SEARCH_DESIGN.md` 2.8 節) |
-| `normalizeResult` / `resultRows` / `buildDiff` / `changeText` / `skillDiff` / `freeSlotsText` / `buildLines` / `baselineValue` | 結果をそろえる (壊れた値を捨てる) / 一覧の行 (いまとの差 % か多頭の回数の差 `diffCombos`・変わる部位・スキルの差・空きスロット・γ・2 本目の武器・守り `defense`) / いまの装備の値 (探した時の入力で計算。火力タブの `summarizePower` と同じ値) |
+| `normalizeResult` / `resultRows` / `buildDiff` / `changeText` / `skillDiff` / `freeSlotsText` / `buildLines` / `baselineValue` | 結果をそろえる (壊れた値を捨てる。行の中の配列 `skills`・`perSubject`・`builds`・`defense.rows`・`infeasible.missing` も物だけにし、装備の `decorations` などの形もそろえる。search-last が壊れていても画面を落とさない。相手に合わせた Job の満たせない理由 (回ごとの配列) は `missing` にまとめる) / 一覧の行 (下) / いまの装備の値 (探した時の入力で計算。火力タブの `summarizePower` と同じ値) |
+| `resultRows(result, {idx, currentBuild, currentSkills, baseline, startBuild, gamma})` | 一覧の行: いまとの差 (`diffPct` = 期待値の %・`diffCombos` = 多頭の回数の差・`diffTPct` = 体力の分からない相手がいて回数を切り上げて数えられないときの回数の割合。+ なら少ない)・`killCombos` (1 体でクエストを選んでいるときの討伐までの回数)・`baseKind` / `baseValue` / `baseCombos` (比べた基準)・`sameAsTop` (1 位と同じ値)・変わる部位・スキルの差・空きスロット・γ・2 本目の武器・守り `defense`。基準: いまの装備が `startBuild` (探し始めた時の装備) のままなら行の `baseline` (Worker が探索と同じ式で計算)、変わっていたら (結果の組を装備に入れたなど) `baseline` (いまの装備で計算し直したもの。数か `recommend.js` の `baselineView` の形 `{kind, value, T, combos}`。相手に合わせた Job は `recommend.planBaseline`) を使う (2026-10-22。前は入れたあとも探す前の装備と比べた「いまより +30%」が残った) |
+| `tiesWithTop(rows)` / `baseText(row, {zeroed, players})` / `playersText(players)` | 1 位と同じ値の行の数 / 詳しくの「比べた基準: いまの装備 約 269 回 (4 人のとき) (仮の条件は 0% で計算)」/ 人数の添え書き |
 | `defenseView(defense, defense2)` / `defenseText(view)` / `costOfDefenseText(cost)` | 守りのチェック (`recommend.defenseCheck`。武器 2 本は悪い方) → 行の「守り ✓環境適応 Lv2・✓火耐性の合計 22」 / 「守りのスキルのために火力 −x.x% (目安)」(多頭は回数の増え) |
-| `progressView` / `PHASE_TEXT` | 計算中の段階の文 (「候補を絞っています」など。「ビーム」などの言葉は出さない。相手に合わせるときの `merge` / `twoWeapons` / `cost` も) と進み具合の帯・「1 / 2 回目: …」 |
+| `progressView` / `PHASE_TEXT` / `PHASE_SHORT` | 計算中の段階の文 (「候補を絞っています」など。「ビーム」などの言葉は出さない。相手に合わせるときの `merge` / `twoWeapons` / `cost` も) と進み具合の帯・「1 / 3 回目: …」(回の数は火力の差を測る回も数える)・いまの最良の文 `bestText` (多頭は「全部倒すまで 約 n 回」)。帯は回が 2 つ以上の Job では Job 全体で数える (回が変わっても 0% に戻らない) / くわしくの段階の短い名前 (「準備」「候補を絞る」…。内部の名前は出さない) |
 
 ### search_client.js (Worker の出し入れ)
 
@@ -500,13 +502,15 @@ const { snap, ctrl } = useSearchRun();          // 部品の中。初めて使�
 ctrl.start(job, { inputKey, summary });         // 探す (前の探索は捨てる)。Worker には {type: 'start', id, job, input (search のとき)}
 ctrl.cancel();                                  // {type: 'cancel', id}。2.5 秒で止まらなければ Worker を作り直す
 ctrl.extend(budget);                            // 「続けて探す」{type: 'extend', id, budget}。snap.canExtend のときだけ
-ctrl.retry();                                   // エラーのあと同じ条件で (Worker は作り直す)
+ctrl.retry();                                   // エラーのあと同じ条件で (Worker から作り直す)
 getSearchController().getSnapshot();            // 部品の外 (テストなど)
 ```
 
 `snap` の主な項目: `status` (`'idle' | 'running' | 'cancelling' | 'done' | 'stopped' | 'cancelled' | 'infeasible' | 'error'`)・`busy`・
-`phase` / `elapsedMs` / `best` / `run` (途中経過)・`result` (`normalizeResult` の形。途中の結果のこともある)・`partial`・
-`improved` (途中の結果か「続けて探す」の前から 1 位が変わった)・`canExtend`・`extended`・`error {message, detail}`・
+`phase` / `elapsedMs` / `best` / `bestKind` / `run` (途中経過。`best` は 1 つの探索の中で悪くならないように残す = `keepBest`。
+期待値は大きい方、多頭の回数 (`bestKind: 'combos'`) は小さい方)・`result` (`normalizeResult` の形。途中の結果のこともある)・`partial`・
+`improved` (途中の結果か「続けて探す」の前から 1 位が変わった)・`canExtend`・`extended`・`error {message, detail, code}`
+(`code: 'load'` = 探す処理を読み込めなかった。文は `LOAD_ERROR_TEXT`、元の英語の文は `detail`)・
 `inline` (画面のスレッドで回した)・`phases [{name, atMs}]`・`partialMs` / `doneMs` (計算した時間。裏に回っていた時間は数えない)・
 `inputKey` / `summary`・`restored {savedAt, appVersion}` (保存から戻した結果)。
 
@@ -515,6 +519,8 @@ getSearchController().getSnapshot();            // 部品の外 (テストなど
   `docs/SEARCH_DESIGN.md` 5 章。
 - Worker が無い・作れない・一度も返事をしないまま落ちた (読み込めなかった) ときは、画面のスレッドで回す (`createModelEngine`:
   model の `createSearch` / recommend.js の `createPlanRunner` を 16ms ずつ回し、Worker と同じメッセージを返す)。
+  画面の処理も読み込めなかった (電波が無いなど) ときは、「もう一度」(`retry`) と次に本人が始めたとき (`start`) に Worker から作り直す
+  (再読み込みしなくても、電波が戻れば探せる。2026-10-22)。結果のカードには「再読み込み」のボタンも出す (`code: 'load'`)。
 - 返事が 20 秒来ない (画面が見えている間だけ数える) と「止まってしまいました」のエラーにして Worker を作り直す。
   iPhone で裏に回している間は数えない (`visibilitychange`)。
 - 途中の結果・終わりが出たら `setTabDot('search')` (探すタブを見ていればつかない)。
@@ -540,7 +546,11 @@ getSearchController().getSnapshot();            // 部品の外 (テストなど
 `[data-search-root]`・カード `[data-sr="target|weapon|defense|required|equip-options|placeholders|budget|start"]`・
 結果 `[data-sr="results"][data-sr-status][data-sr-partial]`・計算中 `[data-sr="running"]` と `[data-sr-phase]`・
 一覧の行 `button.sr-result[data-sr-rank][data-sr-value]`・ボタン `[data-sr-action="start|cancel|extend|undo|add-required|lv-up|lv-down|remove-required|remove-missing|apply|apply2"]`・
-知らせ `[data-sr-note="partial|improved|cancelled|stopped|stale|restored|inline|zeroed|warnings|infeasible|error|applied|empty|cost|two-gain"]`・
+知らせ `[data-sr-note="partial|improved|cancelled|stopped|stale|restored|inline|zeroed|warnings|infeasible|error|applied|applied-zeroed|empty|cost|two-gain|ties|two-top"]`・
+(並び: 計算中 → エラー → 入れた知らせ → 状態 (条件が変わった・前回の結果・途中の結果・やめた) → 満たせない → 一覧 → 説明と注意。
+終わった直後に 1 位の行が知らせの下に押し出されないように、説明と注意は一覧の下。2026-10-22)・
+行の「討伐まで」`[data-sr-row-kill]`・行の「1 位と同じ値」`[data-sr-tie]`・相手ごとの狙う部位 `[data-sr-subject-parts]`・
+詳しくの討伐まで `[data-sr-sheet-kill]`・比べた基準 `[data-sr-sheet-base]`・再読み込み `[data-sr-action="reload"]`・
 シート `[data-sr-sheet="result|hunted|exclude"]`・探せない理由 `[data-sr-blocker]`・守りのスキルの行 `[data-sr-req="<要件の key>"][data-sr-req-on="1|0"]`・
 武器 2 本の案 `[data-sr-two-weapons="on|off"]`・行の守り `[data-sr-row-defense="ok|short"]`・行の 2 本目 `[data-sr-row-second]`・
 詳しくの相手ごと `[data-sr-per-subject]`。
@@ -551,6 +561,9 @@ getSearchController().getSnapshot();            // 部品の外 (テストなど
   「守りのスキルのために火力 −x%」は結果のカードに出す (3f)。「守りのスキルを足す」(体力・回復系の一覧) も画面に無い (自分で決める必須スキルで足す)。
 - 結果から直接「マイセットに保存」(いまは「装備に入れる」のあと装備タブで保存する)。
 - 設定タブの「くわしく」に search-timing を出すこと (いまは探すタブの結果の「くわしく」に最近 5 回を出している)。
+- 同じ値の組を 1 行にまとめること (いまは「1 位と同じ値」の印と「上から n 件は同じ値です」の文だけ)。
+- 「装備に入れました」の toast の「火力タブで見る」(toast の action は 1 つなので、入れたあと結果のカードの先頭 (「元に戻す」
+  「火力タブで見る」のある知らせ) までスクロールする)。
 
 ## 相手タブの段階 3 のカード (担当: ui-target)
 
@@ -562,7 +575,8 @@ getSearchController().getSnapshot();            // 部品の外 (テストなど
 ```
 * 相手の決め方
 * モンスター              モンスター欄 + 「クエストの名前から選ぶ」(全 220 件。★ の高い順・★ ごとの見出し)
-  個体とクエスト          個体 (3 つまで並べる・4 つ以上は選ぶ欄。1 つなら出さない)・クエスト (狩猟対象 / 乱入の可能性)・人数
+  個体とクエスト          個体 (3 つまで並べる・4 つ以上は選ぶ欄。1 つなら出さない)・クエスト (狩猟対象 / 乱入の可能性)・人数・
+                          「この相手で装備を探す」(個体を選んだ所から 1 画面の中で押せるように。2026-10-22。下のおすすめのカードと同じ動き)
   体力と強さ              クエストを選んだときだけ。体力 (1 人・範囲)・N 人のとき [未確定]・攻撃の強さ [未確定]・
                           傷の付きにくさ [未確定]・討伐まで (いまの装備の 1 コンボの期待値で割った目安)・くわしく
   この相手のおすすめ [仮]  buildPlan の要約 (属性・守り・参考・注意) +「この相手で装備を探す」。buildPlan が null なら
@@ -590,6 +604,7 @@ setPlanBuilderForTest(fn | null)            // テスト用: buildPlan を作り
   拘束・部位破壊・ダウン・状態異常などを入れない目安である旨を、くわしくの外にも出す。
 - 多頭の相手ごとの部位は `target_mix.js` の `subjectTargets`: 今のモンスターは相手タブで選んだ部位・割合、ほかは
   `tabs.target.memo` に覚えた部位 (無ければ弱点 1 か所 = `defaultPartKey`)。傷口を狙うか・確度の低い傷口を使うかは全員に同じ。
+  `defaultPartKey` は一時的な部位 (`transient`。ウズ・トゥナの水膜) を選ばない (2026-10-22。それしか無ければ選ぶ)。
 - モンスターを替えるとき (モンスター欄・多頭の行・クエストの名前から選ぶ) は、前のモンスターの部位の選び方を `tabs.target.memo` に残し、
   替えた先に覚えがあれば戻す (`partsMemoPatch` / `readPartsMemo`)。
 - モンスター欄で選ぶと、通常の個体として `selectIndividual(null, {targetData})` も呼ぶ (2.2 節の規則で既定のクエストを選ぶ。
@@ -600,7 +615,9 @@ setPlanBuilderForTest(fn | null)            // テスト用: buildPlan を作り
   (「耐性 20 以上 いま 7」) は Plan にその要件の属性が入ったら出す (未対応)。
 - smoke の目印: `[data-th-card="health"|"plan"|"multi"|"arch"]`・`[data-th-health]`・`[data-th-total]`・`[data-th-combos]`
   (`data-th-combo-value` = 使った期待値)・`[data-th-attack]`・`[data-th-individual]`・`[data-th-players]`・`[data-th-quest-by-name]`・
-  `[data-th-subject]`・`[data-th-multi-total]`・`[data-th-search]` / `[data-th-search-blocked]`・`[data-th-wound-mark]`。
+  `[data-th-subject]`・`[data-th-multi-total]`・`[data-th-search]` / `[data-th-search-blocked]`・`[data-th-wound-mark]`・
+  個体とクエストのカードの「この相手で装備を探す」`[data-th-search-quick]` (装備固定のクエストでは出さない)。
+- 出典のリンク (歴戦王で変わること) は `.th-source` で 44px の高さにする。
 
 ## sw.js (オフラインと更新)
 

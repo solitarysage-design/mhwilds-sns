@@ -25,7 +25,7 @@
   "generatedAt": "2026-10-21T08:35:24+00:00",
   "gameVersion": "1.042",
   "nativeVersion": "1.42.0.2",
-  "note": "肉質は 0〜100 の整数。hitzone=通常、wound=傷口、states=内部名つきの状態別 (stateKeys 参照)。MHWS-in-json (MIT) release database-20261020-070700-4a99b26 / commit 4a99b267930a0a83bcf45274733f169455c7b641。mhdb-wilds-data commit c50a1eb892f4a1ad9bb35c147801658804be2cc2。",
+  "note": "肉質は 0〜100 の整数。hitzone=通常、wound=傷口、states=内部名つきの状態別 (stateKeys 参照)。transient=一時的な部位 (水膜。弱点 1 か所などの自動の選び方では選ばない)。MHWS-in-json (MIT) release database-20261020-070700-4a99b26 / commit 4a99b267930a0a83bcf45274733f169455c7b641。mhdb-wilds-data commit c50a1eb892f4a1ad9bb35c147801658804be2cc2。",
   "license": {
    "MHWS-in-json": "MIT",
    "mhdb-wilds-data": "MIT",
@@ -262,7 +262,7 @@
     "confidence": "low"
    }
   },
-  "elementRecommendation": "部位ごとの bestElement は通常肉質で最も高い属性 (同値は全部)。elementRecommendation.best は名前のある部位のうち斬撃肉質 45 以上の部位 (2 部位未満なら斬撃上位 3 部位) の属性肉質の単純平均が最大の属性。部位不明 (unknownPart) は対象外。同点は 主要部位の傷口の肉質の平均 (傷口のある主要部位だけ) → 名前のある全部位の平均 の順で崩す (経過は tieBreak。同点が無ければ null)。傷口は parts[].wound (通常の個体) の値で、傷口の肉質の置き換え (woundConversions) は入れていない。置き換え後の推奨は woundConversions[].elementRecommendation (アルシュベルドは置き換え後だと傷口の龍 38 が 30 になり、同点崩しの根拠が変わる)。"
+  "elementRecommendation": "部位ごとの bestElement は通常肉質で最も高い属性 (同値は全部)。elementRecommendation.best は名前のある部位のうち斬撃肉質 45 以上の部位 (2 部位未満なら斬撃上位 3 部位) の属性肉質の単純平均が最大の属性。部位不明 (unknownPart) は対象外。同点は 主要部位の傷口の肉質の平均 (傷口のある主要部位だけ) → 名前のある全部位の平均 の順で崩す (経過は tieBreak。同点が無ければ null)。傷口は parts[].wound (通常の個体) の値で、傷口の肉質の置き換え (woundConversions) は入れていない。置き換え後の推奨は woundConversions[].elementRecommendation (アルシュベルドは置き換え後だと傷口の属性が全部同じ値になり、傷口では崩れず、全部位の平均で龍のまま)。"
  },
  "monsters": [
   {
@@ -19363,7 +19363,8 @@
        "thunder"
       ],
       "value": 25
-     }
+     },
+     "transient": true
     },
     {
      "key": "waterfilm-left-head",
@@ -19406,7 +19407,8 @@
        "thunder"
       ],
       "value": 25
-     }
+     },
+     "transient": true
     },
     {
      "key": "waterfilm-right-body",
@@ -19449,7 +19451,8 @@
        "thunder"
       ],
       "value": 25
-     }
+     },
+     "transient": true
     },
     {
      "key": "waterfilm-left-body",
@@ -19492,7 +19495,8 @@
        "thunder"
       ],
       "value": 25
-     }
+     },
+     "transient": true
     },
     {
      "key": "waterfilm-right-front-leg",
@@ -19535,7 +19539,8 @@
        "thunder"
       ],
       "value": 25
-     }
+     },
+     "transient": true
     },
     {
      "key": "waterfilm-left-front-leg",
@@ -19578,7 +19583,8 @@
        "thunder"
       ],
       "value": 25
-     }
+     },
+     "transient": true
     },
     {
      "key": "waterfilm-right-tail",
@@ -19621,7 +19627,8 @@
        "thunder"
       ],
       "value": 25
-     }
+     },
+     "transient": true
     },
     {
      "key": "waterfilm-tail",
@@ -19664,7 +19671,8 @@
        "thunder"
       ],
       "value": 25
-     }
+     },
+     "transient": true
     },
     {
      "key": "waterfilm-left-tail",
@@ -19707,7 +19715,8 @@
        "thunder"
       ],
       "value": 25
-     }
+     },
+     "transient": true
     }
    ],
    "woundConversions": [

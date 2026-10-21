@@ -5,12 +5,15 @@ Playwright の WebKit (iPhone の Safari と同じエンジン。Windows 版) �
 
 使い方:
   PYTHONIOENCODING=utf-8 python tools/bench_search_webkit.py [--cases B1,B5,S1] [--runs 3] [--ms 6000]
-                                                             [--browser webkit|chromium] [--cancel-at ms]
+                                                             [--budget-kind activeMs|ms] [--browser webkit|chromium] [--cancel-at ms]
 
 - リポを 127.0.0.1 の空いているポートで配信し、ベンチのページ (/__bench__/index.html) は このスクリプトの中の HTML を返す。
 - ページは data/*.json を読んで tests/search_cases.mjs の makeCases で B1〜B5 の入力を作り、Worker に start を送る。
   S1〜S3 (相手に合わせて探す。docs/RECOMMEND_DESIGN.md 6.4 節) は makePlanCases の Job (kind 'plan') を送る (--ms は Job 全体の予算)。
 - 1 回ごとに新しいページ (新しい Worker) にする。メモリは WebKit では測れない (performance.memory が無い)。
+- 予算の数え方 (--budget-kind) の既定は activeMs (計算した時間。画面の search_form.js の budgetOf と同じ)。
+  ms (始めてからの時間) は前の測り方 (2026-10-21 の表)。activeMs は下ごしらえ・途中の結果の計算し直し・最後のまとめを数えないので、
+  done が ms より遅くなる (2026-10-22 の点検)。
 """
 import argparse
 import http.server
@@ -35,7 +38,7 @@ BENCH_HTML = """<!doctype html>
 import { makeCases, makePlanCases, CASE_DATA_FILES } from '/tests/search_cases.mjs';
 const q = new URLSearchParams(location.search);
 const name = q.get('case') || 'B1';
-const budget = JSON.parse(q.get('budget') || '{"ms":6000}');
+const budget = JSON.parse(q.get('budget') || '{"activeMs":6000}');
 const cancelAt = Number(q.get('cancelAt') || 0);
 const log = (s) => { document.getElementById('log').textContent += s + '\\n'; };
 try {
@@ -44,7 +47,7 @@ try {
   let job;
   if (/^S\\d/.test(name)) {
     // 相手に合わせて探す: 画面と同じ buildPlan → planToJob の Job。予算 (計算した時間) は Job 全体
-    const { jobs } = await makePlanCases(raw, { budgetMs: budget.ms });
+    const { jobs } = await makePlanCases(raw, { budgetMs: budget.activeMs ?? budget.ms });
     job = jobs[name];
   } else {
     const { cases } = makeCases(raw);
@@ -123,6 +126,8 @@ def main():
     ap.add_argument('--cases', default='B1')
     ap.add_argument('--runs', type=int, default=3)
     ap.add_argument('--ms', type=int, default=6000, help='時間の予算 (画面の既定は 6 秒)')
+    ap.add_argument('--budget-kind', choices=['activeMs', 'ms'], default='activeMs',
+                    help='予算の数え方 (既定 activeMs = 計算した時間。画面と同じ。ms = 始めてからの時間)')
     ap.add_argument('--browser', default='webkit')
     ap.add_argument('--cancel-at', type=int, default=0, help='始めてからこの ms で cancel を送る (中止の効きを測る)')
     a = ap.parse_args()
@@ -138,7 +143,7 @@ def main():
                 page = browser.new_page()
                 errs = []
                 page.on('console', lambda m: errs.append(m.text) if m.type == 'error' else None)
-                qs = urllib.parse.urlencode({'case': name, 'budget': json.dumps({'ms': a.ms}), 'cancelAt': a.cancel_at})
+                qs = urllib.parse.urlencode({'case': name, 'budget': json.dumps({a.budget_kind: a.ms}), 'cancelAt': a.cancel_at})
                 page.goto(f'http://127.0.0.1:{port}/__bench__/index.html?{qs}')
                 page.wait_for_function('window.__result', timeout=600000)
                 res = page.evaluate('window.__result')
@@ -150,7 +155,7 @@ def main():
             ok = [r for r in runs if r.get('type') == 'done']
             med = lambda k: round(statistics.median([r[k] for r in ok if r.get(k) is not None])) if any(r.get(k) is not None for r in ok) else None
             line = {
-                'case': name, 'browser': a.browser, 'budgetMs': a.ms, 'runs': len(runs), 'ok': len(ok),
+                'case': name, 'browser': a.browser, 'budgetMs': a.ms, 'budgetKind': a.budget_kind, 'runs': len(runs), 'ok': len(ok),
                 'readyMs': med('readyMs'), 'partialMs': med('partialMs'), 'doneMs': med('doneMs'),
                 'runsDoneMs': [round(r['doneMs']) for r in ok if r.get('doneMs') is not None],
                 'status': ok[0]['status'] if ok else None, 'top': [round(v, 3) for v in ok[0]['top']] if ok else None,

@@ -12,7 +12,7 @@
   "weapons_sns.json": "8be2c78148bd2f61",
   "motions_sns.json": "12f01d26f4880ff0",
   "combos_sns.json": "3ead0dd3085cae32",
-  "monsters.json": "809ce59c27943194"
+  "monsters.json": "dddb3a9bc1041d8d"
  },
  "method": "幅 [60, 200, 600] のビーム + B&B 120 秒 (tools/bench_search.mjs --make-ref)。best は既知の最良 (試作の値)",
  "cases": {
@@ -31,7 +31,7 @@
     905.668233,
     904.109144
    ],
-   "runMs": 120542
+   "runMs": 120679
   },
   "B2": {
    "best": 866.03,
@@ -48,7 +48,7 @@
     853.232664,
     852.700985
    ],
-   "runMs": 120382
+   "runMs": 120387
   },
   "B3": {
    "best": 1102.952,
@@ -65,7 +65,7 @@
     1079.617313,
     1078.993874
    ],
-   "runMs": 120798
+   "runMs": 120838
   },
   "B5": {
    "best": 927.686364,
@@ -82,7 +82,7 @@
     914.331516,
     914.331516
    ],
-   "runMs": 120674
+   "runMs": 120774
   }
  }
 }

@@ -118,6 +118,7 @@ def main() -> None:
                                | set(legendary.AT_STAR10["sources"])),
                       equip_files=["mhdb/armor.json", "mhdb/charms.json"],
                       note="肉質は 0〜100 の整数。hitzone=通常、wound=傷口、states=内部名つきの状態別 (stateKeys 参照)。"
+                           "transient=一時的な部位 (水膜。弱点 1 か所などの自動の選び方では選ばない)。"
                            + mhws_note,
                       license={"MHWS-in-json": "MIT", "mhdb-wilds-data": "MIT",
                                "wilds.mhdb.io": "データ API (出典表記)",

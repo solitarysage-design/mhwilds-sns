@@ -36,18 +36,30 @@ function combosDiffText(n) {
   return `いまより ${Math.abs(n)} 回${n < 0 ? '少ない' : '多い'}`;
 }
 
+/** 多頭で回数を切り上げて数えられないとき (体力の分からない相手がいる): 回数の割合の差 (+ なら少ない) */
+function combosPctText(pct) {
+  if (Math.abs(pct) < 0.05) return 'いまと同じくらいの回数';
+  return `いまより回数 約 ${formatNumber(Math.abs(pct), 1)}% ${pct > 0 ? '少ない' : '多い'}`;
+}
+
 /** 行の「いまとの差」(1 体 = 火力の %、多頭 = 回数) */
 function RowDiff({ row }) {
   if (row.diffPct != null) return html`<span class=${diffClass(row.diffPct)}>${diffText(row.diffPct)}</span>`;
   if (row.diffCombos != null) return html`<span class=${diffClass(-row.diffCombos)}>${combosDiffText(row.diffCombos)}</span>`;
+  if (row.diffTPct != null) return html`<span class=${diffClass(row.diffTPct)}>${combosPctText(row.diffTPct)}</span>`;
   return null;
+}
+
+/** 人数が 2 人以上のときの回数の印 (相手タブの「このクエストの相手」と同じ。人数の倍率の読み方は未確定) */
+function PlayersMark({ players }) {
+  return Number(players) > 1 ? html`<span class="sr-players">${players} 人のとき <${Badge} kind="unconfirmed" /></span>` : null;
 }
 
 // ---------------------------------------------------------------- 計算中
 
 /** 「探しています」: 段階の文・進み具合の帯・経過の秒・いまの最良・「やめる」 */
 export function RunningPanel({ snap, budgetMs, onCancel }) {
-  const v = F.progressView({ phase: snap.phase, elapsedMs: snap.elapsedMs, best: snap.best, run: snap.run }, budgetMs);
+  const v = F.progressView({ phase: snap.phase, elapsedMs: snap.elapsedMs, best: snap.best, bestKind: snap.bestKind, run: snap.run }, budgetMs);
   const cancelling = snap.status === 'cancelling';
   return html`
     <div class="sr-run" data-sr="running" role="status" aria-live="polite">
@@ -61,7 +73,7 @@ export function RunningPanel({ snap, budgetMs, onCancel }) {
       <div class="sr-progress" aria-hidden="true"><span style=${`width: ${Math.round(v.share * 100)}%`}></span></div>
       <p class="sr-run-meta">
         ${v.seconds != null ? `経過 ${formatNumber(v.seconds, 1)} 秒` : '始めています'}
-        ${v.best != null ? `・いまの最良 ${formatNumber(v.best, 1)}` : ''}
+        ${v.bestText ? `・いまの最良 ${v.bestText}` : ''}
       </p>
       ${snap.inline && html`<p class="hint">この端末では別の処理 (Worker) を使えないので、画面の処理で探しています (遅くなります)。</p>`}
       <div class="btn-row">
@@ -72,16 +84,22 @@ export function RunningPanel({ snap, budgetMs, onCancel }) {
 
 // ---------------------------------------------------------------- 一覧
 
-function ResultRow({ row, onOpen }) {
+function ResultRow({ row, onOpen, players }) {
+  const multi = row.scoreKind === 'combos';
   return html`
     <li>
       <button type="button" class="sr-result" onClick=${() => onOpen(row)}
         data-sr-rank=${row.rank} data-sr-value=${row.value != null ? String(row.value) : ''}>
         <span class="sr-result-head">
           <span class="sr-rank">${row.rank}</span>
+          ${multi && html`<span class="sr-value-label">全部倒すまで</span>`}
           <span class="sr-value">${F.rowValueText(row)}</span>
+          ${multi && html`<${PlayersMark} players=${players} />`}
           <${RowDiff} row=${row} />
+          ${row.sameAsTop && html`<span class="sr-tie" data-sr-tie>1 位と同じ値</span>`}
         </span>
+        ${row.killCombos != null && html`
+          <span class="sr-kill" data-sr-row-kill=${row.killCombos}>討伐まで 約 ${formatNumber(row.killCombos, 0)} 回 (目安) <${PlayersMark} players=${players} /></span>`}
         <span class="sr-change">${row.changeText}</span>
         ${row.skillsText && html`<span class="sr-skills">${row.skillsText}</span>`}
         ${row.second && html`<span class="sr-skills" data-sr-row-second>2 本目: ${row.second.weaponName}</span>`}
@@ -96,8 +114,11 @@ function ResultRow({ row, onOpen }) {
     </li>`;
 }
 
-/** 結果の上に出す知らせ (1 位が変わった・やめた・条件が変わった など) */
-function ResultNotes({ snap, stale, zeroed }) {
+/**
+ * 一覧の上に出す知らせ (状態だけ。条件が変わった・前回の結果・途中の結果・やめた)。説明と注意は一覧の下 (ResultNotes) に出す
+ * (終わった直後に 1 位の行が知らせの下に押し出されて見えなくならないように)。
+ */
+function ResultStatus({ snap, stale }) {
   const r = snap.result;
   return html`
     ${stale && html`
@@ -109,17 +130,28 @@ function ResultNotes({ snap, stale, zeroed }) {
     ${snap.restored && html`
       <p class="hint" data-sr-note="restored">前回の結果 (${formatDateTime(snap.restored.savedAt)} に探したもの)</p>`}
     ${snap.partial && html`<p class="sr-partial-note" data-sr-note="partial">途中の結果です。もっと良い組を探しています…</p>`}
-    ${!snap.busy && snap.improved && html`
-      <${Note} id="improved"><${Notice} kind="ok" title="もっと良い組が見つかりました" /></${Note}>`}
     ${snap.status === 'cancelled' && html`
-      <${Note} id="cancelled">
-        <${Notice} kind="info" title="途中でやめました">
-          ${r && r.results.length ? html`<p>それまでに見つかった組を出しています。</p>` : html`<p>まだ組が見つかっていませんでした。</p>`}
-        </${Notice}>
-      </${Note}>`}
-    ${snap.status === 'stopped' && html`<p class="hint" data-sr-note="stopped">時間で打ち切りました (見つかった組を出しています)。</p>`}
+      <p class="hint" data-sr-note="cancelled">途中でやめました。${r && r.results.length ? 'それまでに見つかった組を出しています。' : 'まだ組が見つかっていませんでした。'}</p>`}`;
+}
+
+/** 警告の code (search.js / recommend.js) があれば、同じことを言うヒントの行は出さない */
+const hasWarning = (r, code) => !!(r && r.warnings.some((w) => w.code === code));
+
+/** 一覧の下に出す説明と注意 (1 位が良くなった・同じ値・打ち切り・仮の条件・守りの火力の差・武器 2 本・注意の一覧) */
+function ResultNotes({ snap, zeroed, rows, K }) {
+  const r = snap.result;
+  const ties = F.tiesWithTop(rows);
+  const two = rows.some((x) => x.second);
+  return html`
+    ${!snap.busy && snap.improved && snap.status !== 'cancelled' && html`
+      <p class="hint" data-sr-note="improved">途中の結果より良い組が見つかったので、差し替えました。</p>`}
+    ${ties > 1 && html`
+      <p class="hint" data-sr-note="ties">上から ${ties} 件は同じ値です (どれを選んでも火力の目安は同じです)。スキルや空きスロットの違いで選んでください。</p>`}
+    ${two && K > rows.length && html`<p class="hint" data-sr-note="two-top">武器 2 本の案は、上位 ${rows.length} 件の防具に合わせたものです (出す件数より少なくなります)。</p>`}
+    ${snap.status === 'stopped' && !hasWarning(r, 'budget-stopped') && html`
+      <p class="hint" data-sr-note="stopped">時間で打ち切りました (見つかった組を出しています)。</p>`}
     ${snap.inline && !snap.busy && html`<p class="hint" data-sr-note="inline">この端末では別の処理 (Worker) を使えないので、画面の処理で探しました。</p>`}
-    ${zeroed > 0 && r && r.results.length > 0 && html`
+    ${zeroed > 0 && r && r.results.length > 0 && !hasWarning(r, 'placeholder-uptimes') && html`
       <p class="hint" data-sr-note="zeroed">火力タブの値と違うのは、仮の発動率の条件 (${zeroed} 個) を 0% にして探したためです。</p>`}
     ${r && F.costOfDefenseText(r.costOfDefense) && html`<p class="hint" data-sr-note="cost">${F.costOfDefenseText(r.costOfDefense)}</p>`}
     ${r && r.twoWeaponsGain && r.twoWeaponsGain.text && html`<p class="hint" data-sr-note="two-gain">${r.twoWeaponsGain.text} (2 本の案と比べて)</p>`}
@@ -160,25 +192,29 @@ function TimingDetails({ snap, timings }) {
       <summary>くわしく (近似のこと・かかった時間)</summary>
       <p class="hint">${APPROX_TEXT}</p>
       ${phases.length > 0 && html`
-        <p class="hint">段階 (計算した時間): ${phases.map((p) => `${p.name} ${formatNumber(p.atMs / 1000, 2)} 秒`).join('・')}</p>`}
+        <p class="hint">段階 (始まった時刻。計算した時間): ${phases.map((p) => `${F.PHASE_SHORT[p.name] || p.name} ${formatNumber(p.atMs / 1000, 2)} 秒`).join('・')}</p>`}
       ${snap.partialMs != null && html`<p class="hint">途中の結果まで ${formatNumber(snap.partialMs / 1000, 2)} 秒・終わりまで ${snap.doneMs != null ? `${formatNumber(snap.doneMs / 1000, 2)} 秒` : '—'}</p>`}
       ${stats.relevantSkills != null && html`<p class="hint">関係するスキル ${stats.relevantSkills} 個</p>`}
       ${timings && timings.length > 0 && html`
         <p class="hint">この端末で探した時間 (最近 ${timings.length} 回。この端末だけの記録で、書き出しには入りません):</p>
         <ul class="sr-list sr-small">
           ${timings.slice(-5).reverse().map((t, i) => html`
-            <li key=${i}>${formatDateTime(t.at)}・${STATUS_TEXT[t.status] || t.status}${t.inline ? '・画面の処理' : ''}・途中 ${t.partialMs != null ? `${formatNumber(t.partialMs / 1000, 1)} 秒` : '—'}・終わり ${t.doneMs != null ? `${formatNumber(t.doneMs / 1000, 1)} 秒` : '—'}</li>`)}
+            <li key=${i}>${formatDateTime(t.at)}・${STATUS_TEXT[t.status] || t.status}${t.extended ? '・続けて探した (時間は最初の探索)' : ''}${t.inline ? '・画面の処理' : ''}・途中 ${t.partialMs != null ? `${formatNumber(t.partialMs / 1000, 1)} 秒` : '—'}・終わり ${t.doneMs != null ? `${formatNumber(t.doneMs / 1000, 1)} 秒` : '—'}</li>`)}
         </ul>`}
     </details>`;
 }
 
 /**
  * 結果のカード (計算中・途中の結果・終わり・やめた・満たせない・エラー)。
- * props: snap (search_client の状態), rows (resultRows), stale, zeroed, budgetMs, timings, requiredIds (Set),
- *        onCancel, onExtend, onRetry, onOpen(row), onRemoveRequired(skillId), applied ({rank, which} | null), onUndo, onShowPower
+ * 並び: 計算中 → エラー → 入れた知らせ → 状態 (条件が変わった・途中の結果・やめた) → 満たせない → 一覧 → 説明と注意 → 続けて探す。
+ * props: snap (search_client の状態), rows (resultRows), stale, zeroed, budgetMs, timings, requiredIds (Set), players (人数), K,
+ *        onCancel, onExtend, onRetry, onReload, onOpen(row), onRemoveRequired(skillId), applied ({rank, which} | null), onUndo, onShowPower
  */
 export function ResultsCard(props) {
-  const { snap, rows, stale, zeroed, budgetMs, timings, requiredIds, onCancel, onExtend, onRetry, onOpen, onRemoveRequired, applied, onUndo, onShowPower } = props;
+  const {
+    snap, rows, stale, zeroed, budgetMs, timings, requiredIds, players = 1, K = 10,
+    onCancel, onExtend, onRetry, onReload, onOpen, onRemoveRequired, applied, onUndo, onShowPower,
+  } = props;
   const r = snap.result;
   // 多頭 (score.kind 'combos') は「全部倒すまでの回数」の少ない順 (docs/RECOMMEND_DESIGN.md 4.6 節)
   const order = rows.length && rows[0].scoreKind === 'combos' ? '回数の少ない順' : '火力の高い順';
@@ -191,22 +227,28 @@ export function ResultsCard(props) {
         ${snap.status === 'error' && html`
           <${Note} id="error">
             <${ErrorBox} title="探せませんでした" error=${{ message: snap.error ? snap.error.message : '' }}
-              detail=${snap.error && snap.error.detail} onRetry=${snap.job ? onRetry : null} />
+              detail=${snap.error && snap.error.detail} onRetry=${snap.job ? onRetry : null}>
+              ${snap.error && snap.error.code === 'load' && onReload && html`
+                <div class="btn-row"><${Button} small onClick=${onReload} data-sr-action="reload">再読み込み</${Button}></div>`}
+            </${ErrorBox}>
           </${Note}>`}
         ${applied && html`
           <${Note} id="applied">
             <${Notice} kind="ok" title=${`${applied.rank} 位の装備${applied.which === 2 ? ' (2 本目の武器)' : ''}を入れました`}
               actions=${html`
                 <${Button} small onClick=${onUndo} data-sr-action="undo">元に戻す</${Button}>
-                <${Button} small variant="ghost" onClick=${onShowPower}>火力タブで見る</${Button}>`} />
+                <${Button} small variant="ghost" onClick=${onShowPower}>火力タブで見る</${Button}>`}>
+              ${zeroed > 0 && html`<p data-sr-note="applied-zeroed">火力タブは仮の条件を火力タブの値 (多くは 50%) で計算するので、結果の値と違うことがあります。</p>`}
+            </${Notice}>
           </${Note}>`}
-        ${(r || snap.status === 'cancelled') && html`<${ResultNotes} snap=${snap} stale=${stale} zeroed=${zeroed} />`}
+        ${(r || snap.status === 'cancelled') && html`<${ResultStatus} snap=${snap} stale=${stale} />`}
         ${snap.status === 'infeasible' && html`<${InfeasibleNotice} result=${r} requiredIds=${requiredIds} onRemoveRequired=${onRemoveRequired} />`}
         ${rows.length > 0 && html`
           <ol class="sr-results-list" data-sr-list>
-            ${rows.map((row) => html`<${ResultRow} key=${`${row.rank}-${row.value}`} row=${row} onOpen=${onOpen} />`)}
+            ${rows.map((row) => html`<${ResultRow} key=${`${row.rank}-${row.value}`} row=${row} onOpen=${onOpen} players=${players} />`)}
           </ol>
           <${Hint}>行をタップすると、装備の中身とスキルを見て装備に入れられます。</${Hint}>`}
+        ${r && html`<${ResultNotes} snap=${snap} zeroed=${zeroed} rows=${rows} K=${K} />`}
         ${!snap.busy && !r && snap.status !== 'error' && snap.status !== 'cancelled' && html`
           <p class="empty" data-sr-note="empty">まだ探していません。上の条件で「この条件で探す」を押してください。</p>`}
         ${!snap.busy && snap.canExtend && html`
@@ -238,13 +280,13 @@ function SkillDiffList({ list }) {
 
 /**
  * 結果の 1 件の詳しく (下からのシート)。
- * props: open, row (resultRows の 1 件), idx, onClose, onApply(row, which)
+ * props: open, row (resultRows の 1 件), idx, onClose, onApply(row, which), zeroed (0% にした仮の条件の数), players (人数)
  */
-export function ResultSheet({ open, row, idx, onClose, onApply }) {
+export function ResultSheet({ open, row, idx, onClose, onApply, zeroed = 0, players = 1 }) {
   const [showAlt, setShowAlt] = useState(false);
   if (!row) return null;
   const lines = F.buildLines(row.raw.build, idx);
-  const title = `${row.rank} 位  ${F.rowValueText(row)}`;
+  const title = `${row.rank} 位  ${row.scoreKind === 'combos' ? '全部倒すまで ' : ''}${F.rowValueText(row)}`;
   return html`
     <${BottomSheet} open=${open} title=${title} onClose=${() => { setShowAlt(false); onClose(); }} tall
       footer=${html`
@@ -257,6 +299,12 @@ export function ResultSheet({ open, row, idx, onClose, onApply }) {
           <${RowDiff} row=${row} />
           <${Badge} kind="info">近似</${Badge}>
         </p>
+        ${row.killCombos != null && html`
+          <p data-sr-sheet-kill>討伐まで 約 ${formatNumber(row.killCombos, 0)} 回${row.baseCombos != null ? ` (いまの装備は 約 ${formatNumber(row.baseCombos, 0)} 回)` : ''} <${PlayersMark} players=${players} /></p>`}
+        ${F.baseText(row, { zeroed, players }) && html`<p class="hint" data-sr-sheet-base>比べた基準: ${F.baseText(row, { zeroed, players })}</p>`}
+        ${row.sameAsTop && html`<p class="hint">1 位と同じ値の組です。</p>`}
+        ${Number(players) > 1 && (row.killCombos != null || row.scoreKind === 'combos') && html`
+          <p class="hint">回数は ${players} 人ぶんの体力を、この装備 1 人で削る目安です (相手タブの「1 人あたり」とは違います)。人数の倍率の読み方は確かめていません。</p>`}
         <p class="hint">${row.changeText}</p>
         <ul class="sr-parts">
           ${lines.map((l) => {

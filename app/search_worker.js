@@ -7,7 +7,8 @@
 //                 (job の代わりに input だけでもよい = kind 'search')
 //                {type: 'cancel', id} / {type: 'extend', id, budget}
 // Worker → 画面: {type: 'ready'} (データを読み終えた) / {type: 'progress', id, phase, elapsedMs, best: [値...], run?}
-//                (段階か plan の回 (run.index) が変わったときと 0.5 秒ごと) / {type: 'partial', id, result} (仕上げ 1 の後) /
+//                (段階か plan の回 (run.index) が変わったときと 0.5 秒ごと。plan は bestKind: 'damage'|'combos' も) /
+//                {type: 'partial', id, result} (仕上げ 1 の後) /
 //                {type: 'done', id, result} /
 //                {type: 'error', id, message}
 // 中止: Worker は計算中にメッセージを受け取れないので、STEP_MS ごとに setTimeout(0) で手を離して cancel を受ける。
@@ -99,7 +100,7 @@ async function runLoop(j) {
         lastRun = runIndex;
         lastPost = t;
         post({ type: 'progress', id: j.id, phase: p.phase, elapsedMs: p.elapsedMs, best: (p.best || []).map((b) => b.value),
-          ...(p.run ? { run: p.run } : {}) });
+          ...(p.bestKind ? { bestKind: p.bestKind } : {}), ...(p.run ? { run: p.run } : {}) });
       }
       if (!fin && !j.partialSent && p.partialReady) {
         j.partialSent = true;

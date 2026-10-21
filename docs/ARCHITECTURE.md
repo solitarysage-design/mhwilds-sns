@@ -203,7 +203,8 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
   - 部位: `slug` (MHDB の部位名)、`unknownPart` (名前が無い部位なら true)、`internalType` (`"HEAD"` など)、`ordinal` (並び順)、
     `health` (部位の体力)、`breakReward` (MHDB の部位破壊報酬が付いているか。特定できなければ null)、
     `bestElement` (`{types: ["fire"], value: 25}` = 通常肉質で一番高い属性。同値は全部、最大が 0 なら types は [])、
-    `note` (あるときだけ)。`wound` は傷口の無い部位では null。`states` のキーは `break` / `custom1`〜`custom5` / `weakPoint` など
+    `note` (あるときだけ)、`transient` (一時的な部位なら true。あるときだけ。いまはウズ・トゥナの水膜 `WATERFILM_*` の 9 部位。
+    弱点 1 か所・主な部位 3 か所の自動の選び方では選ばない。2026-10-22)。`wound` は傷口の無い部位では null。`states` のキーは `break` / `custom1`〜`custom5` / `weakPoint` など
     (意味と確度は `meta.stateKeys`)。
   - `elementRecommendation`: `{best: ["dragon"], order: [{type, avg}], basis, basisParts: [部位 key], tieBreak, allPartsAvg,
     stateMaxAvg, bestStateMax}`。`best` は主要部位 (斬撃肉質 45 以上。2 部位未満なら斬撃上位 3 部位) の属性肉質の平均が最大の属性。

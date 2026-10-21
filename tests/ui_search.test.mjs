@@ -485,6 +485,155 @@ test('結果: いまの装備の値 (baselineValue) は火力タブの計算 (su
   assert.equal(lines[1].limitBreak, true);
 });
 
+// ---------------------------------------------------------------- 2026-10-22 の点検の直し (いまとの比べ・壊れた保存データ・計算中の表示)
+
+const modelData = { index: idx, effects: raw.skillEffects, motions: raw.motions };
+
+test('結果: 装備に入れたあとは、いまの装備で計算し直した基準で「いまより」を出す (1 体・討伐までの回数)', () => {
+  const nu = monsterByName('ヌ・エグドラ');
+  const quest = QUESTS.quests.find((q) => q.name === '黒き揺り篭の吾子');
+  const start = { ...emptyBuild(), weapon: FIRE_WEAPON.id };
+  const f = F.buildJob(ctxOf({ build: start, target: { ...emptyTarget(), monsterId: nu.id, individual: 'arch-tempered', questId: quest.id }, recommend: R }));
+  assert.equal(f.job.kind, 'plan');
+  const next = { ...start, armor: { head: 670, chest: 671, arms: 672, waist: 673, legs: 674 }, charm: 187 };
+  const bStart = R.planBaseline(f.job, start, modelData);
+  const bNext = R.planBaseline(f.job, next, modelData);
+  assert.ok(bStart && bNext && Math.abs(bNext.value - bStart.value) > 1, `${bStart && bStart.value} / ${bNext && bNext.value}`);
+  assert.ok(bNext.combos > 0, 'クエストを選んでいれば討伐までの回数');
+  const key = f.job.subjects[0].key;
+  const res = F.normalizeResult({ status: 'done', results: [{
+    rank: 1, value: bNext.value, build: next, score: { kind: 'damage', value: bNext.value }, baseline: bStart,
+    perSubject: [{ key, value: bNext.value, combos: bNext.combos }],
+  }] });
+  // 探し始めた時の装備のまま: 結果の行の基準 (探し始めた時の装備) と比べる
+  const before = F.resultRows(res, { idx, currentBuild: start, currentSkills: [], baseline: bStart, startBuild: start });
+  close(before[0].diffPct, (bNext.value / bStart.value - 1) * 100, 1e-9);
+  // 1 位を装備に入れたあと: 行の基準は探し始めた時の装備のものなので使わず、いまの装備 (= 1 位) で計算し直した基準と比べる
+  const after = F.resultRows(res, { idx, currentBuild: next, currentSkills: [], baseline: bNext, startBuild: start });
+  assert.equal(after[0].changeText, 'いまの装備と同じ');
+  assert.ok(Math.abs(after[0].diffPct) < 1e-9, `入れたあとも「いまより ${after[0].diffPct}%」`);
+  assert.equal(after[0].killCombos, bNext.combos, '1 体でも討伐までの回数を出す (設計 4.3 節)');
+  assert.equal(after[0].baseCombos, bNext.combos);
+  assert.match(F.baseText(after[0], { zeroed: 3, players: 1 }), /^いまの装備 [\d,]+\.\d・討伐まで 約 [\d,]+ 回 \(仮の条件は 0% で計算\)$/);
+});
+
+test('結果: 多頭も装備に入れたあとは、いまの装備の回数と比べる (回数の差 0)', () => {
+  const hero = QUESTS.quests.find((q) => q.name === '英雄の証');
+  const first = hero.mission.targets.find((x) => x.monsterId != null);
+  const start = { ...emptyBuild(), weapon: FIRE_WEAPON.id };
+  const f = F.buildJob(ctxOf({ build: start, target: { ...emptyTarget(), monsterId: first.monsterId, individual: first.variant, questId: hero.id }, recommend: R }));
+  assert.equal(f.job.subjects.length, 4);
+  const thunder = raw.weapons.weapons.find((w) => w.element && w.element.type === 'thunder' && w.rarity === 8);
+  const next = { ...start, weapon: thunder.id, armor: { head: 670, chest: 671, arms: 672, waist: 673, legs: 674 } };
+  const bStart = R.planBaseline(f.job, start, modelData);
+  const bNext = R.planBaseline(f.job, next, modelData);
+  assert.equal(bNext.kind, 'combos');
+  const ranked = R.rerankMulti([{ value: 1, build: next, perGroup: bNext.perGroup }], f.job.subjects)[0];
+  const res = F.normalizeResult({ status: 'done', results: [{ ...ranked, baseline: bStart }] });
+  const before = F.resultRows(res, { idx, currentBuild: start, currentSkills: [], baseline: bStart, startBuild: start });
+  assert.equal(before[0].diffCombos, ranked.combosTotal - bStart.combos);
+  assert.notEqual(before[0].diffCombos, 0);
+  const after = F.resultRows(res, { idx, currentBuild: next, currentSkills: [], baseline: bNext, startBuild: start });
+  assert.equal(after[0].changeText, 'いまの装備と同じ');
+  assert.equal(after[0].diffCombos, 0, '入れたあとも「いまより n 回少ない」のまま');
+});
+
+test('結果: 体力の分からない相手がいる多頭の「いまより」(全員不明 = 期待値どうし、1 体不明 = 回数の割合)', () => {
+  const rowOf = (score, baseline, extra = {}) => F.resultRows(F.normalizeResult({ status: 'done', results: [{
+    rank: 1, value: 1, build: emptyBuild(), score, baseline, perSubject: [{ key: 'a', value: 1 }, { key: 'b', value: 1 }], ...extra,
+  }] }), { idx, currentBuild: emptyBuild(), currentSkills: [] })[0];
+  // 全員分からない: 結果も基準も期待値の調和平均 (recommend.js の baselineView)
+  close(rowOf({ kind: 'damage', value: 200 }, { kind: 'damage', value: 100, T: null, combos: null }).diffPct, 100, 1e-12);
+  // 前の版で保存した結果 (基準に kind が無く T が入っている) は単位が違うので出さない (前は +14,595,152% のように出ていた)
+  assert.equal(rowOf({ kind: 'damage', value: 200 }, { value: 0.02, combos: null }).diffPct, null);
+  // 1 体だけ分からない: 回数の合計は出せないので T の割合 (+ なら回数が少ない)
+  const one = rowOf({ kind: 'combos', value: 210 }, { kind: 'combos', value: 233, T: 233, combos: null }, { combosTotal: null });
+  assert.equal(one.diffCombos, null);
+  close(one.diffTPct, (1 - 210 / 233) * 100, 1e-12);
+  // 回数の合計が両方あれば回数の差
+  const both = rowOf({ kind: 'combos', value: 209.1 }, { kind: 'combos', value: 268.2, T: 268.2, combos: 269 }, { combosTotal: 210 });
+  assert.equal(both.diffCombos, -59);
+  assert.equal(both.diffTPct, null);
+  assert.equal(F.baseText(both, { zeroed: 1, players: 4 }), 'いまの装備 約 269 回 (4 人のとき) (仮の条件は 0% で計算)');
+});
+
+test('結果: 1 位と同じ値の行に印・同じ値の件数', () => {
+  const b = emptyBuild();
+  const rows = F.resultRows(F.normalizeResult({ status: 'done', results: [
+    { rank: 1, value: 900, build: b }, { rank: 2, value: 900 * (1 + 1e-12), build: b }, { rank: 3, value: 899, build: b },
+  ] }), { idx, currentBuild: b, currentSkills: [], baseline: 800 });
+  assert.deepEqual(rows.map((r) => r.sameAsTop), [false, true, false]);
+  assert.equal(F.tiesWithTop(rows), 2);
+  assert.equal(F.baseText(rows[0], { zeroed: 23 }), 'いまの装備 800.0 (仮の条件は 0% で計算)');
+  assert.equal(F.tiesWithTop([]), 0);
+});
+
+test('結果: 壊れた保存データ (行の中の配列に null・装飾品の形が違う など) でも行を作れる', () => {
+  const broken = [
+    { results: [{ build: emptyBuild(), value: 900, skills: [null] }] },
+    { status: 'infeasible', results: [], infeasible: { missing: [null, 5] } },
+    { results: [{ build: emptyBuild(), value: 900, perSubject: [null, 5], builds: [null, 3], defense: { ok: true, rows: [null] }, defense2: 'x',
+      alternatives: { head: 'x', chest: [1, null] } }] },
+    { results: [{ build: { ...emptyBuild(), decorations: { weapon: 5, head: null }, armor: 'x', limitBreak: 3 }, value: 900, score: 3, baseline: 'x' }] },
+  ];
+  for (const raw0 of broken) {
+    const n = F.normalizeResult(raw0);
+    let rows;
+    assert.doesNotThrow(() => { rows = F.resultRows(n, { idx, currentBuild: emptyBuild(), currentSkills: [] }); }, JSON.stringify(raw0));
+    for (const r of rows) {
+      assert.doesNotThrow(() => F.buildLines(r.raw.build, idx));
+      assert.ok(r.skills.every((s) => s && typeof s === 'object'));
+      assert.ok(r.perSubject.every((p) => p && typeof p === 'object'));
+    }
+  }
+  assert.deepEqual(F.normalizeResult(broken[1]).infeasible.missing, []);
+  assert.deepEqual(F.normalizeResult(broken[2]).results[0].alternatives, { chest: [1] });
+  // 相手に合わせて探した Job の満たせない理由 (回ごとの配列) も missing にまとめる (同じスキルは 1 つ)
+  const n3 = F.normalizeResult({ status: 'infeasible', results: [],
+    infeasible: [{ run: 'a', missing: [{ skillId: 1, level: 2, name: 'x' }] }, { run: 'b', missing: [{ skillId: 1, level: 2, name: 'x' }, null] }] });
+  assert.deepEqual(n3.infeasible.missing.map((m) => m.skillId), [1]);
+});
+
+test('計算中: 帯は Job 全体で数える (回が変わっても戻らない)・回目は回の数をこえない・多頭のいまの最良は回数', () => {
+  const B = 6000;
+  const a = F.progressView({ phase: 'polish2', elapsedMs: 2000, run: { index: 0, count: 3 } }, B);
+  const b = F.progressView({ phase: 'prepare', elapsedMs: 2100, run: { index: 1, count: 3 } }, B);
+  const m = F.progressView({ phase: 'twoWeapons', elapsedMs: 4000, run: { index: 1, count: 3 } }, B);
+  const c = F.progressView({ phase: 'cost', elapsedMs: 4300, run: { index: 2, count: 3, label: '守りのスキルの火力の差を測っています' } }, B);
+  assert.ok(a.share < b.share && b.share < m.share && m.share < c.share && c.share < 1, JSON.stringify([a.share, b.share, m.share, c.share]));
+  assert.equal(c.runText, '3 / 3 回目: 守りのスキルの火力の差を測っています');
+  const d1 = F.progressView({ phase: 'dfs', elapsedMs: 2100, run: { index: 1, count: 3 } }, B);
+  const d2 = F.progressView({ phase: 'dfs', elapsedMs: 3900, run: { index: 1, count: 3 } }, B);
+  assert.ok(b.share < d1.share && d1.share < d2.share && d2.share <= 2 / 3);
+  assert.equal(F.progressView({ phase: 'merge', best: 209.1, bestKind: 'combos' }, B).bestText, '全部倒すまで 約 210 回');
+  assert.equal(F.progressView({ phase: 'dfs', best: 1192.12 }, B).bestText, '1,192.1');
+  assert.equal(F.progressView({ phase: 'dfs' }, B).bestText, '');
+  // いまの最良は 1 つの探索の中で悪くならない (期待値は大きい方・回数は小さい方。種類が変われば新しい値)
+  assert.deepEqual(C.keepBest(1192, 'damage', 1157, 'damage'), { best: 1192, kind: 'damage' });
+  assert.deepEqual(C.keepBest(230, 'combos', 210, 'combos'), { best: 210, kind: 'combos' });
+  assert.deepEqual(C.keepBest(1192, 'damage', 210, 'combos'), { best: 210, kind: 'combos' });
+  assert.deepEqual(C.keepBest(1192, 'damage', null, undefined), { best: 1192, kind: 'damage' });
+  // くわしくの段階の名前は日本語
+  for (const k of ['prepare', 'beam1', 'beam2', 'polish1', 'dfs', 'polish2', 'done', 'merge', 'twoWeapons', 'cost']) {
+    assert.ok(F.PHASE_SHORT[k] && !/[a-z]/i.test(F.PHASE_SHORT[k].replace(/\d/g, '')), k);
+  }
+});
+
+test('相手: 一時的な部位 (水膜) は弱点 1 か所・主な部位 3 か所の自動の選び方で選ばない', () => {
+  const uth = monsterByName('ウズ・トゥナ');
+  assert.ok(uth.parts.some((p) => p.transient === true));
+  assert.equal(T.defaultPartKey(uth), 'right-front-leg');
+  const main = F.mainParts(uth);
+  assert.equal(main.length, 3);
+  assert.ok(main.every((p) => p.transient !== true));
+  const weak = F.searchTargets({ target: { ...emptyTarget(), monsterId: uth.id }, targetData, policy: 'weak1' });
+  assert.equal(weak.targets[0].partKey, 'right-front-leg');
+  // 自分で選べば水膜も狙える
+  const film = uth.parts.find((p) => p.transient === true);
+  const own = F.searchTargets({ target: { ...emptyTarget(), monsterId: uth.id, partKey: film.key }, targetData, policy: 'asSelected' });
+  assert.equal(own.targets[0].partKey, film.key);
+});
+
 // ---------------------------------------------------------------- 作り物の探索 (fixture) とコントローラ
 
 const fakeData = Promise.resolve(raw);
@@ -642,6 +791,59 @@ test('コントローラ: 止まらないときは作り直す・返事が無け
   assert.equal(d.inline, true);
   assert.deepEqual(calls, [false, true]);
   c3.dispose();
+});
+
+test('コントローラ: Worker も画面の処理も読み込めなかったら、もう一度・次に始めたときは Worker から作り直す。読み込めない文は日本語', async () => {
+  const f = jobFor();
+  const offline = () => Promise.reject(new Error('Importing a module script failed.'));
+  // 画面の処理: search.js を読み込めない (電波が無い) → 日本語の文 + code 'load' + 元の文はくわしく
+  const msgs = [];
+  const eng = C.createModelEngine((m) => msgs.push(m), { getData: () => C.searchData(core), loadModules: offline });
+  await eng.handle({ type: 'start', id: 'z', job: f.job });
+  const err = msgs.find((m) => m.type === 'error');
+  assert.equal(err.code, 'load');
+  assert.equal(err.message, C.LOAD_ERROR_TEXT);
+  assert.equal(err.detail, 'Importing a module script failed.');
+  eng.dispose();
+
+  const calls = [];
+  let online = false;
+  const factory = (handlers, opts) => {
+    calls.push(opts.forceInline ? 'inline' : 'worker');
+    if (opts.forceInline) {
+      return C.createInlineTransport((post) => C.createModelEngine(post, { getData: () => C.searchData(core), loadModules: offline }), handlers);
+    }
+    if (!online) {
+      // 返事をしないまま落ちる Worker (読み込めなかった)
+      setTimeout(() => handlers.onError({ message: '' }), 5);
+      return { inline: false, post: () => {}, terminate: () => {} };
+    }
+    const t = fakeTransport({ step: 1 })(handlers);
+    return { ...t, inline: false };
+  };
+  // もう一度
+  const ctrl = C.createSearchController({ makeTransport: factory });
+  ctrl.start(f.job);
+  const e1 = await waitFor(ctrl, (s) => s.status === 'error');
+  assert.equal(e1.error.code, 'load');
+  assert.equal(e1.error.detail, 'Importing a module script failed.');
+  assert.deepEqual(calls, ['worker', 'inline']);
+  online = true;
+  ctrl.retry();
+  await waitFor(ctrl, (s) => s.status === 'done');
+  assert.deepEqual(calls, ['worker', 'inline', 'worker'], 'もう一度は Worker から作り直す (前は画面の処理のままで失敗し続けた)');
+  ctrl.dispose();
+  // 次に本人が始めたとき (start) も同じ
+  calls.length = 0;
+  online = false;
+  const c2 = C.createSearchController({ makeTransport: factory });
+  c2.start(f.job);
+  await waitFor(c2, (s) => s.status === 'error');
+  online = true;
+  c2.start(f.job);
+  await waitFor(c2, (s) => s.status === 'done');
+  assert.deepEqual(calls, ['worker', 'inline', 'worker']);
+  c2.dispose();
 });
 
 test('コントローラ: 前の探索の知らせは無視・保存した結果を出す・作り物の Worker でも同じ順', async () => {

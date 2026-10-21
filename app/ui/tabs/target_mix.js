@@ -109,10 +109,16 @@ export function visibleParts(monster, { showUnknown = false, sort = 'body', keep
   return [...list].sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0));
 }
 
-/** モンスターを選んだときに最初に選んでおく部位 (名前のある部位で切断肉質が一番高いもの。同じなら傷口が高いもの) */
+/**
+ * モンスターを選んだときに最初に選んでおく部位 (名前のある部位で切断肉質が一番高いもの。同じなら傷口が高いもの)。
+ * 一時的な部位 (transient。ウズ・トゥナの水膜など、部位の体力が小さく傷口も無い層) は選ばない (それしか無ければ選ぶ)。
+ * recommend.js の partsTargets の弱点 1 か所 (autoPickParts) と同じ決まり
+ */
 export function defaultPartKey(monster) {
   const list = visibleParts(monster, { sort: 'slash' });
-  return list.length ? list[0].key : null;
+  const stable = list.filter((p) => p.transient !== true);
+  const pick = stable.length ? stable : list;
+  return pick.length ? pick[0].key : null;
 }
 
 // ---------------------------------------------------------------- 割合で混ぜる

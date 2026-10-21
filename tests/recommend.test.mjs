@@ -412,12 +412,30 @@ test('partsTargets: weak1 = target_mix の defaultPartKey、main3 = 切断 45 �
     assert.equal(w.length, 1);
     assert.equal(w[0].partKey, TM.defaultPartKey(m), m.name);
     const m3 = R.partsTargets(m, null, 'main3', {}, false);
-    const main = TM.visibleParts(m, { sort: 'slash' }).filter((p) => p.hitzone.slash >= 45).slice(0, 3);
+    // 一時的な部位 (transient。水膜) は自動では選ばない
+    const main = TM.visibleParts(m, { sort: 'slash' }).filter((p) => p.transient !== true && p.hitzone.slash >= 45).slice(0, 3);
     if (main.length) {
       assert.deepEqual(m3.map((x) => x.partKey), main.map((p) => p.key), m.name);
       assert.ok(m3.every((x) => Math.abs(x.weight - 1 / main.length) < 1e-12));
     } else assert.deepEqual(m3.map((x) => x.partKey), [TM.defaultPartKey(m)]);
   }
+  // ウズ・トゥナの水膜 (WATERFILM_*。部位の体力 130・傷口なしの一時的な層) は transient で、弱点 1 か所・主な部位に選ばない
+  // (前は切断 90 の水膜が弱点 1 か所になり、多頭の T を少なく見積もっていた。2026-10-22 の点検)
+  const uth = H.monsterById(td, UTH_DUNA);
+  const films = uth.parts.filter((p) => p.internalType.startsWith('WATERFILM_'));
+  assert.ok(films.length >= 2 && films.every((p) => p.transient === true && p.wound == null), '水膜は transient');
+  assert.ok(monstersDoc.monsters.every((m) => m.parts.every((p) => (p.transient === true) === p.internalType.startsWith('WATERFILM_'))),
+    'transient は水膜だけ');
+  for (const policy of ['weak1', 'main3']) {
+    for (const kind of [null, AT]) {
+      const got = R.partsTargets(uth, kind, policy, {}, false);
+      assert.ok(got.length && got.every((x) => !films.some((p) => p.key === x.partKey)), `${policy} ${kind}: ${got.map((x) => x.partKey)}`);
+    }
+  }
+  assert.equal(R.partsTargets(uth, null, 'weak1', {}, false)[0].partKey, 'right-front-leg', '水膜の次に切断が高い部位');
+  // 自分で選べば水膜も狙える
+  assert.equal(R.partsTargets(uth, null, 'asSelected', { [UTH_DUNA]: { partKey: films[0].key } }, false)[0].partKey, films[0].key);
+
   const rey = H.monsterById(td, REY_DAU);
   const [a, b] = rey.parts.filter((p) => !p.unknownPart).slice(0, 2);
   const memo = { [REY_DAU]: { partKey: a.key, mix: { on: true, monsterId: REY_DAU, weights: { [a.key]: 0.6, [b.key]: 0.2 } } } };
@@ -1274,6 +1292,159 @@ test('createPlanRunner: いまの装備との比べは探索の入力 (発動率
   while (!runner.step(5));
   assert.equal(runner.result().results[0].baseline.value, 500);
   assert.ok(Math.abs(runner.result().results[0].vsBaselinePct - 100) < 1e-9);
+});
+
+// ---------------------------------------------------------------- いまとの比べ・火力の差・警告・途中経過 (2026-10-22 の点検の直し)
+
+const near = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) <= eps * Math.max(1, Math.abs(b)), `expected ${b}, got ${a}`);
+const plainBuild = (w) => ({ weapon: w, armor: emptyArmor(), charm: null, decorations: {}, limitBreak: {} });
+/** 相手 2 体の作り物の Job (体力 21,000 ずつ。perGroup を返す作り物の探索で回す) */
+function twoSubjectJob(patch = {}) {
+  return {
+    kind: 'plan', K: 3, blocked: null, warnings: [], requirements: [], gamma: null, baseline: null,
+    subjects: [{ key: 'a', name: 'A', health: { mid: 21000 } }, { key: 'b', name: 'B', health: { mid: 21000 } }],
+    merge: { mode: 'multi', subjects: ['a', 'b'] },
+    runs: [{ key: 'main', label: '装備を探しています', input: { weapons: [1], targets: [], required: [] } }],
+    costRun: null, ...patch,
+  };
+}
+
+test('createPlanRunner: 多頭の「いまより」は回数の向き (基準の T / 結果の T − 1)、守りの火力の差は「守りなしの T / 守りありの T − 1」', () => {
+  // 守りあり: a・b とも 200 → T = 105 + 105 = 210。守りなし (火力の差の回): 210 → T = 200。いまの装備: T = 233
+  const d0 = (21000 * 2) / 233;
+  const job = twoSubjectJob({
+    baseline: { value: null, T: 233, perSubject: { a: d0, b: d0 } },
+    costRun: { key: 'cost', label: '守りのスキルの火力の差を測っています', input: { weapons: [1], targets: [], required: [], stopAfter: 'partial' } },
+  });
+  const runner = R.createPlanRunner(job, data, {
+    createSearch: scriptedSearch((input) => ({
+      results: [{ rank: 1, value: 1, weapon: 1, build: plainBuild(1), perGroup: input.stopAfter ? { a: 210, b: 210 } : { a: 200, b: 200 } }],
+    }), []),
+  });
+  while (!runner.step(5));
+  const r = runner.result();
+  const top = r.results[0];
+  assert.equal(top.score.kind, 'combos');
+  near(top.score.value, 210);
+  assert.equal(top.baseline.kind, 'combos');
+  near(top.baseline.value, 233);
+  near(top.baseline.T, 233);
+  assert.equal(top.baseline.combos, 2 * Math.ceil(21000 / d0));
+  near(top.vsBaselinePct, (233 / 210 - 1) * 100); // +10.95% (回数が少ない)
+  assert.equal(r.costOfDefense.kind, 'combos');
+  near(r.costOfDefense.main, 210);
+  near(r.costOfDefense.free, 200);
+  near(r.costOfDefense.pct, (200 / 210 - 1) * 100); // −4.76% (守りのぶん回数が多い)
+  near(r.costOfDefense.rawPct, (200 / 210 - 1) * 100);
+});
+
+test('baselineView / vsBaselinePct: 体力が全員分からない多頭は、基準も結果と同じ期待値の調和平均 (単位をそろえる)', () => {
+  const subs = [{ key: 'a', health: { mid: 1 }, healthAssumed: true }, { key: 'b', health: { mid: 1 }, healthAssumed: true }];
+  const job = twoSubjectJob({ subjects: subs, baseline: { value: null, T: null, perSubject: { a: 100, b: 100 } } });
+  const runner = R.createPlanRunner(job, data, {
+    createSearch: scriptedSearch({ results: [{ rank: 1, value: 1, weapon: 1, build: plainBuild(1), perGroup: { a: 200, b: 200 } }] }, []),
+  });
+  while (!runner.step(5));
+  const top = runner.result().results[0];
+  assert.equal(top.score.kind, 'damage');
+  near(top.score.value, 200);
+  assert.equal(top.baseline.kind, 'damage', '前は baseline.value に T (0.02) が入り、画面の差が桁違いになっていた');
+  near(top.baseline.value, 100);
+  near(top.vsBaselinePct, 100);
+  // 1 体だけ分からない: 回数 (切り上げ) は出ないが T は出る
+  const one = R.baselineView([{ key: 'a', health: { mid: 1000 } }, { key: 'b', health: { mid: 1000 }, healthAssumed: true }], { perGroup: { a: 100, b: 50 } });
+  assert.equal(one.kind, 'combos');
+  near(one.T, 1000 / 100 + 1000 / 50);
+  assert.equal(one.combos, null);
+  // 1 体
+  const single = R.baselineView([{ key: 'a', health: { mid: 1000 } }], { value: 300 });
+  assert.deepEqual([single.kind, single.value, single.combos], ['damage', 300, 4]);
+  assert.equal(R.baselineView([{ key: 'a', health: { mid: 1000 } }, { key: 'b', health: { mid: 1000 } }], { perGroup: { a: 100 } }), null,
+    '計算できない相手がいれば null');
+  // 向き: 期待値は + で火力が高い、回数は + で回数が少ない。単位が違えば null
+  near(R.vsBaselinePct({ kind: 'damage', value: 110 }, { kind: 'damage', value: 100 }), 10);
+  near(R.vsBaselinePct({ kind: 'combos', value: 200 }, { kind: 'combos', value: 220 }), 10);
+  assert.equal(R.vsBaselinePct({ kind: 'damage', value: 110 }, { kind: 'combos', value: 100 }), null);
+});
+
+test('planBaseline: 画面のスレッドで、いまの装備の基準を Worker と同じ式で出し直せる (結果の組を装備に入れたあと用)', () => {
+  const job = R.planToJob(planOf(NU_UDRA, AT, { search: { preset: 'power' } }), { K: 3 });
+  const input = job.runs[0].input;
+  const want = makeEvaluator(input)(input.current).value;
+  const b = R.planBaseline(job, input.current, { index, skillEffects: effects, motions });
+  assert.equal(b.kind, 'damage');
+  near(b.value, want, 1e-12);
+  assert.equal(R.planBaseline(job, plainBuild(null), data), null, '武器が無ければ null');
+  // 多頭 (英雄の証): T と、相手ごとに切り上げた回数の合計
+  const hero = questsDoc.quests.find((q) => q.name === '英雄の証');
+  const first = hero.mission.targets.find((x) => x.monsterId != null);
+  const plan = R.buildPlan({
+    target: { mode: 'monster', monsterId: first.monsterId, partKey: null, isWound: false, questId: hero.id, individual: first.variant,
+      questTargetIndex: 0, players: 1, useUncertainWound: false },
+    tabTarget: {}, search: searchOf(), targetData: td, core, current: currentOf(),
+  });
+  const mj = R.planToJob(plan, { K: 3 });
+  const m = R.planBaseline(mj, currentOf().build, data);
+  assert.equal(m.kind, 'combos');
+  const ev = R.evaluateBuild(currentOf().build, mj.runs[0].input.targets, {
+    index, effects, motions, combo: mj.runs[0].input.combo, uptimes: mj.runs[0].input.uptimes, monsterStatus: mj.runs[0].input.monsterStatus,
+  });
+  near(m.T, mj.subjects.reduce((a, s) => a + s.health.mid / ev.perGroup[s.key], 0), 1e-12);
+  assert.equal(m.combos, mj.subjects.reduce((a, s) => a + Math.ceil(s.health.mid / ev.perGroup[s.key]), 0));
+});
+
+test('createPlanRunner: 回ごとに数の違う警告 (武器を絞った本数) は 1 行にまとめる', () => {
+  const job = R.planToJob(planOf(NU_UDRA, AT), { K: 3, costRun: false });
+  assert.equal(job.runs.length, 2);
+  let n = 0;
+  const sieved = (input, d) => {
+    const s = scriptedSearch({ results: [{ rank: 1, value: 800, build: simpleBuild(FIRE_SNS, 1), weapon: FIRE_SNS }] }, [])(input, d);
+    const kept = n++ === 0 ? 1 : 3;
+    const res = s.result;
+    return { ...s, result: () => ({ ...res(), warnings: [{ code: 'weapons-sieved', kept, rest: 15 - kept, total: 15, before: 23, message: `x${kept}` }] }) };
+  };
+  const runner = R.createPlanRunner(job, data, { createSearch: sieved });
+  while (!runner.step(5));
+  const ws = runner.result().warnings.filter((w) => w.code === 'weapons-sieved');
+  assert.equal(ws.length, 1, JSON.stringify(ws));
+  assert.match(ws[0].message, /23 本 \(同じ性能かそれ以下の武器を除くと 15 本\) のうち、見込みの高い 1〜3 本に絞って/);
+  assert.deepEqual([ws[0].keptMin, ws[0].keptMax], [1, 3]);
+});
+
+test('createPlanRunner: 途中経過の回の数は火力の差の回も数える。いまの最良は火力の差の回・多頭の探索の回の値を出さない', () => {
+  const job = R.planToJob(planOf(NU_UDRA, AT), { K: 3 });
+  assert.equal(job.runs.length, 2);
+  assert.ok(job.costRun);
+  const clock = fakeClock();
+  const withBest = (input, d) => {
+    const s = scriptedSearch({ results: [{ rank: 1, value: input.stopAfter ? 900 : 810, build: simpleBuild(FIRE_SNS, 1), weapon: FIRE_SNS }] }, [], clock)(input, d);
+    const prog = s.progress;
+    return { ...s, progress: () => ({ ...prog(), best: [{ value: input.stopAfter ? 900 : 810, exact: false }] }) };
+  };
+  const runner = R.createPlanRunner(job, data, { createSearch: withBest, now: clock.now });
+  const seen = [];
+  while (!runner.step(5)) seen.push(runner.progress());
+  assert.ok(seen.every((p) => p.run.count === 3 && p.run.index + 1 <= p.run.count), JSON.stringify(seen.map((p) => p.run)));
+  const cost = seen.filter((p) => p.phase === 'cost');
+  assert.ok(cost.length > 0);
+  assert.ok(cost.every((p) => p.run.index === 2 && p.best[0].value === 810), '火力の差の回 (守りなし) の 900 を出さない');
+  assert.ok(seen.every((p) => p.bestKind === 'damage'));
+  // 多頭: 探索の回の上位は重み付きの期待値 (T ではない) なので出さない。合わせたあとは T
+  const clock2 = fakeClock();
+  const multi = R.createPlanRunner(twoSubjectJob(), data, {
+    createSearch: (input, d) => {
+      const s = scriptedSearch({ results: [{ rank: 1, value: 1, weapon: 1, build: plainBuild(1), perGroup: { a: 200, b: 200 } }] }, [], clock2)(input, d);
+      const prog = s.progress;
+      return { ...s, progress: () => ({ ...prog(), best: [{ value: 999, exact: false }] }) };
+    },
+    now: clock2.now,
+  });
+  const ms = [];
+  while (!multi.step(5)) ms.push(multi.progress());
+  assert.ok(ms.filter((p) => p.phase !== 'merge').every((p) => p.best.length === 0 && p.bestKind === 'combos'), JSON.stringify(ms.map((p) => [p.phase, p.best])));
+  const end = multi.progress();
+  assert.equal(end.bestKind, 'combos');
+  near(end.best[0].value, 210);
 });
 
 test('createPlanRunner: 端末の所持アーティア (入力の extraWeapons) の組も、いまの装備の値と守りのチェックを計算できる', () => {
