@@ -2,7 +2,7 @@
 // data は引数で受ける (tools/bench_search_webkit.py のページからも読むので、node 専用のモジュールは loadRepoData の中だけで読む)。
 //
 // B1 = 手入力の巨戟アーティア (破滅のキリエヴェルド 属性激化・火 440・攻撃 175・黒蝕竜の力 + ヌシの魂。
-//      tests/review_numbers.test.mjs と同じ武器)・アルシュベルドの頭・コンボ = combos_sns の先頭・発動率は既定 (uptimes = {})・
+//      よくある作り方の一例)・アルシュベルドの頭・コンボ = combos_sns の先頭・発動率は既定 (uptimes = {})・
 //      限界突破は全部位・護石 = charms.json + charms_fixed.json・珠は全部持っている。
 // B2 = B1 + 必須 耐震3・風圧耐性3・回避性能2
 // B3 = 武器を片手剣 95 本から探す (ほかは B1 と同じ)
