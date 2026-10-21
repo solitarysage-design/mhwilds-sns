@@ -14,10 +14,15 @@ node --test tests/monsters.test.mjs
 
 - 生データは `tools/.cache/monsters/` (git 管理外)。取得元 URL と取得時刻は `tools/.cache/monsters/manifest.json`。
 - `meta.generatedAt` は「使った生データの取得時刻の最大値」。同じキャッシュからは何度実行しても同じファイルになる
-  (2 回続けて実行し SHA-256 が一致することを確認済み)。
+  (2 回続けて実行し SHA-256 が一致することを確認済み。2026-10-21 段階2 の歴戦王の追加のあとも確認)。
 - スクリプト: `tools/build_monsters.py` (入口)、`tools/monsters_fetch.py` (取得)、`tools/monsters_parts.py`
-  (monsters.json)、`tools/monsters_wiki.py` (monster_threats.json / quests.json)。
-- `--refresh` で取り直したら、`tests/monsters.test.mjs` 冒頭の `EXPECT` (件数) を見直す。
+  (monsters.json)、`tools/monsters_wiki.py` (monster_threats.json / quests.json)、`tools/monsters_legendary.py`
+  (歴戦の個体・歴戦王: 群の規則・体力の再計算・配信状況・個体の一覧・歴戦王の脅威と報酬)。
+- **歴戦王の報酬 (γ 防具・固定護石) は装備担当のキャッシュ `tools/.cache/equip/mhdb/armor.json`・`charms.json` を読む**
+  (data/armor.json と data/charms_fixed.json の生成元と同じもの)。無ければ先に `tools/build_equip.py` を実行する。
+- `--refresh` で取り直したら、`tests/monsters.test.mjs` 冒頭の `EXPECT` (件数) と、歴戦王の検査の期待値 (体力・クエスト) を見直す。
+  wiki の歴戦王の節の文が変わると、訳 (`monsters_legendary.MOVE_JA`) が合わなくなった行は `text: null` になり、生成の表示
+  「歴戦王の行動の訳の抜け」とテストで分かる。脅威 (`AT_HAZARDS`) の根拠の語が消えたら生成が止まる。
 
 ## 出典とライセンス
 
@@ -33,6 +38,16 @@ node --test tests/monsters.test.mjs
 | アリーナ受付のクエストの節分け (装備固定の判定) | monsterhunterwiki.org のページ `MHWilds/Quests/Arena Counter` (MediaWiki API の parse) | **CC BY-SA 4.0** | 取得時点 |
 | 防御スキルの規則のしきい値 | monsterhunterwiki.org `Status Effects (MHWilds)` | **CC BY-SA 4.0** | 取得時点 |
 | 防御スキルの id とレベルごとの効果文 | wilds.mhdb.io `/ja/skills`, `/en/skills` | データ API | 取得時点 |
+| 歴戦の群の選び方 (報酬ランク・例外 3 体)・ソロの体力の式 | GitHub `dzxrly/MHWS-in-json` の `src/database/missions/health.py`・`config.py` (作者が実行ファイルを解析したもの) | MIT | commit `4a99b26` |
+| 体力の乱数の等級と確率表 | 同リポの natives `Enemy/CommonData/Data/EmCommonDifficulty2.user.3.json` | MIT | commit `4a99b26` |
+| 報酬ランク・マルチの倍率・クエスト側のダメージ補正・人数の上限 | 同 release の `MissionData.xlsx` (`_RewardRank` / `_MultiTableId` と `_Count = 2〜5` / `_DamageSlashBlow` / `_DamageShot` / `_MaxPlayerNum`) | MIT | 同上 |
+| 歴戦王の行動の変化・防具スキルで防げる脅威 | monsterhunterwiki.org の個別ページ `Rey Dau / Uth Duna / Nu Udra / Jin Dahaad / Arkveld (MHWilds)` の「Arch-Tempered」節 | **CC BY-SA 4.0** | 取得時点 |
+| 歴戦王のクエストの種別 (Importance) | 同 wiki の歴戦王のクエストの個別ページ 17 件 | **CC BY-SA 4.0** | 取得時点 |
+| クエストの配信状況 (期間・常設・終了) | 同 wiki の Bucket `quests` の `time_period` | **CC BY-SA 4.0** | 取得時点 |
+| 歴戦王の報酬 (狩猟証γ → γ 防具・固定護石) | wilds.mhdb.io `/ja/armor`・`/ja/charms` の crafting (装備担当のキャッシュ) | データ API | 装備担当の取得時点 |
+| 傷口の肉質の置き換え (`woundConversions`・`individuals[].hitzone`)・歴戦王/歴戦用の項目の一覧 (`meta.legendaryFields.uniqueParams`) | GitHub `dzxrly/MHWS-in-json` の natives `Enemy/EmXXXX/YY/Data/EmXXXX_YY_Param_Unique.user.3.json` (ParamPack から参照されていないので決まった名前で取る。ドドブランゴは無い = 404 を manifest に `missing` で記録) | MIT | commit `4a99b26` |
+| (照合のみ・値は取り込まない) 傷口の肉質の置き換えが入った版 | GitHub `dtlnor/MHWs-in-json` (別の抽出) の Param_Unique の履歴 (Ver.1.020 / 1.041 の更新) | - | 2026-10-21 に確認 |
+| 歴戦王の追加日 (ゲームデータに無い) | 公式・報道 (`monsters_legendary.AT_RELEASE` に URL つきで記録。PlayStation Blog / ファミ通 / animeanime (PR TIMES) / gamebiz / gamespark / saiganak / automaton / rpgsite / gfinity) | 事実の引用 | 2026-10-21 調べ |
 
 - `monster_threats.json` と `quests.json` は wiki 由来なので、ファイルの `meta.license` に CC BY-SA 4.0 と出典を入れてある。
   画面でこの 2 ファイルの内容を出すときも出典 (Monster Hunter Wiki) とライセンスを表示すること。
@@ -53,6 +68,11 @@ node --test tests/monsters.test.mjs
 | 多頭クエスト (multi) | 34 件 |
 | 装備固定 | true 17 / false 203 / null 0 (2026-10-21 data-fix でフリーチャレンジ 5 件を null → false) |
 | MissionData と名前で結合できたクエスト | 206 / 220 (あいまい一致 1: 「Awakening From a Dream」→「Awaking From a Dream」) |
+| 歴戦王 | 5 体 (レ・ダウ / ウズ・トゥナ / ヌ・エグドラ / ジン・ダハド / アルシュベルド)。狩猟対象のクエスト 17 件 (うち MissionData あり 12、フリーチャレンジ 5 は無し)。MissionData の歴戦王の行 15 (★8: 2 / ★9: 3 / ★10: 10) |
+| ソロの体力の再計算 | 大型の狩猟対象 241 行すべてで MissionData の SoloHealth と一致 |
+| クエスト側のダメージ補正 | 大型の 241 行すべて 1 |
+| 配信状況 (availability) | standard 136 / permanent 70 / inactive 14 (2026-10-21 時点。active 0) |
+| 種別を wiki のページに合わせたクエスト | 2 (These Roots Run Deep / Summons from the Land Beyond: optional → event) |
 
 ## monsters.json の作り方
 
@@ -73,6 +93,8 @@ node --test tests/monsters.test.mjs
 - `hitzone` / `wound` / `states.*` は `slash, blunt, shot, fire, water, thunder, ice, dragon, stun` の 0〜100 の整数。
   `stun` は生データの `_Stun` (MHDB の stun と一致)。
 - `wound` = 傷口の肉質 (Param_Parts `_ScarPointArray` の `_MeatGuid`)。傷口の無い部位は null (34 部位)。
+  通常の個体の値。Param_Unique で置き換わるもの (歴戦王ウズ・トゥナなど) は `woundConversions` と `individuals[].hitzone.woundOverrides`
+  (下の「歴戦の個体・歴戦王」の「肉質」)。
 - `states` のキーは内部名のまま (意味は下の未確定事項)。`meta.stateKeys` に内部名・意味・確度を入れてある。
 - 部位の日本語名は `PartNames.json` の `ja`。名前が無いスラッグ (今回は `hide` だけ) は捨てずに
   `name: "部位不明（hide）"`、`unknownPart: true`。同じモンスターに複数あるときは `key` を `hide-1`, `hide-2` … にする。
@@ -173,6 +195,157 @@ node --test tests/monsters.test.mjs
   - false・確度 high (198): それ以外の通常クエスト。
 - `mission`: 結合できた MissionData の行。対象ごとの `health` (体力倍率)・`attack`・`partsVital`・`soloHealth`
   (ソロ時の体力の候補値)・`legendaryId` (NONE / NORMAL = 歴戦の個体 / KING = 歴戦王)。
+  2026-10-21 段階2 で `maxPlayers`・`rewardRank`・`paramGroup`・`healthCalc`・`attackRate`・`multi` を足した (上の「歴戦の個体・歴戦王」)。
+  MissionData の見出しは 2 段 (例 `_Count = 2` の下に `_Health`) なので、`monsters_wiki.mission_columns` で「上段|下段」の名前にして読む。
+
+## 歴戦の個体・歴戦王 (2026-10-21 段階2)
+
+### 歴戦王は 5 体 (確度 high)
+
+レ・ダウ (Ver.1.010)・ウズ・トゥナ (1.020)・ヌ・エグドラ (1.030)・ジン・ダハド (1.040)・アルシュベルド (1.041)。
+根拠はすべて同じ 5 体を示す: MissionData の `_LegendaryID=KING` の行、MHDB の variants (`arch-tempered`)、行動ロジック
+(MHWS-in-json PROCESSED の enemy_battle_logic) の「自分が KING なら」の分岐、wiki の Tempered Monsters の一覧、
+カプコンのプレスリリース、ファミ通の「最後の歴戦王となる歴戦王アルシュベルド」(2026-02-18)。
+版は MissionData の `_Version` から (その歴戦王のクエストのいちばん古い版)。★10 版は 5 体とも Ver.1.041 (2026-02-18)。
+追加日は公式・報道で、出典と確度を `individuals[].added` に持つ (レ・ダウの 2025-04-30 とジン・ダハドの 2025-12-24 は報道だけなので medium)。
+
+### Param_Legendary の 4 つの群 (確度 medium)
+
+MHWS-in-json の `src/database/missions/health.py` と `config.py` (作者が実行ファイルの `EnemyUtil.getMaxHealth_Difficulty` /
+`getLegendaryID_LegendaryParam` / `cContextInstanceController_Enemy.onSetupContext` を読んだもの) に従う:
+
+| 群 | 生の項目の接尾辞 | 使われるとき |
+|---|---|---|
+| `normal` | なし | 歴戦の個体 (NORMAL) で報酬ランク 8 以下 |
+| `hard` | `_Hard` | 歴戦の個体で報酬ランク 9 以上 (★9 と ★10 のププロポル) |
+| `king` | `_King` | 歴戦王 (KING) で報酬ランク 9 以下 (★8/★9) |
+| `kingHard` | `_King_Hard` | 歴戦王で報酬ランク 10 (★10) |
+
+- NONE (通常の個体・狂竜化・ボス個体) は群なし (体力の倍率 1.0)。
+- 実行ファイルに埋め込まれた例外 (user3 のデータには無いので `monsters_legendary.KING_WHEN_NONE_IDS` / `NO_AUTO_HARD_IDS` に写した):
+  ゾ・シア (EM0164_50) とゴグマジオス (EM0078) は NONE でも報酬ランク 10 は kingHard の倍率を使う
+  (『天人達のエルピス』のゾ・シアは 0.79)。オメガ・プラネテス (EM0166) は報酬ランクから hard にならない。
+- 実行時のフラグ preset_hard は MHWS-in-json と同じく常に false として扱っている (未確認)。
+- 項目の意味 (`meta.legendaryFields`): 体力 (`health`) は medium。攻撃・部位の耐久・動きの速さ・傷の付きにくさ・ガードを崩す強さ・
+  技ごとの上書きは名前からの推定で low。king 群には MotionSpeedRate の欄が無い (null。★8/★9 の歴戦王の動きの速さは不明)。
+  意味の分からない AngryScarDamageRate / AddStunDamageList / ArenaLegendaryScarIndexList / _ShellCustomData は取り込んでいない。
+- null は「Param_Legendary のその群に欄が無い」という意味 (`meta.legendaryFields.nullMeaning`)。例えば `guardPowerAdd` は
+  どの群も null だが、「ガードを崩す強さを足さない」とは限らない (ウズ・トゥナの歴戦王は下の Param_Unique に `_AddGuardPower` 40)。
+- (追記 2026-10-21 照合の指摘) 歴戦王・歴戦の個体の差は Param_Legendary だけでなく、モンスター固有のパラメータ
+  (Param_Unique) にもある。変わるのは体力・攻撃・部位の耐久・傷の付きにくさ・技ごとの速さに加えて、少なくとも
+  ウズ・トゥナの歴戦王の傷口の肉質 (下の「肉質」)・ベールの耐久 (`_VeilVitalRate` 2.4。通常の `_VeilVitalRate_Ex` は 1.2)・
+  `_AddGuardPower` 40、ヌ・エグドラの `_LostFrontHalfVitalRate_King` 0.5・`_KingMinusTentacleDownTime` 2.0、レ・ダウの
+  `BreakEnchantRate_LegendaryKing` 0.25・`LegendaryKingDisableEnchantTime` 60、アルシュベルドの `BladeVitalRate_King` 1.2・
+  `ForceModeChangeThreshold_King` 20・`GalianDamageElementRate_King` 0.025 など。傷口の肉質の置き換え以外は**取り込んでいない**
+  (意味は名前からの推定もしていない)。値だけ `meta.legendaryFields.uniqueParams.byMonster` に並べる (項目名や構造の名前に
+  King / Legendary が付く数値。歴戦王のいないモンスターの Legendary の項目も入る。ジン・ダハドには無い)。
+
+### ソロの体力 (確度 medium)
+
+`ソロの体力 = ceil(float32(基礎体力 × クエストの _Health × 乱数の等級 × 群の HealthRate))`
+
+- 基礎体力 = Param_Parts の `_BaseHealth` (MHDB の baseHealth と全 34 体で一致することを生成時に確かめる)。
+- 乱数の等級 = EmCommonDifficulty2 の `_RandomRateTblArray[0]` (0.94〜1.06)。どの等級が出るかの確率表は 4 つ
+  (adjustRange 0 = 1.0 だけ / 1 = 25・50・25% / 2 = 10・20・40・20・10% / 3 = 2・10・20・36・20・10・2%)。
+  クエストごとの adjustRange はレイアウトの値で MissionData に無いので、**計算した値の集合が MissionData の SoloHealth と
+  一致する表**を選ぶ (一致しなければ `matchesMissionData: false`・確度 low)。
+- 結果: 大型の 241 行すべて一致。歴戦王のクエストの例: 無言の閃耀 35,550 / 孤独から出でし君という自由 79,923 (76,726〜83,120) /
+  英雄の証のアルシュベルド 71,701。テストでは JS でも計算し直して同じになることを確かめている。
+- **確度を high にしない理由**: MissionData の SoloHealth も MHWS-in-json が同じ式で作った値なので、一致は「同じ入力と規則を
+  使えている」ことの確認で、ゲーム内の値の独立の確認ではない。独立の確認は第三者の実測 1 件 (歴戦王アルシュベルドのソロ約 79,000。
+  switchbladegaming、照合のみ) だけ。wiki・Kiranico (Ver.1.040 止まり)・Game8 に体力の公表値は無い。
+- フリーチャレンジ 5 件 (MissionData に無い) は体力不明のまま (`mission: null`)。
+
+### マルチの倍率 (確度 low)・攻撃の倍率 (確度 low)
+
+- MissionData の `_MultiTableId` の表に `_Count = 2〜5` ごとの体力・部位の耐久・攻撃 (全部 1) の倍率がある。`_Count` を参加人数と
+  見て 2〜`maxPlayers` 人ぶんを入れた (`multi.tableId` に表の id)。
+- (訂正 2026-10-21 照合の指摘) 以前ここに「2 人までのクエスト (アリーナ) の表は 2〜5 が全部同じ値で、人数と見る読み方と合う」と
+  書いたが誤り。2 人までのクエストも人数で増える表を使う (`_Count = 2〜5` の体力の倍率が 148912cc・75f3e189 = 1.6 / 2 / 2.4 / 2.6、
+  3911dbb2 = 1.86 / 2.36 / 2.85 / 3.12、a5295449 = 1.88 / 2.43 / 3 / 3.4。
+  a5295449 は『解鎖のアルシュベルド』と『孤独から出でし君という自由』『英雄の証』の表)。`_Count = 2〜5` が全部同じ値の表は、
+  オメガ・プラネテスの 4 人クエスト (473e14cf = 1.55:『彷徨える侵略兵器』『星惑いの侵攻者』、d260b065 = 1.8:『零式オメガ・プラネテス
+  検証戦』) とゴグマジオスの 4 人クエスト (46061a24 = 1.0: 3 件) のもの。なので `_Count` = 人数の読み方を支える根拠は無く、確度は low のまま。
+  照合 (取り込みはしない): Kiranico も `_Count = 2〜5` を Players 2〜5 として表示している。
+- コミュニティの実測とされる 163/200/234% は一般の表 (1.6/2.0/2.4) に近く、★10 の表 (1.88/2.43/3.0) と合わない。
+  `_Count = 5` の意味は分からないので入れていない。
+- 攻撃の倍率の目安 (`attackRate`) = クエストの `_Attack` × 群の平常/怒りの倍率。掛け方はゲームで確かめていない。
+  ハンターが受けるダメージの実数は、モンスターの技ごとの攻撃値が手元に無いので出せない。
+
+### 肉質 (変更 2026-10-21 照合の指摘: 「通常と同じ (確度 high)」は誤り)
+
+**以前の判定とその誤り**: 「肉質の表 (Param_Parts) は EM ID ごとに 1 つ・Param_Legendary の 54 項目に肉質が無い・MissionData の
+ダメージ補正は全部 1」から「歴戦の個体・歴戦王の肉質は通常と同じ (確度 high)」としていたが、モンスター固有のパラメータ
+(Param_Unique) を見ていなかった。照合役が 34 体の Param_Unique を調べ、傷口の肉質の置き換え (`_ScarMeatConvert`) を見つけた。
+いまは tools で Param_Unique を取得して走査し (`monsters_legendary.unique_scan`)、置き換えを部位に結び付けて取り込む。
+
+**置き換えの読み方**: `_ScarMeatConvert` は `{_Before, _After}` (どちらも Param_Parts の `_MeatArray` の肉質 GUID) の並び。
+`_Before` は部位の傷口 (`_ScarPointArray` の `_MeatGuid`) の肉質と一致するので、「その傷口の肉質を `_After` に置き換える」と
+読んだ (名前と GUID の対応からの推定。ゲーム内では確かめていない)。置き換え前の値が `parts[].wound` と一致することを生成時に確かめる。
+通常の肉質 (`hitzone`) は置き換えない (アルシュベルドの頭の `_Before` は頭の通常の肉質と同じ GUID だが、項目名が Scar なので傷口だけ)。
+
+| モンスター | 置き換えのある場所 | 部位 | 置き換え前 → 後 | 扱い |
+|---|---|---|---|---|
+| ウズ・トゥナ | 歴戦王の群専用の構造 `_LegendaryParam_King` / `_LegendaryParam_Hard_King` (同じ値) | 頭の傷口 | 斬 88 / 打 90 / 弾 88、雷 25 → 弾 70、雷 20 | 歴戦王 `sameAsBase: false`・確度 medium |
+| ウズ・トゥナ | 同上 | 胴・前脚・後脚・尻尾の傷口 (6 部位) | 80 / 80 / 80、雷 25 → 弾 65、雷 20 | 同上 |
+| アルシュベルド | モンスター全体の項目 (群の分からない場所) | 鎖翼刃 (左右) の傷口 | 龍 38 → 30 (5 属性すべて 30) | 歴戦王 `sameAsBase: null`・確度 low (参考値として `woundOverrides`) |
+| アルシュベルド | 同上 | 胴・脚・尻尾・翼の傷口 (7 部位) | 火・水・氷 5 → 10、龍 15 → 10 | 同上 |
+| アルシュベルド | 同上 | 頭の傷口 | 属性 5 → 10 | 同上 |
+
+- ウズ・トゥナ (確度 medium): 置き換えは歴戦王の群の構造の中にある。同じ構造の `_VeilVitalRate` 2.4 (通常の `_VeilVitalRate_Ex` は
+  1.2) が wiki の歴戦王の節の「水のベールがとても壊れにくい」と合うので、この構造が歴戦王に使われることの裏付けになる。
+  照合 (値は取り込まない): 別の抽出 `dtlnor/MHWs-in-json` の履歴では、この構造は Ver.1.020 (歴戦王ウズ・トゥナの追加) で入った
+  (Ver.1.010 には無い)。high にしないのは、置き換えの意味が名前からの推定で、ゲーム内で確かめていないため。
+- アルシュベルド (確度 low): 置き換えの項目名に King が無く、`_GenusInfo` / `_SpeciesInfo` の直下 (モンスター全体の項目) にある。
+  並びは `*_King` の項目 (`CombatEmDamageRate_King`〜`AutoElementFinishTime_King` と `ForceModeChangeThreshold_King`) のあいだで、
+  照合: `dtlnor/MHWs-in-json` の履歴では `*_King` の項目もこの置き換えも Ver.1.041 (歴戦王アルシュベルドの追加) で入った
+  (それまでの版の Param_Unique には無い)。護竜アルシュベルド (EM0160_50) の Param_Unique では空。なので歴戦王用と思われるが、
+  常に使うのか、護竜の力を出したあと (wiki: 体力が一定以下で護竜の力を出す・その後は傷を急速に治す) などの状態だけかは分からない。
+  置き換えの 4 組のうち 1 組 (斬 65 / 打 68 / 弾 62・気絶 100 の肉質) はどの部位の傷口にも使われていない (`unmatched`)。
+- 推奨属性への影響: 置き換え後の傷口で計算し直した推奨属性を `woundConversions[].elementRecommendation` と
+  `individuals[].hitzone.elementRecommendation` に持つ。ウズ・トゥナは雷のまま。アルシュベルドは通常の推奨 (龍) の同点崩しが
+  「鎖翼刃の傷口の龍 38」に頼っているが、置き換え後は傷口の属性が全部同じ (鎖翼刃 30・ほか 10) になり、全部位の平均で龍のまま。
+- 歴戦の個体: ウズ・トゥナの置き換えは歴戦王の群だけなので、歴戦の個体は通常と同じ (確度 high)。アルシュベルドの歴戦の個体は、
+  条件の分からない置き換えがあるので true・確度 medium。ほかの歴戦の個体は true・確度 high。
+- 置き換えの無い歴戦王 (レ・ダウ / ヌ・エグドラ / ジン・ダハド) は true・確度 medium (歴戦王は Param_Unique や行動ロジックに意味の
+  分からない専用の項目が多いので high にしない)。
+- ほかの根拠はそのまま: Param_Parts は EM ID ごとに 1 つ、Param_Legendary の 54 項目に肉質が無い、MissionData の大型の全 241 行で
+  クエスト側のダメージ補正 (`_DamageSlashBlow` / `_DamageShot`) は 1 (`quests.json` の `meta.damageRateCheck`)。照合 (取り込みはしない)
+  でも Kiranico の値として紹介されている歴戦王アルシュベルドの鎖翼刃 50/50/45 は MHDB の通常の肉質と同じ (通常の肉質は置き換わらない
+  ことと合う)。
+- Param_Unique のほかの肉質の項目: ゴグマジオスの状態ごとの傷口の肉質 (`GeyserScarMeat` / `_SolidScarMeat` / `_LiquidScarMeat` /
+  `_GasScarMeat`) だけ。群の付かない場所にあり個体によらないので、歴戦の判定には使わず、取り込んでもいない (`meta.uniqueIgnored`)。
+  これ以外の肉質の項目が見つかったら生成が止まる (`monsters_legendary.UNIQUE_MEAT_IGNORED`)。
+- 実行ファイルの処理 (ゲームのコード) は確かめていない。データのファイルだけを見た判定。
+状態異常の効きは個体ではなくクエストの★ (難度の行) で変わる (今回は取り込んでいない)。
+
+### 歴戦王の脅威 (monster_threats.json の variants)
+
+- `moveChanges`: wiki の個別ページの「==== Arch-Tempered ====」節の箇条書きを全部 (リンクを外した英文 `textEn` と、
+  tools の表 `MOVE_JA` の日本語 `text`)。
+- `hazards`: 防具スキルとの関係が wiki に書かれたものだけ 3 件。
+  - ヌ・エグドラの点火中の炎 → 環境適応 (skillId 88) Lv2 で無効 (wiki の歴戦王の節に明記。確度 high。Game8 の「環境適応 Lv2」とも一致 = 照合のみ)
+  - ジン・ダハドの冷気のつむじ風 (凍結が急速にたまる) → 拘束耐性 Lv3 (rules.status.frostblight と同じ規則。確度 medium)
+  - ジン・ダハドのノヴァ → 当たると確定で力尽きる。防げるスキルの記載なし (`oneShot: true`, `skill: null`)
+- `sameAsBase`: 咆哮・風圧・振動・属性やられ・状態異常は通常と同じと見ている (確度 medium)。wiki の monsters_games は個体ごとの
+  行を持たず、歴戦王の節にも変わるという記載が無い。Game8 の表 (照合のみ) でも歴戦王アルシュベルドは 咆哮小・風圧小・振動なし、
+  歴戦王ヌ・エグドラは 咆哮小・風圧なし・振動なしで通常と同じ。
+- 行動ロジック (BTable) の歴戦王だけの分岐はある (レ・ダウ 7 / ウズ・トゥナ 7 / ヌ・エグドラ 6 / ジン・ダハド 53 /
+  アルシュベルドは歴戦王だけが入る状態 UNLEASH) が、技名を引く表が無いのでデータには入れていない。
+
+### 報酬 (MHDB)
+
+狩猟証γ (説明文「歴戦王○○の狩猟に成功した者に与えられる…」) をモンスターに結び、それを素材に使う防具・固定護石を集めた。
+γ 防具 5 シリーズ (armorSetId 91 / 164 / 174 / 185 / 193、各 5 部位) にだけグループスキル「ヌシの魂」(skillId 131) が付く。
+固定護石は 10 個 (charms_fixed の id 61, 66, 168, 170, 178, 179, 182, 185, 186, 187)。片手剣で歴戦王の素材を使うものは無い。
+★10 の報酬 (歴戦錬磨の証・古びたお守り) は今回は入れていない。
+
+### 配信状況と種別 (quests.json)
+
+- `availability` は wiki の Bucket `quests` の `time_period` (例 `March 18 - April 1, 2026 <br>''Inactive''`) を読んだもの。
+  2026-10-21 時点で歴戦王のクエストは、フリーチャレンジ 5 件が終了中 (inactive)、ほかは常設か通常の任務 (英雄の証)。
+- Bucket の `important` とクエストのページの Importance が食い違うものがある。歴戦王のクエストのページだけ取得して、
+  ページが Event で Bucket が optional の 2 件を event にした (`categoryBucket` にもとの値)。
 
 ## 未確定事項
 
@@ -182,8 +355,23 @@ node --test tests/monsters.test.mjs
 | `states.break` の意味 | 「部位破壊後」と解釈 | medium | 内部名 `_MeatGuidBreak` から。破壊後に切り替わることの実地確認はしていない |
 | `states.weakPoint` (弱点) の意味と出現条件 | 内部名 `_WeakPointArray` の肉質を入れた | low | 斬 100 など高い値が多い。出現条件 (部位破壊後・傷口・特定の行動中など) は不明。部位に直接ひも付かない弱点 (MultiParts 等へのリンク) が 10 体 16 件あり、これは入れていない |
 | 怒り時の肉質 | 専用の項目は無い | medium | Param_Parts に怒り専用の肉質欄は無い。custom のどれかが怒りの可能性はある。Param_Legendary の Angry は攻撃倍率で肉質ではない |
-| 歴戦の個体・歴戦王の肉質差 | 差は無いと判断 | medium | 肉質は Param_Parts 1 つで、個体別の肉質表は見つからない。歴戦/歴戦王で変わるのは体力・攻撃などの倍率 |
-| 歴戦の個体・歴戦王・★10 の体力倍率 | 2 か所にある | medium | (1) `monsters[].legendaryParams` = Param_Legendary の倍率を内部名の群 (`normal` / `king` / `hard` / `kingHard`) のまま入れた。`normal` = 歴戦の個体、`king` = 歴戦王と見ているが、**`hard` の意味 (★10 や高難度版?) は不明**。(2) クエスト単位の倍率は `quests[].mission.targets[].health` (MissionData の `_Health`)。両者がどう掛け合わさるかは未確認 |
+| 歴戦の個体・歴戦王の肉質差 | 歴戦王ウズ・トゥナの傷口が変わる (`sameAsBase: false`)。ほかは差が無いと見ている | ウズ・トゥナ medium / 歴戦王 medium / 歴戦の個体 high | 2026-10-21 段階2 で一度「全部同じ・high」にしたが、照合で Param_Unique の傷口の肉質の置き換えが見つかり訂正。上の「肉質」 |
+| 歴戦王アルシュベルドの傷口の肉質 | 置き換えがあるが、いつ使われるか不明 (`sameAsBase: null`・`woundOverrides` は参考値) | low | 歴戦王用と思われる (Ver.1.041 で *_King の項目と一緒に入った。照合のみ) が、常にか、護竜の力を出したあとなどの状態だけかが分からない。分かったら `monsters_legendary` の扱いを直す |
+| Param_Unique の歴戦王・歴戦用の項目 | 傷口の肉質の置き換え以外は取り込んでいない | low | ベールの耐久 (×2.4)・`_AddGuardPower` 40・ヌ・エグドラの前半身の耐久 ×0.5 など。値だけ `meta.legendaryFields.uniqueParams` に並べた。意味は名前からも推定していない |
+| ゴグマジオスの状態ごとの傷口の肉質 | 取り込んでいない | - | Param_Unique の `GeyserScarMeat` / `_SolidScarMeat` / `_LiquidScarMeat` / `_GasScarMeat`。歴戦とは関係しない (群の付かない場所)。状態ごとに傷口の肉質が変わるのに `parts[].wound` は 1 つだけ |
+| 歴戦の個体・歴戦王・★10 の体力 | 解消 (群の意味と式が分かった) | medium | 2026-10-21 段階2。群 = `normal` (歴戦・報酬ランク 8 以下) / `hard` (歴戦・9 以上) / `king` (歴戦王 ★8/★9) / `kingHard` (歴戦王 ★10)。ソロの体力 = ceil(基礎体力 × クエストの health × 乱数の等級 × 群の HealthRate) で 241 行すべて MissionData と一致。ただし MissionData も同じ式なので独立の確認ではなく、ゲーム内の確認は第三者の実測 1 件だけ |
+| 群の選び方の例外 | MHWS-in-json の作者の解析に頼っている | medium | ゾ・シア/ゴグマジオスの ★10 は kingHard、オメガ・プラネテスは hard にしない、preset_hard は常に false。自分では確かめられない。**ゲームが更新されたら config.py を見直す** |
+| マルチの倍率 (`multi`) | `_Count` = 参加人数と推定 | low | コミュニティの実測とされる 163/200/234% は一般の表に近く ★10 の表と合わない。`_Count = 5` の意味は不明 (入れていない)。以前の「2 人までのクエストの表は全部同じ値」は誤り (全部同じ値なのはオメガ・プラネテスとゴグマジオスの 4 人クエストの表) |
+| 攻撃の倍率 (`attackRate`) | クエストの attack × 群の平常/怒りの倍率 | low | 掛け方は推定。技ごとの攻撃値が無いので受けるダメージの実数は出せない。群なし (通常の個体) は null |
+| king 群の動きの速さ | 欄が無い (null) | - | ★8/★9 の歴戦王の動きの速さは不明。傷の付きにくさ・ガードを崩す強さ・技ごとの上書きなどの意味も推定 (low)。null は「Param_Legendary に欄が無い」で、「変わらない」ではない |
+| 歴戦王のフリーチャレンジ 5 件の体力 | 不明 (`mission: null`) | - | MissionData に無い。2026-10-21 時点ではどれも終了中で、また配信されることがある |
+| 種別 (category) の食い違い | 歴戦王の 2 件だけページに合わせた | medium | Bucket で optional なのに time_period (配信期間) がある行はほかに 7 件 (Ballet in the Rain / Congalala Courting Carols / Congalala Cravings / Kut-Ku Gone Cuckoo / Kut-Ku the Forest Conqueror / Putting Up a Stink / There Goes the Neighborhood)。ページを取得していないので直していない |
+| 歴戦王の技名・専用の行動 | wiki の文章だけ | medium | 行動ロジックの歴戦王の分岐はあるが、技名を引く表が無い。画面に出すのは wiki (CC BY-SA) の文章の訳 |
+| 歴戦王アルシュベルドの『護竜の力』での肉質 | 不明 | - | 専用の状態 (UNLEASH) で custom1/custom2 のどれに切り替わるか分からない。wiki の「すぐ壊さない傷は急速に治る」は傷の扱いで肉質ではない。傷口の肉質の置き換え (上の行) がこの状態だけの可能性もある |
+| 歴戦王が今後増えるか | 5 体で全部と判断 | high (Ver.1.042 時点) | 「最後の歴戦王」はファミ通の記事の一文が根拠。拡張『アセンダンス』(2027 年予定) で増えるかは分からない |
+| 歴戦王の追加日 | 出典つきで記録 | medium〜high | レ・ダウの常設化の日 (2025-07 の再配信のあと) は未確定。Ver.1.040 の配信日は報道で 12/15 と 12/16 に分かれる。PS5 版だけの違いは調べていない (全機種同時配信の前提) |
+| 捕獲できる残り体力 | 入れていない | - | wiki は歴戦王 4 体を 20%、ジン・ダハドを討伐のみとしている。MissionData の `_CaptureHpVitalRate` / `_DyingHpVitalRate` の意味は確かめていない |
+| 狂竜化・ボス個体の肉質 | 未調査 (`hitzone.sameAsBase: null`) | - | MissionData では NONE。肉質が通常と同じかは確かめていない |
 | MHDB の stun / exhaust の★ | 1 (効く) しか入らない | high | MHDB に段階が無い。気絶・減気の効きやすさの段階は出典が無い |
 | ゾ・シアの風圧 | wiki の値が wiki マークアップの生文字列 | high | 文字列中の「Dragon Wind Pressure」を読んで `dragon` にした (issues に記録) |
 | ケマトリスの咆哮・風圧・振動 | wiki に値が無い | - | null のまま |

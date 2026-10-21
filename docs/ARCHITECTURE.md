@@ -179,7 +179,8 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
   画面では内部名を出さず「部位不明 1」のように番号にする (`app/ui/tabs/target_mix.js` の `partLabel`)。
 - (追記 2026-10-21) 上の例に無い主な項目 (詳細は `docs/sources/monsters.md`):
   - モンスター: `gameId`, `emId` (`"EM0160_00_0"`), `species`, `variantNames` (`{tempered: "歴戦の個体", ...}`),
-    `legendaryParams` (歴戦/歴戦王の倍率。内部名の群 `normal`/`king`/`hard`/`kingHard` のまま),
+    `legendaryParams` (歴戦/歴戦王の倍率。群 `normal`/`hard`/`king`/`kingHard`。意味は下の「歴戦の個体・歴戦王」),
+    `individuals` (個体の一覧。同じく下), `woundConversions` (傷口の肉質の置き換え。同じく下),
     `itemEffects` (`{flash: {effective: true|false|null, conditions: []}, noise: {...}}`)。
     `variants` には `"frenzied"` (狂竜化) と `"alpha"` (ボス個体) も入る。`statusWeakness` / `immune` は契約どおり (★ 0〜3、無効は 0)。
   - 部位: `slug` (MHDB の部位名)、`unknownPart` (名前が無い部位なら true)、`internalType` (`"HEAD"` など)、`ordinal` (並び順)、
@@ -191,6 +192,100 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
     stateMaxAvg, bestStateMax}`。`best` は主要部位 (斬撃肉質 45 以上。2 部位未満なら斬撃上位 3 部位) の属性肉質の平均が最大の属性。
     同点は 主要部位の傷口の平均 → 全部位の平均 で崩し、経過を `tieBreak` (`{tied, by, woundAvg, woundParts}`。同点が無ければ null)
     に持つ。崩せなければ `best` に複数残る。
+
+#### 歴戦の個体・歴戦王 (追記 2026-10-21 段階2)
+
+歴戦王は Ver.1.042 時点で 5 体 (レ・ダウ / ウズ・トゥナ / ヌ・エグドラ / ジン・ダハド / アルシュベルド)。出典と確度は
+`docs/sources/monsters.md` の「歴戦の個体・歴戦王」。
+
+`legendaryParams` は Param_Legendary の 4 つの群。群の意味は MHWS-in-json の作者による実行ファイルの解析に従う
+(確度 medium。`meta.legendaryGroups`。以前は「内部名のまま・hard の意味は不明」だった):
+`normal` = 歴戦の個体で報酬ランク 8 以下、`hard` = 歴戦の個体で報酬ランク 9 以上、`king` = 歴戦王の ★8/★9、
+`kingHard` = 歴戦王の ★10。クエストでどの群を使うかの規則と例外 (ゾ・シア/ゴグマジオスの ★10 は NONE でも kingHard、
+オメガ・プラネテスは hard にしない) は `meta.legendaryGroups`、項目の意味と確度は `meta.legendaryFields`。
+```json
+"legendaryParams": {
+  "normal": {"health": 1.0, "partsVital": 1.0, "attackCalm": 1.1, "attackAngry": 1.15, "motionSpeed": 1.05,
+             "motionSpeedOverride": null, "staminaSub": 0.7,
+             "woundVital": {"normal": 1.3, "tear": 1.3, "temperedScar": null},
+             "guardPowerAdd": null, "actionOverrides": null},
+  "hard": {...}, "king": {...},
+  "kingHard": {..., "motionSpeedOverride": 1.04, "actionOverrides": {"count": 34, "speedMax": 1.3, "attackMax": 1.5}}}
+```
+- (変更 2026-10-21) どの群も同じ項目を持ち、群に欄が無いものは **null** (以前は項目ごと省いていた)。理由: 「欄が無い」と
+  「1.0」を取り違えないため (例: king / kingHard 群には MotionSpeedRate の欄が無い → `motionSpeed: null`)。
+  意味の分からない AngryScarDamageRate / AddStunDamageList / ArenaLegendaryScarIndexList / _ShellCustomData は取り込まない。
+- 群に欄の無い項目の null は「その群に欄が無い」という意味 (`guardPowerAdd: null` も「ガードを崩す強さを足さない」とは限らない。
+  ウズ・トゥナの歴戦王は Param_Unique に `_AddGuardPower` 40 がある)。Param_Unique の歴戦王・歴戦用と思われる項目は
+  取り込まず、値だけ `meta.legendaryFields.uniqueParams` に並べる。
+- (変更 2026-10-21 照合の指摘) 肉質は「歴戦の個体・歴戦王でも通常と同じ (確度 high)」としていたが誤り。モンスター固有の
+  パラメータ (Param_Unique) に傷口の肉質の置き換え (`_ScarMeatConvert`) があり、ウズ・トゥナの歴戦王は傷口の肉質が変わる
+  (弾 88→70 / 80→65、雷 25→20)。アルシュベルドにも置き換えがあるが、いつ使われるか分からない (鎖翼刃の傷口の龍 38→30 など)。
+  置き換えはモンスターの `woundConversions`、個体ごとの値は `individuals[].hitzone` に持つ (下)。`parts[].wound` は通常の個体の値のまま。
+
+`woundConversions` = 傷口の肉質の置き換え (Param_Unique の `_ScarMeatConvert`)。無いモンスターは `[]` (いまはウズ・トゥナと
+アルシュベルドだけ)。
+```json
+"woundConversions": [
+  {"scope": "arch-tempered", "groups": ["king", "kingHard"],
+   "internal": "Param_Unique の _LegendaryParam_Hard_King._ScarMeatConvert / ...",
+   "condition": "歴戦王の群 (king / kingHard) 専用の構造の中にある = 歴戦王で使われる", "confidence": "medium", "note": "...",
+   "parts": [{"key": "head", "before": {"slash": 88, "blunt": 90, "shot": 88, "fire": 15, "water": 0, "thunder": 25, ...},
+              "after": {"slash": 88, "blunt": 90, "shot": 70, "fire": 15, "water": 0, "thunder": 20, ...},
+              "changed": ["shot", "thunder"]}],
+   "unmatched": [], "elementRecommendation": {...モンスターの elementRecommendation と同じ形...}, "source": "https://github.com/..."}]
+```
+- `scope`: `arch-tempered` = 歴戦王の群の構造の中にある (`groups` にその群)。`unknown` = 群の分からない場所にあり、いつ使われるか
+  分からない (`groups: null`・確度 low。アルシュベルド)。
+- `parts[].before` は `parts[].wound` と同じ値 (生成時に確かめる)。`after` が置き換え後。`changed` は値の変わる項目。
+  `unmatched` はどの部位の傷口にも当たらない置き換え (アルシュベルドに 1 組。値だけ残す)。
+- `elementRecommendation` は置き換え後の傷口で推奨属性を計算し直したもの (同じ規則)。
+
+`individuals` = 個体の一覧。先頭が通常 (`kind: null`)、続いて `variants` の順。`kind` は quests.json の `targets[].variant` と同じ値。
+```json
+"individuals": [
+  {"kind": null, "label": "通常", "name": "アルシュベルド", "legendaryId": "NONE",
+   "groupByRank": [{"min": 1, "max": 10, "group": null, "reason": "none"}],
+   "rates": [{"group": null, "rewardRanks": [7], "health": 1.0, "attackCalm": null, "attackAngry": null, "partsVital": null,
+              "healthConfidence": "medium", "attackConfidence": "low"}],
+   "questIds": ["Awakening From a Dream", ...], "intruderQuestIds": [], "stars": [7],
+   "hitzone": {"sameAsBase": true, "confidence": "high", "woundOverrides": null, "elementRecommendation": null},
+   "threatVariant": null},
+  {"kind": "arch-tempered", "label": "歴戦王", "name": "アルシュベルド（歴戦王）", "legendaryId": "KING",
+   "groupByRank": [{"min": 1, "max": 9, "group": "king", "reason": "rank"}, {"min": 10, "max": 10, "group": "kingHard", ...}],
+   "rates": [{"group": "kingHard", "rewardRanks": [10], "health": 1.265, "attackCalm": 1.2, "attackAngry": 1.2,
+              "partsVital": 1.25, "healthConfidence": "medium", "attackConfidence": "low"}],
+   "questIds": ["Event: Unchained Arkveld", "Freedom from Solitude", "Proof of a Hero", "The Proud Child of the Wilds"],
+   "intruderQuestIds": [], "stars": [10],
+   "hitzone": {"sameAsBase": null, "confidence": "low",
+               "woundOverrides": {"head": {...}, "left-wing-blade": {"slash": 70, ..., "dragon": 30, "stun": 0}, ...},
+               "elementRecommendation": {...}, "note": "傷口の肉質の置き換えがあるが、いつ使われるか分からない ..."},
+   "threatVariant": "arch-tempered",
+   "added": {"version": "1.041", "date": "2026-02-18", "dateConfidence": "high", "note": "...", "sources": ["https://..."]},
+   "star10": {"version": "1.041", "date": "2026-02-18", ...},
+   "rewards": {"certificate": {"itemId": 787, "name": "鎖刃竜の狩猟証γ"},
+               "armorSets": [{"armorSetId": 193, "name": "シュバルカγ", "armorIds": [705, 706, 707, 708, 709]}],
+               "groupSkills": [{"skillId": 131, "name": "ヌシの魂"}], "charmFixedIds": [186, 187], "source": "..."}}]
+```
+- `label` / `name` は MHDB の個体名から (基本種と同じ名前のときは「（歴戦の個体）」を添える)。`legendaryId` は MissionData の
+  `_LegendaryID` (狂竜化・ボス個体は NONE)。
+- `groupByRank` = 報酬ランク → `legendaryParams` の群 (`group: null` は群なし = 体力の倍率 1.0)。`rates` はその個体が出る
+  クエストで実際に使われる群と倍率 (群なしの攻撃・部位の倍率は不明なので null)。確度は体力 medium・攻撃 low。
+- `questIds` = 狩猟対象として出るクエスト (★順)、`intruderQuestIds` = 乱入の可能性があるクエスト。どちらも quests.json の id
+  (wiki 由来の対応なので `meta.license` に CC BY-SA の注記)。クエストごとの体力は quests.json の `mission.targets[].healthCalc`。
+- `hitzone` (変更 2026-10-21 照合の指摘): 肉質が `parts` と同じか と、違うときの傷口の肉質。
+  - `sameAsBase`: true / false (違う) / null (分からない)。`confidence` が null なら未調査 (狂竜化・ボス個体)、low なら
+    置き換えがあるのに条件が分からない (歴戦王アルシュベルド)。
+  - `woundOverrides`: 部位 key → 置き換え後の傷口の肉質 (`parts[].wound` と同じ形)。書いていない部位は `parts[].wound` のまま。
+    置き換えが無ければ null。`sameAsBase: null` のときは「置き換わるとしたら」の参考値。
+  - `elementRecommendation`: 置き換え後の傷口で計算し直した推奨属性 (置き換えが無ければ null = モンスターのものを使う)。
+  - `note`: あるときだけ。
+  - いまの値: ウズ・トゥナの歴戦王が false (確度 medium)、アルシュベルドの歴戦王が null (low)、アルシュベルドの歴戦の個体が
+    true (medium。条件の分からない置き換えがあるので)、ほかの歴戦王が true (medium)、ほかの歴戦の個体と通常が true (high)。
+  - 画面で歴戦王の傷口を計算するときは `woundOverrides` があればその値を使う (null のときは未確定と出す)。
+- `threatVariant`: monster_threats.json の `variants` のキー (無ければ null)。
+- 歴戦王だけ `added` (追加の版 = MissionData の `_Version`、日付と出典 = tools の表)・`star10`・`rewards` (MHDB の素材から
+  狩猟証γ で作れる γ 防具と固定護石。`armorIds` は armor.json、`charmFixedIds` は charms_fixed.json の id)。
 
 ### data/monster_threats.json (CC BY-SA 4.0)
 咆哮・風圧・振動・属性やられ・状態異常の種類。防御スキルを勧めるかの判定に使う。欠損は null。
@@ -217,6 +312,25 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
   無い属性で、属性やられになるか**未確認** (自動で `blights` に足していない。画面では「未確認」と出す)。
 - 防御スキルの判定は `rules` を使う (属性耐性 `resistanceThreshold` 以上ならその属性やられは無効、など)。
 - 画面でこのファイルの内容を出すときは出典 (Monster Hunter Wiki) とライセンス (CC BY-SA 4.0) を表示する。
+- (追記 2026-10-21 段階2) `monsters[]` の各行に `variants` (個体ごとの差分) がある。いまは歴戦王の 5 体だけ中身があり、ほかは `{}`。
+  ```json
+  "variants": {"arch-tempered": {
+    "name": "ヌ・エグドラ（歴戦王）",
+    "sameAsBase": {"roar": true, "windPressure": true, "tremor": true, "blights": true, "statusEffects": true,
+                   "confidence": "medium", "reason": "..."},
+    "moveChanges": [{"text": "点火中は炎をまとい、…", "textEn": "While ignited, emits a burning aura ..."}],
+    "hazards": [{"key": "ignited-aura", "text": "点火中にまとう炎 (近くにいると継続ダメージ)",
+                 "skill": {"skill": "環境適応", "skillEn": "Adaptability", "skillId": 88, "negateLevel": 2, "levelText": {...}},
+                 "oneShot": false, "source": "https://monsterhunterwiki.org/wiki/Nu_Udra_(MHWilds)", "confidence": "high",
+                 "note": "..."}],
+    "source": "https://monsterhunterwiki.org/wiki/Nu_Udra_(MHWilds)"}}
+  ```
+  - `moveChanges` は wiki の個別ページの「Arch-Tempered」節の箇条書き。`text` は日本語 (tools の表 `MOVE_JA`。wiki の文が
+    変わって訳が合わなくなったら null)、`textEn` は wiki の英文。
+  - `hazards` は防具スキルとの関係が書かれた脅威だけ。`skill` は `rules` と同じ形 (防げるスキルが無ければ null で `noSkill` に文)。
+    `oneShot: true` = 当たると力尽きる。いまはヌ・エグドラの炎 (環境適応 Lv2)・ジン・ダハドのつむじ風 (凍結 = 拘束耐性 Lv3)・
+    ジン・ダハドのノヴァ (防げない) の 3 件。
+  - `sameAsBase` = 咆哮・風圧・振動・属性やられ・状態異常は通常と同じと見ている (変わるという記載が無い。確度 medium)。
 
 ### data/quests.json
 クエスト名・★・種類・狩猟対象・装備固定かどうか。
@@ -247,6 +361,36 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
   確度と根拠を `fixedEquipmentConfidence` / `fixedEquipmentReason` に持つ。
 - `mission` は MissionData (MHWS-in-json) と結合できたときだけ (できなければ null)。`health` などは体力倍率。
 - 画面でこのファイルの内容を出すときは出典 (Monster Hunter Wiki) とライセンス (CC BY-SA 4.0) を表示する。
+- (追記 2026-10-21 段階2) 歴戦王のために足した項目:
+  ```json
+  {"category": "event", "categoryBucket": "optional", "categoryReason": "...",
+   "availability": {"status": "permanent|inactive|active|standard|unknown",
+                    "periods": [{"from": "2026-09-23", "to": "2026-10-07", "text": "September 23 - October 7, 2026"}],
+                    "permanentFrom": "2026-08-04", "text": "August 4, 2026 / Permanently Active"},
+   "mission": {..., "maxPlayers": 4,
+     "targets": [{..., "rewardRank": 10, "paramGroup": "kingHard", "paramGroupReason": "rank",
+                  "healthCalc": {"mid": 79923, "min": 76726, "max": 83120, "adjustRange": 2,
+                                 "matchesMissionData": true, "confidence": "medium"},
+                  "attackRate": {"calm": 8.4, "angry": 8.4, "confidence": "low"},
+                  "multi": {"tableId": "a5295449-1a03-4530-a664-87de66f511c7",
+                            "health": {"2": 1.88, "3": 2.43, "4": 3}, "partsVital": {"2": 2, "3": 2.7, "4": 3.5},
+                            "confidence": "low"}}]}}
+  ```
+  - `availability` は wiki の Time Period から (時点は `meta.availabilityAsOf`)。permanent = 常設、inactive = 終了中
+    (`periods` に過去の配信期間。年の書いていない期間は from/to が null)、active = 配信中、standard = 期間の無い通常の
+    クエスト・任務。`permanentFrom` は「開始日 + Permanently Active」と書かれたものだけ。
+  - `category` は wiki の Bucket の値だが、歴戦王のクエストのページの Importance が Event なのに Bucket が optional の 2 件
+    (These Roots Run Deep / Summons from the Land Beyond) はページに合わせ、もとの値を `categoryBucket` に残す。
+  - `paramGroup` = その狩猟対象が使う `monsters.json` の `legendaryParams` の群 (群なし = null)。倍率は monsters.json から引く。
+    `paramGroupReason`: `rank` / `none` / `exe-exception:king-when-none` / `exe-exception:no-auto-hard` / `unknown` (小型)。
+  - `healthCalc` = ソロの体力。`mid` は乱数の等級 1.0 の値、`min`/`max` は `soloHealth` の両端。式と乱数の等級の確率表は
+    `meta.healthFormula` / `meta.healthGrades` (`healthGrades[adjustRange].probs` が昇順の `soloHealth` と同じ並び)。
+    再計算した値が MissionData の `soloHealth` と一致したときだけ `adjustRange`/`min`/`max` が入る。
+    MissionData に無いクエスト (フリーチャレンジなど 14 件) は `mission: null` のまま = 体力不明 (仮の値で埋めない)。
+  - `attackRate` = クエストの `attack` × 群の平常/怒りの攻撃倍率 (掛け方は推定。群なしは null)。
+  - `multi` = 人数ごとの体力・部位の耐久の倍率 (MissionData の `_Count` を人数と推定。確度 low。`maxPlayers` まで)。
+    `tableId` は MissionData の `_MultiTableId` (同じ表の行は同じ値。追記 2026-10-21 照合の指摘)。
+  - クエスト側のダメージ補正 (`_DamageSlashBlow` / `_DamageShot`) は大型の全行で 1 なので行には持たず、`meta.damageRateCheck` に残す。
 
 ## 計算モデルの方針 (app/model/damage.js)
 

@@ -8,7 +8,8 @@
 - wilds.mhdb.io /ja/monsters (大型モンスター・肉質・状態異常・報酬)
 - GitHub LartTyler/mhdb-wilds-data (部位スラッグの日本語名・英語名つきモンスター一覧) ※コミット固定
 - GitHub dzxrly/MHWS-in-json (MIT) の release PROCESSED_DATA (damage_calculator) と
-  natives の生ファイル (EnemyData / Resident / ParamPack / Param_Parts / PartsLost) ※コミット固定
+  natives の生ファイル (EnemyData / Resident / ParamPack / Param_Parts / PartsLost / Param_Legendary /
+  Param_Unique) ※コミット固定
 - monsterhunterwiki.org Bucket API (CC BY-SA 4.0) の monsters_games と quests、
   ページ「MHWilds/Quests/Arena Counter」のウィキテキスト (クエストの節分け)
 """
@@ -21,6 +22,7 @@ import re
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import zipfile
@@ -49,6 +51,9 @@ WIKI_PAGE = 500  # Bucket API の 1 回の上限
 WIKI_ARENA_COUNTER_URL = WIKI_API + "?" + urllib.parse.urlencode(
     {"action": "parse", "page": "MHWilds/Quests/Arena Counter", "prop": "wikitext", "format": "json"})
 
+# 体力の乱数の等級 (M3〜P3) と、等級の確率表 (MHWS-in-json natives。上の MHWS_SHA に固定)
+DIFFICULTY_REL = "natives/Enemy/CommonData/Data/EmCommonDifficulty2.user.3.json"
+
 MG_FIELDS = ["page_name", "page_name_sub", "overview_page", "size_class", "elements",
              "status_effects", "weakest_to", "roar", "wind_pressure", "tremor"]
 QUEST_FIELDS = ["page_name", "page_name_sub", "order", "name", "game", "location", "locale", "rank",
@@ -71,14 +76,23 @@ def _now() -> str:
     return _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0).isoformat()
 
 
-def _http_get(url: str, retries: int = 3) -> bytes:
-    """GET して本文を返す。失敗は握り潰さず、数回やり直してから例外にする。"""
+def _http_get(url: str, retries: int = 3, *, allow_missing: bool = False) -> bytes | None:
+    """GET して本文を返す。失敗は握り潰さず、数回やり直してから例外にする。
+
+    allow_missing=True のときだけ、HTTP 404 (コミット固定の URL にファイルが無い) を None で返す。
+    ほかの失敗 (タイムアウト・5xx など) は allow_missing でも例外にする。
+    """
     last = None
     for i in range(retries):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
             with urllib.request.urlopen(req, timeout=120) as r:
                 return r.read()
+        except urllib.error.HTTPError as e:
+            if allow_missing and e.code == 404:
+                return None
+            last = e
+            time.sleep(2 * (i + 1))
         except Exception as e:  # noqa: BLE001 - 再試行してから投げ直す
             last = e
             time.sleep(2 * (i + 1))
@@ -94,6 +108,33 @@ def _fetch(rel: str, url: str, manifest: dict, refresh: bool, *, binary: bool = 
     body = _http_get(url)
     if not binary:
         json.loads(body.decode("utf-8"))  # JSON として読めることを確かめる
+    path.write_bytes(body)
+    manifest["files"][rel] = {"url": url, "fetchedAt": _now()}
+    _save_manifest(manifest)
+    return path
+
+
+def _fetch_optional(rel: str, url: str, manifest: dict, refresh: bool) -> Path | None:
+    """_fetch と同じだが、取り込み元にファイルが無い (HTTP 404) ときは None を返す。
+
+    無かったことも manifest に {"missing": true} で記録する (次からは取りに行かない。--refresh で確かめ直す)。
+    """
+    path = CACHE / rel
+    ent = manifest["files"].get(rel)
+    if ent and not refresh:
+        if ent.get("missing"):
+            return None
+        if path.exists():
+            return path
+    body = _http_get(url, allow_missing=True)
+    if body is None:
+        if path.exists():
+            path.unlink()
+        manifest["files"][rel] = {"url": url, "fetchedAt": _now(), "missing": True, "status": 404}
+        _save_manifest(manifest)
+        return None
+    json.loads(body.decode("utf-8"))  # JSON として読めることを確かめる
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(body)
     manifest["files"][rel] = {"url": url, "fetchedAt": _now()}
     _save_manifest(manifest)
@@ -245,9 +286,17 @@ def fetch_natives(em_ids: list[str], manifest: dict, refresh: bool) -> dict:
         if leg_path:
             leg_rel = "natives/" + leg_path.replace("GameDesign/", "") + ".3.json"
             _fetch(leg_rel, MHWS_RAW + leg_path + ".3.json", manifest, refresh)
+        # モンスター固有のパラメータ (EmParamUnique)。ParamPack からは参照されていないので、決まった名前
+        # (Data/<EM>_Param_Unique.user) で取る。無いモンスターがある (ドドブランゴ EM0022 は 404)。
+        # 歴戦王専用の傷口の肉質の置き換え (_ScarMeatConvert) などがここにある (monsters_legendary.unique_scan)
+        uniq_path = f"GameDesign/Enemy/{d1}/{d2}/Data/{base}_Param_Unique.user"
+        uniq_rel = "natives/" + uniq_path.replace("GameDesign/", "") + ".3.json"
+        if _fetch_optional(uniq_rel, MHWS_RAW + uniq_path + ".3.json", manifest, refresh) is None:
+            uniq_path, uniq_rel = None, None
         result[em] = {"resident": res_rel, "partsPath": parts_path, "parts": parts_rel,
                       "paramPack": pack_rel, "partsLostPath": lost_path, "partsLost": lost_rel,
-                      "legendaryPath": leg_path, "legendary": leg_rel}
+                      "legendaryPath": leg_path, "legendary": leg_rel,
+                      "uniquePath": uniq_path, "unique": uniq_rel}
     (CACHE / "natives_index.json").write_text(json.dumps(result, ensure_ascii=False, indent=1, sort_keys=True),
                                               encoding="utf-8")
     return result
@@ -276,6 +325,47 @@ def fetch_database_xlsx(lang: str, member: str, manifest: dict, refresh: bool) -
     return out
 
 
+def wiki_page_rel(title: str) -> str:
+    """wiki のページ名 → キャッシュの相対パス (記号は _ に置き換える)。"""
+    return "wiki_pages/" + re.sub(r"[^A-Za-z0-9]+", "_", title).strip("_") + ".json"
+
+
+def wiki_page_url(title: str) -> str:
+    return WIKI_API + "?" + urllib.parse.urlencode(
+        {"action": "parse", "page": title, "prop": "wikitext", "format": "json"})
+
+
+def at_wiki_titles() -> list[str]:
+    """歴戦王まわりで本文を読む wiki のページ名。
+
+    - 歴戦王のいるモンスター (MHDB の variants に arch-tempered がある) の個別ページ「<英語名> (MHWilds)」。
+      「==== Arch-Tempered ====」の節 (歴戦王の行動の変化) を読む
+    - 歴戦王が狩猟対象のクエスト (Bucket の goal_icon_types に「Arch Tempered」がある) の個別ページ。
+      Infobox の Importance (Bucket の important と食い違うことがある) を読む
+    """
+    mh = json.loads((CACHE / "mhdb_monsters_ja.json").read_text(encoding="utf-8"))
+    lm = json.loads((CACHE / "mhdbdata_LargeMonsters.json").read_text(encoding="utf-8"))
+    en = {int(m["game_id"]): m["names"]["en"] for m in lm}
+    titles = [f"{en[m['gameId']]} (MHWilds)" for m in mh
+              if m.get("kind") == "large" and any(v["kind"] == "arch-tempered" for v in m["variants"])]
+    q = json.loads((CACHE / "wiki_quests_mhwilds.json").read_text(encoding="utf-8"))
+    titles += [r["page_name"] for r in q["rows"] if "Arch Tempered" in (r.get("goal_icon_types") or [])]
+    return sorted(set(titles))
+
+
+def fetch_wiki_pages(titles: list[str], manifest: dict, refresh: bool) -> None:
+    """wiki のページのウィキテキストを 1 ページずつ取る (MediaWiki API の parse)。"""
+    for t in titles:
+        rel = wiki_page_rel(t)
+        if (CACHE / rel).exists() and not refresh and rel in manifest["files"]:
+            continue
+        _fetch(rel, wiki_page_url(t), manifest, True)
+        d = json.loads((CACHE / rel).read_text(encoding="utf-8"))
+        if "error" in d:
+            raise RuntimeError(f"wiki のページが取れない: {t}: {d['error']}")
+        time.sleep(1)  # wiki に負担をかけない
+
+
 def fetch_all(refresh: bool = False) -> None:
     CACHE.mkdir(parents=True, exist_ok=True)
     manifest = _load_manifest()
@@ -300,6 +390,10 @@ def fetch_all(refresh: bool = False) -> None:
     fetch_wiki_quests(manifest, refresh)
     # Arena Counter のページ (クエストの節分け: Arena / Challenge / Free Challenge)。フリーチャレンジの装備の判定に使う
     _fetch("wiki_arena_counter.json", WIKI_ARENA_COUNTER_URL, manifest, refresh)
+    # 歴戦王: 体力の乱数の等級と確率 (EmCommonDifficulty2) と、wiki の個別ページ (行動の変化・クエストの種別)
+    _fetch(DIFFICULTY_REL, MHWS_RAW + "GameDesign/Enemy/CommonData/Data/EmCommonDifficulty2.user.3.json",
+           manifest, refresh)
+    fetch_wiki_pages(at_wiki_titles(), manifest, refresh)
 
 
 def enemy_id_map(path: Path) -> dict[int, str]:

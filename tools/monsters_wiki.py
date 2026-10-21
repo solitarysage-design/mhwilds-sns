@@ -12,6 +12,7 @@ from collections import Counter
 
 import openpyxl
 
+import monsters_legendary as legendary
 from monsters_fetch import CACHE
 from monsters_parts import _load
 
@@ -236,19 +237,29 @@ def _strip_tags(s) -> str:
     return re.sub(r"<[^>]+>", "", s or "").strip()
 
 
+def mission_columns(head: tuple, sub: tuple) -> dict[str, int]:
+    """MissionData の 2 段の見出し → {列名: 列番号}。2 段目がある列は「上段|下段」(例 '_Count = 2|_Health')。"""
+    col, cur = {}, None
+    for i, (a, b) in enumerate(zip(head, sub)):
+        if a is not None:
+            cur = a
+        if cur is None:
+            continue
+        col.setdefault(f"{cur}|{b}" if b else cur, i)
+    return col
+
+
 def load_missions() -> dict[str, dict]:
     """MissionData.xlsx (日英) → {missionId: {...}}。対象モンスターは続きの行 (_MissionId 空) にも並ぶ。"""
     def rows(lang):
         ws = openpyxl.load_workbook(CACHE / f"db_{lang}/MissionData.xlsx", read_only=True).worksheets[0]
         return list(ws.iter_rows(values_only=True))
     ja, en = rows("ja-JP"), rows("en-US")
-    head = ja[0]
-    col = {}
-    for i, h in enumerate(head):
-        if h is not None and h not in col:
-            col[h] = i
+    col = mission_columns(ja[0], ja[1])
     need = ["_MissionId", "_QuestLv", "_TitleMsg", "MonsterName", "_TargetType", "_LegendaryID", "SoloHealth",
-            "_Health", "_Attack", "_PartsVital", "_Version", "_QuestType", "_Stage"]
+            "_Health", "_Attack", "_PartsVital", "_Version", "_QuestType", "_Stage",
+            "_RewardRank", "_DamageSlashBlow", "_DamageShot", "_MultiTableId", "_MaxPlayerNum"]
+    need += [f"_Count = {n}|{k}" for n in (2, 3, 4) for k in ("_Health", "_Attack", "_PartsVital")]
     for n in need:
         if n not in col:
             raise ValueError(f"MissionData に列 {n} が無い")
@@ -259,16 +270,22 @@ def load_missions() -> dict[str, dict]:
             out[cur] = {"missionId": cur, "questLv": rj[col["_QuestLv"]],
                         "nameJa": _strip_tags(rj[col["_TitleMsg"]]), "nameEn": _strip_tags(re_[col["_TitleMsg"]]),
                         "questType": rj[col["_QuestType"]], "version": rj[col["_Version"]],
-                        "stage": rj[col["_Stage"]], "targets": []}
+                        "stage": rj[col["_Stage"]], "maxPlayers": rj[col["_MaxPlayerNum"]], "targets": []}
         if cur is None or not rj[col["MonsterName"]]:
             continue
         solo = rj[col["SoloHealth"]]
         solo_list = [int(x) for x in re.findall(r"\d+", str(solo))] if solo is not None else []
+        rank = re.fullmatch(r"REWARD_RANK_(\d+)", str(rj[col["_RewardRank"]] or ""))
         out[cur]["targets"].append({
             "nameJa": rj[col["MonsterName"]], "targetType": rj[col["_TargetType"]],
             "legendary": rj[col["_LegendaryID"]],
             "health": rj[col["_Health"]], "attack": rj[col["_Attack"]], "partsVital": rj[col["_PartsVital"]],
             "soloHealth": solo_list,
+            "rewardRank": int(rank.group(1)) if rank else None,
+            "damageSlashBlow": rj[col["_DamageSlashBlow"]], "damageShot": rj[col["_DamageShot"]],
+            "multiTableId": rj[col["_MultiTableId"]],
+            "multi": {n: {"health": rj[col[f"_Count = {n}|_Health"]], "attack": rj[col[f"_Count = {n}|_Attack"]],
+                          "partsVital": rj[col[f"_Count = {n}|_PartsVital"]]} for n in (2, 3, 4)},
         })
     return out
 
@@ -376,6 +393,8 @@ def build_quests(monsters: list[dict]) -> tuple[list[dict], dict]:
             ja2id.setdefault(n, m["id"])
     missions = load_missions()
     sections = arena_sections()
+    health = legendary.HealthModel(monsters)
+    as_of = legendary.fetched_date("wiki_quests_mhwilds.json")
     by_norm: dict[str, list[dict]] = {}
     for ms in missions.values():
         by_norm.setdefault(_norm(ms["nameEn"]), []).append(ms)
@@ -388,7 +407,10 @@ def build_quests(monsters: list[dict]) -> tuple[list[dict], dict]:
 
     report = {"rows": len(rows), "pages": data["pages"], "missionMatched": 0, "missionUnmatched": [],
               "missionFuzzy": [], "starsDiffer": [], "unmappedTargets": Counter(), "unmappedMissionMonsters": Counter(),
-              "targetMismatch": [], "unmappedIntruders": Counter(), "variantMismatch": []}
+              "targetMismatch": [], "unmappedIntruders": Counter(), "variantMismatch": [],
+              "healthChecked": 0, "healthMismatch": [], "damageRateRows": 0, "damageRateNot1": [],
+              "categoryOverride": [],
+              "availability": Counter()}
     out = []
     for r in sorted(rows, key=lambda x: x["name"]):
         icons = r.get("goal_icon_names") or []
@@ -455,11 +477,33 @@ def build_quests(monsters: list[dict]) -> tuple[list[dict], dict]:
                 mid = ja2id.get(t["nameJa"])
                 if mid is None:
                     report["unmappedMissionMonsters"][t["nameJa"]] += 1
-                mts.append({"monsterId": mid, "nameJa": t["nameJa"],
-                            "variant": LEGENDARY.get(t["legendary"]) if t["legendary"] in LEGENDARY else None,
-                            "legendaryId": t["legendary"], "targetType": t["targetType"],
-                            "health": t["health"], "attack": t["attack"], "partsVital": t["partsVital"],
-                            "soloHealth": t["soloHealth"]})
+                mt = {"monsterId": mid, "nameJa": t["nameJa"],
+                      "variant": LEGENDARY.get(t["legendary"]) if t["legendary"] in LEGENDARY else None,
+                      "legendaryId": t["legendary"], "targetType": t["targetType"],
+                      "health": t["health"], "attack": t["attack"], "partsVital": t["partsVital"],
+                      "soloHealth": t["soloHealth"]}
+                if mid is not None:
+                    # 歴戦の群・体力の再計算 (MissionData の SoloHealth と照合)・攻撃の倍率の目安
+                    mt.update(health.target(mid, t["legendary"], t["rewardRank"], t["health"], t["attack"],
+                                            t["soloHealth"]))
+                    hc = mt["healthCalc"]
+                    if hc is not None:
+                        report["healthChecked"] += 1
+                        if not hc["matchesMissionData"]:
+                            report["healthMismatch"].append(f"{r['name']} {t['nameJa']} 計算 {hc['mid']} / "
+                                                            f"MissionData {t['soloHealth']}")
+                else:
+                    mt.update({"rewardRank": t["rewardRank"], "paramGroup": None, "paramGroupReason": "unknown",
+                               "healthCalc": None, "attackRate": None})
+                # クエスト側のダメージ補正 (切断・打撃 / 弾)。全部 1 なので行には持たず、件数を meta に残す
+                # (1 でない行があれば report に出る。値の無い行 = 小型は数えない)
+                if (t["damageSlashBlow"], t["damageShot"]) != (None, None):
+                    report["damageRateRows"] += 1
+                    if (t["damageSlashBlow"], t["damageShot"]) != (1, 1):
+                        report["damageRateNot1"].append(
+                            f"{r['name']} {t['nameJa']} {t['damageSlashBlow']}/{t['damageShot']}")
+                mt["multi"] = legendary.multi_info(t, ms["maxPlayers"])
+                mts.append(mt)
             wiki_ids = sorted(t["monsterId"] for t in targets if t["large"] for _ in range(t["count"]))
             mis_ids = sorted(t["monsterId"] for t in mts if t["monsterId"] is not None)
             if wiki_ids != mis_ids:
@@ -474,11 +518,24 @@ def build_quests(monsters: list[dict]) -> tuple[list[dict], dict]:
                 report["variantMismatch"].append(f"{r['name']} wiki={wiki_v} / MissionData={mis_v}")
             mission = {"missionId": ms["missionId"], "match": how, "questLv": ms["questLv"],
                        "questType": ms["questType"], "version": ms["version"], "stage": ms["stage"],
-                       "targets": mts}
+                       "maxPlayers": ms["maxPlayers"], "targets": mts}
         else:
             report["missionUnmatched"].append(r["name"])
 
         locale = (r.get("locale") or "").split("|")[0].strip() or None
+        category = (r.get("important") or "").lower() or None
+        cat_extra = {}
+        # Bucket の important がページの Infobox と食い違うものがある (歴戦王のクエストのページだけ取得している)。
+        # ページが Event なのに Bucket が optional のときだけページに合わせる
+        imp = legendary.quest_page_importance(r["page_name"])
+        if imp == "Event" and category == "optional":
+            cat_extra = {"categoryBucket": category,
+                         "categoryReason": "wiki の Bucket では optional だが、クエストのページの Importance は Event "
+                                           "(配信期間 Time Period もある)。ページに合わせた"}
+            report["categoryOverride"].append(f"{r['name']}: {category} → event")
+            category = "event"
+        avail = legendary.availability(r, category, as_of)
+        report["availability"][avail["status"]] += 1
         out.append({
             "id": r["name"],
             "name": ms["nameJa"] if ms else r["name"],
@@ -487,7 +544,9 @@ def build_quests(monsters: list[dict]) -> tuple[list[dict], dict]:
             "stars": r.get("stars"),
             "rank": (r.get("rank") or "").lower() or None,
             "type": (r.get("quest_type") or "").lower() or None,
-            "category": (r.get("important") or "").lower() or None,
+            "category": category,
+            **cat_extra,
+            "availability": avail,
             "targets": targets,
             "largeTargetCount": large_count,
             "multi": large_count >= 2,
@@ -505,6 +564,9 @@ def build_quests(monsters: list[dict]) -> tuple[list[dict], dict]:
     report["unmappedTargets"] = dict(report["unmappedTargets"])
     report["unmappedMissionMonsters"] = dict(report["unmappedMissionMonsters"])
     report["unmappedIntruders"] = dict(report["unmappedIntruders"])
+    report["availability"] = dict(report["availability"])
+    report["availabilityAsOf"] = as_of
+    report["healthGrades"] = health.grade_tables()
     # Arena Counter のページに載っているのに Bucket の quests に無いクエスト (名前の付け方のずれの検出用)
     report["arenaSectionNotInBucket"] = sorted(set(sections) - set(names))
     report["arenaSections"] = dict(Counter(sections.values()))

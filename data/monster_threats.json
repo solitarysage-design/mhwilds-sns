@@ -4,9 +4,14 @@
    "https://wilds.mhdb.io/en/skills",
    "https://wilds.mhdb.io/ja/skills",
    "https://monsterhunterwiki.org/api.php",
+   "https://monsterhunterwiki.org/wiki/Arkveld_(MHWilds)",
+   "https://monsterhunterwiki.org/wiki/Jin_Dahaad_(MHWilds)",
+   "https://monsterhunterwiki.org/wiki/Nu_Udra_(MHWilds)",
+   "https://monsterhunterwiki.org/wiki/Rey_Dau_(MHWilds)",
+   "https://monsterhunterwiki.org/wiki/Uth_Duna_(MHWilds)",
    "https://monsterhunterwiki.org/wiki/Status_Effects_(MHWilds)"
   ],
-  "generatedAt": "2026-10-21T03:12:12+00:00",
+  "generatedAt": "2026-10-21T07:45:40+00:00",
   "gameVersion": "1.042",
   "nativeVersion": "1.42.0.2",
   "license": {
@@ -14,6 +19,7 @@
    "url": "https://creativecommons.org/licenses/by-sa/4.0/",
    "attribution": "Monster Hunter Wiki (monsterhunterwiki.org) の寄稿者。Bucket API の monsters_games / quests と Status Effects (MHWilds) を加工。このファイルも同じ CC BY-SA 4.0 で提供する。"
   },
+  "variants": "variants は個体ごとの差分。いまは歴戦王 ('arch-tempered') だけで、wiki の個別ページの「Arch-Tempered」節の箇条書き (moveChanges。text は日本語、textEn は wiki の英文) と、防具スキルとの関係が書かれた脅威 (hazards。skill は rules と同じ形。oneShot=当たると力尽きる)。sameAsBase は咆哮・風圧・振動・属性やられ・状態異常が通常と同じと見ているもの (確度つき)。",
   "note": "咆哮 roar: none/weak(咆哮【小】)/strong(咆哮【大】)。風圧 windPressure: none/minor(風圧【小】)/major(風圧【大】)/dragon(龍風圧)。振動 tremor: none/minor(振動【小】)/major(振動【大】)。wiki に値が無いものは null。blights は wiki の status_effects の属性 (属性やられ)。blightsUncertain は攻撃属性 (attackElements) にあるのに blights に無いもの (属性やられになるか未確認。blights には足していない)。",
   "wiki": {
    "rowsScanned": 2729,
@@ -301,7 +307,8 @@
    "statusEffects": [],
    "issues": [
     "wiki の値がマークアップの生文字列だったため 'Dragon Wind Pressure' を読み取った"
-   ]
+   ],
+   "variants": {}
   },
   {
    "monsterId": 2,
@@ -316,7 +323,8 @@
    "blights": [],
    "blightsUncertain": [],
    "statusEffects": [],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 3,
@@ -338,7 +346,45 @@
    ],
    "blightsUncertain": [],
    "statusEffects": [],
-   "issues": []
+   "issues": [],
+   "variants": {
+    "arch-tempered": {
+     "name": "レ・ダウ（歴戦王）",
+     "sameAsBase": {
+      "roar": true,
+      "windPressure": true,
+      "tremor": true,
+      "blights": true,
+      "statusEffects": true,
+      "confidence": "medium",
+      "reason": "wiki の monsters_games は個体ごとの行を持たず (歴戦王も通常と同じ行)、個別ページの歴戦王の節にも咆哮・風圧・振動・属性やられ・状態異常が変わるという記載が無い。ゲームデータの行動ロジックに歴戦王だけの分岐はあるが、技名や効果までは引けていない"
+     },
+     "moveChanges": [
+      {
+       "text": "従来の技が速くなり、新しい連携が加わる",
+       "textEn": "Previous moves are performed faster with new combos."
+      },
+      {
+       "text": "飛び立つときに真下へ雷のビームを撃つ技が加わる",
+       "textEn": "Gains a new downward lightning beam that it uses to take off."
+      },
+      {
+       "text": "帯電中は、物理攻撃のあとに時間差の雷が残る",
+       "textEn": "While in a charged state, all physical attacks leave behind delayed electric aftershocks."
+      },
+      {
+       "text": "帯電ビームの着弾点で、時間差の雷の爆発が起きる",
+       "textEn": "Charged lightning beams create delayed electric explosions at the impact site."
+      },
+      {
+       "text": "2 連ビームのあとに弱点をさらさなくなる",
+       "textEn": "No longer exposes a weak point after its double lightning beam."
+      }
+     ],
+     "hazards": [],
+     "source": "https://monsterhunterwiki.org/wiki/Rey_Dau_(MHWilds)"
+    }
+   }
   },
   {
    "monsterId": 4,
@@ -360,7 +406,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 5,
@@ -408,7 +455,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 6,
@@ -442,7 +490,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 7,
@@ -464,7 +513,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 8,
@@ -499,7 +549,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 9,
@@ -521,7 +572,8 @@
    ],
    "blightsUncertain": [],
    "statusEffects": [],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 10,
@@ -547,7 +599,8 @@
     "roar が wiki に無い (null)",
     "windPressure が wiki に無い (null)",
     "tremor が wiki に無い (null)"
-   ]
+   ],
+   "variants": {}
   },
   {
    "monsterId": 11,
@@ -562,7 +615,8 @@
    "blights": [],
    "blightsUncertain": [],
    "statusEffects": [],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 12,
@@ -584,7 +638,8 @@
    ],
    "blightsUncertain": [],
    "statusEffects": [],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 13,
@@ -613,7 +668,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 14,
@@ -628,7 +684,8 @@
    "blights": [],
    "blightsUncertain": [],
    "statusEffects": [],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 15,
@@ -668,7 +725,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 16,
@@ -690,7 +748,8 @@
    ],
    "blightsUncertain": [],
    "statusEffects": [],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 17,
@@ -720,7 +779,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 18,
@@ -742,7 +802,8 @@
    ],
    "blightsUncertain": [],
    "statusEffects": [],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 19,
@@ -764,7 +825,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 20,
@@ -786,7 +848,53 @@
    ],
    "blightsUncertain": [],
    "statusEffects": [],
-   "issues": []
+   "issues": [],
+   "variants": {
+    "arch-tempered": {
+     "name": "アルシュベルド（歴戦王）",
+     "sameAsBase": {
+      "roar": true,
+      "windPressure": true,
+      "tremor": true,
+      "blights": true,
+      "statusEffects": true,
+      "confidence": "medium",
+      "reason": "wiki の monsters_games は個体ごとの行を持たず (歴戦王も通常と同じ行)、個別ページの歴戦王の節にも咆哮・風圧・振動・属性やられ・状態異常が変わるという記載が無い。ゲームデータの行動ロジックに歴戦王だけの分岐はあるが、技名や効果までは引けていない"
+     },
+     "moveChanges": [
+      {
+       "text": "従来の技がずっと速くなり、多くの技でタイミングや動きが変わる",
+       "textEn": "Previous attacks are performed much faster, with many having altered timings or behavior."
+      },
+      {
+       "text": "多くの技を間を置かずにつなぎ、どの技からも別の技に続きうる",
+       "textEn": "Can combo numerous attacks in a row without pause, with each attack potentially chaining into several other ones."
+      },
+      {
+       "text": "新しい技を使う",
+       "textEn": "Can perform additional new attacks."
+      },
+      {
+       "text": "帯電していないとき、鎖翼刃に当たった属性攻撃を吸って早く帯電する。帯電は鎖翼刃に属性攻撃を当てないと抑えられない",
+       "textEn": "If not charged, can now absorb elemental attacks that hit its chainblades to enter its charged state faster; the charged state can only be suppressed by dealing elemental attacks to the chainblades."
+      },
+      {
+       "text": "体力が一定以下になると護竜の力を出して帯電を強め、護竜アルシュベルドのように結晶を作る型の技が増える",
+       "textEn": "Below a certain amount of HP, begins manifesting Guardian abilities to augment its charged state, giving it Wylkrystal-creating variants of many previous attacks akin to Guardian Arkveld."
+      },
+      {
+       "text": "護竜の力を出している間は、さらに新しい技を使う",
+       "textEn": "While manifesting Guardian abilities, gains even more new attacks."
+      },
+      {
+       "text": "最初に護竜の力を出したあとは、すぐに壊さない傷を急速に治す",
+       "textEn": "After first manifesting Guardian abilities, rapidly heals any Wounds that are not destroyed quickly."
+      }
+     ],
+     "hazards": [],
+     "source": "https://monsterhunterwiki.org/wiki/Arkveld_(MHWilds)"
+    }
+   }
   },
   {
    "monsterId": 21,
@@ -816,7 +924,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 22,
@@ -844,7 +953,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 23,
@@ -859,7 +969,8 @@
    "blights": [],
    "blightsUncertain": [],
    "statusEffects": [],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 24,
@@ -888,7 +999,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 25,
@@ -910,7 +1022,41 @@
    ],
    "blightsUncertain": [],
    "statusEffects": [],
-   "issues": []
+   "issues": [],
+   "variants": {
+    "arch-tempered": {
+     "name": "ウズ・トゥナ（歴戦王）",
+     "sameAsBase": {
+      "roar": true,
+      "windPressure": true,
+      "tremor": true,
+      "blights": true,
+      "statusEffects": true,
+      "confidence": "medium",
+      "reason": "wiki の monsters_games は個体ごとの行を持たず (歴戦王も通常と同じ行)、個別ページの歴戦王の節にも咆哮・風圧・振動・属性やられ・状態異常が変わるという記載が無い。ゲームデータの行動ロジックに歴戦王だけの分岐はあるが、技名や効果までは引けていない"
+     },
+     "moveChanges": [
+      {
+       "text": "従来の技の動きが大きくなり、攻めが激しくなる",
+       "textEn": "Previous moves have greatly increased mobility and are performed more aggressively."
+      },
+      {
+       "text": "水のベールがとても壊れにくくなる",
+       "textEn": "Water veils have greatly increased durability."
+      },
+      {
+       "text": "ベールをまとった攻撃で波が多く出て、ダメージと押し出しが大きくなる",
+       "textEn": "Attacks with the water veil active produce more frequent waves that deal more damage and pushback."
+      },
+      {
+       "text": "新しい技を使う",
+       "textEn": "Can perform additional new attacks."
+      }
+     ],
+     "hazards": [],
+     "source": "https://monsterhunterwiki.org/wiki/Uth_Duna_(MHWilds)"
+    }
+   }
   },
   {
    "monsterId": 26,
@@ -940,7 +1086,83 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {
+    "arch-tempered": {
+     "name": "ジン・ダハド（歴戦王）",
+     "sameAsBase": {
+      "roar": true,
+      "windPressure": true,
+      "tremor": true,
+      "blights": true,
+      "statusEffects": true,
+      "confidence": "medium",
+      "reason": "wiki の monsters_games は個体ごとの行を持たず (歴戦王も通常と同じ行)、個別ページの歴戦王の節にも咆哮・風圧・振動・属性やられ・状態異常が変わるという記載が無い。ゲームデータの行動ロジックに歴戦王だけの分岐はあるが、技名や効果までは引けていない"
+     },
+     "moveChanges": [
+      {
+       "text": "従来の技を激しくつなぎ、のしかかりを 2 回続けることがある",
+       "textEn": "Combos previous attacks more aggressively; body slam may be performed twice in a row."
+      },
+      {
+       "text": "最終エリアの技を第3エリアでも使う",
+       "textEn": "Can use attacks exclusive to the final area in the third area."
+      },
+      {
+       "text": "胴体から冷気を出して短いつむじ風を作る (ダメージは無いが、凍結が急速にたまる)",
+       "textEn": "Expelling ice mist from its torso creates a short-lived whirlwind, dealing no damage but inflicting rapid Frostblight buildup."
+      },
+      {
+       "text": "真下への氷の爆発のあと、時間差で氷柱が爆発する (ダメージがあり、動きをさえぎる)",
+       "textEn": "Downward ice explosion produces an additional delayed explosion of icicles, dealing damage and obstructing movement."
+      },
+      {
+       "text": "新しい技を使う",
+       "textEn": "Can perform additional new attacks."
+      },
+      {
+       "text": "構造物に巻きついている間、ハンターの周りに爆発する氷柱を出す",
+       "textEn": "While coiled around structures, creates clusters of exploding icicles around players."
+      },
+      {
+       "text": "ノヴァのためが速くなり、当たると確定で力尽きる。最終エリアでは、ため中に地面から爆発する氷柱も出す",
+       "textEn": "Nova attack has a faster charge-up time and is a guaranteed faint if it connects. Additionally, in the final area, it produces additional clusters of exploding icicles from the ground while charging."
+      }
+     ],
+     "hazards": [
+      {
+       "key": "frostblight-whirlwind",
+       "text": "冷気のつむじ風 (ダメージは無いが、凍結が急速にたまる)",
+       "skill": {
+        "skill": "拘束耐性",
+        "skillEn": "Bind Resistance",
+        "skillId": 147,
+        "negateLevel": 3,
+        "mitigateLevel": 1,
+        "levelText": {
+         "1": "糸拘束状態と凍結状態から早く復帰できるようになる",
+         "2": "糸拘束状態と凍結状態からとても早く復帰できるようになる",
+         "3": "糸拘束状態と凍結状態にならない"
+        }
+       },
+       "oneShot": false,
+       "source": "https://monsterhunterwiki.org/wiki/Jin_Dahaad_(MHWilds)",
+       "confidence": "medium",
+       "note": "凍結を防ぐスキルは rules.status.frostblight と同じ (wiki の Status Effects: 拘束耐性 Lv3 で凍結にならない)"
+      },
+      {
+       "key": "nova",
+       "text": "ノヴァ (当たると確定で力尽きる)",
+       "skill": null,
+       "oneShot": true,
+       "source": "https://monsterhunterwiki.org/wiki/Jin_Dahaad_(MHWilds)",
+       "confidence": "high",
+       "noSkill": "防げる防具スキルの記載は無い (避ける)"
+      }
+     ],
+     "source": "https://monsterhunterwiki.org/wiki/Jin_Dahaad_(MHWilds)"
+    }
+   }
   },
   {
    "monsterId": 27,
@@ -962,7 +1184,60 @@
    ],
    "blightsUncertain": [],
    "statusEffects": [],
-   "issues": []
+   "issues": [],
+   "variants": {
+    "arch-tempered": {
+     "name": "ヌ・エグドラ（歴戦王）",
+     "sameAsBase": {
+      "roar": true,
+      "windPressure": true,
+      "tremor": true,
+      "blights": true,
+      "statusEffects": true,
+      "confidence": "medium",
+      "reason": "wiki の monsters_games は個体ごとの行を持たず (歴戦王も通常と同じ行)、個別ページの歴戦王の節にも咆哮・風圧・振動・属性やられ・状態異常が変わるという記載が無い。ゲームデータの行動ロジックに歴戦王だけの分岐はあるが、技名や効果までは引けていない"
+     },
+     "moveChanges": [
+      {
+       "text": "従来の技が速く激しくなり、届く距離が伸びる",
+       "textEn": "Previous moves are performed faster and more aggressively, with further reach."
+      },
+      {
+       "text": "点火中は炎をまとい、近くのハンターに継続ダメージを与える (環境適応 Lv2 で無効)",
+       "textEn": "While ignited, emits a burning aura that deals constant damage to nearby hunters. This can be negated by Level 2 Adaptability."
+      },
+      {
+       "text": "ダメージで解除させない限り点火が続く",
+       "textEn": "No longer exits the ignited state unless forced out of it via damage."
+      },
+      {
+       "text": "新しい技を使う",
+       "textEn": "Can perform additional new attacks."
+      }
+     ],
+     "hazards": [
+      {
+       "key": "ignited-aura",
+       "text": "点火中にまとう炎 (近くにいると継続ダメージ)",
+       "skill": {
+        "skill": "環境適応",
+        "skillEn": "Adaptability",
+        "skillId": 88,
+        "negateLevel": 2,
+        "levelText": {
+         "1": "暑さ、寒さの影響を無効化する",
+         "2": "地形によるダメージを無効化する"
+        }
+       },
+       "oneShot": false,
+       "source": "https://monsterhunterwiki.org/wiki/Nu_Udra_(MHWilds)",
+       "confidence": "high",
+       "note": "wiki の歴戦王の節に「環境適応 Lv2 で無効」と明記。環境適応 Lv2 の効果文は「地形によるダメージを無効化する」"
+      }
+     ],
+     "source": "https://monsterhunterwiki.org/wiki/Nu_Udra_(MHWilds)"
+    }
+   }
   },
   {
    "monsterId": 28,
@@ -991,7 +1266,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 29,
@@ -1020,7 +1296,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 30,
@@ -1049,7 +1326,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 31,
@@ -1071,7 +1349,8 @@
    ],
    "blightsUncertain": [],
    "statusEffects": [],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 32,
@@ -1093,7 +1372,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 33,
@@ -1129,7 +1409,8 @@
      "nameConfidence": "high"
     }
    ],
-   "issues": []
+   "issues": [],
+   "variants": {}
   },
   {
    "monsterId": 34,
@@ -1151,7 +1432,8 @@
    ],
    "blightsUncertain": [],
    "statusEffects": [],
-   "issues": []
+   "issues": [],
+   "variants": {}
   }
  ],
  "otherMonsters": [

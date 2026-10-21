@@ -8,6 +8,7 @@
 - damage_calculator (MHWS-in-json PROCESSED_DATA) から 通常/破壊後/custom1〜5 の肉質と傷口の肉質
 - 生の Param_Parts から 気絶の肉質 (_Stun)・弱点 (_WeakPointArray)・破壊対象 (_PartsBreakArray)
 - 生の PartsLost から 切断できる部位
+- 生の Param_Unique から 傷口の肉質の置き換え (歴戦王など。monsters_legendary.wound_conversions)
 
 MHDB の肉質と damage_calculator・生データの通常肉質は全部位で一致することを確かめてから使う
 (一致しなければ例外で止める)。
@@ -20,6 +21,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from monsters_fetch import CACHE, enemy_id_map
+from monsters_legendary import legendary_params, unique_scan, wound_conversions
 
 HZ_KEYS = ["slash", "blunt", "shot", "fire", "water", "thunder", "ice", "dragon", "stun"]
 ELEMENTS = ["fire", "water", "thunder", "ice", "dragon"]
@@ -80,26 +82,6 @@ def _check_range(hz: dict, where: str) -> None:
             raise ValueError(f"肉質が範囲外: {where} {k}={v}")
 
 
-def _legendary_params(rel: str | None) -> dict | None:
-    """Param_Legendary の倍率を内部名の群ごとに取り出す (意味づけは docs で未確定扱い)。"""
-    if not rel:
-        return None
-    root = _load(rel)[0]["app.user_data.EmParamLegendary"]
-    groups = {"normal": "", "king": "_King", "hard": "_Hard", "kingHard": "_King_Hard"}
-    fields = {"health": "HealthRate", "partsVital": "PartsVitalRate", "attackAngry": "AngryAttackRate",
-              "attackCalm": "NoAngryAttackRate", "motionSpeed": "MotionSpeedRate"}
-    out = {}
-    for g, suf in groups.items():
-        vals = {}
-        for k, base in fields.items():
-            key = base + suf
-            if key in root and isinstance(root[key], (int, float)):
-                vals[k] = round(float(root[key]), 4)
-        if vals:
-            out[g] = vals
-    return out or None
-
-
 def build_monsters() -> tuple[list[dict], dict]:
     """monsters 配列と、docs 用の集計 (report) を返す。"""
     mh = _load("mhdb_monsters_ja.json")
@@ -110,7 +92,8 @@ def build_monsters() -> tuple[list[dict], dict]:
     dc_by_source = {m["sourceFile"]: m for m in dc["monsters"]}
 
     report = {"unknownParts": [], "breakDiff": [], "unlinkedWeakPoints": [], "stateKeysUsed": Counter(),
-              "woundParts": 0, "parts": 0, "sharedParts": []}
+              "woundParts": 0, "parts": 0, "sharedParts": [],
+              "uniqueMissing": [], "uniqueParams": {}, "uniqueMeatIgnored": {}, "woundConversions": []}
     monsters = []
     for m in sorted((x for x in mh if x.get("kind") == "large"), key=lambda x: x["id"]):
         em = gid2em[m["gameId"]]
@@ -190,6 +173,7 @@ def build_monsters() -> tuple[list[dict], dict]:
         slug_count = Counter(p["part"] for p, _, _ in pairs)
         slug_seen = Counter()
         parts_out = []
+        scar_guids = {}  # 部位 key → 傷口の肉質 GUID (傷口の肉質の置き換えを部位に結び付けるため)
         for p, q, mv in pairs:
             slug = p["part"]
             slug_seen[slug] += 1
@@ -214,6 +198,9 @@ def build_monsters() -> tuple[list[dict], dict]:
                 states[v["key"]] = hz
                 report["stateKeysUsed"][v["key"]] += 1
             wound = None
+            scar_guids[key] = [s["meatGuid"] for s in q["scars"]]
+            if len(q["scars"]) > 1:
+                raise ValueError(f"{m['name']} {key}: 傷口が 2 つ以上ある (wound は 1 つしか持てない。形を見直す)")
             if q["scars"]:
                 s = q["scars"][0]
                 wound = {k: s["meat"][DC_MEAT[k]] for k in DC_MEAT}
@@ -285,14 +272,30 @@ def build_monsters() -> tuple[list[dict], dict]:
             report["unlinkedWeakPoints"].append(f"{m['name']} {len(unl)}件")
 
         rec = recommend_element(parts_out)
+        # モンスター固有のパラメータ (Param_Unique): 傷口の肉質の置き換えと、歴戦王・歴戦用と思われる項目の一覧
+        scan = unique_scan(em, ix.get("unique"))
+        if not ix.get("unique"):
+            report["uniqueMissing"].append(f"{m['name']} {em}")
+        if scan["values"]:
+            report["uniqueParams"][m["name"]] = scan["values"]
+        if scan["meatIgnored"]:
+            report["uniqueMeatIgnored"][m["name"]] = scan["meatIgnored"]
+        convs = wound_conversions(m["name"], em, ix.get("uniquePath"), scan,
+                                  {g: _raw_hz(x) for g, x in raw_meat.items()}, parts_out, scar_guids,
+                                  recommend_element)
+        for c in convs:
+            report["woundConversions"].append(
+                f"{m['name']} {c['scope']} {c['groups']} 部位 {len(c['parts'])} / 部位に当たらない {len(c['unmatched'])} "
+                f"推奨 {rec['best']} → {c['elementRecommendation']['best']}")
         status, immune, item_effects = status_info(m)
         monsters.append({
             "id": m["id"], "gameId": m["gameId"], "emId": em, "name": m["name"], "species": m["species"],
             "baseHealth": m["baseHealth"],
             "variants": [v["kind"] for v in m["variants"]],
             "variantNames": {v["kind"]: v["name"] for v in m["variants"]},
-            "legendaryParams": _legendary_params(ix.get("legendary")),
+            "legendaryParams": legendary_params(ix.get("legendary")),
             "parts": parts_out,
+            "woundConversions": convs,
             "elementRecommendation": rec,
             "statusWeakness": status,
             "immune": immune,
@@ -308,6 +311,8 @@ def recommend_element(parts: list[dict]) -> dict:
     同点は (1) 主要部位の傷口の肉質の平均 (傷口のある主要部位だけで平均) → (2) 名前のある全部位の平均
     の順で崩す。それでも同点なら全部を best に残す。崩した経過は tieBreak に残す (同点が無ければ null)。
     例: アルシュベルドは主要部位の属性肉質が全属性同じ (平均 2.5) だが、鎖翼刃の傷口が龍 38・他 30 なので龍になる。
+    傷口の肉質の置き換え (Param_Unique。woundConversions) の後の値で計算し直すと、アルシュベルドは傷口の属性が
+    全部同じ (鎖翼刃 30・ほか 10) になり、全部位の平均で龍になる。
     """
     named = [p for p in parts if not p["unknownPart"]]
     basis = [p for p in named if p["hitzone"]["slash"] >= MAJOR_SLASH]
