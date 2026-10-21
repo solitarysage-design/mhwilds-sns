@@ -1176,6 +1176,356 @@ def target_tab_pick_monster_and_parts(page, ctx: Ctx):
         page.evaluate(JS_STATE_RESTORE, snap)
 
 
+# ---------------------------------------------------------------- 相手タブの段階 3 (担当: ui-target)
+#
+# docs/RECOMMEND_DESIGN.md 6.5 節の相手タブの分 (target_arch_tempered / target_multi_quest)。
+# 個体・クエスト (既定の選び方・名前から選ぶ)・人数・体力と強さ・討伐までの回数・歴戦王で変わること・このクエストの相手 (多頭)・
+# 「この相手で装備を探す」の受け渡し・保存して開き直す・文字を大きくしたとき を確かめる。
+# 数字は 2026-10-21 のデータ (quests.json の healthCalc)。データが変わったら TH_* を直す。
+
+TH_HEALTH = f'{TARGET_PANEL} [data-th-card="health"]'
+# 歴戦王アルシュベルドの既定のクエスト (id, 名前, 体力, 範囲の表示, 4 人の体力)
+TH_AT_QUEST = ("Freedom from Solitude", "孤独から出でし君という自由", 79923, "76,726〜83,120", 239769)
+# 装備固定のクエスト (検索語, id, 体力)
+TH_FIXED_QUEST = ("解鎖", "Event: Unchained Arkveld", 28944)
+# 多頭のクエスト (検索語, id, 相手の体力の並び)
+TH_MULTI_QUEST = ("英雄の証", "Proof of a Hero", [32850, 46574, 40242, 71701])
+
+JS_TH_RESET = """async () => { const S = await import('./app/state.js'); const H = await import('./app/ui/tabs/target_hunt.js');
+  H.setPlanBuilderForTest(null);
+  S.setTabState('target', { mix: null, memo: null }); S.setTargetMode('monster'); S.selectMonster(null);
+  S.setWound(false); S.setPlayers(1); S.setUseUncertainWound(false); }"""
+
+# 「この相手で装備を探す」で置かれる印を、探すタブが受け取って消す前に写しておく
+JS_TH_WATCH_AUTOSTART = """async () => { const S = await import('./app/state.js');
+  if (window.__thOff) window.__thOff();
+  window.__thAuto = [];
+  window.__thOff = S.subscribe((s) => { if (s.search.autoStart) window.__thAuto.push({ ...s.search.autoStart, useTarget: s.search.useTarget }); });
+}"""
+JS_TH_TAKE_AUTOSTART = """() => { if (window.__thOff) window.__thOff(); window.__thOff = null; return window.__thAuto || []; }"""
+
+# docs/RECOMMEND_DESIGN.md 5.3 節の形の作り物の Plan (buildPlan ができるまでの見た目の確認用)
+JS_TH_FAKE_PLAN = """async () => { const H = await import('./app/ui/tabs/target_hunt.js'); const D = await import('./app/data.js');
+  const roar = D.getTargetData().threats.rules.roar.weak;
+  H.setPlanBuilderForTest(({ target }) => {
+    const key = `${target.monsterId}:arch-tempered#0`;
+    return {
+      subjects: [{ key, monsterId: target.monsterId, kind: 'arch-tempered', name: 'ヌ・エグドラ（歴戦王）', health: null,
+                   targets: [], element: null, threats: [] }],
+      element: { mode: 'element', weapons: [], twoWeapons: { suggested: false, groups: [] },
+                 perSubject: [{ key, view: { kind: 'clear', best: ['water'], top: 30, gap: 8, weapon: 'other' } }] },
+      requirements: [
+        { key: 'hazard:ignited-aura', label: '環境適応 Lv2', options: [[{ skillId: 88, level: 2 }]], tier: 'on', defaultOn: true,
+          on: true, why: [{ subjectKey: key, text: '点火中にまとう炎' }], provisional: true, unconfirmed: false,
+          mitigateLevel: null, negateLevel: 2 },
+        { key: 'roar', label: `${roar.skill} Lv${roar.negateLevel}`, options: [[{ skillId: roar.skillId, level: roar.negateLevel }]],
+          tier: 'ref', defaultOn: false, on: false, why: [{ subjectKey: key, text: '咆哮【小】' }], provisional: true,
+          unconfirmed: true, mitigateLevel: null, negateLevel: roar.negateLevel },
+      ],
+      notes: [{ subjectKey: key, text: '作り物の注意 (防げない攻撃)', oneShot: true, source: '' }],
+      exclusions: { armor: [], charmsFixed: [], labels: [] }, weights: [], warnings: [], license: [],
+    };
+  });
+}"""
+
+# 雷の片手剣 (ウズ・トゥナの歴戦王の傷口は雷 25→20 に置き換わる。火の武器では差が出ない)
+JS_TH_THUNDER_WEAPON = """async () => { const S = await import('./app/state.js'); const D = await import('./app/data.js');
+  const w = D.getCoreData().lists.weapons.find((x) => x.element && x.element.type === 'thunder');
+  S.setWeapon(w.id); return w.id; }"""
+
+
+def _th_pick_monster(page, search: str, name: str):
+    """モンスター欄を開き、search で探して、名前がちょうど name の候補を選ぶ。"""
+    page.locator(f"{TARGET_PANEL} .picker-field .row").first.click()
+    page.wait_for_selector(".sheet .picker-list")
+    page.wait_for_timeout(150)
+    page.fill(".sheet input[type=search]", search)
+    page.locator(".sheet .picker-item").filter(
+        has=page.locator(".picker-label", has_text=re.compile(f"^{re.escape(name)}$"))).first.click()
+    page.wait_for_selector(".sheet", state="detached")
+
+
+def _th_individual(page, label: str):
+    page.locator(f"{TARGET_PANEL} [data-th-individual] .segment", has_text=re.compile(f"^{re.escape(label)}$")).click()
+
+
+def _th_players(page, n: int):
+    page.locator(f"{TARGET_PANEL} [data-th-players] .segment", has_text=re.compile(f"^{n} 人$")).click()
+
+
+def _th_attr(page, sel: str, name: str):
+    return page.get_attribute(f"{TH_HEALTH} {sel}", name)
+
+
+def _th_wait_attr(page, sel: str, name: str, value: str, timeout=10000):
+    page.wait_for_function(
+        "([s, n, v]) => { const e = document.querySelector(s); return !!e && e.getAttribute(n) === v; }",
+        arg=[f"{TH_HEALTH} {sel}", name, value], timeout=timeout)
+
+
+def _th_quest_field(page):
+    return page.locator(f"{TARGET_PANEL} .picker-field",
+                        has=page.locator(".row-label", has_text=re.compile("^クエスト$"))).locator(".row").first
+
+
+def _th_choose_in_sheet(page, search: str, label: str, ctx: Ctx | None = None, shot: str | None = None):
+    """開いたシートで search で探して、名前がちょうど label の候補を選ぶ (shot があれば探す前のシートを写す)。"""
+    page.wait_for_selector(".sheet .picker-list")
+    page.wait_for_timeout(150)
+    if ctx and shot:
+        check_layout(page, ctx, f"相手タブのシート ({shot})")
+        ctx.shot(shot, full_page=False)
+    page.fill(".sheet input[type=search]", search)
+    page.locator(".sheet .picker-item:not(.picker-none)").filter(
+        has=page.locator(".picker-label", has_text=re.compile(f"^{re.escape(label)}$"))).first.click()
+    page.wait_for_selector(".sheet", state="detached")
+
+
+def _th_zoom_layout(page, ctx: Ctx, where: str, shot: str):
+    """文字を大きくしたとき (Safari の表示の拡大 125% ≒ 幅 375px の 0.8 = 300px) にも横にはみ出さない。"""
+    vp = page.viewport_size
+    try:
+        page.set_viewport_size({"width": 300, "height": vp["height"]})
+        page.wait_for_timeout(200)
+        check_layout(page, ctx, f"{where} (幅 300px = 文字を大きくしたとき)")
+        ctx.shot(shot)
+    finally:
+        page.set_viewport_size(vp)
+
+
+@scenario_check
+def target_arch_tempered(page, ctx: Ctx):
+    """相手タブ: アルシュベルド → 歴戦王 → 既定のクエスト → 体力と範囲 → 4 人で倍率 (未確定) → 攻撃の強さ (未確定) →
+    討伐までの回数 = 体力 ÷ 火力タブの期待値 → 歴戦王で変わること (出典) → 開き直しても残る → 装備固定のクエストで体力が変わり
+    探すボタンが出ない → ウズ・トゥナの歴戦王で傷口に「未確認」・火力タブも置き換え後の傷口 → ヌ・エグドラの歴戦王で
+    作り物の Plan の見た目と「この相手で装備を探す」(探すタブへ移り、自動で探し始める印が置かれる)。"""
+    snap = page.evaluate(JS_STATE_SNAPSHOT)
+    qid, qname, hp, hp_range, hp4 = TH_AT_QUEST
+    try:
+        page.evaluate(JS_POWER_SETUP)
+        open_tab(page, "target")
+        page.evaluate(JS_TH_RESET)
+        # --- アルシュベルド → 歴戦王 → 既定のクエスト『孤独から出でし君という自由』
+        _th_pick_monster(page, "あるしゅべるど", "アルシュベルド")
+        # モンスター欄で選ぶと、通常の個体の既定のクエスト (2.2 節の規則) も選んでおく
+        want_q = page.evaluate("""async () => { const D = await import('./app/data.js'); const H = await import('./app/model/hunt.js');
+          const S = await import('./app/state.js'); return H.defaultQuestId(D.getTargetData(), S.getState().target.monsterId, null); }""")
+        if _app_state(page, "s.target.questId") != want_q or want_q is None:
+            ctx.fail(f"モンスターを選んでも通常の個体の既定のクエスト ({want_q}) になりません: {_app_state(page, 's.target.questId')}")
+        _th_individual(page, "歴戦王")
+        page.wait_for_selector(f"{TH_HEALTH} [data-th-health]", timeout=10000)
+        st = _app_state(page, "s.target")
+        if st["individual"] != "arch-tempered" or st["questId"] != qid:
+            ctx.fail(f"歴戦王を選んでも既定のクエスト ({qid}) になりません: {st}")
+        if qname not in page.inner_text(f"{TARGET_PANEL} .card:has([data-th-individual])"):
+            ctx.fail(f"クエストの欄に「{qname}」が出ていません")
+        health = page.inner_text(TH_HEALTH)
+        if _th_attr(page, "[data-th-health]", "data-th-health") != str(hp) or f"{hp:,}" not in health or hp_range not in health:
+            ctx.fail(f"体力に「{hp:,}」と「{hp_range}」が出ていません: {health[:160]!r}")
+        # 討伐までの回数 = 体力 ÷ 火力タブの 1 コンボの期待値 (切り上げ)
+        combos = _th_attr(page, "[data-th-combos]", "data-th-combos")
+        value = float(_th_attr(page, "[data-th-combos]", "data-th-combo-value") or "nan")
+        if "拘束・部位破壊・ダウン・状態異常" not in page.inner_text(f"{TARGET_PANEL} .card:has([data-th-card=\"health\"])"):
+            ctx.fail("討伐までの回数に「拘束・部位破壊・ダウン・状態異常」を含まない目安である旨がありません")
+        open_tab(page, "power")
+        page.wait_for_selector(f"{POWER_PANEL} [data-power-total]", timeout=15000)
+        pw_total = _power_total(page)
+        if "アルシュベルド（歴戦王）" not in page.inner_text(f"{POWER_PANEL} [data-power-target]"):
+            ctx.fail(f"火力タブの相手が歴戦王になっていません: {page.inner_text(f'{POWER_PANEL} [data-power-target]')!r}")
+        open_tab(page, "target")
+        if not _close(value, pw_total, rel=1e-9):
+            ctx.fail(f"討伐までの回数に使った期待値 {value} が火力タブの期待値 {pw_total} と違います")
+        if not combos or int(combos) != int(-(-hp // pw_total)):  # 切り上げ
+            ctx.fail(f"討伐までの回数 {combos} が 体力 {hp} ÷ 期待値 {pw_total} の切り上げと違います")
+        # --- 4 人: 体力 × 3.0 = 239,769 (未確定)
+        _th_players(page, 4)
+        _th_wait_attr(page, "[data-th-total]", "data-th-total", str(hp4))
+        health = page.inner_text(TH_HEALTH)
+        if f"{hp4:,}" not in health or "未確定" not in health:
+            ctx.fail(f"4 人のときの体力「{hp4:,}」と「未確定」が出ていません: {health[:200]!r}")
+        if _app_state(page, "s.target.players") != 4:
+            ctx.fail("人数を 4 人にしても state.target.players が 4 になりません")
+        # 2 人: 倍率が変わる
+        _th_players(page, 2)
+        page.wait_for_function(
+            "([s, v]) => { const e = document.querySelector(s); return !!e && e.getAttribute('data-th-total') !== v; }",
+            arg=[f"{TH_HEALTH} [data-th-total]", str(hp4)], timeout=10000)
+        t2 = int(_th_attr(page, "[data-th-total]", "data-th-total") or 0)
+        if not (hp < t2 < hp4):
+            ctx.fail(f"2 人のときの体力 {t2} が 1 人 ({hp}) と 4 人 ({hp4}) の間になりません")
+        _th_players(page, 4)
+        _th_wait_attr(page, "[data-th-total]", "data-th-total", str(hp4))
+        atk = page.inner_text(f"{TH_HEALTH} [data-th-attack]")
+        if "未確定" not in atk or "倍" not in atk:
+            ctx.fail(f"攻撃の強さに「〇倍」と「未確定」が出ていません: {atk!r}")
+        arch = page.inner_text(f'{TARGET_PANEL} [data-th-card="arch"]')
+        for word in ["Monster Hunter Wiki", "CC BY-SA 4.0", "未確定"]:
+            if word not in arch:
+                ctx.fail(f"歴戦王で変わることに「{word}」がありません")
+        check_layout(page, ctx, "相手タブ (歴戦王・4 人)")
+        ctx.shot("target-at")
+        _th_zoom_layout(page, ctx, "相手タブ (歴戦王)", "target-at-zoom")
+
+        # --- 保存して開き直しても、個体・クエスト・人数が残る
+        page.evaluate("async () => { const S = await import('./app/state.js'); await S.flushState(); }")
+        page.reload(wait_until="load")
+        wait_app_ready(page)
+        open_tab(page, "target")
+        page.wait_for_selector(f"{TH_HEALTH} [data-th-total]", timeout=15000)
+        st = _app_state(page, "s.target")
+        if (st["individual"], st["questId"], st["players"]) != ("arch-tempered", qid, 4) \
+                or _th_attr(page, "[data-th-total]", "data-th-total") != str(hp4):
+            ctx.fail(f"開き直したら個体・クエスト・人数が戻りません: {st}")
+        if _app_state(page, "s.search.autoStart") is not None:
+            ctx.fail("開き直しただけで「自動で探し始める」の印が残っています")
+
+        # --- クエストを替えると体力が変わる (装備固定のクエスト: 探すボタンは出ず、理由が出る。人数は 2 人まで)
+        search, fixed_id, fixed_hp = TH_FIXED_QUEST
+        _th_quest_field(page).click()
+        _th_choose_in_sheet(page, search, "イベント：解鎖のアルシュベルド", ctx, "target-quest-picker")
+        _th_wait_attr(page, "[data-th-health]", "data-th-health", str(fixed_hp))
+        if _app_state(page, "s.target.questId") != fixed_id:
+            ctx.fail("クエストの欄で選んだクエストが state.target.questId に入っていません")
+        text = page.inner_text(TARGET_PANEL)
+        if "装備が決められたクエスト" not in text:
+            ctx.fail("装備固定のクエストで「装備が決められたクエスト」の案内が出ていません")
+        if page.locator(f"{TARGET_PANEL} [data-th-search]").count() or not page.locator(f"{TARGET_PANEL} [data-th-search-blocked]").count():
+            ctx.fail("装備固定のクエストなのに「この相手で装備を探す」が出ています (または理由が出ていません)")
+        n_players = page.locator(f"{TARGET_PANEL} [data-th-players] .segment").count()
+        if n_players != 2:
+            ctx.fail(f"2 人までのクエストなのに人数の選択肢が {n_players} 個あります")
+
+        # --- ウズ・トゥナの歴戦王: 傷口に「未確認」。火力タブも置き換え後の傷口 (雷 25→20) で計算する
+        page.evaluate(JS_TH_THUNDER_WEAPON)
+        _th_pick_monster(page, "うず", "ウズ・トゥナ")
+        _th_individual(page, "歴戦王")
+        page.click(f'{TARGET_PANEL} [data-target-parts] [data-part="head"]')
+        page.wait_for_selector(f'{TARGET_PANEL} [data-target-parts] ~ [data-th-wound-mark="unverified"]', timeout=10000)
+        if "未確認" not in page.inner_text(f'{TARGET_PANEL} [data-th-wound-mark="unverified"] >> nth=0'):
+            ctx.fail("ウズ・トゥナの歴戦王で、傷口の印「未確認」が出ていません")
+        check_layout(page, ctx, "相手タブ (ウズ・トゥナの歴戦王)")
+        ctx.shot("target-at-uth")
+        page.locator(f'{TARGET_PANEL} .toggle:has-text("傷口を狙う")').click()
+        uth = page.evaluate("""async () => { const D = await import('./app/data.js');
+          const m = D.getTargetData().lists.monsters.find((x) => x.name === 'ウズ・トゥナ');
+          const p = m.parts.find((x) => x.key === 'head');
+          return { hitzone: p.hitzone, wound: m.individuals.find((i) => i.kind === 'arch-tempered').hitzone.woundOverrides.head,
+                   base: p.wound }; }""")
+        open_tab(page, "power")
+        page.wait_for_function(
+            "() => { const e = document.querySelector('[data-tab-panel=\"power\"] [data-power-target]');"
+            " return !!e && e.textContent.includes('ウズ・トゥナ（歴戦王）'); }", timeout=15000)
+        exp_ov = page.evaluate(JS_POWER_EXPECT, [{"w": 1, "hitzone": uth["hitzone"], "wound": uth["wound"], "isWound": True}])
+        exp_base = page.evaluate(JS_POWER_EXPECT, [{"w": 1, "hitzone": uth["hitzone"], "wound": uth["base"], "isWound": True}])
+        if not _close(_power_total(page), exp_ov["total"]):
+            ctx.fail(f"ウズ・トゥナの歴戦王の頭の傷口: 火力タブ {_power_total(page)} が置き換え後の傷口の計算 {exp_ov['total']} と違います")
+        if _close(exp_ov["total"], exp_base["total"]):
+            ctx.note("ウズ・トゥナの歴戦王: 置き換え前後で期待値が同じでした (武器の属性を確かめてください)")
+        open_tab(page, "target")
+        page.locator(f'{TARGET_PANEL} .toggle:has-text("傷口を狙う")').click()
+
+        # --- ヌ・エグドラの歴戦王: 作り物の Plan で「この相手のおすすめ」の見た目 → 「この相手で装備を探す」
+        page.evaluate(JS_POWER_SETUP)
+        _th_pick_monster(page, "ぬえぐ", "ヌ・エグドラ")
+        _th_individual(page, "歴戦王")
+        page.wait_for_selector(f"{TARGET_PANEL} [data-th-search]", timeout=10000)
+        stub = page.evaluate("""async () => { const R = await import('./app/model/recommend.js');
+          try { return R.buildPlan() === null; } catch { return false; } }""")
+        if stub and page.locator(f'{TARGET_PANEL} [data-th-card="plan"]').count():
+            ctx.fail("buildPlan が null なのに「この相手のおすすめ」のカードが出ています")
+        page.evaluate(JS_TH_FAKE_PLAN)
+        page.wait_for_selector(f'{TARGET_PANEL} [data-th-card="plan"]', timeout=10000)
+        plan_card = page.locator(f"{TARGET_PANEL} section.card", has=page.locator('[data-th-card="plan"]'))
+        plan_text = plan_card.inner_text()
+        for word in ["この相手のおすすめ", "仮", "環境適応 Lv2", "点火中にまとう炎", "守り", "参考", "未確認", "注意",
+                     "作り物の注意", "水 (いまの武器は火。水の方が通る)", "いま"]:
+            if word not in plan_text:
+                ctx.fail(f"作り物の Plan の「この相手のおすすめ」に「{word}」が出ていません")
+        if plan_card.locator("[data-th-search]").count() != 1:
+            ctx.fail("「この相手のおすすめ」のカードに「この相手で装備を探す」がありません")
+        check_layout(page, ctx, "相手タブ (この相手のおすすめ)")
+        ctx.shot("target-plan")
+        _th_zoom_layout(page, ctx, "相手タブ (この相手のおすすめ)", "target-plan-zoom")
+        page.evaluate(JS_TH_WATCH_AUTOSTART)
+        plan_card.locator("[data-th-search]").click()
+        page.wait_for_selector('.app[data-active-tab="search"]', timeout=10000)
+        seen = page.evaluate(JS_TH_TAKE_AUTOSTART)
+        if not seen or seen[0].get("from") != "target" or seen[0].get("useTarget") is not True:
+            ctx.fail(f"「この相手で装備を探す」で探すタブへの印 (search.autoStart) が置かれていません: {seen}")
+        page.evaluate("async () => (await import('./app/ui/tabs/target_hunt.js')).setPlanBuilderForTest(null)")
+        open_tab(page, "target")
+    finally:
+        page.evaluate("async () => (await import('./app/ui/tabs/target_hunt.js')).setPlanBuilderForTest(null)")
+        page.evaluate(JS_STATE_RESTORE, snap)
+
+
+@scenario_check
+def target_multi_quest(page, ctx: Ctx):
+    """相手タブ: 「クエストの名前から選ぶ」→『英雄の証』→ 4 体の行と全部倒すまでの回数 → 行をタップで相手が替わり、
+    部位の選び方はモンスターごとに覚える → 「このクエストで装備を探す」。"""
+    snap = page.evaluate(JS_STATE_SNAPSHOT)
+    search, qid, hps = TH_MULTI_QUEST
+    try:
+        page.evaluate(JS_POWER_SETUP)
+        open_tab(page, "target")
+        page.evaluate(JS_TH_RESET)
+        page.click(f"{TARGET_PANEL} [data-th-quest-by-name]")
+        _th_choose_in_sheet(page, search, search, ctx, "target-quest-names")
+        page.wait_for_selector(f'{TARGET_PANEL} [data-th-card="multi"] [data-th-subject]', timeout=10000)
+        st = _app_state(page, "s.target")
+        if st["questId"] != qid or st["individual"] != "arch-tempered" or st["questTargetIndex"] != 0 or not st["partKey"]:
+            ctx.fail(f"クエストの名前から選んでも、1 体目 (歴戦王・行 0・部位) になりません: {st}")
+        rows = page.locator(f'{TARGET_PANEL} [data-th-card="multi"] [data-th-subject]')
+        if rows.count() != len(hps):
+            ctx.fail(f"『{search}』の相手の行が {rows.count()} 行 (期待 {len(hps)} 行)")
+        texts = rows.all_inner_texts()
+        for t, h in zip(texts, hps):
+            if f"{h:,}" not in t or "回" not in t:
+                ctx.fail(f"相手の行に体力 {h:,} と回数が出ていません: {t!r}")
+        _th_wait_attr(page, "[data-th-health]", "data-th-health", str(hps[0]))
+        nums = [int(re.search(r"約 ([\d,]+) 回", t).group(1).replace(",", "")) for t in texts if re.search(r"約 ([\d,]+) 回", t)]
+        total = page.get_attribute(f"{TARGET_PANEL} [data-th-multi-total]", "data-th-multi-total")
+        if len(nums) != len(hps) or not total or int(total) != sum(nums):
+            ctx.fail(f"全部倒すまでの回数 {total} が相手ごとの回数 {nums} の合計と違います")
+        if nums and _th_attr(page, "[data-th-combos]", "data-th-combos") != str(nums[0]):
+            ctx.fail("1 体目の行の回数と、体力と強さのカードの回数が違います")
+        if "このクエストで装備を探す" not in page.inner_text(f"{TARGET_PANEL} [data-th-search]"):
+            ctx.fail("多頭のクエストで「このクエストで装備を探す」になっていません")
+        check_layout(page, ctx, "相手タブ (多頭)")
+        ctx.shot("target-multi")
+        # 1 体目の部位を替えてから 2 体目へ → 2 体目に替わり、1 体目へ戻すと部位も戻る
+        first = st["monsterId"]
+        parts = page.eval_on_selector_all(f"{TARGET_PANEL} [data-target-parts] [data-part]", "els => els.map((e) => e.dataset.part)")
+        other = next((k for k in parts if k != st["partKey"]), None)
+        if other:
+            page.click(f'{TARGET_PANEL} [data-target-parts] [data-part="{other}"]')
+        rows.nth(1).click()
+        _th_wait_attr(page, "[data-th-health]", "data-th-health", str(hps[1]))
+        st2 = _app_state(page, "s.target")
+        if st2["questId"] != qid or st2["questTargetIndex"] != 1 or st2["monsterId"] == first:
+            ctx.fail(f"2 体目の行をタップしても、相手が替わりません: {st2}")
+        if (rows.nth(1).get_attribute("aria-pressed")) != "true":
+            ctx.fail("タップした相手の行が選ばれた見た目になっていません")
+        # 2 体目の回数 = 体力 ÷ 火力タブの期待値
+        value = float(_th_attr(page, "[data-th-combos]", "data-th-combo-value") or "nan")
+        open_tab(page, "power")
+        page.wait_for_selector(f"{POWER_PANEL} [data-power-total]", timeout=15000)
+        if not _close(value, _power_total(page), rel=1e-9):
+            ctx.fail(f"2 体目の討伐までの回数に使った期待値 {value} が火力タブ {_power_total(page)} と違います")
+        open_tab(page, "target")
+        rows.nth(0).click()
+        _th_wait_attr(page, "[data-th-health]", "data-th-health", str(hps[0]))
+        st3 = _app_state(page, "s.target")
+        if other and st3["partKey"] != other:
+            ctx.fail(f"1 体目に戻しても、前に選んだ部位 ({other}) に戻りません: {st3['partKey']}")
+        memo = _app_state(page, "s.tabs.target && s.tabs.target.memo")
+        if not isinstance(memo, dict) or str(st2["monsterId"]) not in memo:
+            ctx.fail(f"部位の選び方が state.tabs.target.memo に残っていません: {memo}")
+        _th_zoom_layout(page, ctx, "相手タブ (多頭)", "target-multi-zoom")
+    finally:
+        page.evaluate(JS_STATE_RESTORE, snap)
+
+
 # ---------------------------------------------------------------- 探すタブ (段階 2・3。いまは「準備中」のカードだけ)
 
 SEARCH_PANEL = '[data-tab-panel="search"]'

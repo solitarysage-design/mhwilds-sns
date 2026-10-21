@@ -10,6 +10,16 @@
 //   }
 // 割合で混ぜている間も state.target.partKey には一番割合の大きい部位を入れておく
 // (resolveTarget だけを使う画面でも、それらしい 1 部位で計算できるように)。
+//
+// 個体 (state.target.individual。歴戦王など) があれば、傷口の肉質は hunt.js の hitzoneFor で置き換える
+// (歴戦王ウズ・トゥナは置き換え後、歴戦王アルシュベルドは state.target.useUncertainWound のときだけ)。
+// 段階 3 の相手タブ (target_hunt.js) のために、クエストの文脈 (questContext)・多頭の相手ごとの部位 (subjectTargets)・
+// モンスターごとの部位の選び方の覚え (tabs.target.memo) もここに置く。
+//   tabs.target.memo = { [monsterId]: { partKey, mix: {on, weights} | null } }  (相手を替える前の部位の選び方)
+
+import {
+  hitzoneFor, individualOf, questById, questSubjects, subjectIndexOf, clampPlayers, INDIVIDUAL_KINDS, MAX_PLAYERS,
+} from '../../model/hunt.js';
 
 /** 弱点とみなす物理 (切断) 肉質のしきい値 (弱点特効と同じ 45) */
 export const WEAK_POINT_MIN = 45;
@@ -190,8 +200,33 @@ export function removeShare(weights, key) {
   return normalizeShares(out);
 }
 
-function partTarget(part, isWound) {
-  return { hitzone: part.hitzone, wound: part.wound || null, isWound: !!isWound };
+/** state.target.individual を個体の値にそろえる (通常・知らない値は null) */
+export function individualKindOf(target) {
+  const k = target && target.individual;
+  return INDIVIDUAL_KINDS.includes(k) ? k : null;
+}
+
+/** 印の重さ (未確定 > 未確認 > なし)。部位を混ぜたときは一番重い印を出す */
+const MARK_ORDER = { uncertain: 2, unverified: 1 };
+const heavierMark = (a, b) => ((MARK_ORDER[b] || 0) > (MARK_ORDER[a] || 0) ? b : a);
+
+/**
+ * 部位 1 つの肉質 (個体の傷口の置き換えを入れたもの)。kind が null (通常) なら parts[] のまま。
+ * @returns {{target: {hitzone, wound, isWound}, hz: object|null}}  hz は hunt.js の hitzoneFor の結果 (通常なら null)
+ */
+function partTarget(monster, part, target) {
+  const isWound = !!target.isWound;
+  const kind = individualKindOf(target);
+  if (kind == null) return { target: { hitzone: part.hitzone, wound: part.wound || null, isWound }, hz: null };
+  const hz = hitzoneFor(monster, part, kind, { useUncertain: target.useUncertainWound === true });
+  return { target: { hitzone: hz.hitzone, wound: hz.wound || null, isWound }, hz };
+}
+
+/** ラベルに使うモンスターの名前 (個体なら「ウズ・トゥナ（歴戦王）」) */
+export function individualName(monster, kind) {
+  if (!monster) return '';
+  const ind = kind != null ? individualOf(monster, kind) : null;
+  return (ind && ind.name) || monster.name;
 }
 
 /** 手入力の肉質 (state.target.manual) → damage.js の target */
@@ -207,8 +242,11 @@ const shareText = (s) => `${Math.round(s * 100)}%`;
  * @param {object} target state.target
  * @param {object} tabTarget state.tabs.target (割合で混ぜる指定。無くてよい)
  * @param {object} targetData data.js の target データ (手入力だけなら無くてよい)
- * @returns {null | {targets: Array<{weight, label, partKey, target}>, label, mixed, mode, monster?, part?}}
+ * @returns {null | {targets: Array<{weight, label, partKey, target}>, label, mixed, mode, monster?, part?,
+ *                   individual?, woundMark?}}
  *   決まらないとき (モンスター・部位が未選択、データ未読み込み) は null。
+ *   個体 (target.individual) があれば傷口を hunt.js の hitzoneFor で置き換え、ラベルは「ウズ・トゥナ（歴戦王） 頭」。
+ *   woundMark = 狙う部位の傷口の印 ('unverified' = 未確認 / 'uncertain' = 未確定 / null。混ぜたときは一番重いもの)。
  */
 export function resolveTargetMix(target, tabTarget, targetData) {
   if (!target) return null;
@@ -221,26 +259,127 @@ export function resolveTargetMix(target, tabTarget, targetData) {
   }
   const monster = findMonster(targetData, target.monsterId);
   if (!monster) return null;
+  const kind = individualKindOf(target);
+  const name = individualName(monster, kind);
   const mix = readMix(tabTarget, monster.id, monster);
   if (mix.on) {
     const shares = mixShares(monster, mix.weights);
     if (shares.length) {
-      const targets = shares.map((x) => ({
-        weight: x.share, label: partLabel(x.part, monster), partKey: x.part.key, target: partTarget(x.part, target.isWound),
-      }));
+      let woundMark = null;
+      const targets = shares.map((x) => {
+        const pt = partTarget(monster, x.part, target);
+        if (pt.hz) woundMark = heavierMark(woundMark, pt.hz.mark);
+        return { weight: x.share, label: partLabel(x.part, monster), partKey: x.part.key, target: pt.target };
+      });
       const label = shares.length === 1
-        ? `${monster.name} ${partLabel(shares[0].part, monster)}`
-        : `${monster.name} ${shares.map((x) => `${partLabel(x.part, monster)} ${shareText(x.share)}`).join('・')}`;
-      return { mode: 'monster', mixed: shares.length > 1, label, monster, targets };
+        ? `${name} ${partLabel(shares[0].part, monster)}`
+        : `${name} ${shares.map((x) => `${partLabel(x.part, monster)} ${shareText(x.share)}`).join('・')}`;
+      return { mode: 'monster', mixed: shares.length > 1, label, monster, targets, individual: kind, woundMark };
     }
   }
   const part = findPart(monster, target.partKey);
   if (!part) return null;
-  const label = `${monster.name} ${partLabel(part, monster)}`;
+  const label = `${name} ${partLabel(part, monster)}`;
+  const pt = partTarget(monster, part, target);
   return {
-    mode: 'monster', mixed: false, label, monster, part,
-    targets: [{ weight: 1, label: partLabel(part, monster), partKey: part.key, target: partTarget(part, target.isWound) }],
+    mode: 'monster', mixed: false, label, monster, part, individual: kind, woundMark: pt.hz ? pt.hz.mark : null,
+    targets: [{ weight: 1, label: partLabel(part, monster), partKey: part.key, target: pt.target }],
   };
+}
+
+// ---------------------------------------------------------------- 部位の選び方の覚え (tabs.target.memo)
+
+/** 覚えておくモンスターの数の上限 (保存データを大きくしない) */
+const MEMO_MAX = 64;
+
+/**
+ * tabs.target.memo からそのモンスターの部位の選び方を読む (壊れた値・無くなった部位は捨てる)。
+ * @returns {{partKey: string|null, mix: {on: boolean, weights: object}|null} | null}
+ */
+export function readPartsMemo(tabTarget, monsterId, monster = null) {
+  const memo = isObj(tabTarget) && isObj(tabTarget.memo) ? tabTarget.memo : null;
+  const m = memo && monsterId != null ? memo[String(monsterId)] : null;
+  if (!isObj(m)) return null;
+  const partKey = typeof m.partKey === 'string' && (!monster || findPart(monster, m.partKey)) ? m.partKey : null;
+  const mix = isObj(m.mix) ? readMix({ mix: { ...m.mix, monsterId } }, monsterId, monster) : null;
+  return { partKey, mix: mix && mix.on && Object.keys(mix.weights).length ? mix : null };
+}
+
+/**
+ * 今のモンスターの部位の選び方 (state.target.partKey と tabs.target.mix) を memo に入れた tabs.target の差分 ({memo})。
+ * 相手を替える前に setTabState('target', partsMemoPatch(...)) で残す。手入力・モンスター未選択なら null。
+ */
+export function partsMemoPatch(tabTarget, target) {
+  if (!target || target.mode === 'manual' || target.monsterId == null) return null;
+  const prev = isObj(tabTarget) && isObj(tabTarget.memo) ? tabTarget.memo : {};
+  const mix = readMix(tabTarget, target.monsterId);
+  const entry = {
+    partKey: typeof target.partKey === 'string' ? target.partKey : null,
+    mix: mix.on && Object.keys(mix.weights).length ? { on: true, weights: mix.weights } : null,
+  };
+  const key = String(target.monsterId);
+  // 多すぎたら (壊れた保存データなど) 今のモンスター以外を先頭から捨てる
+  // (モンスターの id は数なので、キーの並びは入れた順ではなく数の順。いまは 34 体なので上限には届かない)
+  const others = Object.keys(prev).filter((k) => k !== key);
+  const memo = {};
+  for (const k of others.slice(Math.max(0, others.length - (MEMO_MAX - 1)))) memo[k] = prev[k];
+  memo[key] = entry;
+  return { memo };
+}
+
+// ---------------------------------------------------------------- クエスト (段階 3。相手タブの target_hunt.js が使う)
+
+/**
+ * 相手タブのクエストの文脈。クエストを選んでいない・見つからない・手入力なら null。
+ * @returns {null | {quest, subjects, current, intruder: boolean, fixed: boolean, multi: boolean, maxPlayers, players}}
+ *   subjects = hunt.js の questSubjects (人数の体力つき)。current = その中の今のモンスターの行
+ *   (state.target.questTargetIndex の行がこのモンスターならそれ、違えば subjectIndexOf で探す。無ければ null = 乱入など)。
+ *   intruder = 今のモンスターがこのクエストの乱入の候補。players = 人数 (クエストの上限 mission.maxPlayers で頭打ち)。
+ */
+export function questContext(targetData, target) {
+  if (!target || target.mode === 'manual' || target.questId == null) return null;
+  const quest = questById(targetData, target.questId);
+  if (!quest) return null;
+  const mp = quest.mission ? Number(quest.mission.maxPlayers) : NaN;
+  const maxPlayers = Number.isFinite(mp) && mp >= 1 ? Math.min(MAX_PLAYERS, Math.round(mp)) : MAX_PLAYERS;
+  const players = Math.min(clampPlayers(target.players), maxPlayers);
+  const subjects = questSubjects(quest, targetData, { players });
+  const kind = individualKindOf(target);
+  let current = subjects.find((s) => s.index === target.questTargetIndex && s.monsterId === target.monsterId) || null;
+  if (!current && target.monsterId != null) {
+    const i = subjectIndexOf(quest, target.monsterId, kind);
+    current = (i != null && subjects.find((s) => s.index === i))
+      || subjects.find((s) => s.monsterId === target.monsterId && s.kind === kind)
+      || subjects.find((s) => s.monsterId === target.monsterId) || null;
+  }
+  const intruder = !current && (quest.intruders || []).some((x) => x && x.monsterId === target.monsterId);
+  return {
+    quest, subjects, current, intruder, fixed: quest.fixedEquipment === true, multi: subjects.length > 1,
+    maxPlayers, players,
+  };
+}
+
+/**
+ * クエストの相手 1 体を狙うときの計算の相手 (resolveTargetMix と同じ形)。
+ * 今のモンスターなら相手タブで選んだ部位・割合、別のモンスターなら memo に覚えた選び方、無ければ弱点 1 か所 (defaultPartKey)。
+ * 傷口を狙うか・確度の低い傷口の置き換えを使うかは、全部の相手に同じ指定を使う。
+ * @param subject hunt.js の questSubjects の 1 件
+ */
+export function subjectTargets(targetData, subject, target, tabTarget) {
+  if (!subject || !target) return null;
+  const monster = findMonster(targetData, subject.monsterId);
+  if (!monster) return null;
+  const same = subject.monsterId === target.monsterId && target.mode !== 'manual';
+  const memo = same ? null : readPartsMemo(tabTarget, monster.id, monster);
+  const t = {
+    mode: 'monster', monsterId: monster.id, isWound: !!target.isWound, individual: subject.kind ?? null,
+    useUncertainWound: target.useUncertainWound === true,
+    partKey: same ? target.partKey : ((memo && memo.partKey) || defaultPartKey(monster)),
+  };
+  let tab = null;
+  if (same) tab = tabTarget;
+  else if (memo && memo.mix) tab = { mix: { on: true, monsterId: monster.id, weights: memo.mix.weights } };
+  return resolveTargetMix(t, tab, targetData);
 }
 
 /**
@@ -330,13 +469,15 @@ function threatRowOf(threats, monsterId) {
  * @param {object} threats monster_threats.json 丸ごと (data.js の target.threats)
  * @param {number} monsterId
  * @param {object} skillLevels いまの装備のスキル {skillId: Lv} (build.js の skillLevels)。無くてよい
- * @returns {null | {hazards: Array, blights: Array, status: Array, wikiUrl, issues, license}}
+ * @param {object} opts.kind 個体 (state.target.individual)。歴戦王なら variant に専用の脅威などを入れる
+ * @returns {null | {hazards: Array, blights: Array, status: Array, wikiUrl, issues, license, variant}}
  *   hazards[]: {key: 'roar'|'wind'|'tremor', label, value, text, none, unknown, need}
  *   blights[]: {element, name, uncertain, reason, need, resistName, resistThreshold}
  *   status[]: {key, name, nameUncertain, need, noSkill}
  *   need は skillNeed (無効にする Lv・軽減する Lv・いまの Lv) か null
+ *   variant: variantThreats の結果 (その個体の差分が無ければ null)
  */
-export function threatInfo(threats, monsterId, skillLevels = {}) {
+export function threatInfo(threats, monsterId, skillLevels = {}, { kind = null } = {}) {
   const row = threatRowOf(threats, monsterId);
   if (!row) return null;
   const rules = (threats && threats.rules) || {};
@@ -379,5 +520,34 @@ export function threatInfo(threats, monsterId, skillLevels = {}) {
   return {
     hazards, blights, status, wikiUrl: row.wikiUrl || null, issues: row.issues || [],
     license: (threats && threats.meta && threats.meta.license) || null,
+    variant: variantThreats(row, kind, skillLevels),
+  };
+}
+
+/**
+ * 個体ごとの差分 (monster_threats.json の monsters[].variants[kind]。いまは歴戦王だけ)。
+ * @returns {null | {kind, name, sameAsBase: {all: boolean, confidence, reason}|null,
+ *                   moveChanges: [{text, textEn}], hazards: [{key, text, need, oneShot, noSkill, confidence, unverified, note}],
+ *                   source}}
+ *   hazards[].need = 防ぐスキル (skillNeed) か null (防げない攻撃)。unverified = 確度が high でない (画面は「未確認」)
+ */
+export function variantThreats(row, kind, skillLevels = {}) {
+  const v = row && isObj(row.variants) && kind != null ? row.variants[kind] : null;
+  if (!isObj(v)) return null;
+  const sab = isObj(v.sameAsBase) ? v.sameAsBase : null;
+  const sameKeys = ['roar', 'windPressure', 'tremor', 'blights', 'statusEffects'];
+  return {
+    kind, name: v.name || '',
+    sameAsBase: sab ? {
+      all: sameKeys.every((k) => sab[k] === true), confidence: sab.confidence || null, reason: sab.reason || '',
+    } : null,
+    moveChanges: (Array.isArray(v.moveChanges) ? v.moveChanges : [])
+      .filter(isObj).map((m) => ({ text: m.text || null, textEn: m.textEn || null })),
+    hazards: (Array.isArray(v.hazards) ? v.hazards : []).filter(isObj).map((h) => ({
+      key: h.key, text: h.text || '', need: isObj(h.skill) ? skillNeed(h.skill, skillLevels) : null,
+      oneShot: h.oneShot === true, noSkill: isObj(h.skill) ? null : (h.noSkill || '防ぐスキルの情報がありません'),
+      confidence: h.confidence || null, unverified: h.confidence !== 'high', note: h.note || null,
+    })),
+    source: v.source || null,
   };
 }

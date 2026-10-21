@@ -3,6 +3,9 @@
 // - いくつかの部位を割合で混ぜられる (火力の期待値は割合で平均)。指定は state の tabs.target に置く (target_mix.js)。
 // - おすすめの属性 (monsters.json の elementRecommendation) と、咆哮・風圧・振動・属性やられ・状態異常を防ぐスキル
 //   (monster_threats.json の rules。出典 Monster Hunter Wiki / CC BY-SA 4.0)。
+// - 段階 3 (docs/RECOMMEND_DESIGN.md 4.2 節): 個体 (通常・歴戦の個体・歴戦王など)・クエスト・人数・体力と強さ・
+//   この相手のおすすめ・このクエストの相手 (多頭)・歴戦王で変わること は target_hunt.js のカード。
+//   個体の傷口の置き換え (歴戦王ウズ・トゥナなど) は部位の一覧・肉質・おすすめの属性にも反映する (hunt.js の hitzoneFor)。
 // 選んだ相手は state.target に入り、装備タブ・火力タブの計算に使われる。
 import { useMemo } from 'preact/hooks';
 import {
@@ -10,17 +13,20 @@ import {
   ELEMENT_LABEL, formatNumber,
 } from '../components/index.js';
 import {
-  useAppState, setTargetMode, selectMonster, selectPart, setWound, setManualHitzone, setTarget, setTabState,
+  useAppState, setTargetMode, selectPart, setWound, setManualHitzone, setTarget, setTabState, setUseUncertainWound,
 } from '../../state.js';
 import { useTargetData } from '../../data.js';
 import { computeBuild } from '../../model/build.js';
 import { useEquipIndex } from './equip_index.js';
 import { resolveWeaponRef } from './equip_logic.js';
+import { hitzoneFor, elementRecommendationOf } from '../../model/hunt.js';
 import {
-  visibleParts, defaultPartKey, findMonster, findPart, isUnknownPart, readMix, mixShares, mainPartKey,
-  threatInfo, partLabel, weakInfo, recommendationView, setShare, addShare, removeShare, MIX_MIN_SHARE,
+  visibleParts, findMonster, findPart, isUnknownPart, readMix, mixShares, mainPartKey,
+  threatInfo, partLabel, weakInfo, recommendationView, setShare, addShare, removeShare, individualKindOf, individualName,
+  MIX_MIN_SHARE,
   ELEMENT_KEYS, HITZONE_INPUT_KEYS, WEAK_POINT_MIN,
 } from './target_mix.js';
+import { HuntCards, QuestNameEntry, MarkBadge, WoundMarkLine, pickMonster } from './target_hunt.js';
 
 const EMPTY = Object.freeze({});
 const cx = (...a) => a.filter(Boolean).join(' ');
@@ -88,15 +94,7 @@ function bestText(monster) {
   return v.best.map(elemName).join('・');
 }
 
-function pickMonster(td, id) {
-  if (id == null) {
-    selectMonster(null);
-    return;
-  }
-  selectMonster(id, defaultPartKey(findMonster(td, id)));
-}
-
-function MonsterPicker({ td, target }) {
+function MonsterPicker({ td, target, ui }) {
   const items = useMemo(() => {
     const en = new Map(td.lists.threats.map((x) => [x.monsterId, x.nameEn || '']));
     return td.lists.monsters.map((m) => ({
@@ -106,8 +104,9 @@ function MonsterPicker({ td, target }) {
   return html`
     <${Card} title="モンスター">
       <${PickerField} title="モンスターを選ぶ" items=${items} value=${target.monsterId}
-        onChange=${(v) => pickMonster(td, v)} allowNone noneLabel="選ばない" placeholder="選んでいません"
+        onChange=${(v) => pickMonster(td, ui, target, v)} allowNone noneLabel="選ばない" placeholder="選んでいません"
         searchPlaceholder="名前で探す (ひらがなでも)" />
+      <${QuestNameEntry} td=${td} target=${target} ui=${ui} />
     </${Card}>`;
 }
 
@@ -119,8 +118,23 @@ function tieText(tb) {
   return `${tied} が同じ値です。`;
 }
 
-function RecommendCard({ monster, weaponElem }) {
-  const rec = monster.elementRecommendation || {};
+/**
+ * 個体の傷口で計算し直したおすすめを使っているときの印 (確かめていない置き換え = 未確認、
+ * いつ置き換わるか分からない置き換え = 未確定)。通常のおすすめのままなら null
+ */
+function individualRecoMark(monster, target) {
+  const kind = individualKindOf(target);
+  if (kind == null) return null;
+  const rec = elementRecommendationOf(monster, kind, { useUncertain: target.useUncertainWound === true });
+  if (!rec || rec === monster.elementRecommendation) return null;
+  const ind = (monster.individuals || []).find((i) => (i.kind ?? null) === kind);
+  return ind && ind.hitzone && ind.hitzone.sameAsBase === false ? 'unverified' : 'uncertain';
+}
+
+function RecommendCard({ monster, target, weaponElem }) {
+  const kind = individualKindOf(target);
+  const rec = elementRecommendationOf(monster, kind, { useUncertain: target.useUncertainWound === true }) || {};
+  const recMark = individualRecoMark(monster, target);
   const order = rec.order || [];
   const v = recommendationView(rec, weaponElem);
   const bestName = v.best.map(elemName).join('・');
@@ -140,6 +154,8 @@ function RecommendCard({ monster, weaponElem }) {
       ${order.length > 0 && html`
         <div class="tg-order">${order.map((o) => html`<span key=${o.type}>${elemName(o.type)} ${formatNumber(o.avg, 1)}</span>`)}</div>`}
       ${rec.tieBreak && v.kind !== 'weak' && html`<${Hint}>${tieText(rec.tieBreak)}</${Hint}>`}
+      ${recMark && html`
+        <p class="hint th-mark-line" data-th-reco-mark=${recMark}><${MarkBadge} mark=${recMark} /> この個体の傷口の肉質 (置き換え後) で計算し直したおすすめです。</p>`}
     </${Card}>`;
 }
 
@@ -160,10 +176,14 @@ function weakBadgeText(w) {
   return null;
 }
 
-function PartRow({ part, monster, elemCol, selected, share, onClick }) {
-  const w = weakInfo(part);
+function PartRow({ part, monster, elemCol, selected, share, onClick, ihz }) {
+  // 個体の傷口の置き換え (ihz = hunt.js の hitzoneFor の結果。通常なら null) を入れた部位で弱点・傷口の数字を出す
+  const wound = ihz ? ihz.wound : part.wound;
+  const w = weakInfo(ihz ? { ...part, wound } : part);
   const weakText = weakBadgeText(w);
   const hz = part.hitzone || {};
+  const woundChanged = !!ihz && (ihz.woundSource === 'override' || ihz.woundSource === 'override-uncertain')
+    && ihz.changed.includes('slash');
   return html`
     <button type="button" class=${cx('tg-part', selected && 'is-selected')} aria-pressed=${selected ? 'true' : 'false'}
       data-part=${part.key} onClick=${onClick}>
@@ -174,14 +194,19 @@ function PartRow({ part, monster, elemCol, selected, share, onClick }) {
       </span>
       <span class=${cx('tg-num', w.sword && 'is-weak')}>${hz.slash ?? '—'}</span>
       <span class="tg-num">${hz[elemCol] ?? '—'}</span>
-      <span class=${cx('tg-num', !part.wound && 'is-none', w.woundSword && 'is-weak')}>${part.wound ? part.wound.slash : '—'}</span>
+      <span class=${cx('tg-num', !wound && 'is-none', w.woundSword && 'is-weak', woundChanged && 'th-changed')}>${wound ? wound.slash : '—'}</span>
     </button>`;
 }
 
 function PartsCard({ monster, target, ui, weaponElem }) {
   const showUnknown = !!ui.showUnknown;
   const sort = ui.sort === 'slash' ? 'slash' : 'body';
-  const best = (monster.elementRecommendation && monster.elementRecommendation.best) || [];
+  const kind = individualKindOf(target);
+  const useUncertain = target.useUncertainWound === true;
+  const rec = elementRecommendationOf(monster, kind, { useUncertain });
+  const best = (rec && rec.best) || [];
+  // 個体の肉質 (傷口の置き換え)。通常なら null
+  const ihzOf = (p) => (kind != null ? hitzoneFor(monster, p, kind, { useUncertain }) : null);
   const elemCol = ELEMENT_KEYS.includes(ui.elem) ? ui.elem : (weaponElem || best[0] || 'fire');
   const mix = readMix(ui, monster.id, monster);
   const shares = mix.on ? mixShares(monster, mix.weights) : [];
@@ -225,7 +250,7 @@ function PartsCard({ monster, target, ui, weaponElem }) {
           const share = mix.on && shareOf.has(p.key) && shares.length > 1 ? shareOf.get(p.key) : null;
           return html`
             <${PartRow} key=${p.key} part=${p} monster=${monster} elemCol=${elemCol} selected=${selected} share=${share}
-              onClick=${() => onTap(p)} />
+              ihz=${ihzOf(p)} onClick=${() => onTap(p)} />
             ${mix.on && shareOf.has(p.key) && shares.length > 1 && html`
               <div class="tg-mix-slider" key=${`${p.key}-w`}>
                 <${Slider} label=${`${partLabel(p, monster)}を狙う割合`} value=${shareOf.get(p.key)} min=${MIX_MIN_SHARE} max=${maxShare}
@@ -236,6 +261,7 @@ function PartsCard({ monster, target, ui, weaponElem }) {
         })}
       </div>
       <${Hint}>数字は肉質 (0〜100。大きいほど通る)。剣は切断・盾は打撃の肉質が ${WEAK_POINT_MIN} 以上 (傷口を狙うときは傷口の肉質) のとき、弱点特効が効きます。「弱点 (剣だけ)」の部位では、盾のヒットには効きません。傷口の「—」は傷口ができない部位です。</${Hint}>
+      <${IndividualWoundNote} monster=${monster} target=${target} parts=${parts} ihzOf=${ihzOf} />
       ${unknownCount > 0 && html`
         <${Toggle} label=${`部位不明も出す (${unknownCount} か所)`} checked=${showUnknown}
           onChange=${(on) => setTabState('target', { showUnknown: on })}
@@ -249,31 +275,71 @@ function PartsCard({ monster, target, ui, weaponElem }) {
     </${Card}>`;
 }
 
-function HitzoneTable({ part }) {
+/**
+ * 個体 (歴戦王など) の傷口の注記: 印 (未確認 / 未確定) と、いつ置き換わるか分からない置き換えを使うかのスイッチ。
+ * 印は一覧に出ている部位のうち一番重いもの (ウズ・トゥナの歴戦王 = 未確認、アルシュベルドの歴戦王 = 未確定)。
+ */
+function IndividualWoundNote({ target, parts, ihzOf }) {
+  if (individualKindOf(target) == null) return null;
+  const list = parts.map(ihzOf).filter(Boolean);
+  const pick = list.find((h) => h.mark === 'uncertain') || list.find((h) => h.mark === 'unverified');
+  const hasUncertain = list.some((h) => h.overrideWound && h.sameAsBase == null);
+  return html`
+    ${pick && html`<${WoundMarkLine} hz=${pick} />`}
+    ${hasUncertain && html`
+      <${Toggle} label="置き換わった傷口で計算する (参考)" checked=${target.useUncertainWound === true}
+        onChange=${(on) => setUseUncertainWound(on)}
+        hint="この個体は、傷口の肉質が置き換わることがあります (いつかは分かりません)。オンにすると、置き換わったときの値で計算します (未確定)" />`}`;
+}
+
+/** 肉質の表。rows = [[見出し, 肉質, 置き換えで変わった項目の Set か null]] */
+function HitzoneTable({ rows, noWound }) {
   const keys = HITZONE_INPUT_KEYS;
-  const row = (label, hz) => html`
-    <tr>
+  const row = ([label, hz, changed]) => html`
+    <tr key=${label}>
       <th scope="row">${label}</th>
-      ${keys.map((k) => html`<td key=${k} class=${k === 'slash' && (hz[k] ?? 0) >= WEAK_POINT_MIN ? 'is-weak' : ''}>${hz[k] ?? '—'}</td>`)}
+      ${keys.map((k) => html`<td key=${k} class=${cx(k === 'slash' && (hz[k] ?? 0) >= WEAK_POINT_MIN && 'is-weak', changed && changed.has(k) && 'th-changed')}>${hz[k] ?? '—'}</td>`)}
     </tr>`;
   return html`
     <div class="tg-detail">
       <table class="tg-hz">
         <thead><tr><th scope="col"></th>${keys.map((k) => html`<th scope="col" key=${k}>${ELEMENT_LABEL[k]}</th>`)}</tr></thead>
         <tbody>
-          ${row('通常', part.hitzone || {})}
-          ${part.wound ? row('傷口', part.wound) : html`<tr><th scope="row">傷口</th><td colspan=${keys.length}>できません</td></tr>`}
+          ${rows.map(row)}
+          ${noWound && html`<tr><th scope="row">傷口</th><td colspan=${keys.length}>できません</td></tr>`}
         </tbody>
       </table>
     </div>`;
 }
 
-function PartDetailCard({ monster, part }) {
-  const w = weakInfo(part);
+/** 部位の肉質の表の行 (個体の傷口の置き換えがあれば、計算に使う傷口と通常の傷口を並べる) */
+function hitzoneRows(part, ihz) {
+  const rows = [['通常', part.hitzone || {}, null]];
+  if (!part.wound) return rows;
+  if (!ihz || !ihz.overrideWound) {
+    rows.push(['傷口', part.wound, null]);
+    return rows;
+  }
+  const changed = new Set(ihz.changed);
+  if (ihz.woundSource === 'override' || ihz.woundSource === 'override-uncertain') {
+    rows.push(['傷口 (この個体)', ihz.wound, changed]);
+    rows.push(['傷口 (通常)', part.wound, null]);
+  } else {
+    rows.push(['傷口', part.wound, null]);
+    rows.push(['置き換わったとき', ihz.overrideWound, changed]);
+  }
+  return rows;
+}
+
+function PartDetailCard({ monster, part, target }) {
+  const kind = individualKindOf(target);
+  const ihz = kind != null ? hitzoneFor(monster, part, kind, { useUncertain: target.useUncertainWound === true }) : null;
+  const w = weakInfo(ihz ? { ...part, wound: ihz.wound } : part);
   const weakText = weakBadgeText(w);
   return html`
-    <${Card} title=${`${partLabel(part, monster)} の肉質`} sub=${monster.name}>
-      <${HitzoneTable} part=${part} />
+    <${Card} title=${`${partLabel(part, monster)} の肉質`} sub=${individualName(monster, kind)}>
+      <${HitzoneTable} rows=${hitzoneRows(part, ihz)} noWound=${!part.wound} />
+      <${WoundMarkLine} hz=${ihz} />
       <div class="tg-badges">
         ${weakText && html`<${Badge} kind="ok">${weakText}</${Badge}>`}
         ${part.breakable && html`<${Badge} kind="info">部位破壊できる</${Badge}>`}
@@ -326,6 +392,8 @@ function WoundCard({ target, noWound }) {
       <${Toggle} label="傷口を狙う" checked=${target.isWound} onChange=${(on) => setWound(on)}
         hint="オンにすると、コンボの技をすべて傷口の肉質で計算します" />
       <${Hint}>コンボ「集中弱点攻撃で傷を突く」は、このスイッチに関係なく傷口で計算します。</${Hint}>
+      ${target.mode !== 'manual' && individualKindOf(target) === 'arch-tempered' && html`
+        <${Hint}>歴戦王は傷が付きにくいので、傷口を狙う技の回数は減ります (期待値は傷口ができている前提の値です)。</${Hint}>`}
       ${noWound && html`
         <${Notice} kind="warn" title=${noWound}>
           <p>傷口を狙うコンボも、傷口なしで計算します。</p>
@@ -349,8 +417,11 @@ function NeedLine({ need }) {
 }
 
 function ThreatCard({ info }) {
+  const v = info.variant;
   return html`
     <${Card} title="気をつけること" sub="咆哮・風圧・振動・属性やられ・状態異常と、防ぐスキル">
+      ${v && v.sameAsBase && v.sameAsBase.all && html`
+        <p class="hint th-hint-first" data-th-threat-same>${v.name || 'この個体'}も、咆哮・風圧・振動・属性やられ・状態異常は通常と同じと見ています ${v.sameAsBase.confidence !== 'high' && html`<${MarkBadge} mark="unverified" />`}</p>`}
       <ul class="tg-threats" data-target-threats>
         ${info.hazards.map((h) => html`
           <li key=${h.key}>
@@ -370,6 +441,15 @@ function ThreatCard({ info }) {
               <${NeedLine} need=${b.need} />
               <span class="tg-th-text">${b.resistName}の値が ${b.resistThreshold} 以上でも防げます。</span>
               ${b.uncertain && html`<span class="tg-th-text">${elemName(b.element)}属性の攻撃はありますが、属性やられになるかはまだ確かめられていません。</span>`}
+            </li>`)}
+        </ul>`}
+      ${v && v.hazards.length > 0 && html`
+        <p class="card-subhead">${v.kind === 'arch-tempered' ? '歴戦王' : 'この個体'}だけの攻撃</p>
+        <ul class="tg-threats" data-th-variant-hazards>
+          ${v.hazards.map((h) => html`
+            <li key=${h.key}>
+              <div class="tg-th-head"><span class="tg-th-label">${h.text} ${h.unverified && html`<${MarkBadge} mark="unverified" />`}</span></div>
+              ${h.need ? html`<${NeedLine} need=${h.need} />` : html`<span class="tg-th-text">${h.noSkill}</span>`}
             </li>`)}
         </ul>`}
       <p class="card-subhead">状態異常</p>
@@ -402,13 +482,15 @@ export default function TargetTab({ data, active }) {
   const { idx } = useEquipIndex(data, { active });
   const weapon = useMemo(() => resolveWeaponRef(build.weapon, idx), [build.weapon, idx]);
   const weaponElem = weapon && weapon.element && ELEMENT_KEYS.includes(weapon.element.type) ? weapon.element.type : null;
-  const skillLevels = useMemo(() => {
+  // いまの装備 (防ぐスキルの「いまの Lv」と、討伐までの回数に使う 1 コンボの期待値)
+  const buildResult = useMemo(() => {
     try {
-      return computeBuild(build, idx).skillLevels;
+      return computeBuild(build, idx);
     } catch {
-      return {};
+      return null;
     }
   }, [build, idx]);
+  const skillLevels = (buildResult && buildResult.skillLevels) || EMPTY;
 
   if (t.status === 'error') return html`<${ErrorBox} title="モンスターのデータを読み込めませんでした" error=${t.error} onRetry=${t.retry} />`;
   if (t.status !== 'ready') return html`<${Loading} text="モンスターのデータを読み込み中…" />`;
@@ -418,7 +500,7 @@ export default function TargetTab({ data, active }) {
   const mix = monster ? readMix(ui, monster.id, monster) : null;
   const mixShareList = monster && mix.on ? mixShares(monster, mix.weights) : [];
   const part = monster && !(mix.on && mixShareList.length > 1) ? findPart(monster, target.partKey) : null;
-  const info = monster ? threatInfo(td.threats, monster.id, skillLevels) : null;
+  const info = monster ? threatInfo(td.threats, monster.id, skillLevels, { kind: individualKindOf(target) }) : null;
 
   let noWound = null;
   if (isManual && !target.manual.wound) noWound = '傷口の肉質を入れていません';
@@ -435,12 +517,15 @@ export default function TargetTab({ data, active }) {
         <${Hint}>選んだ相手は、装備タブと火力タブの計算に使われます。</${Hint}>
       </${Card}>
       ${isManual ? html`<${ManualCard} target=${target} />` : html`
-        <${MonsterPicker} td=${td} target=${target} />
-        ${!monster && html`<${Hint}>モンスターを選ぶと、部位ごとの肉質・おすすめの属性・気をつけることが出ます。</${Hint}>`}
-        ${monster && html`<${RecommendCard} monster=${monster} weaponElem=${weaponElem} />`}
+        <${MonsterPicker} td=${td} target=${target} ui=${ui} />
+        ${!monster && html`<${Hint}>モンスターを選ぶと、部位ごとの肉質・おすすめの属性・気をつけることが出ます。クエストの名前からも選べます。</${Hint}>`}
+        ${monster && html`
+          <${HuntCards} data=${data} td=${td} monster=${monster} target=${target} ui=${ui} idx=${idx} buildResult=${buildResult}
+            weaponFull=${weapon} weaponElem=${weaponElem} info=${info} active=${active} />`}
+        ${monster && html`<${RecommendCard} monster=${monster} target=${target} weaponElem=${weaponElem} />`}
         ${monster && html`<${PartsCard} monster=${monster} target=${target} ui=${ui} weaponElem=${weaponElem} />`}
         ${monster && !part && !(mix && mix.on && mixShareList.length) && html`<${Notice} kind="info" title="部位を選んでください" />`}
-        ${part && html`<${PartDetailCard} monster=${monster} part=${part} />`}`}
+        ${part && html`<${PartDetailCard} monster=${monster} part=${part} target=${target} />`}`}
       <${WoundCard} target=${target} noWound=${noWound} />
       ${info && html`<${ThreatCard} info=${info} />`}
       ${monster && !info && html`<${Hint}>このモンスターの咆哮・風圧などのデータがありません。</${Hint}>`}

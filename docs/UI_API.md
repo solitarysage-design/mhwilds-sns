@@ -423,7 +423,7 @@ toast('武器の装飾品 1 個 (…) は入らないので外しました', { a
 | `tabs/equip_logic.js` (純粋関数) | (武器の解決・斬れ味の 9 関数の本体は `app/model/weapon.js`。ここから再 export) `resolveWeaponRef(ref, idx)` (所持武器は元の武器で補う) / `damageWeapon(w)` / `autoSharpness(w, idx, skillLevels)` (斬れ味の自動 = 匠込みの一番上の色) / `sharpnessResolver(w, idx, fixedColor)` (スキルの組ごとに斬れ味の色を決め直す関数。power_calc の `perSkills`) / `handicraftInfo(idx)` / `weaponName(w)` / `DEFAULT_TARGET` と `DEFAULT_HITZONE_TEXT` (相手が決まらないときの肉質: 切断・打撃 45、属性 20) / `pickDamageTarget` / `summarizePower({…, target, targets?, perSkills?, monsterStatus?})` (targets を渡すと部位の割合で平均) / `refitDecorations(ids, sizes, kind, idx)` (装備を替えたとき入る珠を残す) ほか一覧づくり | 装備・火力・相手 |
 | `tabs/equip_index.js` (hook) | `useEquipIndex(data, {active})` → `{idx, localWeapons, localCharms}`。画面で足した武器・護石も入った索引 (`computeBuild` にそのまま渡す) | 装備・火力・相手 |
 | `tabs/power_calc.js` (純粋関数) | `mixExpected(input, targets)` / `mixTotal` / `mixContribution` (狙う部位の割合で加重平均した comboExpected・スキルなし比・外したときの低下) / スキル火力表 (`skillTableCandidates(effects, weapon, {handicraft})` `tableContext` `skillTableRow` (行の `conflict` = 同時に起きない条件の合計が 100% 超え) `skillTable` `sortTableRows`) / `conditionSummary(effects, uptimes, groupId, {entry, skillIds, monsterStatus})` (スキルが効く段だけ・段ごと) / `effectiveStates` / `exclusiveConflict` / `inputFor` / `rebalanceCategorical`。input に `perSkills` (斬れ味の自動) と `handicraft` (匠の行) を足せる | 火力・装備 (summarizePower 経由) |
-| `tabs/target_mix.js` (純粋関数) | `resolveTargetMix(state.target, state.tabs.target, targetData)` → `{targets: [{weight, label, partKey, target}], label, mixed}` か null / `partLabel(part, monster)` (部位不明は「部位不明 1」) / `readMix` `mixShares` `mainPartKey` `setShare` `addShare` `removeShare` (割合のつまみ) / `visibleParts` `defaultPartKey` `isWeakPart` `weakInfo` (剣・盾・傷口のどれに弱点特効が効くか) `manualTarget` / `recommendationView` (おすすめ属性の見せ方。近い・低いときは 1 つを大きく出さない) / `monsterStatusOf` (相手が使う状態異常) / `threatInfo` (咆哮などと防ぐスキル) | 相手・火力・装備 |
+| `tabs/target_mix.js` (純粋関数。import は `app/model/hunt.js` だけ) | `resolveTargetMix(state.target, state.tabs.target, targetData)` → `{targets: [{weight, label, partKey, target}], label, mixed, individual, woundMark}` か null (個体 `state.target.individual` があれば傷口を hunt.js の `hitzoneFor` で置き換え、ラベルは「ウズ・トゥナ（歴戦王） 頭」。`woundMark` = 傷口の印) / 段階 3: `questContext(targetData, state.target)` (クエスト・相手の一覧・今の相手・人数) `subjectTargets(targetData, subject, target, tabTarget)` (多頭の相手ごとの部位) `partsMemoPatch` `readPartsMemo` (`tabs.target.memo`) `individualKindOf` `individualName` `variantThreats` / `partLabel(part, monster)` (部位不明は「部位不明 1」) / `readMix` `mixShares` `mainPartKey` `setShare` `addShare` `removeShare` (割合のつまみ) / `visibleParts` `defaultPartKey` `isWeakPart` `weakInfo` (剣・盾・傷口のどれに弱点特効が効くか) `manualTarget` / `recommendationView` (おすすめ属性の見せ方。近い・低いときは 1 つを大きく出さない) / `monsterStatusOf` (相手が使う状態異常) / `threatInfo(threats, monsterId, skillLevels, {kind})` (咆哮などと防ぐスキル。`kind` が歴戦王なら `variant` に専用の脅威・動きの変化・通常と同じと見ているもの) | 相手・火力・装備 |
 | `tabs/charms.js` | 「この端末で足した護石」の入れ物: `LOCAL_CHARMS_KEY` (`mhwilds-sns:charms-local`) / `loadLocalCharms` `refreshLocalCharms` `getLocalCharms` `subscribeLocalCharms` `useLocalCharms` `addLocalCharms` `updateLocalCharm` `deleteLocalCharms` / `mergeCharms` `charmsIndex` `useCharmsIndex` `charmPickerItems` / 純粋関数 `rarityChoices` `slotChoices` `skillChoices` `pickStatus` `checkCharm` `nakiSimExport` `claudeExportText` `parseImportText` | 護石・装備 (equip_index.js が読む) |
 
 `targets` の形は `[{weight, label?, partKey?, target: {hitzone, wound, isWound}}]` (weight は足して 1 でなくてよい)。
@@ -434,7 +434,7 @@ toast('武器の装飾品 1 個 (…) は入らないので外しました', { a
 | キー | 形 | 中身 |
 |---|---|---|
 | `tabs.equip` | `{myWeapons: [...], armorRank: 'all'\|'high'\|'low', armorRarity: 'all'\|数}` | `myWeapons` = 画面で足したアーティア武器 (my_weapons.json と同じ形。id は `"wl…"`)。`build.weapon` がこの id を指せる |
-| `tabs.target` | `{mix: {on, monsterId, weights: {部位 key: 0〜1}}, showUnknown, sort: 'body'\|'slash', elem}` | 部位を割合で混ぜる指定 (`state.target.partKey` には一番割合の大きい部位が入る。画面は weights を足して 1 の割合で書く。つまみの値 = その部位の割合)・部位不明を出すか・並べ方・属性の列 |
+| `tabs.target` | `{mix: {on, monsterId, weights: {部位 key: 0〜1}}, showUnknown, sort: 'body'\|'slash', elem, memo: {[monsterId]: {partKey, mix: {on, weights} \| null}}}` | 部位を割合で混ぜる指定 (`state.target.partKey` には一番割合の大きい部位が入る。画面は weights を足して 1 の割合で書く。つまみの値 = その部位の割合)・部位不明を出すか・並べ方・属性の列・モンスターごとの部位の選び方の覚え (相手を替える前に残す。多頭の相手ごとの部位と、探索の `partsPolicy: 'asSelected'` に使う。最大 64 体) |
 | `tabs.power` | `{showSteps, tableOpen, tableSort: 'next'\|'max'\|'name'}` | 技ごとの内訳・スキル火力表を開くか・並べ方 |
 
 これらは `state.js` の正式な項目ではない (`sanitizeState` は `tabs` を JSON のまま残す)。中身の検査は読む側 (`sanitizeLocalWeapons`・`readMix` など) でしている。
@@ -443,8 +443,8 @@ toast('武器の装飾品 1 個 (…) は入らないので外しました', { a
 
 `equip.js` は `<style>` を部品の中に、`power.js` / `target.js` は `<style id="mhwilds-sns-power-style">` などを head に足して持つ
 (class は `eq-*` / `pw-*` / `tg-*`。色は :root の変数だけ)。styles.css に移すときは class 名を変えないこと (スモークテストが使う)。
-段階 2・3 の画面は別のファイル: 探すタブは `app/ui/styles_search.css` (class は `sr-*`)、相手タブの新しいカード (`target_hunt.js`) は
-`app/ui/styles_target.css` (class は `th-*`)。どちらも index.html が styles.css の後に読む。スモークテストの `:hover`・`vh` の検査は
+段階 2・3 の画面は別のファイル: 探すタブは `app/ui/styles_search.css` (class は `sr-*`)、相手タブの新しいカード (`target_hunt.js`) と
+target.js に足した個体の傷口の印は `app/ui/styles_target.css` (class は `th-*`)。どちらも index.html が styles.css の後に読む。スモークテストの `:hover`・`vh` の検査は
 `app/ui/*.css` を全部見る。
 
 ## 探すタブ (段階 2・3。担当: ui-search)
@@ -454,8 +454,53 @@ toast('武器の装飾品 1 個 (…) は入らないので外しました', { a
 
 ## 相手タブの段階 3 のカード (担当: ui-target)
 
-個体・クエスト・人数・体力と強さ・この相手のおすすめ・このクエストの相手・歴戦王で変わること (`docs/RECOMMEND_DESIGN.md` 4.2 節。
-`tabs/target_hunt.js`)。いまは置き場だけ。
+個体・クエスト・人数・体力と強さ・この相手のおすすめ・このクエストの相手・歴戦王で変わること (`docs/RECOMMEND_DESIGN.md` 4.2 節)。
+部品は `tabs/target_hunt.js`、純粋関数は `tabs/target_mix.js`、見た目は `app/ui/styles_target.css` (`th-*`)。
+
+相手タブの並び (上から。`*` は前からあるカード):
+
+```
+* 相手の決め方
+* モンスター              モンスター欄 + 「クエストの名前から選ぶ」(全 220 件。★ の高い順・★ ごとの見出し)
+  個体とクエスト          個体 (3 つまで並べる・4 つ以上は選ぶ欄。1 つなら出さない)・クエスト (狩猟対象 / 乱入の可能性)・人数
+  体力と強さ              クエストを選んだときだけ。体力 (1 人・範囲)・N 人のとき [未確定]・攻撃の強さ [未確定]・
+                          傷の付きにくさ [未確定]・討伐まで (いまの装備の 1 コンボの期待値で割った目安)・くわしく
+  この相手のおすすめ [仮]  buildPlan の要約 (属性・守り・参考・注意) +「この相手で装備を探す」。buildPlan が null なら
+                          代わりに「装備を探す」のカード (ボタンだけ)。装備固定のクエストはボタンを出さず理由を出す
+  このクエストの相手      多頭のとき (と、乱入の相手を選んでいるとき)。1 体 1 行 (体力・討伐まで約 n 回) と「全部倒すまで」。
+                          行をタップするとその相手を下のカードに出す
+  歴戦王で変わること      歴戦王のときだけ。動き・防げる/防げない攻撃・通常と同じと見ているもの [未確認]・肉質・報酬・出典
+* おすすめの属性          個体の傷口で計算し直したおすすめ (hunt.js の elementRecommendationOf) と印
+* 狙う部位                傷口の列は個体の置き換え後。印の行と「置き換わった傷口で計算する (参考)」(歴戦王アルシュベルド)
+* 部位の肉質 / * 傷口 / * 気をつけること (歴戦王だけの攻撃・通常と同じと見ている旨を足した)
+```
+
+```js
+// target.js から使うもの
+import { HuntCards, QuestNameEntry, MarkBadge, WoundMarkLine, pickMonster, setPlanBuilderForTest } from './target_hunt.js';
+<${HuntCards} data td monster target ui idx buildResult weaponFull weaponElem info active />  // 個体とクエスト〜歴戦王のカード
+<${QuestNameEntry} td target ui />          // モンスターのカードに置く「クエストの名前から選ぶ」
+pickMonster(td, ui, target, monsterId)      // モンスター欄で選んだとき (部位の選び方を覚え・戻し、通常の個体の既定のクエストを選ぶ)
+<${MarkBadge} mark="uncertain" />           // hunt.js の印 → Badge (uncertain = 未確定 / unverified = 未確認 / provisional = 仮)
+setPlanBuilderForTest(fn | null)            // テスト用: buildPlan を作り物に差し替える (smoke_ui.py が 5.3 節の形の Plan で見た目を確かめる)
+```
+
+- 討伐までの回数 = 体力 ÷ 1 コンボの期待値 (火力タブと同じ入力で `power_calc.js` の `mixTotal`。部位の割合で平均。相手が使う状態異常も
+  `monsterStatusOf`)。2 人以上は「1 人あたり」= 人数ぶんの体力 ÷ 人数 ÷ 期待値 [未確定]。装備固定のクエストは出さない。
+  拘束・部位破壊・ダウン・状態異常などを入れない目安である旨を、くわしくの外にも出す。
+- 多頭の相手ごとの部位は `target_mix.js` の `subjectTargets`: 今のモンスターは相手タブで選んだ部位・割合、ほかは
+  `tabs.target.memo` に覚えた部位 (無ければ弱点 1 か所 = `defaultPartKey`)。傷口を狙うか・確度の低い傷口を使うかは全員に同じ。
+- モンスターを替えるとき (モンスター欄・多頭の行・クエストの名前から選ぶ) は、前のモンスターの部位の選び方を `tabs.target.memo` に残し、
+  替えた先に覚えがあれば戻す (`partsMemoPatch` / `readPartsMemo`)。
+- モンスター欄で選ぶと、通常の個体として `selectIndividual(null, {targetData})` も呼ぶ (2.2 節の規則で既定のクエストを選ぶ。
+  体力と回数がすぐ出るように。無ければクエストなし)。
+- 「この相手で装備を探す」(多頭は「このクエストで装備を探す」) は `requestSearch({from: 'target'})` → `goToTab('search', {top: true})`。
+  探し始めるのは探すタブ (上の「自動で探し始める受け渡し」)。
+- 「この相手のおすすめ」の「いま」は装備タブの装備のスキル Lv (`options` のどれか 1 つを満たせば ✓)。属性の耐性の合計
+  (「耐性 20 以上 いま 7」) は Plan にその要件の属性が入ったら出す (未対応)。
+- smoke の目印: `[data-th-card="health"|"plan"|"multi"|"arch"]`・`[data-th-health]`・`[data-th-total]`・`[data-th-combos]`
+  (`data-th-combo-value` = 使った期待値)・`[data-th-attack]`・`[data-th-individual]`・`[data-th-players]`・`[data-th-quest-by-name]`・
+  `[data-th-subject]`・`[data-th-multi-total]`・`[data-th-search]` / `[data-th-search-blocked]`・`[data-th-wound-mark]`。
 
 ## sw.js (オフラインと更新)
 
