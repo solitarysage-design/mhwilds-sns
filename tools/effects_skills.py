@@ -15,6 +15,8 @@
 """
 from __future__ import annotations
 
+import re
+import unicodedata
 from typing import Callable
 
 from effects_conditions import GROUPS_BY_ID, default_active_states, main_uptime
@@ -31,6 +33,13 @@ ELEMENT_SKILLS = {
     "HunterSkill_005": "fire", "HunterSkill_006": "water", "HunterSkill_007": "ice",
     "HunterSkill_008": "thunder", "HunterSkill_009": "dragon",
 }
+
+# 属性の耐性スキル (火耐性など。防具スキル)。SkillData の _value[0] = その属性の耐性に足す値 (Lv3 の _value[1] は防御力)
+RESIST_SKILLS = {
+    "HunterSkill_077": "fire", "HunterSkill_078": "water", "HunterSkill_079": "ice",
+    "HunterSkill_080": "thunder", "HunterSkill_081": "dragon",
+}
+RESIST_LABEL = {"fire": "火", "water": "水", "thunder": "雷", "ice": "氷", "dragon": "龍"}
 
 
 def _r(x: float) -> float:
@@ -492,3 +501,64 @@ def build_specs() -> dict[str, dict]:
         add(hid, _skill(hid, conditional=True, uptime=0.0, uptime_basis="未対応", condition=cond,
                         levels=lv, confidence="low", supported=False, source=src, note=note))
     return specs
+
+
+# ---------------------------------------------------------------- 属性の耐性スキル (rules.resistSkills)
+
+def _desc_value(text: str, label: str) -> int | None:
+    """MHDB の説明文 (「火耐性＋６」「火耐性＋２０、防御力＋１０」) から耐性の値を読む。読めなければ None。"""
+    m = re.match(rf"^{label}耐性\+(\d+)", unicodedata.normalize("NFKC", text or "").strip())
+    return int(m.group(1)) if m else None
+
+
+def _desc_defense(text: str) -> int:
+    """MHDB の説明文の「防御力＋１０」の値 (書いていなければ 0)。"""
+    m = re.search(r"防御力\+(\d+)", unicodedata.normalize("NFKC", text or ""))
+    return int(m.group(1)) if m else 0
+
+
+def build_resist_skills(enum: dict[str, int], index: dict[int, dict]) -> dict[str, dict]:
+    """rules.resistSkills (属性の耐性スキル → 耐性に足す値) を作る。docs/RECOMMEND_DESIGN.md 5.8 節。
+
+    値はゲームデータ (SkillData の _value[0])。MHDB のスキルの説明文 (「火耐性＋６」など) と照合し、
+    スキルが見つからない・名前・Lv の数・値 (耐性と、Lv3 の防御力) のどれかが合わなければ SystemExit で生成を止める
+    (属性やられの判定に使う耐性の合計が静かに狂うのを防ぐ)。
+    enum: HunterSkill_XXX → gameId。index: gameId → {id, name, descriptions: [Lv1 の説明文, ...]}
+    """
+    rows_by_hid = skill_data_rows()
+    out: dict[str, dict] = {}
+    errors: list[str] = []
+    for hid, elem in RESIST_SKILLS.items():
+        label = RESIST_LABEL[elem]
+        sk = index.get(enum.get(hid))
+        rows = [r for r in rows_by_hid.get(hid, []) if r["level"] > 0]
+        if sk is None or not rows:
+            errors.append(f"{hid} ({label}耐性) がスキル一覧かゲームデータに無い")
+            continue
+        if sk["name"] != f"{label}耐性":
+            errors.append(f"{hid}: スキル名が {sk['name']} (期待は {label}耐性)")
+            continue
+        game = [int(r["value"][0]) for r in rows]
+        descs = sk.get("descriptions") or []
+        mhdb = [_desc_value(d, label) for d in descs]
+        if len(descs) != len(game) or mhdb != game:
+            errors.append(f"{sk['name']}: ゲームデータ {game} と MHDB の説明文 {mhdb} ({descs}) が合わない")
+            continue
+        game_def = [int(r["value"][1]) for r in rows]
+        mhdb_def = [_desc_defense(d) for d in descs]
+        if mhdb_def != game_def:
+            errors.append(f"{sk['name']}: 防御力の加算 ゲームデータ {game_def} と MHDB の説明文 {mhdb_def} が合わない")
+            continue
+        defense = {str(i + 1): v for i, v in enumerate(game_def) if v}
+        out[str(sk["id"])] = {
+            "name": sk["name"], "element": elem, "gameSkill": hid,
+            "levels": {str(i + 1): v for i, v in enumerate(game)},
+            "defenseAdd": defense,
+            "source": f"SkillData {hid} _value[0]=耐性の加算 (Lv3 の _value[1]=防御力の加算)。MHDB の説明文と照合",
+            "confidence": "high",
+            "verification": [_verify(f"{sk['name']} (MHDB の説明文)", game, mhdb),
+                             _verify(f"{sk['name']} 防御力の加算 (MHDB の説明文)", game_def, mhdb_def)],
+        }
+    if errors:
+        raise SystemExit("耐性スキルの照合の食い違い: " + " / ".join(errors))
+    return dict(sorted(out.items(), key=lambda kv: int(kv[0])))

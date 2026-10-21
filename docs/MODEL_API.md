@@ -309,8 +309,131 @@ const hz = hitzoneFor(monster, 'head', 'arch-tempered', { useUncertain: state.ta
 
 ## recommend.js (段階 3。担当: model-recommend)
 
-相手に合わせたおすすめ (守りのスキル・武器の属性・多頭の重み・並べ直し・守りのチェック・`createPlanRunner`)。API は
-`docs/RECOMMEND_DESIGN.md` 5.3 節。いまは置き場だけ (`buildPlan` は null を返す)。
+相手に合わせたおすすめ (守りのスキル・武器の属性・狙う部位・多頭の重み・作れない γ 防具の除外)、Plan → Job、探索を順に回す
+`createPlanRunner`、多頭の並べ直し、守りのチェック、耐性の合計。設計は `docs/RECOMMEND_DESIGN.md` (2〜3 章・5.3 節)。
+純粋関数で、import は相対パスの `./build.js` / `./damage.js` / `./hunt.js` / `./weapon.js` だけ (Worker からも読める)。
+探索の本体 (`createSearch`・`optimizeWeaponSide`) は import せず、`createPlanRunner` の引数で受ける。テストは `tests/recommend.test.mjs`。
+
+```js
+import { buildPlan, planToJob, createPlanRunner, rerankMulti, defenseCheck, resistTotals, jobKey,
+         collectThreats, requirementsFrom, elementPlan, elementView, partsTargets, multiWeights, subjectHealths,
+         gammaExclusions, gammaIndex, searchUptimes, evaluateBuild, defenseSkillChoices, stableHash,
+         PRESETS, PRESET_LABEL, DEFAULT_PRESET, ELEMENT_LABEL, DEFENSE_SKILL_NAMES, TWO_WEAPON_TOP,
+         DEFAULT_HITZONE, DEFAULT_HITZONE_TEXT } from './app/model/recommend.js';
+
+// 画面のスレッド (相手タブの「この相手のおすすめ」と探すタブ)。探索はしない (歴戦王・多頭で 1ms 前後)
+const plan = buildPlan({
+  target: state.target, tabTarget: state.tabs.target, search: state.search,
+  targetData,                                   // data.js の target データ (monsters / quests / threats)
+  core: { index, skillEffects, motions, combos },  // data.js の core データ (index は端末の護石・武器を足した索引でもよい)
+  current: { build: state.build, combo: state.combo, uptimes: state.uptimes, sharpness: state.sharpness, extraWeapons },
+});
+const job = planToJob(plan, { K: 10, budgetMs: state.search.budgetSec * 1000, userRequired: state.search.required,
+                              extraCharms, extraWeapons, current: state.build });
+const inputKey = jobKey(job, { dataVersion });   // 結果の保存 (search-last) の inputKey
+
+// Worker の中で (createSearch と同じ形)
+const runner = createPlanRunner(job, data, { createSearch, optimizeWeaponSide });
+while (!runner.step(80)) { const p = runner.progress(); /* p.run = {index, count, label, key} */ }
+const r = runner.result();   // r.results[] に score / perSubject / weapons / builds / defense / baseline / gamma
+```
+
+### Plan (`buildPlan` の返り値)
+
+| 項目 | 中身 |
+|---|---|
+| `status` / `blocked` | `'ok'` / `'no-target'` (相手が決まっていない) / `'no-data'` (モンスターは選んだが相手のデータを読み込み中。`subjects: []` で待つ)。`blocked` = 探さない理由 `{code: 'fixed-equipment', message}` (装備固定のクエスト。体力などは出す) か null。モンスターを選んでいなければ `no-target` のまま、装備タブ・火力タブと同じ既定の肉質 (`DEFAULT_HITZONE` = 切断・打撃 45、属性 20) の相手 1 体 (`key: 'default'`・`isDefault: true`) を入れて探せるようにする (段階 2 で相手なしに探す) |
+| `mode` / `useTarget` | `'single'` / `'multi'`。`useTarget: false` (段階 2) は相手 1 体・守りの要件なし・武器は `weaponMode` (`auto` = いまの武器) |
+| `subjects[]` | 戦う相手 `{key, index, monsterId, kind, name, health (hunt.targetHealth), healthForT: {mid,min,max}, healthAssumed, healthBasis, targets: partsTargets の結果, element: {rec, view}, threats, monsterStatus, current: {value, combos} \| null}`。クエストを選んでいれば mission.targets の行ごと (多頭は全部)、無ければモンスター 1 体 (体力不明) |
+| `element` | `elementPlan` の結果 (下) |
+| `requirements[]` | 守りの要件の行 (`requirementsFrom`。下) |
+| `notes[]` | 防げない攻撃・防ぐスキルの無い状態異常 `{subjectKey, subjectName, text, oneShot, source, type}` (ジン・ダハドの歴戦王のノヴァなど) |
+| `exclusions` | `gammaExclusions` の結果 + `gamma` (`gammaIndex`。結果の「歴戦王〇〇の素材が要ります」用) |
+| `weights[]` | 多頭の重み (`multiWeights`)。1 体なら `[{key, weight: 1}]` |
+| `quest` | `{id, name, stars, multi, fixedEquipment, intruders: [名前]}` か null (乱入は相手に入れず名前だけ) |
+| `inputs` | Job に入れる値: `combo` (解決済み)・`uptimes` (仮置きを 0% にしたもの)・`uptimeMode`・`placeholders` (仮置きの条件の一覧)・`sourceUptimes`・`monsterStatus` (多頭は全員の和)・`sharpness`・`limitBreak` (`search.limitBreak` を解決)・`charms`・`armorExclude`・`currentBuild` (いまの装備。武器が無ければ null) |
+| `current` | いまの装備 `{value (1 体), T (多頭), perSubject: [{key, value, combos}], check: defenseCheck(...)}` か null |
+| `marks` / `warnings` / `license` | `{preset: 'provisional', parts: 'provisional' (main3) \| null}` / `[{code, message}]` / CC BY-SA の出典 (画面に出す) |
+
+警告のコード: `placeholder-uptimes` (仮置きの発動率を 0% で探す) / `gamma-excluded` / `health-assumed` (体力の分からない相手を平均で置いた) /
+`health-unknown` (全員分からない・等分) / `reference-weapon` (武器が無いので候補の先頭の武器で重みを決めた) / `no-weapon` /
+`no-element-weapon` / `no-resist-skills` / `no-threat-data` / `no-part` / `quest-missing` / `quest-mismatch` / `current-eval-failed` /
+`no-target` / `no-target-data` / `default-target` (既定の肉質で探す)。
+
+### 守りの要件 (`collectThreats` → `requirementsFrom`)
+
+- `collectThreats(threats, subjects)`: monster_threats.json の 咆哮・風圧・振動・属性やられ (確定 / 未確認)・状態異常と、個体の
+  `variants[threatVariant].hazards` を 1 件ずつ `{key, subjectKey, subjectName, type, value, element, skill: {skillId, name, negateLevel, mitigateLevel, levelText} | null, oneShot, confidence, uncertain, unconfirmed, text, note, source}` にする。
+  歴戦王 (threatVariant のある個体) の咆哮などは `sameAsBase` が true なら通常の値を使い `unconfirmed: true`・`confidence: 'medium'`。
+- `requirementsFrom(items, {preset, toggles, levels, effects, threshold})`: 同じスキルは 1 行 (Lv は大きい方・理由は全部)、
+  属性やられは確定の属性で 1 行 (`key: 'blight'`)・未確認の属性で 1 行 (`'blight-uncertain'`)。行の key は `skill:<skillId>` / `blight` / `blight-uncertain`
+  (`state.search.toggles` / `levels` のキー)。行 = `{key, kind: 'skill'|'blight', label, reason, skillId, skillName, elements, threshold,
+  blightSkillId, bySkill, byResist, orText, options, level, levelChoices, negateLevel, mitigateLevel, mitigated, tier: 'on'|'ref', defaultOn, on,
+  userSet, category, why: [{subjectKey, subjectName, text, type, note}], provisional, unconfirmed}`。
+  - `tier` は `PRESETS[preset][category]` (category = `hazard` / `blight` / `uncertain` (未確認の属性やられ・確度 low) / `roar` / `wind` / `tremor` / `status`)。
+    `on` は `toggles[key]` があればそれ。`level` は `levels[key]` が `levelChoices` (軽減の Lv〜無効の Lv) にあればそれ、無ければ無効の Lv。
+  - 属性やられの「または」: `bySkill` = `[{属性やられ耐性, Lv}]`、`byResist` = 属性ごとの耐性スキルで `threshold` (20) 以上になる Lv
+    (`rules.resistSkills`。いまは全部 Lv3 = +20)。`options` = `[bySkill, byResist]`。
+  - `provisional` (仮) = 根拠の確度が high でない (データに確度の書いていない wiki の値は high と同じに扱う)。
+    `unconfirmed` (未確認) = 行の脅威が全部「通常と同じと見ている」「未確認の属性やられ」「確度 medium/low の歴戦王の脅威」。
+- 体力・回復系 (`DEFENSE_SKILL_NAMES`) は自動では足さない。`defenseSkillChoices(index)` が「守りのスキルを足す」の候補 `[{skillId, name, kind, maxLevel}]`。
+
+| プリセット (`PRESETS`) | hazard | blight | roar / wind / tremor | status | uncertain |
+|---|---|---|---|---|---|
+| `power` (火力優先) | ref | ref | ref | ref | ref |
+| `balance` (バランス・既定) | on | on | ref | ref | ref |
+| `safe` (安全) | on | on | on | on | ref |
+
+### 武器・部位・重み
+
+- `elementPlan(subjects, current, index, {mode, twoWeapons, time})` → `{mode: 'current'|'element'|'all', requestedMode, weapons: [ref...] | 'sns-all', types, perSubject: [{key, rec, view}], currentRef, currentElement, text, warnings, twoWeapons: {option, suggested, reason, groups: [{element, subjectKeys, timeShare, weapons}]}}`。
+  `auto`: 1 体でいまの武器が `same`/`close` → いまの武器、おすすめがはっきり (`clear`) か近い (`close`) → 1 位と差が 2 以内の属性の片手剣 +
+  所持武器 + いまの武器、どれも効きにくい → いまの武器 (無ければ全部)。多頭は `clear` の相手の 1 位の属性を合わせる。
+  武器 2 本の案は `clear` の 1 位の属性が 2 種類以上 (3 種類以上なら `time` の和の大きい 2 つ)。`elementView` は target_mix.js の `recommendationView` と同じ。
+- `partsTargets(monster, kind, policy, memo, isWound, {useUncertain})` → `[{weight, label, partKey, target: {hitzone, wound, isWound}, woundSource, woundMark}]`。
+  `memo = {[monsterId]: {partKey, mix: {on, weights}}}` (`tabs.target.memo` と、いまの相手の `partKey` / `tabs.target.mix`)。傷口は `hunt.hitzoneFor`。
+- `subjectHealths(subjects)` → 相手ごとの T 用の体力 (分からない相手は分かっている相手の平均・全員分からなければ 1)。人数の倍率は全員分かるときだけ掛ける。
+- `multiWeights(subjects, dRef)` → `[{key, name, weight (足して 1), time = H/D_ref, timeShare, health, healthAssumed, healthBasis, dRef, dRefAssumed, reason}]`。
+  `weight ∝ H_i / D_ref_i²`。D_ref はいまの装備の期待値 (武器が無ければ候補の先頭の武器のスキルなし)。
+- `searchUptimes(effects, uptimes, 'zero'|'keep')` → `{mode, uptimes, placeholders: [{id, label, type, defaultUptime, zeroed}]}`
+  (本人が入れていない仮置きの条件を 0% に。binary は 0、categorical は `{}`)。
+- `evaluateBuild(build, targets, ctx)` → `{value, perTarget, perGroup, skillLevels}` か null (computeBuild + comboExpected。探索と同じ式)。
+
+### Job (`planToJob`) と探索の回し方 (`createPlanRunner`)
+
+- Job = `{kind: 'plan', runs: [{key, label, input}], costRun, merge: {mode: 'single'|'multi'|'twoWeapons', subjects, weights, alternatives, groups}, K, subjects: [{key, name, health, healthAssumed, healthBasis}], requirements, gamma, baseline, players, blocked, warnings, tryKey}`。
+  - `runs[].input` は `createSearch` の入力 (`docs/SEARCH_DESIGN.md` 3.2 節)。`targets[]` は相手 × 部位の行で `group` = 相手の key、
+    `weight` = 相手の重み × 部位の割合 (足して 1)。`required` = 自分で足した必須 + オンの要件 (同じスキルは Lv の大きい方)。
+    `charms.fixedExclude` (狩猟証γ の護石)・`armorExclude` (使わない防具 + γ 防具)・`current` (いまの装備。既定 `plan.inputs.currentBuild`。「いまより +x%」用)・`budget` (既定 `{ms: budgetMs / 回数}`。`opts.budget` を渡すとそのまま)。
+  - 属性やられがオン → `runs` は `blight-skill` (属性やられ耐性 Lv3) と `blight-resist` (各属性の耐性スキル Lv3) の 2 つ。オフなら `main` の 1 つ。
+  - `costRun` = 守りの要件を外した探索 (`stopAfter: 'partial'`・自分で足した必須は残す)。守りの要件がオンのときだけ。
+  - `tryKey` を渡すと「試す」用 (その行をオンにして全部 `stopAfter: 'partial'`・`costRun` なし・武器 2 本なし)。
+  - 属性やられの行はあるが、防ぎ方 (`bySkill` / `byResist`) が行ごとにそろわない (データの欠け) ときは、必須にせず `main` の 1 回にして警告 `blight-not-required`。
+  - `blocked` (相手のデータの読み込み中・装備固定) のときは `runs: []`。
+- `createPlanRunner(job, data, {createSearch, optimizeWeaponSide, now})`: `step(ms)` / `progress()` / `result()` / `cancel()` / `extend({ms})`。
+  `runs` を順に回し (`progress().run = {index, count, label, key}`、`phase` は探索の段か `'merge'` / `'twoWeapons'` / `'cost'` / `'done'`)、
+  合わせる → 武器 2 本 (上位 `TWO_WEAPON_TOP` = 5 件の防具の組に、その回の候補の武器から 2 本目と 1 本目を `optimizeWeaponSide` で選び直す) → `costRun`。
+  `partialReady` は 1 回目の探索の途中の結果 (仕上げ 1) が出たとき。`extend` は終わった回 (満たせなかった回を除く) を延長してもう一度合わせる。
+  武器 2 本の案では `extend` が「2 本目の武器で倒す相手だけ」を見た回 (`two-focus:<相手の key>`。重み = いまの最良の組での H_i / D_i²・部位の割合はそのまま) を 1 つ足し、
+  その回の上位も 2 本の合わせにかける (`docs/RECOMMEND_DESIGN.md` 3.3 節の 4。前の組も残るので、良くなったときだけ上位が入れ替わる)。
+  回が全部終わったあと (合わせ・`costRun`・延長の途中も) の `result()` は合わせた結果 (延長中は前の結果のまま)。合わせの途中でやめたら、それまでに合わせた分で出す。
+  - `result()` = `{status: 'partial'|'done'|'stopped'|'cancelled'|'infeasible'|'error'|'blocked', results, infeasible, warnings, stats: {elapsedMs, mergeMs, twoWeaponsMs, extended, runs: [{key, label, status, ms, stats}]}, quality: 'heuristic', merge, costOfDefense, singleWeapon, twoWeaponsGain}`。
+  - `results[]` = 探索の結果に `score: {kind: 'damage'|'combos', value, better}`・`perSubject: [{key, name, value, combos, weapon: 1|2}]`・`combosTotal`・
+    `perGroup` (無ければ計算し直す)・`weapons`・`builds` (武器 2 本なら 2 つ。防具・護石は共通)・`defense` (`defenseCheck`。2 本目は `defense2`)・
+    `gamma: [{part, monsterId, name}]`・`baseline: {value, combos}`・`vsBaselinePct`・`run` を足したもの。守りを満たす組を先に、その中で score の順
+    (属性やられの耐性が 20 に届かない組は下)。同じ組 (武器・防具・護石。武器 2 本は 2 本とも) は 1 件にまとめる (珠だけ違う組は良い方)。
+  - `baseline` (いまの装備) は、探索が返した `baseline` → 無ければ `runs[0].input.current` を探索と同じ式 (`evaluateBuild`・同じ発動率) で計算 →
+    それも無ければ Plan の `current` の順に使う。多頭は `baseline.value` = いまの装備の T。
+  - `costOfDefense = {kind, main, free, pct (≤ 0 = 火力 −x%), rawPct, approx: true}`。`twoWeaponsGain = {combos, text: '武器 1 本で通すと 約 +n 回'}`。
+- `rerankMulti(results, subjects, {twoWeapons})`: T = Σ 体力_i / 期待値_i (武器 2 本は相手ごとに良い方) の小さい順。1 体なら期待値の高い順 (`score.kind: 'damage'`)。
+  全員の体力が分からなければ期待値の調和平均を `damage` として出す (並びは T と同じ)。
+- `defenseCheck(build, requirements, index, effects)` → `{ok, rows: [{key, label, kind, status: 'ok'|'mitigated'|'missing', meets, have, need, negateLevel, mitigateLevel, on, via, elements: [{element, total, ok, short}], text}], resist}`。
+  属性やられは「属性やられ耐性が無効の Lv」か「全部の属性の耐性の合計 ≥ 20」で ok。`ok` はオンの行が全部 `meets`。
+- `resistTotals(build, index, effects)` → `{fire, water, thunder, ice, dragon}` = 防具 5 部位の `resist` の和 + 耐性スキル (`rules.resistSkills`)。
+  限界突破で耐性は変わらないものとして計算する (分からない)。
+- `gammaExclusions(targetData, archTemperedHunted)` → `{armor, charmsFixed, labels: [{monsterId, name, hunted, armorSets, armorIds, charmFixedIds, certificate, groupSkills}], notes}`。
+  `gammaIndex(targetData)` → `{armor: {id: {monsterId, name}}, charmsFixed: {...}}`。
+- `jobKey(job, {dataVersion})` = Job の入力 (予算を除く) の 16 桁のハッシュ。
 
 ## search.js と search/ (段階 2。担当: solver)
 
