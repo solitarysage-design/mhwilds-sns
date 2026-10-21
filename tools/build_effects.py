@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from effects_conditions import groups_with_skills, validate as validate_conditions  # noqa: E402
 from effects_motions import build_combos, build_motions  # noqa: E402
-from effects_skills import build_specs  # noqa: E402
+from effects_skills import build_resist_skills, build_specs  # noqa: E402
 from effects_source import (  # noqa: E402
     GAME_BUILD, GAME_VERSION, MHDB_SKILLS_URL, MHWS_DB_JA_URL, MHWS_TAG, RAW_FILES, ROOT,
     mhdb_skills, raw_path, raw_url, sha256_of, sharpness_table, skill_enum, skill_param,
@@ -33,20 +33,24 @@ DATA = ROOT / "data"
 
 
 def _skill_index() -> tuple[dict[int, dict], str]:
-    """gameId → スキル (id, name, kind, levels 数)。data/skills.json があればそちらを使う。"""
+    """gameId → スキル (id, name, kind, levels 数, descriptions = Lv ごとの MHDB の説明文)。
+    data/skills.json (MHDB の /ja/ から生成) があればそちらを使う。"""
     sk = DATA / "skills.json"
     if sk.exists():
         doc = json.loads(sk.read_text(encoding="utf-8"))
         out = {}
         for s in doc.get("skills", []):
             if s.get("gameId") is not None:
+                levels = s.get("levels") or []
                 out[int(s["gameId"])] = {"id": s["id"], "name": s["name"], "kind": s.get("kind"),
-                                         "levels": len(s.get("levels") or [])}
+                                         "levels": len(levels),
+                                         "descriptions": [lv.get("description") or "" for lv in levels]}
         if out:
             return out, "data/skills.json"
     out = {}
     for s in mhdb_skills():
-        out[int(s["gameId"])] = {"id": s["id"], "name": s["name"], "kind": s["kind"], "levels": len(s["ranks"])}
+        out[int(s["gameId"])] = {"id": s["id"], "name": s["name"], "kind": s["kind"], "levels": len(s["ranks"]),
+                                 "descriptions": [r.get("description") or "" for r in s["ranks"]]}
     return out, MHDB_SKILLS_URL
 
 
@@ -123,10 +127,14 @@ def build_skill_effects() -> tuple[dict, list[str]]:
             "affinity": "%",
         },
         "conditionGroups": groups_with_skills(effects),
+        # 属性の耐性スキル → 耐性に足す値 (火力には使わない。属性やられの判定 = 耐性の合計 ≥ 20 に使う)
+        "resistSkills": build_resist_skills(enum, index),
         "note": "属性の上限は攻撃と同じく倍率と加算を別々に切る: 元の値 × min(倍率, elementRateLimit) + "
                 "min(加算, elementAddLimit) (PlayerStatusParam._ElementAttack_RateLimit / _ElementAttack_AddLimit。"
                 "_PhysicalAttack_RateLimit / _AddLimit と同じ形の名前なので同じ切り方と読んだ。確度 medium)。"
-                "条件つきスキルの発動率は conditionGroups (条件ごと) に持つ。",
+                "条件つきスキルの発動率は conditionGroups (条件ごと) に持つ。"
+                "resistSkills は属性の耐性スキル (skillId → {element, levels: {Lv: 耐性に足す値}})。"
+                "値は SkillData の _value[0] で、MHDB の説明文 (「火耐性＋６」など) と照合して合わなければ生成を止める。",
     }
     urls, hashes = _raw_sources(["SkillCommonData", "SkillData", "PlayerSkillParam", "PlayerStatusParam", "EmCommonData"])
     sources = [f"https://github.com/dzxrly/MHWS-in-json/releases/tag/{MHWS_TAG}", *urls]

@@ -163,6 +163,15 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
 
 - (追記 2026-10-21) `rules.conditionGroups[]` は条件ごとの発動率の定義 (`docs/MODEL_API.md`)。条件のもとがある条件
   (狂竜症) は `sources: {skillIds, monsterStatus, label, inactiveText}` を持ち、もとのスキルも相手の状態異常も無いときは 0% で計算する。
+- (追記 2026-10-21 段階3) `rules.resistSkills` = 属性の耐性スキル (火耐性・水耐性・雷耐性・氷耐性・龍耐性) → 耐性の値に足す数。
+  火力には使わない (属性やられの判定 = 耐性の合計 ≥ 20 と、守りのチェックに使う。`app/model/recommend.js` の `resistTotals`)。
+  ```json
+  "resistSkills": {"125": {"name": "火耐性", "element": "fire", "gameSkill": "HunterSkill_077",
+                           "levels": {"1": 6, "2": 12, "3": 20}, "defenseAdd": {"3": 10},
+                           "source": "SkillData HunterSkill_077 _value[0]=耐性の加算 ...", "confidence": "high", "verification": [...]}}
+  ```
+  値は SkillData の `_value[0]` (`defenseAdd` = Lv3 の `_value[1]` = 防御力)。`tools/effects_skills.py` の `build_resist_skills` が MHDB の
+  説明文 (「火耐性＋６」「火耐性＋２０、防御力＋１０」) と照合し、スキルが無い・名前・Lv の数・値 (耐性と防御力) のどれかが合わなければ生成を止める。
 
 ### data/motions_sns.json と data/combos_sns.json
 技ごとのモーション値と属性補正、代表コンボ (技とヒット数の並び)。日本語の技名。
@@ -421,6 +430,9 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
 - 画面: 6 つ目のタブ「探す」(並び: 装備・火力・相手・探す・護石・設定)。状態は `state.search` と `state.target` の
   個体・クエスト・人数の項目 (`docs/UI_API.md`)。見た目は `app/ui/styles_search.css` / `styles_target.css`。
 - 計算: `app/model/hunt.js` (済み)・`weapon.js` (済み)・`search.js` / `search/` と `app/search_worker.js` (済み 2026-10-21)・
-  `recommend.js` (置き場だけ)。`docs/MODEL_API.md`。
+  `recommend.js` (済み 2026-10-21: 相手 → Plan → Job、探索を順に回す `createPlanRunner`、多頭の T での並べ直し、守りのチェック。
+  探索の本体は引数で受ける)。`docs/MODEL_API.md`。
 - 端末に保存: `mhwilds-sns:search-last` (最後の結果・書き出しに入る) と `mhwilds-sns:search-timing` (時間の記録・この端末だけ)。
-- データに足すもの: `skill_effects.json` の `rules.resistSkills` (`docs/RECOMMEND_DESIGN.md` 5.8 節。担当: data)。
+- データに足したもの: `skill_effects.json` の `rules.resistSkills` (済み 2026-10-21。上の skill_effects.json の節。`docs/RECOMMEND_DESIGN.md` 5.8 節)。
+- 段階 3 の流れ: 相手タブ・探すタブ → `recommend.buildPlan` (画面のスレッド。1ms 前後) → `planToJob` → Worker で
+  `createPlanRunner(job, data, {createSearch, optimizeWeaponSide})` (属性やられがオンなら探索 2 回 + 守りの火力の差の 1 回) → 結果。

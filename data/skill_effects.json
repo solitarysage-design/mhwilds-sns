@@ -9,7 +9,7 @@
    "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/database-20261020-070700-4a99b26/MHWS-in-json/natives/STM/GameDesign/Enemy/CommonData/Data/EmCommonData.user.3.json",
    "data/skills.json"
   ],
-  "generatedAt": "2026-10-21T06:04:35Z",
+  "generatedAt": "2026-10-21T12:34:06Z",
   "gameVersion": "1.042",
   "gameDataBuild": "1.42.0.2",
   "license": "ゲームデータの抽出は dzxrly/MHWS-in-json (MIT)。数値はカプコンのゲームデータ由来。",
@@ -549,7 +549,234 @@
     ]
    }
   ],
-  "note": "属性の上限は攻撃と同じく倍率と加算を別々に切る: 元の値 × min(倍率, elementRateLimit) + min(加算, elementAddLimit) (PlayerStatusParam._ElementAttack_RateLimit / _ElementAttack_AddLimit。_PhysicalAttack_RateLimit / _AddLimit と同じ形の名前なので同じ切り方と読んだ。確度 medium)。条件つきスキルの発動率は conditionGroups (条件ごと) に持つ。"
+  "resistSkills": {
+   "1": {
+    "name": "龍耐性",
+    "element": "dragon",
+    "gameSkill": "HunterSkill_081",
+    "levels": {
+     "1": 6,
+     "2": 12,
+     "3": 20
+    },
+    "defenseAdd": {
+     "3": 10
+    },
+    "source": "SkillData HunterSkill_081 _value[0]=耐性の加算 (Lv3 の _value[1]=防御力の加算)。MHDB の説明文と照合",
+    "confidence": "high",
+    "verification": [
+     {
+      "item": "龍耐性 (MHDB の説明文)",
+      "gameData": [
+       6,
+       12,
+       20
+      ],
+      "survey": [
+       6,
+       12,
+       20
+      ],
+      "match": true
+     },
+     {
+      "item": "龍耐性 防御力の加算 (MHDB の説明文)",
+      "gameData": [
+       0,
+       0,
+       10
+      ],
+      "survey": [
+       0,
+       0,
+       10
+      ],
+      "match": true
+     }
+    ]
+   },
+   "84": {
+    "name": "水耐性",
+    "element": "water",
+    "gameSkill": "HunterSkill_078",
+    "levels": {
+     "1": 6,
+     "2": 12,
+     "3": 20
+    },
+    "defenseAdd": {
+     "3": 10
+    },
+    "source": "SkillData HunterSkill_078 _value[0]=耐性の加算 (Lv3 の _value[1]=防御力の加算)。MHDB の説明文と照合",
+    "confidence": "high",
+    "verification": [
+     {
+      "item": "水耐性 (MHDB の説明文)",
+      "gameData": [
+       6,
+       12,
+       20
+      ],
+      "survey": [
+       6,
+       12,
+       20
+      ],
+      "match": true
+     },
+     {
+      "item": "水耐性 防御力の加算 (MHDB の説明文)",
+      "gameData": [
+       0,
+       0,
+       10
+      ],
+      "survey": [
+       0,
+       0,
+       10
+      ],
+      "match": true
+     }
+    ]
+   },
+   "101": {
+    "name": "氷耐性",
+    "element": "ice",
+    "gameSkill": "HunterSkill_079",
+    "levels": {
+     "1": 6,
+     "2": 12,
+     "3": 20
+    },
+    "defenseAdd": {
+     "3": 10
+    },
+    "source": "SkillData HunterSkill_079 _value[0]=耐性の加算 (Lv3 の _value[1]=防御力の加算)。MHDB の説明文と照合",
+    "confidence": "high",
+    "verification": [
+     {
+      "item": "氷耐性 (MHDB の説明文)",
+      "gameData": [
+       6,
+       12,
+       20
+      ],
+      "survey": [
+       6,
+       12,
+       20
+      ],
+      "match": true
+     },
+     {
+      "item": "氷耐性 防御力の加算 (MHDB の説明文)",
+      "gameData": [
+       0,
+       0,
+       10
+      ],
+      "survey": [
+       0,
+       0,
+       10
+      ],
+      "match": true
+     }
+    ]
+   },
+   "125": {
+    "name": "火耐性",
+    "element": "fire",
+    "gameSkill": "HunterSkill_077",
+    "levels": {
+     "1": 6,
+     "2": 12,
+     "3": 20
+    },
+    "defenseAdd": {
+     "3": 10
+    },
+    "source": "SkillData HunterSkill_077 _value[0]=耐性の加算 (Lv3 の _value[1]=防御力の加算)。MHDB の説明文と照合",
+    "confidence": "high",
+    "verification": [
+     {
+      "item": "火耐性 (MHDB の説明文)",
+      "gameData": [
+       6,
+       12,
+       20
+      ],
+      "survey": [
+       6,
+       12,
+       20
+      ],
+      "match": true
+     },
+     {
+      "item": "火耐性 防御力の加算 (MHDB の説明文)",
+      "gameData": [
+       0,
+       0,
+       10
+      ],
+      "survey": [
+       0,
+       0,
+       10
+      ],
+      "match": true
+     }
+    ]
+   },
+   "156": {
+    "name": "雷耐性",
+    "element": "thunder",
+    "gameSkill": "HunterSkill_080",
+    "levels": {
+     "1": 6,
+     "2": 12,
+     "3": 20
+    },
+    "defenseAdd": {
+     "3": 10
+    },
+    "source": "SkillData HunterSkill_080 _value[0]=耐性の加算 (Lv3 の _value[1]=防御力の加算)。MHDB の説明文と照合",
+    "confidence": "high",
+    "verification": [
+     {
+      "item": "雷耐性 (MHDB の説明文)",
+      "gameData": [
+       6,
+       12,
+       20
+      ],
+      "survey": [
+       6,
+       12,
+       20
+      ],
+      "match": true
+     },
+     {
+      "item": "雷耐性 防御力の加算 (MHDB の説明文)",
+      "gameData": [
+       0,
+       0,
+       10
+      ],
+      "survey": [
+       0,
+       0,
+       10
+      ],
+      "match": true
+     }
+    ]
+   }
+  },
+  "note": "属性の上限は攻撃と同じく倍率と加算を別々に切る: 元の値 × min(倍率, elementRateLimit) + min(加算, elementAddLimit) (PlayerStatusParam._ElementAttack_RateLimit / _ElementAttack_AddLimit。_PhysicalAttack_RateLimit / _AddLimit と同じ形の名前なので同じ切り方と読んだ。確度 medium)。条件つきスキルの発動率は conditionGroups (条件ごと) に持つ。resistSkills は属性の耐性スキル (skillId → {element, levels: {Lv: 耐性に足す値}})。値は SkillData の _value[0] で、MHDB の説明文 (「火耐性＋６」など) と照合して合わなければ生成を止める。"
  },
  "effects": {
   "3": {
