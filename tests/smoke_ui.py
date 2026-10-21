@@ -1546,11 +1546,16 @@ JS_TABBAR = """() => [...document.querySelectorAll('.tabbar [role=tab]')].map((b
 
 
 @tab_check("search")
-def search_tab_placeholder(page, ctx: Ctx):
-    """探すタブ: 「準備中」のカードが出て、見出しが「探す」・state.tab が search。"""
-    text = page.inner_text(SEARCH_PANEL)
-    if "準備中" not in text:
-        ctx.fail(f"探すタブに「準備中」が出ていません: {text[:80]!r}")
+def search_tab_opens(page, ctx: Ctx):
+    """探すタブ: 条件のカードと「この条件で探す」が出て (「準備中」の置き場ではない)、見出しが「探す」・state.tab が search。
+    探す流れの確認は下の「探すタブ (担当: ui-search)」節 (作り物の Worker を使う run_search)。"""
+    if page.locator(f'{SEARCH_PANEL} [data-search-tab="placeholder"]').count():
+        ctx.fail("探すタブが「準備中」の置き場のままです")
+    for key in SEARCH_CARDS:
+        if not page.locator(f'{SEARCH_PANEL} [data-sr="{key}"]').count():
+            ctx.fail(f"探すタブに {key} のカードがありません")
+    if not page.locator(f'{SEARCH_PANEL} [data-sr-action="start"]').count():
+        ctx.fail("探すタブに「この条件で探す」がありません")
     if page.inner_text(".app-title").strip() != "探す":
         ctx.fail(f"探すタブの見出しが「探す」になっていません: {page.inner_text('.app-title')!r}")
     if _app_state(page, "s.tab") != "search":
@@ -1607,6 +1612,459 @@ def tab_dot_marks_unseen_tab(page, ctx: Ctx):
     finally:
         if before in TABS:
             open_tab(page, before)
+
+
+# ---------------------------------------------------------------- 探すタブ (担当: ui-search)
+#
+# 探す流れは作り物の Worker (tests/fixtures/fake_search_worker.js) で確かめる。探索の本体が無くても、段階ごとの進み・
+# 途中の結果・終わり・やめる・続けて探す・失敗が決まった順で来る (値は本物の計算モデルで計算したもの)。
+# 作り物への切り替えは init script の window.__mhwSearchWorker = {url} (app/ui/tabs/search_client.js。本番では置かない)。
+# まっさらな保存領域 (新しい context) で 1 つずつ動かす。main() から run_search(...) を 1 行で呼ぶ (--only で search を外すと動かない)。
+#   1. 通し (iPhone 13・ライト): 仮置きの発動率の一覧 → 「火力タブの値で探す」→ 探す → 段階の文 → 途中の結果 → 終わり
+#      (1 位が良くなる) → 1 位の詳しく → 装備に入れる (state.build = 結果・火力タブと計算モデルの値 = 結果の値) → 元に戻す →
+#      続けて探す → 保存 (search-last・search-timing。書き出しには search-last だけ) → 開き直すと前回の結果 → 条件を変えると
+#      「条件が変わりました」。続けて (段階をゆっくり進める作り物で) やめる → もう一度 → 計算中にタブを移る (点が付く) →
+#      裏に回して戻す → 相手タブからの自動の開始
+#   2. 相手・武器が無いときの案内と、探せないとき (いまの武器で、武器が無い) の止め方
+#   3. 必須スキルを足す (Lv の ＋/−) → 満たせない → 「〇〇を外して探す」
+#   4. Worker の失敗 (error を返す → もう一度で直る / 落ちる) と、Worker が無い端末 (画面のスレッドで回る)
+#   5. 幅 375・ダークで結果とシートの見た目 (はみ出し・44px)
+
+SEARCH_CARDS = ["target", "weapon", "defense", "required", "equip-options", "placeholders", "budget", "start"]
+SEARCH_FAKE = "./tests/fixtures/fake_search_worker.js"
+SEARCH_RESULTS = f'{SEARCH_PANEL} [data-sr="results"]'
+SEARCH_PHASE_TEXT = ["準備しています", "候補を絞っています", "仕上げています", "もっと良い組を探しています", "まとめています"]
+
+JS_SEARCH_SNAP = """async () => { const m = await import('./app/ui/tabs/search_client.js'); const s = m.getSearchController().getSnapshot();
+  const r = s.result; return { status: s.status, busy: s.busy, partial: s.partial, improved: s.improved, canExtend: s.canExtend,
+    inline: s.inline, extended: s.extended, n: r ? r.results.length : 0, top: r && r.results[0] ? r.results[0].value : null,
+    topBuild: r && r.results[0] ? r.results[0].build : null, error: s.error, restored: !!s.restored }; }"""
+
+# 火の片手剣 (レア 8) + アルシュベルドの頭。探すタブの条件は既定に戻す
+JS_SEARCH_SETUP = """async () => { const S = await import('./app/state.js'); const D = await import('./app/data.js');
+  const data = D.getCoreData();
+  const w = data.lists.weapons.find((x) => x.element && x.element.type === 'fire' && x.rarity === 8);
+  S.clearBuild(); S.setWeapon(w.id); S.setTargetMode('monster'); S.selectMonster(20, 'head'); S.setWound(false);
+  S.setSearch(S.defaultSearch()); S.resetUptime(); S.setCombo(null); S.setSharpness(null);
+  await S.flushState(); return w.id; }"""
+
+JS_SEARCH_BUILD = """async () => { const S = await import('./app/state.js'); return JSON.parse(JSON.stringify(S.getState().build)); }"""
+
+
+def _search_open(browser, ctx_opts: dict, server: Server, base_url: str, name: str, *, fake="step=150", no_worker=False):
+    """作り物の Worker を使う context を開く (Service Worker は使わない)。"""
+    context = browser.new_context(**ctx_opts, service_workers="block")
+    context.add_init_script(ROBUST_UNHANDLED)
+    context.add_init_script(f"window.__mhwSearchWorker = {{ url: {json.dumps(SEARCH_FAKE + '?' + fake)} }};")
+    if no_worker:
+        context.add_init_script("try { delete window.Worker; } catch (e) {} window.Worker = undefined;")
+    page = context.new_page()
+    ctx = Ctx(scenario=name, page=page, base_url=base_url, server=server)
+    page.on("console", lambda m: ctx.errors.append(f"console.error: {m.text}") if m.type == "error" else None)
+    page.on("pageerror", lambda e: ctx.errors.append(f"pageerror: {e}"))
+    page.on("response", lambda r: ctx.errors.append(f"HTTP {r.status}: {r.url}")
+            if r.url.startswith(base_url) and r.status >= 400 else None)
+    page.goto(base_url, wait_until="load")
+    wait_app_ready(page)
+    return context, page, ctx
+
+
+def _search_status(page, status: str, timeout=20000):
+    page.wait_for_selector(f'{SEARCH_RESULTS}[data-sr-status="{status}"]', timeout=timeout)
+
+
+def _search_start(page):
+    page.locator(f'{SEARCH_PANEL} [data-sr-action="start"]').click()
+
+
+def _search_top(page):
+    v = page.locator(f"{SEARCH_PANEL} .sr-result").first.get_attribute("data-sr-value")
+    return float(v) if v not in (None, "") else None
+
+
+def _search_err(e) -> str:
+    """例外の文の先頭 (Playwright の待ちの失敗は、どの要素を待っていたかが 2 行目以降にある)。"""
+    return " / ".join(x.strip() for x in str(e).splitlines()[:4] if x.strip())
+
+
+def _same_build(a: dict, b: dict) -> bool:
+    keys = ["weapon", "armor", "charm", "limitBreak"]
+    return all(json.dumps(a.get(k), sort_keys=True) == json.dumps(b.get(k), sort_keys=True) for k in keys)
+
+
+def search_walkthrough(browser, ctx_opts, server, base_url) -> Ctx:
+    """1. 通し: 探す → 途中の結果 → 終わり → 装備に入れる → 元に戻す → 続けて探す → 保存して開き直す → やめる → タブを移る など。"""
+    context, page, ctx = _search_open(browser, ctx_opts, server, base_url, "iphone13-light")
+    P = SEARCH_PANEL
+    try:
+        page.evaluate(JS_SEARCH_SETUP)
+        open_tab(page, "search")
+        # --- 仮置きの発動率の一覧 → 「火力タブの値で探す」(装備に入れたあと火力タブと値を比べるため)
+        n = int(page.get_attribute(f'{P} [data-sr="placeholders"]', "data-sr-placeholder-count") or "0")
+        if n < 20:
+            ctx.fail(f"探す: 仮置きの発動率の条件の数が {n} 個 (20 個以上あるはず)")
+        page.locator(f'{P} [data-sr="placeholders"] summary').click()
+        if page.locator(f'{P} [data-sr-placeholder-list] li').count() != n:
+            ctx.fail("探す: 仮の条件の一覧の行数が数と合いません")
+        page.locator(f'{P} [data-sr="placeholders"] .segment', has_text="火力タブの値で探す").click()
+        if _app_state(page, "s.search.placeholders") != "keep":
+            ctx.fail("探す: 「火力タブの値で探す」が state.search.placeholders に入りません")
+        if "アルシュベルド" not in page.inner_text(f'{P} [data-sr-target-label]'):
+            ctx.fail(f"探す: 相手のカードに相手が出ていません: {page.inner_text(f'{P} [data-sr-target-label]')!r}")
+        check_layout(page, ctx, "探す (条件)")
+        ctx.shot("search-form")
+
+        # --- 探す → 段階の文 → 途中の結果 → 終わり (1 位が良くなる)
+        _search_start(page)
+        page.wait_for_selector(f'{P} [data-sr="running"]', timeout=10000)
+        phase = page.inner_text(f'{P} [data-sr-phase]')
+        if not any(t in phase for t in SEARCH_PHASE_TEXT):
+            ctx.fail(f"探す: 計算中の段階の文が出ていません: {phase!r}")
+        if not page.locator(f'{P} [data-sr-action="start"]').is_disabled():
+            ctx.fail("探す: 計算中なのに「この条件で探す」が押せます")
+        check_layout(page, ctx, "探す (計算中)")
+        ctx.shot("search-running", full_page=False)
+        page.wait_for_selector(f'{SEARCH_RESULTS}[data-sr-partial="1"] .sr-result', timeout=15000)
+        if not page.locator(f'{P} [data-sr-note="partial"]').count():
+            ctx.fail("探す: 途中の結果に「途中の結果です」が出ていません")
+        partial_top = _search_top(page)
+        _search_status(page, "done")
+        done_top = _search_top(page)
+        if not (partial_top and done_top and done_top > partial_top):
+            ctx.fail(f"探す: 終わりの 1 位が途中の結果より良くなっていません: {partial_top} → {done_top}")
+        if not page.locator(f'{P} [data-sr-note="improved"]').count():
+            ctx.fail("探す: 1 位が良くなったのに「もっと良い組が見つかりました」が出ません")
+        snap = page.evaluate(JS_SEARCH_SNAP)
+        if not _close(snap["top"], done_top, 1e-12) or snap["n"] != page.locator(f"{P} .sr-result").count():
+            ctx.fail(f"探す: 画面の結果がコントローラの結果と違います: {snap}")
+        text = page.inner_text(SEARCH_RESULTS)
+        for word in ["近似", "いまより", "が変わる"]:
+            if word not in text:
+                ctx.fail(f"探す: 結果に「{word}」がありません")
+        if not page.locator(f'{P} .sr-result .badge', has_text="γ").count():
+            ctx.fail("探す: 歴戦王の素材が要る防具の印 (γ) が出ていません")
+        check_layout(page, ctx, "探す (結果)")
+        ctx.shot("search-results")
+
+        # --- 1 位の詳しく → 装備に入れる → 火力タブ・計算モデルの値が結果と同じ → 元に戻す
+        before = page.evaluate(JS_SEARCH_BUILD)
+        page.locator(f"{P} .sr-result").first.click()
+        page.wait_for_selector('[data-sr-sheet="result"]')
+        _wait_sheet_ready(page)
+        sheet = page.inner_text(".sheet")
+        for word in ["スキル (いまと比べて)", "近似", "頭", "護石"]:
+            if word not in sheet:
+                ctx.fail(f"探す: 結果の詳しくに「{word}」がありません")
+        check_layout(page, ctx, "探す (結果の詳しく)")
+        ctx.shot("search-sheet", full_page=False)
+        page.locator('.sheet [data-sr-action="apply"]').click()
+        page.wait_for_selector(".sheet", state="detached")
+        after = page.evaluate(JS_SEARCH_BUILD)
+        if not _same_build(after, snap["topBuild"]):
+            ctx.fail(f"探す: 装備に入れても state.build が結果と違います: {after} / {snap['topBuild']}")
+        if not page.locator(f'{P} [data-sr-note="applied"]').count():
+            ctx.fail("探す: 装備に入れたあとに「元に戻す」が出ません")
+        model = _walk_model(page, ctx)
+        if model and not _close(model["total"], done_top, 1e-9):
+            ctx.fail(f"探す: 計算モデル (calc_from_state) の値 {model['total']} が結果の値 {done_top} と違います")
+        open_tab(page, "power")
+        page.wait_for_selector(f"{POWER_PANEL} [data-power-total]", timeout=15000)
+        if not _close(_power_total(page), done_top, 1e-9):
+            ctx.fail(f"探す: 装備に入れたあとの火力タブの値 {_power_total(page)} が結果の値 {done_top} と違います")
+        open_tab(page, "search")
+        page.locator(f'{P} [data-sr-action="undo"]').click()
+        if not _same_build(page.evaluate(JS_SEARCH_BUILD), before):
+            ctx.fail("探す: 「元に戻す」で前の装備に戻りません")
+
+        # --- 続けて探す
+        page.locator(f'{P} [data-sr-action="extend"]').click()
+        page.wait_for_selector(f'{P} [data-sr="running"]', timeout=10000)
+        _search_status(page, "done")
+        ext_top = _search_top(page)
+        snap = page.evaluate(JS_SEARCH_SNAP)
+        if not (ext_top and ext_top > done_top and snap["extended"] == 1):
+            ctx.fail(f"探す: 「続けて探す」で 1 位が良くなりません: {done_top} → {ext_top} ({snap})")
+
+        # --- 保存: search-last (書き出しに入る) と search-timing (この端末だけ)
+        page.wait_for_function("""async () => { const D = await import('./app/store.js');
+          const last = await D.kvGet('mhwilds-sns:search-last'); const t = await D.kvGet('mhwilds-sns:search-timing');
+          return !!last && last.result && last.result.results.length > 0 && Array.isArray(t) && t.length >= 2; }""", timeout=10000)
+        saved = page.evaluate("""async () => { const D = await import('./app/store.js');
+          const last = await D.kvGet('mhwilds-sns:search-last'); const t = await D.kvGet('mhwilds-sns:search-timing');
+          const text = await D.exportAllText({}); return { top: last.result.results[0].value, key: last.inputKey,
+          timing: t.length, phases: t[0].phases.length, inExport: text.includes('mhwilds-sns:search-last'),
+          timingInExport: text.includes('mhwilds-sns:search-timing') }; }""")
+        if not _close(saved["top"], ext_top, 1e-12) or not saved["key"]:
+            ctx.fail(f"探す: 保存した最後の結果が画面と違います: {saved}")
+        if not saved["inExport"] or saved["timingInExport"]:
+            ctx.fail(f"探す: 書き出しには search-last だけが入るはず: {saved}")
+        if saved["phases"] < 3:
+            ctx.fail(f"探す: 時間の記録に段階が入っていません: {saved}")
+
+        # --- 開き直すと前回の結果 → 条件を変えると「条件が変わりました」
+        page.evaluate("async () => (await import('./app/state.js')).flushState()")
+        page.reload(wait_until="load")
+        wait_app_ready(page)
+        page.wait_for_selector(f'{P} [data-sr-note="restored"]', timeout=15000)
+        if not _close(_search_top(page), ext_top, 1e-12):
+            ctx.fail(f"探す: 開き直したときの前回の結果の 1 位が違います: {_search_top(page)} / {ext_top}")
+        if page.locator(f'{P} [data-sr-action="extend"]').count():
+            ctx.fail("探す: 保存から戻した結果なのに「続けて探す」が出ています")
+        if page.locator(f'{P} [data-sr-note="stale"]').count():
+            ctx.fail("探す: 条件を変えていないのに「条件が変わりました」が出ています")
+        page.locator(f'{P} [data-sr="budget"] .segment', has_text="5 件").click()
+        page.wait_for_selector(f'{P} [data-sr-note="stale"]', timeout=5000)
+        page.locator(f'{P} [data-sr="budget"] .segment', has_text="10 件").click()
+        page.wait_for_selector(f'{P} [data-sr-note="stale"]', state="detached", timeout=5000)
+        ctx.shot("search-restored")
+        check_errors(ctx, "探す (通し)")
+    except Exception as e:
+        ctx.fail(f"探す (通し) が途中で止まりました: {_search_err(e)}")
+        try:
+            ctx.shot("search-stopped")
+        except Exception:
+            pass
+    finally:
+        context.close()
+    return ctx
+
+
+def search_cancel_and_tabs(browser, ctx_opts, server, base_url) -> Ctx:
+    """1 の続き (段階をゆっくり進める作り物で): やめる → もう一度 → 計算中にタブを移る → 裏に回す → 相手タブからの自動の開始。"""
+    context, page, ctx = _search_open(browser, ctx_opts, server, base_url, "search-cancel", fake="step=500")
+    P = SEARCH_PANEL
+    try:
+        page.evaluate(JS_SEARCH_SETUP)
+        open_tab(page, "search")
+        # --- やめる → 途中でやめました → もう一度
+        _search_start(page)
+        page.wait_for_selector(f'{P} [data-sr="running"]', timeout=10000)
+        page.locator(f'{P} [data-sr-action="cancel"]').click()
+        _search_status(page, "cancelled")
+        if not page.locator(f'{P} [data-sr-note="cancelled"]').count():
+            ctx.fail("探す: やめたのに「途中でやめました」が出ません")
+        _search_start(page)
+        _search_status(page, "done")
+
+        # --- 計算中にほかのタブへ移る → 終わるとタブの絵に点 → 戻ると結果
+        _search_start(page)
+        page.wait_for_selector(f'{P} [data-sr="running"]', timeout=10000)
+        open_tab(page, "equip")
+        page.wait_for_function(f"async () => (await ({JS_SEARCH_SNAP})()).status === 'done'", timeout=15000)
+        page.wait_for_selector('.tabbar [data-tab-dot="search"]', timeout=5000)
+        open_tab(page, "search")
+        if page.locator(".tabbar [data-tab-dot]").count():
+            ctx.fail("探す: 探すタブを開いても点が消えません")
+        if not page.locator(f"{P} .sr-result").count():
+            ctx.fail("探す: ほかのタブから戻ると結果がありません")
+
+        # --- 裏に回す (visibilitychange) → 戻す: 止まらずに終わる
+        _search_start(page)
+        page.wait_for_selector(f'{P} [data-sr="running"]', timeout=10000)
+        page.evaluate("""() => { Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+          document.dispatchEvent(new Event('visibilitychange')); }""")
+        page.wait_for_timeout(400)
+        page.evaluate("""() => { delete document.visibilityState;
+          document.dispatchEvent(new Event('visibilitychange')); }""")
+        _search_status(page, "done")
+
+        # --- 相手タブから「この相手で装備を探す」(印を置いて探すタブへ) → 自動で始まり、印は消える
+        open_tab(page, "target")
+        page.evaluate("""async () => { const S = await import('./app/state.js'); const sh = await import('./app/ui/shell.js');
+          S.requestSearch({ from: 'target' }); sh.goToTab('search', { top: true }); }""")
+        page.wait_for_selector('.app[data-active-tab="search"]')
+        page.wait_for_selector(f'{P} [data-sr="running"]', timeout=10000)
+        _search_status(page, "done")
+        if _app_state(page, "s.search.autoStart") is not None:
+            ctx.fail("探す: 自動で探し始めたあとも state.search.autoStart の印が残っています")
+        check_errors(ctx, "探す (やめる・タブを移る)")
+    except Exception as e:
+        ctx.fail(f"探す (やめる・タブを移る) が途中で止まりました: {_search_err(e)}")
+        try:
+            ctx.shot("search-cancel-stopped")
+        except Exception:
+            pass
+    finally:
+        context.close()
+    return ctx
+
+
+def search_guidance_and_required(browser, ctx_opts, server, base_url) -> Ctx:
+    """2・3. 相手・武器が無いときの案内、探せないとき、必須スキルを足して満たせない → 外して探す。"""
+    context, page, ctx = _search_open(browser, ctx_opts, server, base_url, "search-required", fake="step=20&result=infeasible")
+    P = SEARCH_PANEL
+    try:
+        open_tab(page, "search")
+        if "相手を選んでいません" not in page.inner_text(f'{P} [data-sr-target-label]'):
+            ctx.fail("探す: 相手が無いときの案内が出ません")
+        if "片手剣すべて" not in page.inner_text(f'{P} [data-sr-weapon-text]'):
+            ctx.fail("探す: 武器が無いとき (おまかせ) に「片手剣すべて」から探す案内が出ません")
+        page.locator(f'{P} [data-sr="weapon"] .segment', has_text="いまの武器").click()
+        page.wait_for_selector(f'{P} [data-sr-blocker="no-weapon"]', timeout=5000)
+        if not page.locator(f'{P} [data-sr-action="start"]').is_disabled():
+            ctx.fail("探す: 武器が無いのに「いまの武器」で探せてしまいます")
+        page.locator(f'{P} [data-sr="weapon"] .segment', has_text="おまかせ").click()
+        # 必須スキルを足す → Lv を上げ下げ
+        page.locator(f'{P} [data-sr-action="add-required"]').click()
+        page.wait_for_selector(".sheet .picker-list")
+        page.fill(".sheet input[type=search]", "耐震")
+        page.locator(".sheet .picker-item:not([disabled])", has_text="耐震").first.click()
+        page.wait_for_selector(".sheet", state="detached")
+        row = page.locator(f"{P} [data-sr-required]")
+        if row.count() != 1 or "耐震" not in row.inner_text():
+            ctx.fail("探す: 必須スキル (耐震) の行が出ません")
+        row.locator('[data-sr-action="lv-up"]').click()
+        row.locator('[data-sr-action="lv-up"]').click()
+        row.locator('[data-sr-action="lv-down"]').click()
+        req = _app_state(page, "s.search.required")
+        if len(req) != 1 or req[0]["level"] != 2:
+            ctx.fail(f"探す: 必須スキルの Lv の上げ下げが state に入りません: {req}")
+        check_layout(page, ctx, "探す (必須スキル)")
+        _search_start(page)
+        _search_status(page, "infeasible")
+        if "耐震" not in page.inner_text(f'{P} [data-sr-note="infeasible"]'):
+            ctx.fail("探す: 満たせないときに足りないスキルが出ません")
+        ctx.shot("search-infeasible")
+        page.locator(f'{P} [data-sr-action="remove-missing"]').first.click()
+        page.wait_for_selector(f"{P} [data-sr-required]", state="detached", timeout=5000)
+        page.wait_for_function(f"async () => {{ const s = await ({JS_SEARCH_SNAP})(); return s.status === 'infeasible' && !s.busy; }}",
+                               timeout=10000)
+        if _app_state(page, "s.search.required"):
+            ctx.fail("探す: 「〇〇を外して探す」で必須スキルが外れません")
+        check_errors(ctx, "探す (案内と必須スキル)")
+    except Exception as e:
+        ctx.fail(f"探す (案内と必須スキル) が途中で止まりました: {_search_err(e)}")
+    finally:
+        context.close()
+    return ctx
+
+
+def search_failures(browser, ctx_opts, server, base_url) -> list[Ctx]:
+    """4. Worker が error を返す (もう一度で直る)・Worker が落ちる・Worker が無い端末。"""
+    out = []
+    P = SEARCH_PANEL
+    # error を返す → もう一度 (差し替えを普通の作り物に戻してから) で直る
+    context, page, ctx = _search_open(browser, ctx_opts, server, base_url, "search-fail", fake="step=20&fail=start")
+    try:
+        page.evaluate(JS_SEARCH_SETUP)
+        open_tab(page, "search")
+        _search_start(page)
+        _search_status(page, "error")
+        note = page.locator(f'{P} [data-sr-note="error"]')
+        if "探せませんでした" not in note.inner_text():
+            ctx.fail("探す: Worker のエラーが「探せませんでした」で出ません")
+        ctx.shot("search-error")
+        page.evaluate(f"() => {{ window.__mhwSearchWorker = {{ url: {json.dumps(SEARCH_FAKE + '?step=20')} }}; }}")
+        note.locator("button", has_text="もう一度").click()
+        _search_status(page, "done")
+        check_errors(ctx, "探す (Worker のエラー)")
+    except Exception as e:
+        ctx.fail(f"探す (Worker のエラー) が途中で止まりました: {_search_err(e)}")
+    finally:
+        context.close()
+    out.append(ctx)
+    # Worker が落ちる (error イベント) → エラーの表示 (作り物の例外のコンソール出力は数えない)
+    context, page, ctx = _search_open(browser, ctx_opts, server, base_url, "search-crash", fake="step=20&fail=crash")
+    try:
+        page.evaluate(JS_SEARCH_SETUP)
+        open_tab(page, "search")
+        _search_start(page)
+        _search_status(page, "error")
+        errs = [e for e in ctx.take_errors() if "作り物" not in e]
+        if errs:
+            ctx.fail(f"探す (Worker が落ちる): エラー {errs[:4]}")
+    except Exception as e:
+        ctx.fail(f"探す (Worker が落ちる) が途中で止まりました: {_search_err(e)}")
+    finally:
+        context.close()
+    out.append(ctx)
+    # Worker が無い端末 → 画面のスレッドで回る
+    context, page, ctx = _search_open(browser, ctx_opts, server, base_url, "search-noworker", fake="step=20", no_worker=True)
+    try:
+        if page.evaluate("typeof window.Worker") != "undefined":
+            ctx.note("探す: init script で Worker を消せなかったので、Worker が無い端末の確認は Worker のまま動きました")
+        page.evaluate(JS_SEARCH_SETUP)
+        open_tab(page, "search")
+        _search_start(page)
+        _search_status(page, "done")
+        if not page.evaluate(JS_SEARCH_SNAP)["inline"] or not page.locator(f'{P} [data-sr-note="inline"]').count():
+            ctx.fail("探す: Worker が無いのに、画面の処理で探したことになっていません")
+        check_errors(ctx, "探す (Worker が無い)")
+    except Exception as e:
+        ctx.fail(f"探す (Worker が無い) が途中で止まりました: {_search_err(e)}")
+    finally:
+        context.close()
+    out.append(ctx)
+    return out
+
+
+def search_dark_375(browser, ctx_opts, server, base_url) -> Ctx:
+    """5. 幅 375・ダークで、結果の一覧と詳しくのシートがはみ出さず、44px 以上で押せる。
+    相手は歴戦王ウズ・トゥナ (雷がはっきり) で、火の武器なので「おすすめの属性」から探す。雷の武器の結果を装備に入れても
+    「条件が変わりました」にならない (探し始めた時の装備で比べ直す) ことも確かめる。"""
+    context, page, ctx = _search_open(browser, ctx_opts, server, base_url, "w375-dark", fake="step=20&warn=1")
+    P = SEARCH_PANEL
+    try:
+        page.evaluate(JS_SEARCH_SETUP)
+        page.evaluate("""async () => { const S = await import('./app/state.js'); const D = await import('./app/data.js');
+          const td = await D.loadTargetData(); const m = td.lists.monsters.find((x) => x.name === 'ウズ・トゥナ');
+          S.selectMonster(m.id, 'head'); S.selectIndividual('arch-tempered'); await S.flushState(); }""")
+        open_tab(page, "search")
+        if "おすすめの属性" not in page.inner_text(f'{P} [data-sr-weapon-text]'):
+            ctx.fail(f"探す: 歴戦王ウズ・トゥナと火の武器で「おすすめの属性」から探していません: {page.inner_text(f'{P} [data-sr-weapon-text]')!r}")
+        _search_start(page)
+        _search_status(page, "done")
+        if not page.locator(f'{P} [data-sr-note="warnings"]').count():
+            ctx.fail("探す: 結果の警告 (evaluator-mismatch) が出ません")
+        if not page.locator(f'{P} [data-sr-note="zeroed"]').count():
+            ctx.fail("探す: 仮の発動率を 0% にして探したときの説明が出ません")
+        check_layout(page, ctx, "探す (幅 375・ダークの結果)")
+        ctx.shot("search-results")
+        page.locator(f"{P} .sr-result").first.click()
+        page.wait_for_selector('[data-sr-sheet="result"]')
+        _wait_sheet_ready(page)
+        check_layout(page, ctx, "探す (幅 375・ダークの詳しく)")
+        ctx.shot("search-sheet", full_page=False)
+        # 1 位 (武器が変わる組) を装備に入れても「条件が変わりました」にならない → 元に戻す
+        before = page.evaluate(JS_SEARCH_BUILD)
+        page.locator('.sheet [data-sr-action="apply"]').click()
+        page.wait_for_selector(".sheet", state="detached")
+        after = page.evaluate(JS_SEARCH_BUILD)
+        if after.get("weapon") == before.get("weapon"):
+            ctx.note("探す: 1 位の組の武器がいまの武器と同じだったので、武器が変わるときの確かめになっていません")
+        page.wait_for_timeout(300)
+        if page.locator(f'{P} [data-sr-note="stale"]').count():
+            ctx.fail("探す: 結果の組を装備に入れただけで「条件が変わりました」が出ます")
+        page.locator(f'{P} [data-sr-action="undo"]').click()
+        if not _same_build(page.evaluate(JS_SEARCH_BUILD), before):
+            ctx.fail("探す: 「元に戻す」で前の装備に戻りません (幅 375・ダーク)")
+        check_errors(ctx, "探す (幅 375・ダーク)")
+    except Exception as e:
+        ctx.fail(f"探す (幅 375・ダーク) が途中で止まりました: {_search_err(e)}")
+    finally:
+        context.close()
+    return ctx
+
+
+def run_search(browser, device: dict, bname: str, server: Server, base_url: str, args, failures: list, notes: list):
+    """探すタブの流れを全部動かし、失敗とメモを failures / notes に足す (--robust-only か、--only に search が無ければ何もしない)。"""
+    if args.robust_only or (args.only and "search" not in args.only.split(",")):
+        return
+    light = {**device, "color_scheme": "light"}
+    dark = {**device, "viewport": {"width": 375, "height": 667}, "color_scheme": "dark"}
+    runs = [
+        ("search-walkthrough", lambda: search_walkthrough(browser, light, server, base_url)),
+        ("search-cancel", lambda: search_cancel_and_tabs(browser, light, server, base_url)),
+        ("search-required", lambda: search_guidance_and_required(browser, light, server, base_url)),
+        ("search-failures", lambda: search_failures(browser, light, server, base_url)),
+        ("search-dark-375", lambda: search_dark_375(browser, dark, server, base_url)),
+    ]
+    for name, fn in runs:
+        print(f"--- {bname} {name}", flush=True)
+        res = fn()
+        for c in (res if isinstance(res, list) else [res]):
+            failures += c.failures
+            notes += c.notes
 
 
 @scenario_check
@@ -3045,6 +3503,7 @@ def main() -> int:
                 f, n = run_robust(browser, device, bname)
                 failures += f
                 notes += n
+            run_search(browser, device, bname, server, base_url, args, failures, notes)  # 探すタブ (作り物の Worker)
             browser.close()
     finally:
         server.shutdown()
