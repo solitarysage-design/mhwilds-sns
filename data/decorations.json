@@ -1,0 +1,5770 @@
+{
+ "meta": {
+  "source": [
+   "https://wilds.mhdb.io/ja/decorations",
+   "https://github.com/dzxrly/MHWS-in-json/releases/download/database-20261020-070700-4a99b26/DATABASE_ja-JP_20261020-070700-4a99b26.zip"
+  ],
+  "generatedAt": "2026-10-21T03:08:28+00:00",
+  "gameVersion": "1.042",
+  "sourceVersions": {
+   "mhdb": "wilds.mhdb.io /ja/ (取得日時は meta.source の各 fetchedAt)",
+   "mhwsInJson": "dzxrly/MHWS-in-json database-20261020-070700-4a99b26 (commit 4a99b26, ゲーム版 1.42.0.2)"
+  },
+  "license": {
+   "mhdb": "wilds.mhdb.io (LartTyler/mhdb-wilds-data)。ゲームデータの数値と名前のみ使用",
+   "mhwsInJson": "MIT (dzxrly/MHWS-in-json)"
+  },
+  "checks": {
+   "mhwsCompared": 361,
+   "mismatches": []
+  }
+ },
+ "decorations": [
+  {
+   "id": 1,
+   "name": "毒珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 12,
+     "level": 1
+    }
+   ],
+   "gameId": -2144349312
+  },
+  {
+   "id": 2,
+   "name": "匠珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 119,
+     "level": 2
+    }
+   ],
+   "gameId": -2136274304
+  },
+  {
+   "id": 3,
+   "name": "刺撃珠【３】",
+   "kind": "armor",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 38,
+     "level": 1
+    }
+   ],
+   "gameId": -2135118208
+  },
+  {
+   "id": 4,
+   "name": "特会・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 68,
+     "level": 3
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": -2098600064
+  },
+  {
+   "id": 5,
+   "name": "睡眠珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 78,
+     "level": 1
+    }
+   ],
+   "gameId": -2092760832
+  },
+  {
+   "id": 6,
+   "name": "射法珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 53,
+     "level": 2
+    }
+   ],
+   "gameId": -2046315136
+  },
+  {
+   "id": 7,
+   "name": "雷光・射法珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 53,
+     "level": 1
+    },
+    {
+     "skillId": 127,
+     "level": 3
+    }
+   ],
+   "gameId": -2040726144
+  },
+  {
+   "id": 8,
+   "name": "耐水珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 84,
+     "level": 1
+    }
+   ],
+   "gameId": -1958732416
+  },
+  {
+   "id": 9,
+   "name": "睡眠珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 78,
+     "level": 2
+    }
+   ],
+   "gameId": -1957828352
+  },
+  {
+   "id": 10,
+   "name": "奪気珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 141,
+     "level": 3
+    }
+   ],
+   "gameId": -1918136064
+  },
+  {
+   "id": 11,
+   "name": "重撃珠【２】",
+   "kind": "armor",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 129,
+     "level": 1
+    }
+   ],
+   "gameId": -1911376000
+  },
+  {
+   "id": 12,
+   "name": "積弾珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 137,
+     "level": 3
+    }
+   ],
+   "gameId": -1907467776
+  },
+  {
+   "id": 13,
+   "name": "耐拘珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 147,
+     "level": 1
+    }
+   ],
+   "gameId": -1898312320
+  },
+  {
+   "id": 14,
+   "name": "溜幅珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 24,
+     "level": 1
+    }
+   ],
+   "gameId": -1890995072
+  },
+  {
+   "id": 15,
+   "name": "攻撃珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 72,
+     "level": 2
+    }
+   ],
+   "gameId": -1843593600
+  },
+  {
+   "id": 16,
+   "name": "積弾・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    },
+    {
+     "skillId": 137,
+     "level": 3
+    }
+   ],
+   "gameId": -1838842752
+  },
+  {
+   "id": 17,
+   "name": "火炎・射法珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 3
+    },
+    {
+     "skillId": 53,
+     "level": 1
+    }
+   ],
+   "gameId": -1826260608
+  },
+  {
+   "id": 18,
+   "name": "雷光珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 127,
+     "level": 1
+    }
+   ],
+   "gameId": -1814261888
+  },
+  {
+   "id": 19,
+   "name": "耐裂珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 146,
+     "level": 1
+    }
+   ],
+   "gameId": -1808385664
+  },
+  {
+   "id": 20,
+   "name": "耐火珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 125,
+     "level": 1
+    }
+   ],
+   "gameId": -1801961088
+  },
+  {
+   "id": 21,
+   "name": "研磨・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 119,
+     "level": 1
+    },
+    {
+     "skillId": 126,
+     "level": 2
+    }
+   ],
+   "gameId": -1780766976
+  },
+  {
+   "id": 22,
+   "name": "強毒珠【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 21,
+     "level": 1
+    }
+   ],
+   "gameId": -1779241856
+  },
+  {
+   "id": 23,
+   "name": "無食珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 151,
+     "level": 1
+    }
+   ],
+   "gameId": -1775008128
+  },
+  {
+   "id": 24,
+   "name": "昂揚珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 104,
+     "level": 1
+    }
+   ],
+   "gameId": -1770074240
+  },
+  {
+   "id": 25,
+   "name": "雷光・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 119,
+     "level": 1
+    },
+    {
+     "skillId": 127,
+     "level": 3
+    }
+   ],
+   "gameId": -1769520768
+  },
+  {
+   "id": 26,
+   "name": "標本珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 114,
+     "level": 1
+    }
+   ],
+   "gameId": -1749412352
+  },
+  {
+   "id": 27,
+   "name": "速射珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 23,
+     "level": 1
+    }
+   ],
+   "gameId": -1730551168
+  },
+  {
+   "id": 28,
+   "name": "沼渡珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 63,
+     "level": 1
+    }
+   ],
+   "gameId": -1726768640
+  },
+  {
+   "id": 29,
+   "name": "増弾珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 109,
+     "level": 2
+    }
+   ],
+   "gameId": -1723727616
+  },
+  {
+   "id": 30,
+   "name": "業物珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 117,
+     "level": 3
+    }
+   ],
+   "gameId": -1720284416
+  },
+  {
+   "id": 31,
+   "name": "睡眠珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 78,
+     "level": 3
+    }
+   ],
+   "gameId": -1714653184
+  },
+  {
+   "id": 32,
+   "name": "破龍珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 3
+    }
+   ],
+   "gameId": -1709840128
+  },
+  {
+   "id": 33,
+   "name": "鼓笛・攻撃珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 29,
+     "level": 2
+    },
+    {
+     "skillId": 72,
+     "level": 1
+    }
+   ],
+   "gameId": -1708108928
+  },
+  {
+   "id": 34,
+   "name": "特会珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 68,
+     "level": 3
+    }
+   ],
+   "gameId": -1706210176
+  },
+  {
+   "id": 35,
+   "name": "雷光珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 127,
+     "level": 2
+    }
+   ],
+   "gameId": -1693028992
+  },
+  {
+   "id": 36,
+   "name": "火炎・守勢珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 3
+    },
+    {
+     "skillId": 66,
+     "level": 1
+    }
+   ],
+   "gameId": -1672815872
+  },
+  {
+   "id": 37,
+   "name": "毒珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 12,
+     "level": 2
+    }
+   ],
+   "gameId": -1669066368
+  },
+  {
+   "id": 38,
+   "name": "奪気珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 141,
+     "level": 2
+    }
+   ],
+   "gameId": -1664513664
+  },
+  {
+   "id": 39,
+   "name": "攻勢珠【３】",
+   "kind": "armor",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 75,
+     "level": 1
+    }
+   ],
+   "gameId": -1645940096
+  },
+  {
+   "id": 40,
+   "name": "研磨・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    },
+    {
+     "skillId": 126,
+     "level": 2
+    }
+   ],
+   "gameId": -1631437696
+  },
+  {
+   "id": 41,
+   "name": "耐防珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 135,
+     "level": 1
+    }
+   ],
+   "gameId": -1626218240
+  },
+  {
+   "id": 42,
+   "name": "破龍・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 36,
+     "level": 1
+    },
+    {
+     "skillId": 41,
+     "level": 3
+    }
+   ],
+   "gameId": -1622630272
+  },
+  {
+   "id": 43,
+   "name": "研磨・抜刀珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 103,
+     "level": 1
+    },
+    {
+     "skillId": 126,
+     "level": 2
+    }
+   ],
+   "gameId": -1609962496
+  },
+  {
+   "id": 44,
+   "name": "初弾珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 140,
+     "level": 2
+    }
+   ],
+   "gameId": -1604621952
+  },
+  {
+   "id": 45,
+   "name": "溜打・攻撃珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 72,
+     "level": 1
+    },
+    {
+     "skillId": 83,
+     "level": 1
+    }
+   ],
+   "gameId": -1581788032
+  },
+  {
+   "id": 46,
+   "name": "速変珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 3
+    }
+   ],
+   "gameId": -1569165952
+  },
+  {
+   "id": 47,
+   "name": "渾身珠【２】",
+   "kind": "armor",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 99,
+     "level": 1
+    }
+   ],
+   "gameId": -1550869760
+  },
+  {
+   "id": 48,
+   "name": "守勢珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 1
+    }
+   ],
+   "gameId": -1549794304
+  },
+  {
+   "id": 49,
+   "name": "剛刃珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 134,
+     "level": 2
+    }
+   ],
+   "gameId": -1545069696
+  },
+  {
+   "id": 50,
+   "name": "雷光珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 127,
+     "level": 3
+    }
+   ],
+   "gameId": -1518352896
+  },
+  {
+   "id": 51,
+   "name": "守勢・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    },
+    {
+     "skillId": 66,
+     "level": 3
+    }
+   ],
+   "gameId": -1489248128
+  },
+  {
+   "id": 52,
+   "name": "跳躍珠【２】",
+   "kind": "armor",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 102,
+     "level": 1
+    }
+   ],
+   "gameId": -1485261696
+  },
+  {
+   "id": 53,
+   "name": "雷光・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 36,
+     "level": 1
+    },
+    {
+     "skillId": 127,
+     "level": 3
+    }
+   ],
+   "gameId": -1465477120
+  },
+  {
+   "id": 54,
+   "name": "心眼珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 136,
+     "level": 1
+    }
+   ],
+   "gameId": -1463543552
+  },
+  {
+   "id": 55,
+   "name": "業物・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    },
+    {
+     "skillId": 117,
+     "level": 3
+    }
+   ],
+   "gameId": -1452017024
+  },
+  {
+   "id": 56,
+   "name": "早復珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 31,
+     "level": 1
+    }
+   ],
+   "gameId": -1449268352
+  },
+  {
+   "id": 57,
+   "name": "耐眠珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 64,
+     "level": 1
+    }
+   ],
+   "gameId": -1434375936
+  },
+  {
+   "id": 58,
+   "name": "耐龍珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 1,
+     "level": 1
+    }
+   ],
+   "gameId": -1416808832
+  },
+  {
+   "id": 59,
+   "name": "抗狂珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 18,
+     "level": 1
+    }
+   ],
+   "gameId": -1401571456
+  },
+  {
+   "id": 60,
+   "name": "特射珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 69,
+     "level": 2
+    }
+   ],
+   "gameId": -1397276160
+  },
+  {
+   "id": 61,
+   "name": "流水珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 91,
+     "level": 1
+    }
+   ],
+   "gameId": -1394596736
+  },
+  {
+   "id": 62,
+   "name": "防音珠【２】",
+   "kind": "armor",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 80,
+     "level": 1
+    }
+   ],
+   "gameId": -1392648576
+  },
+  {
+   "id": 63,
+   "name": "体術珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 14,
+     "level": 1
+    }
+   ],
+   "gameId": -1381641984
+  },
+  {
+   "id": 64,
+   "name": "初弾珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 140,
+     "level": 3
+    }
+   ],
+   "gameId": -1374390656
+  },
+  {
+   "id": 65,
+   "name": "火炎・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 3
+    },
+    {
+     "skillId": 59,
+     "level": 1
+    }
+   ],
+   "gameId": -1345708800
+  },
+  {
+   "id": 66,
+   "name": "達芸珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 124,
+     "level": 1
+    }
+   ],
+   "gameId": -1340047744
+  },
+  {
+   "id": 67,
+   "name": "抜打・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 8,
+     "level": 3
+    },
+    {
+     "skillId": 36,
+     "level": 1
+    }
+   ],
+   "gameId": -1319399040
+  },
+  {
+   "id": 68,
+   "name": "環境珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 48,
+     "level": 1
+    }
+   ],
+   "gameId": -1318893952
+  },
+  {
+   "id": 69,
+   "name": "耐雷珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 156,
+     "level": 1
+    }
+   ],
+   "gameId": -1267187456
+  },
+  {
+   "id": 70,
+   "name": "抜刀珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 103,
+     "level": 3
+    }
+   ],
+   "gameId": -1220470528
+  },
+  {
+   "id": 71,
+   "name": "守勢珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 3
+    }
+   ],
+   "gameId": -1218528128
+  },
+  {
+   "id": 72,
+   "name": "速変・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 3
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": -1205597696
+  },
+  {
+   "id": 73,
+   "name": "流水珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 91,
+     "level": 2
+    }
+   ],
+   "gameId": -1188973056
+  },
+  {
+   "id": 74,
+   "name": "飛燕珠【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 86,
+     "level": 1
+    }
+   ],
+   "gameId": -1178454912
+  },
+  {
+   "id": 75,
+   "name": "射法珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 53,
+     "level": 1
+    }
+   ],
+   "gameId": -1166585472
+  },
+  {
+   "id": 76,
+   "name": "鈍器珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 85,
+     "level": 3
+    }
+   ],
+   "gameId": -1163377152
+  },
+  {
+   "id": 77,
+   "name": "毒瓶珠【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 116,
+     "level": 1
+    }
+   ],
+   "gameId": -1161972480
+  },
+  {
+   "id": 78,
+   "name": "眠瓶珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 79,
+     "level": 1
+    }
+   ],
+   "gameId": -1159995904
+  },
+  {
+   "id": 79,
+   "name": "属会・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 3
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": -1152759424
+  },
+  {
+   "id": 80,
+   "name": "強跳珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 76,
+     "level": 1
+    }
+   ],
+   "gameId": -1139186816
+  },
+  {
+   "id": 81,
+   "name": "毒珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 12,
+     "level": 3
+    }
+   ],
+   "gameId": -1133012096
+  },
+  {
+   "id": 82,
+   "name": "適応珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 88,
+     "level": 1
+    }
+   ],
+   "gameId": -1113106688
+  },
+  {
+   "id": 83,
+   "name": "特会・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    },
+    {
+     "skillId": 68,
+     "level": 3
+    }
+   ],
+   "gameId": -1108771200
+  },
+  {
+   "id": 84,
+   "name": "増弾・達人珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 3,
+     "level": 1
+    },
+    {
+     "skillId": 109,
+     "level": 2
+    }
+   ],
+   "gameId": -1082640896
+  },
+  {
+   "id": 85,
+   "name": "達人珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 3,
+     "level": 3
+    }
+   ],
+   "gameId": -1081371008
+  },
+  {
+   "id": 86,
+   "name": "耐氷珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 101,
+     "level": 1
+    }
+   ],
+   "gameId": -1072040640
+  },
+  {
+   "id": 87,
+   "name": "抜打・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 8,
+     "level": 3
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": -1055912640
+  },
+  {
+   "id": 88,
+   "name": "属会・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 36,
+     "level": 1
+    },
+    {
+     "skillId": 82,
+     "level": 3
+    }
+   ],
+   "gameId": -1050453888
+  },
+  {
+   "id": 89,
+   "name": "抜打珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 8,
+     "level": 1
+    }
+   ],
+   "gameId": -1034943744
+  },
+  {
+   "id": 90,
+   "name": "耐麻珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 92,
+     "level": 1
+    }
+   ],
+   "gameId": -1016655360
+  },
+  {
+   "id": 91,
+   "name": "爆破珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 40,
+     "level": 1
+    }
+   ],
+   "gameId": -1016332736
+  },
+  {
+   "id": 92,
+   "name": "痺瓶珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 44,
+     "level": 1
+    }
+   ],
+   "gameId": -1003144960
+  },
+  {
+   "id": 93,
+   "name": "ＫＯ珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 36,
+     "level": 1
+    }
+   ],
+   "gameId": -949824384
+  },
+  {
+   "id": 94,
+   "name": "火炎・昂揚珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 3
+    },
+    {
+     "skillId": 104,
+     "level": 1
+    }
+   ],
+   "gameId": -937758144
+  },
+  {
+   "id": 95,
+   "name": "抜打・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 8,
+     "level": 3
+    },
+    {
+     "skillId": 59,
+     "level": 1
+    }
+   ],
+   "gameId": -933830080
+  },
+  {
+   "id": 96,
+   "name": "飛燕・抜刀珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 86,
+     "level": 1
+    },
+    {
+     "skillId": 103,
+     "level": 1
+    }
+   ],
+   "gameId": -919326784
+  },
+  {
+   "id": 97,
+   "name": "爆破珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 40,
+     "level": 2
+    }
+   ],
+   "gameId": -857552768
+  },
+  {
+   "id": 98,
+   "name": "超心珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 22,
+     "level": 2
+    }
+   ],
+   "gameId": -848728960
+  },
+  {
+   "id": 99,
+   "name": "雷光・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    },
+    {
+     "skillId": 127,
+     "level": 3
+    }
+   ],
+   "gameId": -790612736
+  },
+  {
+   "id": 100,
+   "name": "火炎・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 3
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": -777488128
+  },
+  {
+   "id": 101,
+   "name": "溜幅・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 24,
+     "level": 3
+    },
+    {
+     "skillId": 36,
+     "level": 1
+    }
+   ],
+   "gameId": -773823488
+  },
+  {
+   "id": 102,
+   "name": "守勢珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 2
+    }
+   ],
+   "gameId": -753381888
+  },
+  {
+   "id": 103,
+   "name": "属会珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 1
+    }
+   ],
+   "gameId": -749488896
+  },
+  {
+   "id": 104,
+   "name": "防風珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 35,
+     "level": 1
+    }
+   ],
+   "gameId": -725659840
+  },
+  {
+   "id": 105,
+   "name": "麻痺珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 9,
+     "level": 1
+    }
+   ],
+   "gameId": -714680256
+  },
+  {
+   "id": 106,
+   "name": "集中珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 60,
+     "level": 3
+    }
+   ],
+   "gameId": -712981504
+  },
+  {
+   "id": 107,
+   "name": "強毒・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 21,
+     "level": 1
+    },
+    {
+     "skillId": 36,
+     "level": 1
+    }
+   ],
+   "gameId": -706109632
+  },
+  {
+   "id": 108,
+   "name": "飛燕・攻撃珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 72,
+     "level": 1
+    },
+    {
+     "skillId": 86,
+     "level": 1
+    }
+   ],
+   "gameId": -699699904
+  },
+  {
+   "id": 109,
+   "name": "爆瓶珠【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 5,
+     "level": 1
+    }
+   ],
+   "gameId": -693750528
+  },
+  {
+   "id": 110,
+   "name": "研磨・達人珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 3,
+     "level": 1
+    },
+    {
+     "skillId": 126,
+     "level": 2
+    }
+   ],
+   "gameId": -682377152
+  },
+  {
+   "id": 111,
+   "name": "増弾・抜刀珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 103,
+     "level": 1
+    },
+    {
+     "skillId": 109,
+     "level": 2
+    }
+   ],
+   "gameId": -677836288
+  },
+  {
+   "id": 112,
+   "name": "早気珠【２】",
+   "kind": "armor",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 58,
+     "level": 1
+    }
+   ],
+   "gameId": -673317952
+  },
+  {
+   "id": 113,
+   "name": "火炎・集中珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 3
+    },
+    {
+     "skillId": 60,
+     "level": 1
+    }
+   ],
+   "gameId": -645579072
+  },
+  {
+   "id": 114,
+   "name": "溜打・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 36,
+     "level": 1
+    },
+    {
+     "skillId": 83,
+     "level": 1
+    }
+   ],
+   "gameId": -645377408
+  },
+  {
+   "id": 115,
+   "name": "集中・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 60,
+     "level": 3
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": -621608832
+  },
+  {
+   "id": 116,
+   "name": "鼓笛・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 29,
+     "level": 2
+    },
+    {
+     "skillId": 36,
+     "level": 1
+    }
+   ],
+   "gameId": -595931264
+  },
+  {
+   "id": 117,
+   "name": "研鑽珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 138,
+     "level": 1
+    }
+   ],
+   "gameId": -590616064
+  },
+  {
+   "id": 118,
+   "name": "積弾珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 137,
+     "level": 2
+    }
+   ],
+   "gameId": -557270784
+  },
+  {
+   "id": 119,
+   "name": "強壁・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 3
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": -546783040
+  },
+  {
+   "id": 120,
+   "name": "加護珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 122,
+     "level": 1
+    }
+   ],
+   "gameId": -534202944
+  },
+  {
+   "id": 121,
+   "name": "麻痺珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 9,
+     "level": 3
+    }
+   ],
+   "gameId": -522458240
+  },
+  {
+   "id": 122,
+   "name": "流水・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 36,
+     "level": 1
+    },
+    {
+     "skillId": 91,
+     "level": 3
+    }
+   ],
+   "gameId": -510575936
+  },
+  {
+   "id": 123,
+   "name": "鼓笛珠【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 29,
+     "level": 1
+    }
+   ],
+   "gameId": -508830240
+  },
+  {
+   "id": 124,
+   "name": "業物珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 117,
+     "level": 1
+    }
+   ],
+   "gameId": -493483136
+  },
+  {
+   "id": 125,
+   "name": "速変・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 3
+    },
+    {
+     "skillId": 59,
+     "level": 1
+    }
+   ],
+   "gameId": -487601632
+  },
+  {
+   "id": 126,
+   "name": "破龍・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 3
+    },
+    {
+     "skillId": 59,
+     "level": 1
+    }
+   ],
+   "gameId": -477564992
+  },
+  {
+   "id": 127,
+   "name": "守勢・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 3
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": -463114720
+  },
+  {
+   "id": 128,
+   "name": "達人珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 3,
+     "level": 1
+    }
+   ],
+   "gameId": -451614112
+  },
+  {
+   "id": 129,
+   "name": "連撃珠【３】",
+   "kind": "armor",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 95,
+     "level": 1
+    }
+   ],
+   "gameId": -447558304
+  },
+  {
+   "id": 130,
+   "name": "増弾・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 109,
+     "level": 2
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": -430198272
+  },
+  {
+   "id": 131,
+   "name": "耐衝珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 108,
+     "level": 1
+    }
+   ],
+   "gameId": -417484064
+  },
+  {
+   "id": 132,
+   "name": "飛込珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 28,
+     "level": 1
+    }
+   ],
+   "gameId": -394478144
+  },
+  {
+   "id": 133,
+   "name": "強毒・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 21,
+     "level": 1
+    },
+    {
+     "skillId": 59,
+     "level": 1
+    }
+   ],
+   "gameId": -389889248
+  },
+  {
+   "id": 134,
+   "name": "耐毒珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 128,
+     "level": 1
+    }
+   ],
+   "gameId": -384925600
+  },
+  {
+   "id": 135,
+   "name": "爆師珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 37,
+     "level": 1
+    }
+   ],
+   "gameId": -325572000
+  },
+  {
+   "id": 136,
+   "name": "地学珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 98,
+     "level": 1
+    }
+   ],
+   "gameId": -316552800
+  },
+  {
+   "id": 137,
+   "name": "昂揚珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 104,
+     "level": 2
+    }
+   ],
+   "gameId": -301443072
+  },
+  {
+   "id": 138,
+   "name": "火炎・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 36,
+     "level": 1
+    },
+    {
+     "skillId": 50,
+     "level": 3
+    }
+   ],
+   "gameId": -292390464
+  },
+  {
+   "id": 139,
+   "name": "抜刀珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 103,
+     "level": 1
+    }
+   ],
+   "gameId": -245086656
+  },
+  {
+   "id": 140,
+   "name": "溜幅珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 24,
+     "level": 2
+    }
+   ],
+   "gameId": -243518144
+  },
+  {
+   "id": 141,
+   "name": "速納珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 32,
+     "level": 1
+    }
+   ],
+   "gameId": -198925264
+  },
+  {
+   "id": 142,
+   "name": "強壁珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 2
+    }
+   ],
+   "gameId": -198819232
+  },
+  {
+   "id": 143,
+   "name": "節食珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 111,
+     "level": 1
+    }
+   ],
+   "gameId": -177096704
+  },
+  {
+   "id": 144,
+   "name": "破龍珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 2
+    }
+   ],
+   "gameId": -150840288
+  },
+  {
+   "id": 145,
+   "name": "業物珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 117,
+     "level": 2
+    }
+   ],
+   "gameId": -145991360
+  },
+  {
+   "id": 146,
+   "name": "鼓笛・達人珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 3,
+     "level": 1
+    },
+    {
+     "skillId": 29,
+     "level": 2
+    }
+   ],
+   "gameId": -143560672
+  },
+  {
+   "id": 147,
+   "name": "強毒・抜刀珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 21,
+     "level": 1
+    },
+    {
+     "skillId": 103,
+     "level": 1
+    }
+   ],
+   "gameId": -140702464
+  },
+  {
+   "id": 148,
+   "name": "研磨・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 36,
+     "level": 1
+    },
+    {
+     "skillId": 126,
+     "level": 2
+    }
+   ],
+   "gameId": -102120712
+  },
+  {
+   "id": 149,
+   "name": "鉄壁珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    }
+   ],
+   "gameId": -98207152
+  },
+  {
+   "id": 150,
+   "name": "火炎・強壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 1
+    },
+    {
+     "skillId": 50,
+     "level": 3
+    }
+   ],
+   "gameId": -92885912
+  },
+  {
+   "id": 151,
+   "name": "砲術珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 47,
+     "level": 2
+    }
+   ],
+   "gameId": -87428912
+  },
+  {
+   "id": 152,
+   "name": "茸好珠【２】",
+   "kind": "armor",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 52,
+     "level": 1
+    }
+   ],
+   "gameId": -35111916
+  },
+  {
+   "id": 153,
+   "name": "初弾・射法珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 53,
+     "level": 1
+    },
+    {
+     "skillId": 140,
+     "level": 3
+    }
+   ],
+   "gameId": -19370102
+  },
+  {
+   "id": 154,
+   "name": "火炎珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 2
+    }
+   ],
+   "gameId": -15284539
+  },
+  {
+   "id": 155,
+   "name": "火炎珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 1
+    }
+   ],
+   "gameId": -12878304
+  },
+  {
+   "id": 156,
+   "name": "強壁・流水珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 3
+    },
+    {
+     "skillId": 91,
+     "level": 1
+    }
+   ],
+   "gameId": 276
+  },
+  {
+   "id": 157,
+   "name": "雷光・初弾珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 127,
+     "level": 3
+    },
+    {
+     "skillId": 140,
+     "level": 1
+    }
+   ],
+   "gameId": 783
+  },
+  {
+   "id": 158,
+   "name": "破龍・守勢珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 3
+    },
+    {
+     "skillId": 66,
+     "level": 1
+    }
+   ],
+   "gameId": 1508
+  },
+  {
+   "id": 159,
+   "name": "破龍・集中珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 3
+    },
+    {
+     "skillId": 60,
+     "level": 1
+    }
+   ],
+   "gameId": 1570
+  },
+  {
+   "id": 160,
+   "name": "属会・火炎珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 1
+    },
+    {
+     "skillId": 82,
+     "level": 3
+    }
+   ],
+   "gameId": 1591
+  },
+  {
+   "id": 161,
+   "name": "氷結・業物珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 117,
+     "level": 1
+    },
+    {
+     "skillId": 121,
+     "level": 3
+    }
+   ],
+   "gameId": 1625
+  },
+  {
+   "id": 162,
+   "name": "集中・氷結珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 60,
+     "level": 3
+    },
+    {
+     "skillId": 121,
+     "level": 1
+    }
+   ],
+   "gameId": 1919
+  },
+  {
+   "id": 163,
+   "name": "業物・氷結珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 117,
+     "level": 3
+    },
+    {
+     "skillId": 121,
+     "level": 1
+    }
+   ],
+   "gameId": 2186
+  },
+  {
+   "id": 164,
+   "name": "破龍・初弾珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 3
+    },
+    {
+     "skillId": 140,
+     "level": 1
+    }
+   ],
+   "gameId": 2420
+  },
+  {
+   "id": 165,
+   "name": "集中・流水珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 60,
+     "level": 3
+    },
+    {
+     "skillId": 91,
+     "level": 1
+    }
+   ],
+   "gameId": 3416
+  },
+  {
+   "id": 166,
+   "name": "速変・破龍珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 3
+    },
+    {
+     "skillId": 41,
+     "level": 1
+    }
+   ],
+   "gameId": 3690
+  },
+  {
+   "id": 167,
+   "name": "積弾・火炎珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 1
+    },
+    {
+     "skillId": 137,
+     "level": 3
+    }
+   ],
+   "gameId": 4514
+  },
+  {
+   "id": 168,
+   "name": "業物・流水珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 91,
+     "level": 1
+    },
+    {
+     "skillId": 117,
+     "level": 3
+    }
+   ],
+   "gameId": 4715
+  },
+  {
+   "id": 169,
+   "name": "火炎・初弾珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 3
+    },
+    {
+     "skillId": 140,
+     "level": 1
+    }
+   ],
+   "gameId": 4781
+  },
+  {
+   "id": 170,
+   "name": "雷光・集中珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 60,
+     "level": 1
+    },
+    {
+     "skillId": 127,
+     "level": 3
+    }
+   ],
+   "gameId": 5173
+  },
+  {
+   "id": 171,
+   "name": "昂揚・火炎珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 1
+    },
+    {
+     "skillId": 104,
+     "level": 3
+    }
+   ],
+   "gameId": 5731
+  },
+  {
+   "id": 172,
+   "name": "属会・流水珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 3
+    },
+    {
+     "skillId": 91,
+     "level": 1
+    }
+   ],
+   "gameId": 5876
+  },
+  {
+   "id": 173,
+   "name": "雷光・業物珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 117,
+     "level": 1
+    },
+    {
+     "skillId": 127,
+     "level": 3
+    }
+   ],
+   "gameId": 6393
+  },
+  {
+   "id": 174,
+   "name": "昂揚・氷結珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 104,
+     "level": 3
+    },
+    {
+     "skillId": 121,
+     "level": 1
+    }
+   ],
+   "gameId": 6455
+  },
+  {
+   "id": 175,
+   "name": "属会・雷光珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 3
+    },
+    {
+     "skillId": 127,
+     "level": 1
+    }
+   ],
+   "gameId": 6866
+  },
+  {
+   "id": 176,
+   "name": "破龍・属会珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 3
+    },
+    {
+     "skillId": 82,
+     "level": 1
+    }
+   ],
+   "gameId": 7249
+  },
+  {
+   "id": 177,
+   "name": "氷結・積弾珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 121,
+     "level": 3
+    },
+    {
+     "skillId": 137,
+     "level": 1
+    }
+   ],
+   "gameId": 7817
+  },
+  {
+   "id": 178,
+   "name": "破龍・強壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 1
+    },
+    {
+     "skillId": 41,
+     "level": 3
+    }
+   ],
+   "gameId": 8302
+  },
+  {
+   "id": 179,
+   "name": "速変・火炎珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 3
+    },
+    {
+     "skillId": 50,
+     "level": 1
+    }
+   ],
+   "gameId": 8988
+  },
+  {
+   "id": 180,
+   "name": "強壁・氷結珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 3
+    },
+    {
+     "skillId": 121,
+     "level": 1
+    }
+   ],
+   "gameId": 9096
+  },
+  {
+   "id": 181,
+   "name": "雷光・速変珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 1
+    },
+    {
+     "skillId": 127,
+     "level": 3
+    }
+   ],
+   "gameId": 11183
+  },
+  {
+   "id": 182,
+   "name": "属会・氷結珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 3
+    },
+    {
+     "skillId": 121,
+     "level": 1
+    }
+   ],
+   "gameId": 12151
+  },
+  {
+   "id": 183,
+   "name": "強壁・雷光珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 3
+    },
+    {
+     "skillId": 127,
+     "level": 1
+    }
+   ],
+   "gameId": 12241
+  },
+  {
+   "id": 184,
+   "name": "流水・業物珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 91,
+     "level": 3
+    },
+    {
+     "skillId": 117,
+     "level": 1
+    }
+   ],
+   "gameId": 12727
+  },
+  {
+   "id": 185,
+   "name": "流水・強壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 1
+    },
+    {
+     "skillId": 91,
+     "level": 3
+    }
+   ],
+   "gameId": 13386
+  },
+  {
+   "id": 186,
+   "name": "氷結・集中珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 60,
+     "level": 1
+    },
+    {
+     "skillId": 121,
+     "level": 3
+    }
+   ],
+   "gameId": 13550
+  },
+  {
+   "id": 187,
+   "name": "流水・属会珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 1
+    },
+    {
+     "skillId": 91,
+     "level": 3
+    }
+   ],
+   "gameId": 14731
+  },
+  {
+   "id": 188,
+   "name": "初弾・雷光珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 127,
+     "level": 1
+    },
+    {
+     "skillId": 140,
+     "level": 3
+    }
+   ],
+   "gameId": 14794
+  },
+  {
+   "id": 189,
+   "name": "破龍・昂揚珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 3
+    },
+    {
+     "skillId": 104,
+     "level": 1
+    }
+   ],
+   "gameId": 14855
+  },
+  {
+   "id": 190,
+   "name": "業物・火炎珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 1
+    },
+    {
+     "skillId": 117,
+     "level": 3
+    }
+   ],
+   "gameId": 14956
+  },
+  {
+   "id": 191,
+   "name": "初弾・流水珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 91,
+     "level": 1
+    },
+    {
+     "skillId": 140,
+     "level": 3
+    }
+   ],
+   "gameId": 15379
+  },
+  {
+   "id": 192,
+   "name": "守勢・火炎珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 1
+    },
+    {
+     "skillId": 66,
+     "level": 3
+    }
+   ],
+   "gameId": 16193
+  },
+  {
+   "id": 193,
+   "name": "集中・雷光珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 60,
+     "level": 3
+    },
+    {
+     "skillId": 127,
+     "level": 1
+    }
+   ],
+   "gameId": 16930
+  },
+  {
+   "id": 194,
+   "name": "氷結・昂揚珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 104,
+     "level": 1
+    },
+    {
+     "skillId": 121,
+     "level": 3
+    }
+   ],
+   "gameId": 17415
+  },
+  {
+   "id": 195,
+   "name": "集中・破龍珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 1
+    },
+    {
+     "skillId": 60,
+     "level": 3
+    }
+   ],
+   "gameId": 17610
+  },
+  {
+   "id": 196,
+   "name": "雷光・強壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 1
+    },
+    {
+     "skillId": 127,
+     "level": 3
+    }
+   ],
+   "gameId": 17913
+  },
+  {
+   "id": 197,
+   "name": "積弾・流水珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 91,
+     "level": 1
+    },
+    {
+     "skillId": 137,
+     "level": 3
+    }
+   ],
+   "gameId": 17949
+  },
+  {
+   "id": 198,
+   "name": "積弾・氷結珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 121,
+     "level": 1
+    },
+    {
+     "skillId": 137,
+     "level": 3
+    }
+   ],
+   "gameId": 18359
+  },
+  {
+   "id": 199,
+   "name": "速変・氷結珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 3
+    },
+    {
+     "skillId": 121,
+     "level": 1
+    }
+   ],
+   "gameId": 18958
+  },
+  {
+   "id": 200,
+   "name": "雷光・属会珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 1
+    },
+    {
+     "skillId": 127,
+     "level": 3
+    }
+   ],
+   "gameId": 19383
+  },
+  {
+   "id": 201,
+   "name": "破龍・速変珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 1
+    },
+    {
+     "skillId": 41,
+     "level": 3
+    }
+   ],
+   "gameId": 20183
+  },
+  {
+   "id": 202,
+   "name": "強壁・破龍珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 3
+    },
+    {
+     "skillId": 41,
+     "level": 1
+    }
+   ],
+   "gameId": 20287
+  },
+  {
+   "id": 203,
+   "name": "氷結・守勢珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 1
+    },
+    {
+     "skillId": 121,
+     "level": 3
+    }
+   ],
+   "gameId": 20306
+  },
+  {
+   "id": 204,
+   "name": "火炎・属会珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 3
+    },
+    {
+     "skillId": 82,
+     "level": 1
+    }
+   ],
+   "gameId": 20412
+  },
+  {
+   "id": 205,
+   "name": "氷結・属会珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 1
+    },
+    {
+     "skillId": 121,
+     "level": 3
+    }
+   ],
+   "gameId": 21045
+  },
+  {
+   "id": 206,
+   "name": "守勢・破龍珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 1
+    },
+    {
+     "skillId": 66,
+     "level": 3
+    }
+   ],
+   "gameId": 21328
+  },
+  {
+   "id": 207,
+   "name": "破龍・積弾珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 3
+    },
+    {
+     "skillId": 137,
+     "level": 1
+    }
+   ],
+   "gameId": 21515
+  },
+  {
+   "id": 208,
+   "name": "雷光・守勢珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 1
+    },
+    {
+     "skillId": 127,
+     "level": 3
+    }
+   ],
+   "gameId": 21891
+  },
+  {
+   "id": 209,
+   "name": "流水・昂揚珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 91,
+     "level": 3
+    },
+    {
+     "skillId": 104,
+     "level": 1
+    }
+   ],
+   "gameId": 22048
+  },
+  {
+   "id": 210,
+   "name": "流水・守勢珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 1
+    },
+    {
+     "skillId": 91,
+     "level": 3
+    }
+   ],
+   "gameId": 22310
+  },
+  {
+   "id": 211,
+   "name": "積弾・雷光珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 127,
+     "level": 1
+    },
+    {
+     "skillId": 137,
+     "level": 3
+    }
+   ],
+   "gameId": 22604
+  },
+  {
+   "id": 212,
+   "name": "守勢・流水珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 3
+    },
+    {
+     "skillId": 91,
+     "level": 1
+    }
+   ],
+   "gameId": 22673
+  },
+  {
+   "id": 213,
+   "name": "昂揚・流水珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 91,
+     "level": 1
+    },
+    {
+     "skillId": 104,
+     "level": 3
+    }
+   ],
+   "gameId": 22681
+  },
+  {
+   "id": 214,
+   "name": "雷光・積弾珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 127,
+     "level": 3
+    },
+    {
+     "skillId": 137,
+     "level": 1
+    }
+   ],
+   "gameId": 23236
+  },
+  {
+   "id": 215,
+   "name": "破龍・業物珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 3
+    },
+    {
+     "skillId": 117,
+     "level": 1
+    }
+   ],
+   "gameId": 23494
+  },
+  {
+   "id": 216,
+   "name": "集中・火炎珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 1
+    },
+    {
+     "skillId": 60,
+     "level": 3
+    }
+   ],
+   "gameId": 23522
+  },
+  {
+   "id": 217,
+   "name": "守勢・雷光珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 3
+    },
+    {
+     "skillId": 127,
+     "level": 1
+    }
+   ],
+   "gameId": 23556
+  },
+  {
+   "id": 218,
+   "name": "速変・雷光珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 3
+    },
+    {
+     "skillId": 127,
+     "level": 1
+    }
+   ],
+   "gameId": 23622
+  },
+  {
+   "id": 219,
+   "name": "氷結・速変珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 1
+    },
+    {
+     "skillId": 121,
+     "level": 3
+    }
+   ],
+   "gameId": 23677
+  },
+  {
+   "id": 220,
+   "name": "守勢・氷結珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 3
+    },
+    {
+     "skillId": 121,
+     "level": 1
+    }
+   ],
+   "gameId": 24211
+  },
+  {
+   "id": 221,
+   "name": "初弾・氷結珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 121,
+     "level": 1
+    },
+    {
+     "skillId": 140,
+     "level": 3
+    }
+   ],
+   "gameId": 24561
+  },
+  {
+   "id": 222,
+   "name": "流水・積弾珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 91,
+     "level": 3
+    },
+    {
+     "skillId": 137,
+     "level": 1
+    }
+   ],
+   "gameId": 24768
+  },
+  {
+   "id": 223,
+   "name": "業物・破龍珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 1
+    },
+    {
+     "skillId": 117,
+     "level": 3
+    }
+   ],
+   "gameId": 24865
+  },
+  {
+   "id": 224,
+   "name": "初弾・火炎珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 1
+    },
+    {
+     "skillId": 140,
+     "level": 3
+    }
+   ],
+   "gameId": 24927
+  },
+  {
+   "id": 225,
+   "name": "火炎・積弾珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 3
+    },
+    {
+     "skillId": 137,
+     "level": 1
+    }
+   ],
+   "gameId": 25926
+  },
+  {
+   "id": 226,
+   "name": "昂揚・雷光珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 104,
+     "level": 3
+    },
+    {
+     "skillId": 127,
+     "level": 1
+    }
+   ],
+   "gameId": 25952
+  },
+  {
+   "id": 227,
+   "name": "強壁・火炎珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 3
+    },
+    {
+     "skillId": 50,
+     "level": 1
+    }
+   ],
+   "gameId": 26003
+  },
+  {
+   "id": 228,
+   "name": "昂揚・破龍珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 1
+    },
+    {
+     "skillId": 104,
+     "level": 3
+    }
+   ],
+   "gameId": 26077
+  },
+  {
+   "id": 229,
+   "name": "速変・流水珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 3
+    },
+    {
+     "skillId": 91,
+     "level": 1
+    }
+   ],
+   "gameId": 27036
+  },
+  {
+   "id": 230,
+   "name": "積弾・破龍珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 1
+    },
+    {
+     "skillId": 137,
+     "level": 3
+    }
+   ],
+   "gameId": 27791
+  },
+  {
+   "id": 231,
+   "name": "初弾・破龍珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 1
+    },
+    {
+     "skillId": 140,
+     "level": 3
+    }
+   ],
+   "gameId": 28076
+  },
+  {
+   "id": 232,
+   "name": "属会・破龍珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 1
+    },
+    {
+     "skillId": 82,
+     "level": 3
+    }
+   ],
+   "gameId": 30137
+  },
+  {
+   "id": 233,
+   "name": "氷結・初弾珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 121,
+     "level": 3
+    },
+    {
+     "skillId": 140,
+     "level": 1
+    }
+   ],
+   "gameId": 30161
+  },
+  {
+   "id": 234,
+   "name": "業物・雷光珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 117,
+     "level": 3
+    },
+    {
+     "skillId": 127,
+     "level": 1
+    }
+   ],
+   "gameId": 30405
+  },
+  {
+   "id": 235,
+   "name": "流水・速変珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 1
+    },
+    {
+     "skillId": 91,
+     "level": 3
+    }
+   ],
+   "gameId": 30490
+  },
+  {
+   "id": 236,
+   "name": "氷結・強壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 1
+    },
+    {
+     "skillId": 121,
+     "level": 3
+    }
+   ],
+   "gameId": 31893
+  },
+  {
+   "id": 237,
+   "name": "雷光・昂揚珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 104,
+     "level": 1
+    },
+    {
+     "skillId": 127,
+     "level": 3
+    }
+   ],
+   "gameId": 32288
+  },
+  {
+   "id": 238,
+   "name": "流水・集中珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 60,
+     "level": 1
+    },
+    {
+     "skillId": 91,
+     "level": 3
+    }
+   ],
+   "gameId": 32433
+  },
+  {
+   "id": 239,
+   "name": "流水・初弾珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 91,
+     "level": 3
+    },
+    {
+     "skillId": 140,
+     "level": 1
+    }
+   ],
+   "gameId": 32676
+  },
+  {
+   "id": 240,
+   "name": "研磨珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 126,
+     "level": 2
+    }
+   ],
+   "gameId": 5028590
+  },
+  {
+   "id": 241,
+   "name": "防御珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 118,
+     "level": 1
+    }
+   ],
+   "gameId": 5672852
+  },
+  {
+   "id": 242,
+   "name": "研磨珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 126,
+     "level": 1
+    }
+   ],
+   "gameId": 7844454
+  },
+  {
+   "id": 243,
+   "name": "強毒・射法珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 21,
+     "level": 1
+    },
+    {
+     "skillId": 53,
+     "level": 1
+    }
+   ],
+   "gameId": 17525612
+  },
+  {
+   "id": 244,
+   "name": "抜打珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 8,
+     "level": 3
+    }
+   ],
+   "gameId": 19401228
+  },
+  {
+   "id": 245,
+   "name": "業物・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 36,
+     "level": 1
+    },
+    {
+     "skillId": 117,
+     "level": 3
+    }
+   ],
+   "gameId": 23951036
+  },
+  {
+   "id": 246,
+   "name": "散弾珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 2,
+     "level": 1
+    }
+   ],
+   "gameId": 34988560
+  },
+  {
+   "id": 247,
+   "name": "ＫＯ珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 36,
+     "level": 2
+    }
+   ],
+   "gameId": 44196940
+  },
+  {
+   "id": 248,
+   "name": "集中・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 36,
+     "level": 1
+    },
+    {
+     "skillId": 60,
+     "level": 3
+    }
+   ],
+   "gameId": 64300272
+  },
+  {
+   "id": 249,
+   "name": "剛刃珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 134,
+     "level": 1
+    }
+   ],
+   "gameId": 67372504
+  },
+  {
+   "id": 250,
+   "name": "狩人珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 143,
+     "level": 1
+    }
+   ],
+   "gameId": 72596768
+  },
+  {
+   "id": 251,
+   "name": "砲術珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 47,
+     "level": 1
+    }
+   ],
+   "gameId": 97814240
+  },
+  {
+   "id": 252,
+   "name": "積弾・射法珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 53,
+     "level": 1
+    },
+    {
+     "skillId": 137,
+     "level": 3
+    }
+   ],
+   "gameId": 103198480
+  },
+  {
+   "id": 253,
+   "name": "溜幅・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 24,
+     "level": 3
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": 115284000
+  },
+  {
+   "id": 254,
+   "name": "特会珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 68,
+     "level": 1
+    }
+   ],
+   "gameId": 124240896
+  },
+  {
+   "id": 255,
+   "name": "攻撃珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 72,
+     "level": 1
+    }
+   ],
+   "gameId": 130724024
+  },
+  {
+   "id": 256,
+   "name": "匠珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 119,
+     "level": 3
+    }
+   ],
+   "gameId": 146040608
+  },
+  {
+   "id": 257,
+   "name": "初弾・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    },
+    {
+     "skillId": 140,
+     "level": 3
+    }
+   ],
+   "gameId": 163043584
+  },
+  {
+   "id": 258,
+   "name": "速変珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 2
+    }
+   ],
+   "gameId": 183160800
+  },
+  {
+   "id": 259,
+   "name": "氷結珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 121,
+     "level": 1
+    }
+   ],
+   "gameId": 186552368
+  },
+  {
+   "id": 260,
+   "name": "無傷珠【２】",
+   "kind": "armor",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 154,
+     "level": 1
+    }
+   ],
+   "gameId": 213184688
+  },
+  {
+   "id": 261,
+   "name": "破龍・射法珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 3
+    },
+    {
+     "skillId": 53,
+     "level": 1
+    }
+   ],
+   "gameId": 219173888
+  },
+  {
+   "id": 262,
+   "name": "達人珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 3,
+     "level": 2
+    }
+   ],
+   "gameId": 248848256
+  },
+  {
+   "id": 263,
+   "name": "攻撃珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 72,
+     "level": 3
+    }
+   ],
+   "gameId": 280205024
+  },
+  {
+   "id": 264,
+   "name": "増弾珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 109,
+     "level": 1
+    }
+   ],
+   "gameId": 298345088
+  },
+  {
+   "id": 265,
+   "name": "強毒・達人珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 3,
+     "level": 1
+    },
+    {
+     "skillId": 21,
+     "level": 1
+    }
+   ],
+   "gameId": 336866720
+  },
+  {
+   "id": 266,
+   "name": "氷結珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 121,
+     "level": 3
+    }
+   ],
+   "gameId": 386498304
+  },
+  {
+   "id": 267,
+   "name": "強毒・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 21,
+     "level": 1
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": 391149760
+  },
+  {
+   "id": 268,
+   "name": "匠珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": 435353600
+  },
+  {
+   "id": 269,
+   "name": "昂揚珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 104,
+     "level": 3
+    }
+   ],
+   "gameId": 446613472
+  },
+  {
+   "id": 270,
+   "name": "治癒珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 30,
+     "level": 1
+    }
+   ],
+   "gameId": 454747104
+  },
+  {
+   "id": 271,
+   "name": "溜幅珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 24,
+     "level": 3
+    }
+   ],
+   "gameId": 457280288
+  },
+  {
+   "id": 272,
+   "name": "飛燕・達人珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 3,
+     "level": 1
+    },
+    {
+     "skillId": 86,
+     "level": 1
+    }
+   ],
+   "gameId": 460437856
+  },
+  {
+   "id": 273,
+   "name": "鼓笛・抜刀珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 29,
+     "level": 2
+    },
+    {
+     "skillId": 103,
+     "level": 1
+    }
+   ],
+   "gameId": 499818016
+  },
+  {
+   "id": 274,
+   "name": "逆上珠【２】",
+   "kind": "armor",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 123,
+     "level": 1
+    }
+   ],
+   "gameId": 519959680
+  },
+  {
+   "id": 275,
+   "name": "特会・射法珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 53,
+     "level": 1
+    },
+    {
+     "skillId": 68,
+     "level": 3
+    }
+   ],
+   "gameId": 520733824
+  },
+  {
+   "id": 276,
+   "name": "心眼珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 136,
+     "level": 3
+    }
+   ],
+   "gameId": 583988672
+  },
+  {
+   "id": 277,
+   "name": "ＫＯ珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 36,
+     "level": 3
+    }
+   ],
+   "gameId": 594204352
+  },
+  {
+   "id": 278,
+   "name": "増弾・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    },
+    {
+     "skillId": 109,
+     "level": 2
+    }
+   ],
+   "gameId": 618579264
+  },
+  {
+   "id": 279,
+   "name": "麻痺珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 9,
+     "level": 2
+    }
+   ],
+   "gameId": 639622592
+  },
+  {
+   "id": 280,
+   "name": "早食珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 100,
+     "level": 1
+    }
+   ],
+   "gameId": 645053056
+  },
+  {
+   "id": 281,
+   "name": "流水・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    },
+    {
+     "skillId": 91,
+     "level": 3
+    }
+   ],
+   "gameId": 654954304
+  },
+  {
+   "id": 282,
+   "name": "急襲珠【２】",
+   "kind": "armor",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 67,
+     "level": 1
+    }
+   ],
+   "gameId": 656487488
+  },
+  {
+   "id": 283,
+   "name": "転福珠【２】",
+   "kind": "armor",
+   "slot": 2,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 13,
+     "level": 1
+    }
+   ],
+   "gameId": 668852032
+  },
+  {
+   "id": 284,
+   "name": "耐絶珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 105,
+     "level": 1
+    }
+   ],
+   "gameId": 694060672
+  },
+  {
+   "id": 285,
+   "name": "耐爆珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 110,
+     "level": 1
+    }
+   ],
+   "gameId": 701807872
+  },
+  {
+   "id": 286,
+   "name": "奪気珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 141,
+     "level": 1
+    }
+   ],
+   "gameId": 714935168
+  },
+  {
+   "id": 287,
+   "name": "心眼珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 136,
+     "level": 2
+    }
+   ],
+   "gameId": 759889920
+  },
+  {
+   "id": 288,
+   "name": "痛撃珠【３】",
+   "kind": "armor",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 57,
+     "level": 1
+    }
+   ],
+   "gameId": 767051200
+  },
+  {
+   "id": 289,
+   "name": "砲術珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 47,
+     "level": 3
+    }
+   ],
+   "gameId": 771935488
+  },
+  {
+   "id": 290,
+   "name": "溜打珠【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 83,
+     "level": 1
+    }
+   ],
+   "gameId": 795180288
+  },
+  {
+   "id": 291,
+   "name": "集中珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 60,
+     "level": 2
+    }
+   ],
+   "gameId": 797303936
+  },
+  {
+   "id": 292,
+   "name": "溜打・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 83,
+     "level": 1
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": 839957184
+  },
+  {
+   "id": 293,
+   "name": "緩衝珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 45,
+     "level": 1
+    }
+   ],
+   "gameId": 865685248
+  },
+  {
+   "id": 294,
+   "name": "火炎珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 3
+    }
+   ],
+   "gameId": 886913856
+  },
+  {
+   "id": 295,
+   "name": "氷結珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 121,
+     "level": 2
+    }
+   ],
+   "gameId": 895028672
+  },
+  {
+   "id": 296,
+   "name": "破龍・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 3
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": 897466048
+  },
+  {
+   "id": 297,
+   "name": "属会・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    },
+    {
+     "skillId": 82,
+     "level": 3
+    }
+   ],
+   "gameId": 910101056
+  },
+  {
+   "id": 298,
+   "name": "火炎・速変珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 1
+    },
+    {
+     "skillId": 50,
+     "level": 3
+    }
+   ],
+   "gameId": 912898176
+  },
+  {
+   "id": 299,
+   "name": "流水・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 91,
+     "level": 3
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": 914233472
+  },
+  {
+   "id": 300,
+   "name": "溜打・達人珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 3,
+     "level": 1
+    },
+    {
+     "skillId": 83,
+     "level": 1
+    }
+   ],
+   "gameId": 934416192
+  },
+  {
+   "id": 301,
+   "name": "属会・射法珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 53,
+     "level": 1
+    },
+    {
+     "skillId": 82,
+     "level": 3
+    }
+   ],
+   "gameId": 944809600
+  },
+  {
+   "id": 302,
+   "name": "全開珠【３】",
+   "kind": "armor",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 142,
+     "level": 1
+    }
+   ],
+   "gameId": 948977536
+  },
+  {
+   "id": 303,
+   "name": "耐臭珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 55,
+     "level": 1
+    }
+   ],
+   "gameId": 949857152
+  },
+  {
+   "id": 304,
+   "name": "整備珠【２】",
+   "kind": "armor",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 90,
+     "level": 1
+    }
+   ],
+   "gameId": 954350400
+  },
+  {
+   "id": 305,
+   "name": "超心珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 22,
+     "level": 3
+    }
+   ],
+   "gameId": 986212736
+  },
+  {
+   "id": 306,
+   "name": "氷結・射法珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 53,
+     "level": 1
+    },
+    {
+     "skillId": 121,
+     "level": 3
+    }
+   ],
+   "gameId": 1024615424
+  },
+  {
+   "id": 307,
+   "name": "火炎・業物珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 50,
+     "level": 3
+    },
+    {
+     "skillId": 117,
+     "level": 1
+    }
+   ],
+   "gameId": 1031937152
+  },
+  {
+   "id": 308,
+   "name": "疲瓶珠【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 65,
+     "level": 1
+    }
+   ],
+   "gameId": 1067880832
+  },
+  {
+   "id": 309,
+   "name": "強壁珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 3
+    }
+   ],
+   "gameId": 1088947584
+  },
+  {
+   "id": 310,
+   "name": "研磨・攻撃珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 72,
+     "level": 1
+    },
+    {
+     "skillId": 126,
+     "level": 2
+    }
+   ],
+   "gameId": 1096472320
+  },
+  {
+   "id": 311,
+   "name": "鈍器珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 85,
+     "level": 2
+    }
+   ],
+   "gameId": 1115345024
+  },
+  {
+   "id": 312,
+   "name": "超心珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 22,
+     "level": 1
+    }
+   ],
+   "gameId": 1150766464
+  },
+  {
+   "id": 313,
+   "name": "剛刃珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 134,
+     "level": 3
+    }
+   ],
+   "gameId": 1162934272
+  },
+  {
+   "id": 314,
+   "name": "集中・射法珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 53,
+     "level": 1
+    },
+    {
+     "skillId": 60,
+     "level": 3
+    }
+   ],
+   "gameId": 1174071168
+  },
+  {
+   "id": 315,
+   "name": "抜打珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 8,
+     "level": 2
+    }
+   ],
+   "gameId": 1179637760
+  },
+  {
+   "id": 316,
+   "name": "積弾珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 137,
+     "level": 1
+    }
+   ],
+   "gameId": 1190642816
+  },
+  {
+   "id": 317,
+   "name": "鈍器珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 85,
+     "level": 1
+    }
+   ],
+   "gameId": 1194220032
+  },
+  {
+   "id": 318,
+   "name": "強弾珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 6,
+     "level": 1
+    }
+   ],
+   "gameId": 1202986624
+  },
+  {
+   "id": 319,
+   "name": "速変珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 1
+    }
+   ],
+   "gameId": 1213481984
+  },
+  {
+   "id": 320,
+   "name": "属会珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 2
+    }
+   ],
+   "gameId": 1216872320
+  },
+  {
+   "id": 321,
+   "name": "閃光珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 61,
+     "level": 1
+    }
+   ],
+   "gameId": 1230875008
+  },
+  {
+   "id": 322,
+   "name": "飛燕・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 86,
+     "level": 1
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": 1287680640
+  },
+  {
+   "id": 323,
+   "name": "逆襲珠【２】",
+   "kind": "armor",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 81,
+     "level": 1
+    }
+   ],
+   "gameId": 1305797760
+  },
+  {
+   "id": 324,
+   "name": "射法珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 53,
+     "level": 3
+    }
+   ],
+   "gameId": 1343145856
+  },
+  {
+   "id": 325,
+   "name": "特射珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 69,
+     "level": 1
+    }
+   ],
+   "gameId": 1377760768
+  },
+  {
+   "id": 326,
+   "name": "氷結・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 36,
+     "level": 1
+    },
+    {
+     "skillId": 121,
+     "level": 3
+    }
+   ],
+   "gameId": 1389113984
+  },
+  {
+   "id": 327,
+   "name": "特会・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 36,
+     "level": 1
+    },
+    {
+     "skillId": 68,
+     "level": 3
+    }
+   ],
+   "gameId": 1397927296
+  },
+  {
+   "id": 328,
+   "name": "底力珠【２】",
+   "kind": "armor",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 87,
+     "level": 1
+    }
+   ],
+   "gameId": 1414248576
+  },
+  {
+   "id": 329,
+   "name": "特会珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 68,
+     "level": 2
+    }
+   ],
+   "gameId": 1427190272
+  },
+  {
+   "id": 330,
+   "name": "強壁・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 3
+    },
+    {
+     "skillId": 59,
+     "level": 1
+    }
+   ],
+   "gameId": 1443679488
+  },
+  {
+   "id": 331,
+   "name": "強壁珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 1
+    }
+   ],
+   "gameId": 1444555776
+  },
+  {
+   "id": 332,
+   "name": "回避珠【２】",
+   "kind": "armor",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 77,
+     "level": 1
+    }
+   ],
+   "gameId": 1478235520
+  },
+  {
+   "id": 333,
+   "name": "氷結・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 119,
+     "level": 1
+    },
+    {
+     "skillId": 121,
+     "level": 3
+    }
+   ],
+   "gameId": 1494637824
+  },
+  {
+   "id": 334,
+   "name": "流水珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 91,
+     "level": 3
+    }
+   ],
+   "gameId": 1536980096
+  },
+  {
+   "id": 335,
+   "name": "氷結・鉄壁珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    },
+    {
+     "skillId": 121,
+     "level": 3
+    }
+   ],
+   "gameId": 1596720768
+  },
+  {
+   "id": 336,
+   "name": "抜刀珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 103,
+     "level": 2
+    }
+   ],
+   "gameId": 1597431680
+  },
+  {
+   "id": 337,
+   "name": "反攻珠【３】",
+   "kind": "armor",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 120,
+     "level": 1
+    }
+   ],
+   "gameId": 1598502400
+  },
+  {
+   "id": 338,
+   "name": "速変・ＫＯ珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 7,
+     "level": 3
+    },
+    {
+     "skillId": 36,
+     "level": 1
+    }
+   ],
+   "gameId": 1619248640
+  },
+  {
+   "id": 339,
+   "name": "業物・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 117,
+     "level": 3
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": 1636575872
+  },
+  {
+   "id": 340,
+   "name": "貫通珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 94,
+     "level": 1
+    }
+   ],
+   "gameId": 1701043584
+  },
+  {
+   "id": 341,
+   "name": "友愛珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 113,
+     "level": 1
+    }
+   ],
+   "gameId": 1731714432
+  },
+  {
+   "id": 342,
+   "name": "強走珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 43,
+     "level": 1
+    }
+   ],
+   "gameId": 1738329216
+  },
+  {
+   "id": 343,
+   "name": "属会珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 3
+    }
+   ],
+   "gameId": 1789092864
+  },
+  {
+   "id": 344,
+   "name": "爆破珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 40,
+     "level": 3
+    }
+   ],
+   "gameId": 1832912384
+  },
+  {
+   "id": 345,
+   "name": "流水・射法珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 53,
+     "level": 1
+    },
+    {
+     "skillId": 91,
+     "level": 3
+    }
+   ],
+   "gameId": 1833462144
+  },
+  {
+   "id": 346,
+   "name": "昂揚・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 104,
+     "level": 3
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": 1887590400
+  },
+  {
+   "id": 347,
+   "name": "集中珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 60,
+     "level": 1
+    }
+   ],
+   "gameId": 1906356096
+  },
+  {
+   "id": 348,
+   "name": "溜打・抜刀珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 83,
+     "level": 1
+    },
+    {
+     "skillId": 103,
+     "level": 1
+    }
+   ],
+   "gameId": 1910118400
+  },
+  {
+   "id": 349,
+   "name": "登壁珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 42,
+     "level": 1
+    }
+   ],
+   "gameId": 1933586560
+  },
+  {
+   "id": 350,
+   "name": "鉄壁珠Ⅱ【２】",
+   "kind": "weapon",
+   "slot": 2,
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 2
+    }
+   ],
+   "gameId": 1967618304
+  },
+  {
+   "id": 351,
+   "name": "植学珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 112,
+     "level": 1
+    }
+   ],
+   "gameId": 1979979520
+  },
+  {
+   "id": 352,
+   "name": "挑戦珠【３】",
+   "kind": "armor",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 144,
+     "level": 1
+    }
+   ],
+   "gameId": 2003488640
+  },
+  {
+   "id": 353,
+   "name": "増弾・攻撃珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 72,
+     "level": 1
+    },
+    {
+     "skillId": 109,
+     "level": 2
+    }
+   ],
+   "gameId": 2004238976
+  },
+  {
+   "id": 354,
+   "name": "鉄壁珠Ⅲ【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 3
+    }
+   ],
+   "gameId": 2005516288
+  },
+  {
+   "id": 355,
+   "name": "鼓笛・匠珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 29,
+     "level": 2
+    },
+    {
+     "skillId": 119,
+     "level": 1
+    }
+   ],
+   "gameId": 2071836160
+  },
+  {
+   "id": 356,
+   "name": "持続珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 15,
+     "level": 1
+    }
+   ],
+   "gameId": 2074953216
+  },
+  {
+   "id": 357,
+   "name": "破龍珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 41,
+     "level": 1
+    }
+   ],
+   "gameId": 2088515968
+  },
+  {
+   "id": 358,
+   "name": "初弾珠【１】",
+   "kind": "weapon",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 140,
+     "level": 1
+    }
+   ],
+   "gameId": 2092268800
+  },
+  {
+   "id": 359,
+   "name": "耐震珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 46,
+     "level": 1
+    }
+   ],
+   "gameId": 2099419520
+  },
+  {
+   "id": 360,
+   "name": "強毒・攻撃珠【３】",
+   "kind": "weapon",
+   "slot": 3,
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 21,
+     "level": 1
+    },
+    {
+     "skillId": 72,
+     "level": 1
+    }
+   ],
+   "gameId": 2117714048
+  },
+  {
+   "id": 361,
+   "name": "威嚇珠【１】",
+   "kind": "armor",
+   "slot": 1,
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 130,
+     "level": 1
+    }
+   ],
+   "gameId": 2145184512
+  }
+ ]
+}

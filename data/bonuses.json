@@ -1,0 +1,584 @@
+{
+ "meta": {
+  "source": [
+   "https://wilds.mhdb.io/ja/armor/sets",
+   "https://wilds.mhdb.io/ja/skills"
+  ],
+  "generatedAt": "2026-10-21T03:08:22+00:00",
+  "gameVersion": "1.042",
+  "sourceVersions": {
+   "mhdb": "wilds.mhdb.io /ja/ (取得日時は meta.source の各 fetchedAt)",
+   "mhwsInJson": "dzxrly/MHWS-in-json database-20261020-070700-4a99b26 (commit 4a99b26, ゲーム版 1.42.0.2)"
+  },
+  "license": {
+   "mhdb": "wilds.mhdb.io (LartTyler/mhdb-wilds-data)。ゲームデータの数値と名前のみ使用",
+   "mhwsInJson": "MIT (dzxrly/MHWS-in-json)"
+  },
+  "note": "setBonuses と groupBonuses の id は別の番号体系 (MHDB の bonus id / groupBonus id)"
+ },
+ "setBonuses": [
+  {
+   "id": 3,
+   "name": "黒蝕竜の力",
+   "skillId": 106,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "黒蝕一体Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "黒蝕一体Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "name": "雪獅子の闘志",
+   "skillId": 107,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "ウォークライⅠ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "ウォークライⅡ"
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "name": "火竜の力",
+   "skillId": 71,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "灼熱化Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "灼熱化Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "name": "闢獣の力",
+   "skillId": 70,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "力自慢Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "力自慢Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "name": "護鎖刃竜の命脈",
+   "skillId": 26,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "破壊衝動Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "破壊衝動Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 16,
+   "name": "凍峰竜の反逆",
+   "skillId": 62,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "束縛反攻Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "束縛反攻Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 18,
+   "name": "波衣竜の守護",
+   "skillId": 153,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "守護のヴェールⅠ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "守護のヴェールⅡ"
+    }
+   ]
+  },
+  {
+   "id": 19,
+   "name": "煌雷竜の力",
+   "skillId": 93,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "雷々響鳴Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "雷々響鳴Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 22,
+   "name": "暗器蛸の力",
+   "skillId": 25,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "蛮勇の食卓Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "蛮勇の食卓Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 23,
+   "name": "鎖刃竜の飢餓",
+   "skillId": 33,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "加速再生Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "加速再生Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 24,
+   "name": "鎧竜の守護",
+   "skillId": 54,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "無傷の重装Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "無傷の重装Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 26,
+   "name": "泡狐竜の力",
+   "skillId": 56,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "泡沫の舞Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "泡沫の舞Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 27,
+   "name": "花舞の祈り",
+   "skillId": 34,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "地の恵み【花舞】Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "地の恵み【花舞】Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 29,
+   "name": "白熾龍の脈動",
+   "skillId": 51,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "超回復力Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "超回復力Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 31,
+   "name": "兇爪竜の力",
+   "skillId": 115,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "連撃強化Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "連撃強化Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 32,
+   "name": "獄焔蛸の反逆",
+   "skillId": 149,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "恨撃Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "恨撃Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 33,
+   "name": "雷顎竜の闘志",
+   "skillId": 11,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "無尽蔵Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "無尽蔵Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 34,
+   "name": "千刃竜の闘志",
+   "skillId": 167,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "千刃の身躱しⅠ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "千刃の身躱しⅡ"
+    }
+   ]
+  },
+  {
+   "id": 36,
+   "name": "踊火の祈り",
+   "skillId": 161,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "地の恵み【踊火】Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "地の恵み【踊火】Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 37,
+   "name": "海竜の渦雷",
+   "skillId": 162,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "蒼雷一閃Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "蒼雷一閃Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 38,
+   "name": "オメガレゾナンス",
+   "skillId": 173,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "レゾナンスⅠ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "レゾナンスⅡ"
+    }
+   ]
+  },
+  {
+   "id": 39,
+   "name": "暗黒騎士の証",
+   "skillId": 172,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "ダークアーツ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "ブラックナイト"
+    }
+   ]
+  },
+  {
+   "id": 40,
+   "name": "夢灯の祈り",
+   "skillId": 170,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "地の恵み【夢灯】Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "地の恵み【夢灯】Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 41,
+   "name": "祝謡の祈り",
+   "skillId": 180,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "地の恵み【祝謡】Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "地の恵み【祝謡】Ⅱ"
+    }
+   ]
+  },
+  {
+   "id": 42,
+   "name": "巨戟龍の黙示録",
+   "skillId": 178,
+   "ranks": [
+    {
+     "pieces": 2,
+     "level": 1,
+     "name": "宣戦呼応Ⅰ"
+    },
+    {
+     "pieces": 4,
+     "level": 2,
+     "name": "宣戦呼応Ⅱ"
+    }
+   ]
+  }
+ ],
+ "groupBonuses": [
+  {
+   "id": 1,
+   "name": "毛皮の昂揚",
+   "skillId": 150,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "不屈"
+  },
+  {
+   "id": 2,
+   "name": "鱗張りの技法",
+   "skillId": 132,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "乗り名人"
+  },
+  {
+   "id": 5,
+   "name": "毛皮の誘惑",
+   "skillId": 97,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "陽動"
+  },
+  {
+   "id": 6,
+   "name": "甲虫の知らせ",
+   "skillId": 148,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "ハニーハンター"
+  },
+  {
+   "id": 8,
+   "name": "鱗重ねの工夫",
+   "skillId": 17,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "奮起"
+  },
+  {
+   "id": 9,
+   "name": "革細工の柔性",
+   "skillId": 19,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "採集の達人"
+  },
+  {
+   "id": 11,
+   "name": "護竜の守り",
+   "skillId": 4,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "竜都の護り"
+  },
+  {
+   "id": 12,
+   "name": "先達の導き",
+   "skillId": 20,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "探索者の幸運"
+  },
+  {
+   "id": 13,
+   "name": "甲虫の擬態",
+   "skillId": 139,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "忍び歩き"
+  },
+  {
+   "id": 14,
+   "name": "護竜の脈動",
+   "skillId": 27,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "竜乳活性"
+  },
+  {
+   "id": 17,
+   "name": "ヌシの誇り",
+   "skillId": 10,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "激励"
+  },
+  {
+   "id": 20,
+   "name": "ヌシの憤激",
+   "skillId": 155,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "死中に活"
+  },
+  {
+   "id": 21,
+   "name": "革細工の滑性",
+   "skillId": 89,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "滑走強化"
+  },
+  {
+   "id": 25,
+   "name": "栄光の誉れ",
+   "skillId": 73,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "幸運"
+  },
+  {
+   "id": 28,
+   "name": "祝祭の巡り",
+   "skillId": 74,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "剥ぎ取り名人"
+  },
+  {
+   "id": 30,
+   "name": "ヌシの魂",
+   "skillId": 131,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "根性【果敢】"
+  },
+  {
+   "id": 35,
+   "name": "拳を極めし者",
+   "skillId": 157,
+   "pieces": 3,
+   "level": 1,
+   "effectName": "殺意の波動"
+  }
+ ]
+}

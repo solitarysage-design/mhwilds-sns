@@ -1,0 +1,171 @@
+"""火力計算用のデータを生成する (担当: damage)。
+
+出力:
+    data/skill_effects.json  スキルの各 Lv の効果 (skillId は MHDB の skill id)
+    data/motions_sns.json    片手剣のモーション値・属性補正・斬れ味の扱い
+    data/combos_sns.json     代表コンボ (技の並び)
+
+一次資料はゲームデータ (GitHub dzxrly/MHWS-in-json、ゲーム版 1.42.0.2、MIT)。
+生データは tools/.cache/damage/ に置き、無ければ取得する。再実行で同じ結果になる。
+
+使い方:
+    PYTHONIOENCODING=utf-8 python tools/build_effects.py
+"""
+from __future__ import annotations
+
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from effects_motions import build_combos, build_motions  # noqa: E402
+from effects_skills import build_specs  # noqa: E402
+from effects_source import (  # noqa: E402
+    GAME_BUILD, GAME_VERSION, MHDB_SKILLS_URL, MHWS_DB_JA_URL, MHWS_TAG, RAW_FILES, ROOT,
+    mhdb_skills, raw_path, raw_url, sha256_of, sharpness_table, skill_enum, skill_param,
+    status_param, write_json,
+)
+
+DATA = ROOT / "data"
+
+
+def _skill_index() -> tuple[dict[int, dict], str]:
+    """gameId → スキル (id, name, kind, levels 数)。data/skills.json があればそちらを使う。"""
+    sk = DATA / "skills.json"
+    if sk.exists():
+        doc = json.loads(sk.read_text(encoding="utf-8"))
+        out = {}
+        for s in doc.get("skills", []):
+            if s.get("gameId") is not None:
+                out[int(s["gameId"])] = {"id": s["id"], "name": s["name"], "kind": s.get("kind"),
+                                         "levels": len(s.get("levels") or [])}
+        if out:
+            return out, "data/skills.json"
+    out = {}
+    for s in mhdb_skills():
+        out[int(s["gameId"])] = {"id": s["id"], "name": s["name"], "kind": s["kind"], "levels": len(s["ranks"])}
+    return out, MHDB_SKILLS_URL
+
+
+def _meta(sources: list[str], extra: dict | None = None) -> dict:
+    meta = {
+        "source": sources,
+        "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "gameVersion": GAME_VERSION,
+        "gameDataBuild": GAME_BUILD,
+        "license": "ゲームデータの抽出は dzxrly/MHWS-in-json (MIT)。数値はカプコンのゲームデータ由来。",
+    }
+    if extra:
+        meta.update(extra)
+    return meta
+
+
+def _raw_sources(keys: list[str]) -> tuple[list[str], dict[str, str]]:
+    urls, hashes = [], {}
+    for k in keys:
+        urls.append(raw_url(k))
+        hashes[RAW_FILES[k]] = sha256_of(raw_path(k))
+    return urls, hashes
+
+
+def build_skill_effects() -> tuple[dict, list[str]]:
+    warnings: list[str] = []
+    specs = build_specs()
+    enum = skill_enum()
+    index, index_src = _skill_index()
+    effects: dict[str, dict] = {}
+    for hid, spec in specs.items():
+        gid = enum.get(hid)
+        sk = index.get(gid)
+        if sk is None:
+            warnings.append(f"{hid} (gameId {gid}) がスキル一覧に無いので出力しない")
+            continue
+        if sk["levels"] and sk["levels"] != len(spec["levels"]):
+            warnings.append(f"{sk['name']}: Lv 数が一覧 {sk['levels']} とゲームデータ {len(spec['levels'])} で違う")
+        requires = spec.pop("requiresGameSkill")
+        req_id = None
+        if requires:
+            req = index.get(enum.get(requires))
+            req_id = req["id"] if req else None
+        for v in spec["verification"]:
+            if not v["match"]:
+                warnings.append(f"照合の食い違い {sk['name']} {v['item']}: ゲーム={v['gameData']} 調査={v['survey']}")
+        entry = {"name": sk["name"], "kind": sk["kind"], "gameId": gid, **spec}
+        entry["requiresSkillId"] = req_id
+        effects[str(sk["id"])] = entry
+    effects = dict(sorted(effects.items(), key=lambda kv: int(kv[0])))
+
+    st, sp = status_param(), skill_param()
+    rules = {
+        "criticalBase": st["_CriticalAttackRate"],
+        "criticalNegative": st["_NegativeAttackRate"],
+        "affinityMin": -100,
+        "affinityMax": 100,
+        "elementCapRate": st["_ElementAttack_RateLimit"],
+        "elementCapAdd": st["_ElementAttack_AddLimit"] * 10,
+        "physicalRateLimit": st["_PhysicalAttack_RateLimit"],
+        "physicalAddLimit": st["_PhysicalAttack_AddLimit"],
+        "weakPointMinHitzone": int(sp["_WeakAttackMeatThreshold"]),
+        "hardPartMaxHitzone": int(sp["_Shingan_MeatThreshold"]),
+        "frenzyOvercomeAffinity": st["_Frenzy_Overcome_CriticalRate"],
+        "frenzyOvercomeSec": st["_Frenzy_Overcome_Duration"],
+        "sharpness": sharpness_table(),
+        "units": {
+            "attack": "係数なしの内部値 (片手剣の表示倍率 1.4 を掛けない)",
+            "element": "表示値 (ダメージ計算では /10)。elementAdd も表示値",
+            "affinity": "%",
+        },
+        "note": "属性の上限は max(元の値 + elementCapAdd, 元の値 × elementCapRate) と扱う "
+                "(PlayerStatusParam._ElementAttack_RateLimit / _ElementAttack_AddLimit)。",
+    }
+    urls, hashes = _raw_sources(["SkillCommonData", "SkillData", "PlayerSkillParam", "PlayerStatusParam", "EmCommonData"])
+    sources = [f"https://github.com/dzxrly/MHWS-in-json/releases/tag/{MHWS_TAG}", *urls]
+    if index_src not in sources:
+        sources.append(index_src)
+    doc = {"meta": _meta(sources, {"sourceSha256": hashes, "skillIdSource": index_src}),
+           "rules": rules, "effects": effects}
+    return doc, warnings
+
+
+def main() -> int:
+    warnings: list[str] = []
+    eff, w = build_skill_effects()
+    warnings += w
+    body, w = build_motions()
+    warnings += w
+    combos = build_combos(body["moves"])
+
+    m_urls, m_hashes = _raw_sources(["Wp01_Attack", "Wp01_SubAttack", "Wp01_Shell", "Wp01ShellList",
+                                     "Wp01_FinishSlash", "Wp01_RushFinishSlash", "Wp01_OldScarSlash"])
+    m_sources = [f"https://github.com/dzxrly/MHWS-in-json/releases/tag/{MHWS_TAG}", *m_urls, MHWS_DB_JA_URL]
+    motions = {"meta": _meta(m_sources, {
+        "sourceSha256": m_hashes,
+        "fields": {
+            "mv": "物理モーション値 (_Attack)",
+            "elementRate": "技の属性補正。属性を使わないヒット (盾など) は 0",
+            "sharpnessMul": "斬れ味補正が掛かるか (= !_IsNoUseKireaji || _IsForceUseKireajiAttackRate)",
+            "consumesSharpness": "斬れ味を消費するか (= !_IsNoUseKireaji)",
+            "hien": "飛燕の対象 (_IsSkillHien)",
+            "additionalDamage": "追加ダメージ系スキル (灼熱化など) の対象と推定 (_UseSkillAdditionalDamage)",
+            "count": "このヒットの回数",
+            "mapping": "proven=技名の対応表どおり / inferred=調査値から推定 / unmapped=対応なし",
+        }}), **body}
+    combo_doc = {"meta": _meta([f"https://github.com/dzxrly/MHWS-in-json/releases/tag/{MHWS_TAG}"],
+                               {"note": "技 (motions_sns.json の moves[].id) の並び。onWound=true の段は傷口の肉質で計算する。"}),
+                 **combos}
+
+    changed = []
+    for name, doc in (("skill_effects.json", eff), ("motions_sns.json", motions), ("combos_sns.json", combo_doc)):
+        if write_json(DATA / name, doc):
+            changed.append(name)
+    print(f"スキル {len(eff['effects'])} 件 / 技 {len(motions['moves'])} 件 / コンボ {len(combos['combos'])} 件")
+    print("更新: " + (", ".join(changed) if changed else "なし (前回と同じ)"))
+    for w in warnings:
+        print("注意: " + w)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

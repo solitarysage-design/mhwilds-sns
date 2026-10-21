@@ -1,0 +1,19 @@
+{
+ "schema": 1,
+ "charms": [
+  {
+   "id": "c0001",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 59, "name": "ガード性能", "level": 3},
+    {"skillId": 133, "name": "属性吸収", "level": 1}
+   ],
+   "armorSlots": [2, 0, 0],
+   "weaponSlots": [0],
+   "source": "写真 2026-10-21",
+   "addedAt": "2026-10-21",
+   "note": ""
+  }
+ ]
+}

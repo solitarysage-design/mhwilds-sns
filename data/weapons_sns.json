@@ -1,0 +1,4908 @@
+{
+ "meta": {
+  "source": [
+   "https://wilds.mhdb.io/ja/weapons?q=%7B%22kind%22%3A%22sword-shield%22%7D",
+   "https://github.com/dzxrly/MHWS-in-json/releases/download/database-20261020-070700-4a99b26/DATABASE_ja-JP_20261020-070700-4a99b26.zip"
+  ],
+  "generatedAt": "2026-10-21T03:08:28+00:00",
+  "gameVersion": "1.042",
+  "sourceVersions": {
+   "mhdb": "wilds.mhdb.io /ja/ (取得日時は meta.source の各 fetchedAt)",
+   "mhwsInJson": "dzxrly/MHWS-in-json database-20261020-070700-4a99b26 (commit 4a99b26, ゲーム版 1.42.0.2)"
+  },
+  "license": {
+   "mhdb": "wilds.mhdb.io (LartTyler/mhdb-wilds-data)。ゲームデータの数値と名前のみ使用",
+   "mhwsInJson": "MIT (dzxrly/MHWS-in-json)"
+  },
+  "checks": {
+   "mhwsCompared": 95,
+   "mismatches": [],
+   "mhwsOnly": [
+    {
+     "id": "ShortSword_201",
+     "name": "ShortSword_106"
+    }
+   ]
+  },
+  "note": "attack は係数なし (表示値 / 1.4)。sharpness は [赤,橙,黄,緑,青,白] の長さ (ヒット数)。handicraftMax は匠 Lv5。mhwsAttributeValue はアーティア系の属性値の目安 (属性未選択の値)"
+ },
+ "weapons": [
+  {
+   "id": 985,
+   "name": "ホープソードⅠ",
+   "rarity": 1,
+   "attack": 90,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     50,
+     50,
+     40,
+     60,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     50,
+     40,
+     110,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 126,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "調査隊派生",
+   "gameId": 1
+  },
+  {
+   "id": 986,
+   "name": "ホープソードⅡ",
+   "rarity": 1,
+   "attack": 100,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     40,
+     50,
+     40,
+     70,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     40,
+     50,
+     40,
+     120,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 126,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 140,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "調査隊派生",
+   "gameId": 2
+  },
+  {
+   "id": 987,
+   "name": "ホープソードⅢ",
+   "rarity": 3,
+   "attack": 130,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     50,
+     60,
+     50,
+     90,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     60,
+     50,
+     140,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 3,
+     "level": 1
+    },
+    {
+     "skillId": 126,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 182,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "調査隊派生",
+   "gameId": 3
+  },
+  {
+   "id": 988,
+   "name": "ホープソードⅣ",
+   "rarity": 5,
+   "attack": 160,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     50,
+     60,
+     60,
+     70,
+     60,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     60,
+     60,
+     70,
+     110,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 3,
+     "level": 1
+    },
+    {
+     "skillId": 126,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 224,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "調査隊派生",
+   "gameId": 4
+  },
+  {
+   "id": 989,
+   "name": "ホープソードⅤ",
+   "rarity": 7,
+   "attack": 190,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     50,
+     60,
+     50,
+     70,
+     60,
+     60
+    ],
+    "handicraftMax": [
+     50,
+     60,
+     50,
+     70,
+     60,
+     110
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 3,
+     "level": 1
+    },
+    {
+     "skillId": 126,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 266,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "調査隊派生",
+   "gameId": 5
+  },
+  {
+   "id": 990,
+   "name": "レ・グクルトスⅠ",
+   "rarity": 3,
+   "attack": 140,
+   "affinity": 0,
+   "element": {
+    "type": "thunder",
+    "value": 120
+   },
+   "sharpness": {
+    "base": [
+     10,
+     10,
+     140,
+     90,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     10,
+     10,
+     140,
+     140,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    },
+    {
+     "skillId": 66,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 196,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "煌雷竜派生",
+   "gameId": 6
+  },
+  {
+   "id": 991,
+   "name": "レ・グクルトスⅡ",
+   "rarity": 5,
+   "attack": 170,
+   "affinity": 0,
+   "element": {
+    "type": "thunder",
+    "value": 150
+   },
+   "sharpness": {
+    "base": [
+     10,
+     10,
+     120,
+     100,
+     60,
+     0
+    ],
+    "handicraftMax": [
+     10,
+     10,
+     120,
+     100,
+     110,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    },
+    {
+     "skillId": 66,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 238,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "煌雷竜派生",
+   "gameId": 7
+  },
+  {
+   "id": 992,
+   "name": "レ・グクルトスⅢ",
+   "rarity": 7,
+   "attack": 200,
+   "affinity": 0,
+   "element": {
+    "type": "thunder",
+    "value": 170
+   },
+   "sharpness": {
+    "base": [
+     10,
+     10,
+     110,
+     80,
+     80,
+     60
+    ],
+    "handicraftMax": [
+     10,
+     10,
+     110,
+     80,
+     80,
+     110
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 2
+    },
+    {
+     "skillId": 66,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 280,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "煌雷竜派生",
+   "gameId": 8
+  },
+  {
+   "id": 993,
+   "name": "煌雷剣グクルトス",
+   "rarity": 8,
+   "attack": 220,
+   "affinity": 0,
+   "element": {
+    "type": "thunder",
+    "value": 200
+   },
+   "sharpness": {
+    "base": [
+     10,
+     10,
+     100,
+     70,
+     70,
+     90
+    ],
+    "handicraftMax": [
+     10,
+     10,
+     100,
+     70,
+     70,
+     140
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 2
+    },
+    {
+     "skillId": 66,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 308,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "煌雷竜派生",
+   "gameId": 9
+  },
+  {
+   "id": 994,
+   "name": "アンクofチェッカーⅠ",
+   "rarity": 7,
+   "attack": 180,
+   "affinity": 20,
+   "element": {
+    "type": "dragon",
+    "value": 160
+   },
+   "sharpness": {
+    "base": [
+     50,
+     80,
+     80,
+     60,
+     30,
+     50
+    ],
+    "handicraftMax": [
+     50,
+     80,
+     80,
+     60,
+     30,
+     100
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 252,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "黒蝕竜派生",
+   "gameId": 12
+  },
+  {
+   "id": 995,
+   "name": "アンクofサーチャー",
+   "rarity": 8,
+   "attack": 210,
+   "affinity": 20,
+   "element": {
+    "type": "dragon",
+    "value": 200
+   },
+   "sharpness": {
+    "base": [
+     50,
+     50,
+     90,
+     50,
+     30,
+     80
+    ],
+    "handicraftMax": [
+     50,
+     50,
+     90,
+     50,
+     30,
+     130
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 294,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "黒蝕竜派生",
+   "gameId": 13
+  },
+  {
+   "id": 996,
+   "name": "ラバラ・ダーゲⅠ",
+   "rarity": 1,
+   "attack": 100,
+   "affinity": 10,
+   "element": {
+    "type": "paralysis",
+    "value": 100
+   },
+   "sharpness": {
+    "base": [
+     50,
+     40,
+     40,
+     70,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     40,
+     40,
+     120,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 103,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 140,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "刺花蜘蛛派生",
+   "gameId": 14
+  },
+  {
+   "id": 997,
+   "name": "ラバラ・ダーゲⅡ",
+   "rarity": 3,
+   "attack": 120,
+   "affinity": 10,
+   "element": {
+    "type": "paralysis",
+    "value": 120
+   },
+   "sharpness": {
+    "base": [
+     70,
+     40,
+     30,
+     110,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     70,
+     40,
+     30,
+     160,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 68,
+     "level": 1
+    },
+    {
+     "skillId": 103,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 168,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "刺花蜘蛛派生",
+   "gameId": 15
+  },
+  {
+   "id": 998,
+   "name": "ラバラ・ダーゲⅢ",
+   "rarity": 5,
+   "attack": 150,
+   "affinity": 15,
+   "element": {
+    "type": "paralysis",
+    "value": 150
+   },
+   "sharpness": {
+    "base": [
+     70,
+     40,
+     30,
+     100,
+     60,
+     0
+    ],
+    "handicraftMax": [
+     70,
+     40,
+     30,
+     100,
+     110,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 68,
+     "level": 1
+    },
+    {
+     "skillId": 103,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 210,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "刺花蜘蛛派生",
+   "gameId": 16
+  },
+  {
+   "id": 999,
+   "name": "ラバラ・ダーゲⅣ",
+   "rarity": 7,
+   "attack": 180,
+   "affinity": 15,
+   "element": {
+    "type": "paralysis",
+    "value": 170
+   },
+   "sharpness": {
+    "base": [
+     70,
+     40,
+     30,
+     90,
+     60,
+     60
+    ],
+    "handicraftMax": [
+     70,
+     40,
+     30,
+     90,
+     60,
+     110
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 68,
+     "level": 1
+    },
+    {
+     "skillId": 103,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 252,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "刺花蜘蛛派生",
+   "gameId": 17
+  },
+  {
+   "id": 1000,
+   "name": "刺花剣アカトペルマ",
+   "rarity": 8,
+   "attack": 200,
+   "affinity": 15,
+   "element": {
+    "type": "paralysis",
+    "value": 200
+   },
+   "sharpness": {
+    "base": [
+     70,
+     40,
+     30,
+     60,
+     40,
+     110
+    ],
+    "handicraftMax": [
+     70,
+     40,
+     30,
+     60,
+     40,
+     160
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 68,
+     "level": 1
+    },
+    {
+     "skillId": 103,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 280,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "刺花蜘蛛派生",
+   "gameId": 18
+  },
+  {
+   "id": 1001,
+   "name": "ケマスクチーロⅠ",
+   "rarity": 1,
+   "attack": 100,
+   "affinity": 5,
+   "element": {
+    "type": "fire",
+    "value": 100
+   },
+   "sharpness": {
+    "base": [
+     50,
+     70,
+     40,
+     40,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     70,
+     40,
+     90,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 140,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "炎尾竜派生",
+   "gameId": 19
+  },
+  {
+   "id": 1002,
+   "name": "ケマスクチーロⅡ",
+   "rarity": 3,
+   "attack": 140,
+   "affinity": 5,
+   "element": {
+    "type": "fire",
+    "value": 120
+   },
+   "sharpness": {
+    "base": [
+     50,
+     80,
+     50,
+     70,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     80,
+     50,
+     120,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 196,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "炎尾竜派生",
+   "gameId": 20
+  },
+  {
+   "id": 1003,
+   "name": "ケマスクチーロⅢ",
+   "rarity": 5,
+   "attack": 170,
+   "affinity": 5,
+   "element": {
+    "type": "fire",
+    "value": 140
+   },
+   "sharpness": {
+    "base": [
+     70,
+     80,
+     70,
+     50,
+     30,
+     0
+    ],
+    "handicraftMax": [
+     70,
+     80,
+     70,
+     50,
+     80,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 238,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "炎尾竜派生",
+   "gameId": 21
+  },
+  {
+   "id": 1004,
+   "name": "ケマスクチーロⅣ",
+   "rarity": 7,
+   "attack": 210,
+   "affinity": 5,
+   "element": {
+    "type": "fire",
+    "value": 160
+   },
+   "sharpness": {
+    "base": [
+     70,
+     80,
+     70,
+     80,
+     50,
+     0
+    ],
+    "handicraftMax": [
+     70,
+     80,
+     70,
+     80,
+     100,
+     0
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 294,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "炎尾竜派生",
+   "gameId": 22
+  },
+  {
+   "id": 1005,
+   "name": "炎尾剣フォルナクス",
+   "rarity": 8,
+   "attack": 240,
+   "affinity": 5,
+   "element": {
+    "type": "fire",
+    "value": 180
+   },
+   "sharpness": {
+    "base": [
+     60,
+     70,
+     70,
+     80,
+     70,
+     0
+    ],
+    "handicraftMax": [
+     60,
+     70,
+     70,
+     80,
+     120,
+     0
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 336,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "炎尾竜派生",
+   "gameId": 23
+  },
+  {
+   "id": 1006,
+   "name": "グラビドサイフォスⅠ",
+   "rarity": 6,
+   "attack": 210,
+   "affinity": -15,
+   "element": {
+    "type": "blast",
+    "value": 190
+   },
+   "sharpness": {
+    "base": [
+     90,
+     70,
+     80,
+     60,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     90,
+     70,
+     80,
+     90,
+     20,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 294,
+   "defenseBonus": 30,
+   "elderseal": null,
+   "handicraft": [
+    3,
+    2
+   ],
+   "series": "鎧竜派生",
+   "gameId": 24
+  },
+  {
+   "id": 1007,
+   "name": "重剣タイタン",
+   "rarity": 8,
+   "attack": 240,
+   "affinity": -15,
+   "element": {
+    "type": "blast",
+    "value": 250
+   },
+   "sharpness": {
+    "base": [
+     80,
+     70,
+     70,
+     70,
+     60,
+     0
+    ],
+    "handicraftMax": [
+     80,
+     70,
+     70,
+     70,
+     110,
+     0
+    ]
+   },
+   "slots": [
+    3,
+    3,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 336,
+   "defenseBonus": 30,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "鎧竜派生",
+   "gameId": 25
+  },
+  {
+   "id": 1008,
+   "name": "鉄剣ジュネスⅠ",
+   "rarity": 2,
+   "attack": 120,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     20,
+     40,
+     90,
+     50,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     20,
+     40,
+     90,
+     100,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 168,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "鉱石素材派生",
+   "gameId": 26
+  },
+  {
+   "id": 1009,
+   "name": "鉄剣ジュネスⅡ",
+   "rarity": 4,
+   "attack": 160,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     20,
+     60,
+     90,
+     80,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     20,
+     60,
+     90,
+     130,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    1,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 224,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "鉱石素材派生",
+   "gameId": 27
+  },
+  {
+   "id": 1010,
+   "name": "鉄剣ジュネスⅢ",
+   "rarity": 6,
+   "attack": 190,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     20,
+     70,
+     90,
+     60,
+     60,
+     0
+    ],
+    "handicraftMax": [
+     20,
+     70,
+     90,
+     60,
+     110,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 266,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "鉱石素材派生",
+   "gameId": 28
+  },
+  {
+   "id": 1011,
+   "name": "重鉄剣フロシオン",
+   "rarity": 8,
+   "attack": 220,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     20,
+     60,
+     90,
+     70,
+     50,
+     60
+    ],
+    "handicraftMax": [
+     20,
+     60,
+     90,
+     70,
+     50,
+     110
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 308,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "鉱石素材派生",
+   "gameId": 29
+  },
+  {
+   "id": 1012,
+   "name": "ダハ・ガダⅠ",
+   "rarity": 7,
+   "attack": 190,
+   "affinity": 0,
+   "element": {
+    "type": "ice",
+    "value": 320
+   },
+   "sharpness": {
+    "base": [
+     40,
+     40,
+     30,
+     100,
+     110,
+     30
+    ],
+    "handicraftMax": [
+     40,
+     40,
+     30,
+     100,
+     110,
+     80
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 266,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "凍峰竜派生",
+   "gameId": 30
+  },
+  {
+   "id": 1013,
+   "name": "断崖のマテプトロ",
+   "rarity": 8,
+   "attack": 210,
+   "affinity": 0,
+   "element": {
+    "type": "ice",
+    "value": 350
+   },
+   "sharpness": {
+    "base": [
+     40,
+     40,
+     20,
+     80,
+     120,
+     50
+    ],
+    "handicraftMax": [
+     40,
+     40,
+     20,
+     80,
+     120,
+     100
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 294,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "凍峰竜派生",
+   "gameId": 31
+  },
+  {
+   "id": 1014,
+   "name": "アルラスエッジⅠ",
+   "rarity": 4,
+   "attack": 160,
+   "affinity": 15,
+   "element": {
+    "type": "fire",
+    "value": 120
+   },
+   "sharpness": {
+    "base": [
+     50,
+     90,
+     60,
+     50,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     90,
+     60,
+     100,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    1,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 1
+    },
+    {
+     "skillId": 124,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 224,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "護火竜派生",
+   "gameId": 32
+  },
+  {
+   "id": 1015,
+   "name": "アルラスエッジⅡ",
+   "rarity": 6,
+   "attack": 180,
+   "affinity": 15,
+   "element": {
+    "type": "fire",
+    "value": 170
+   },
+   "sharpness": {
+    "base": [
+     50,
+     100,
+     50,
+     50,
+     50,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     100,
+     50,
+     50,
+     70,
+     30
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 1
+    },
+    {
+     "skillId": 124,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 252,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    2,
+    3
+   ],
+   "series": "護火竜派生",
+   "gameId": 33
+  },
+  {
+   "id": 1016,
+   "name": "メルト",
+   "rarity": 8,
+   "attack": 210,
+   "affinity": 15,
+   "element": {
+    "type": "fire",
+    "value": 200
+   },
+   "sharpness": {
+    "base": [
+     50,
+     130,
+     50,
+     50,
+     40,
+     30
+    ],
+    "handicraftMax": [
+     50,
+     130,
+     50,
+     50,
+     40,
+     80
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 1
+    },
+    {
+     "skillId": 124,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 294,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "護火竜派生",
+   "gameId": 34
+  },
+  {
+   "id": 1017,
+   "name": "ヒートエッジⅠ",
+   "rarity": 6,
+   "attack": 180,
+   "affinity": 10,
+   "element": {
+    "type": "fire",
+    "value": 210
+   },
+   "sharpness": {
+    "base": [
+     100,
+     70,
+     40,
+     30,
+     60,
+     0
+    ],
+    "handicraftMax": [
+     100,
+     70,
+     40,
+     30,
+     110,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 22,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 252,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "火竜派生",
+   "gameId": 35
+  },
+  {
+   "id": 1018,
+   "name": "コロナ",
+   "rarity": 8,
+   "attack": 200,
+   "affinity": 10,
+   "element": {
+    "type": "fire",
+    "value": 250
+   },
+   "sharpness": {
+    "base": [
+     100,
+     70,
+     50,
+     40,
+     40,
+     50
+    ],
+    "handicraftMax": [
+     100,
+     70,
+     50,
+     40,
+     40,
+     100
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 22,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 280,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "火竜派生",
+   "gameId": 36
+  },
+  {
+   "id": 1019,
+   "name": "プリンセスレイピアⅠ",
+   "rarity": 5,
+   "attack": 160,
+   "affinity": 15,
+   "element": {
+    "type": "poison",
+    "value": 120
+   },
+   "sharpness": {
+    "base": [
+     50,
+     70,
+     40,
+     90,
+     50,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     70,
+     40,
+     90,
+     100,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 21,
+     "level": 1
+    },
+    {
+     "skillId": 68,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 224,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "雌火竜派生",
+   "gameId": 37
+  },
+  {
+   "id": 1020,
+   "name": "プリンセスレイピアⅡ",
+   "rarity": 7,
+   "attack": 190,
+   "affinity": 15,
+   "element": {
+    "type": "poison",
+    "value": 150
+   },
+   "sharpness": {
+    "base": [
+     40,
+     80,
+     40,
+     110,
+     30,
+     50
+    ],
+    "handicraftMax": [
+     40,
+     80,
+     40,
+     110,
+     30,
+     100
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 21,
+     "level": 1
+    },
+    {
+     "skillId": 68,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 266,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "雌火竜派生",
+   "gameId": 38
+  },
+  {
+   "id": 1021,
+   "name": "クイーンレイピア",
+   "rarity": 8,
+   "attack": 210,
+   "affinity": 15,
+   "element": {
+    "type": "poison",
+    "value": 180
+   },
+   "sharpness": {
+    "base": [
+     40,
+     80,
+     30,
+     100,
+     30,
+     70
+    ],
+    "handicraftMax": [
+     40,
+     80,
+     30,
+     100,
+     30,
+     120
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 21,
+     "level": 1
+    },
+    {
+     "skillId": 68,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 294,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "雌火竜派生",
+   "gameId": 39
+  },
+  {
+   "id": 1022,
+   "name": "スケイルソードⅠ",
+   "rarity": 3,
+   "attack": 120,
+   "affinity": 10,
+   "element": {
+    "type": "sleep",
+    "value": 120
+   },
+   "sharpness": {
+    "base": [
+     70,
+     40,
+     30,
+     110,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     70,
+     40,
+     30,
+     160,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 168,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "影蜘蛛派生",
+   "gameId": 40
+  },
+  {
+   "id": 1023,
+   "name": "スケイルソードⅡ",
+   "rarity": 5,
+   "attack": 150,
+   "affinity": 15,
+   "element": {
+    "type": "sleep",
+    "value": 150
+   },
+   "sharpness": {
+    "base": [
+     70,
+     40,
+     30,
+     100,
+     60,
+     0
+    ],
+    "handicraftMax": [
+     70,
+     40,
+     30,
+     100,
+     110,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 210,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "影蜘蛛派生",
+   "gameId": 41
+  },
+  {
+   "id": 1024,
+   "name": "スケイルソードⅢ",
+   "rarity": 7,
+   "attack": 180,
+   "affinity": 15,
+   "element": {
+    "type": "sleep",
+    "value": 170
+   },
+   "sharpness": {
+    "base": [
+     70,
+     40,
+     30,
+     90,
+     60,
+     60
+    ],
+    "handicraftMax": [
+     70,
+     40,
+     30,
+     90,
+     60,
+     110
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 252,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "影蜘蛛派生",
+   "gameId": 42
+  },
+  {
+   "id": 1025,
+   "name": "ネルスパーダ",
+   "rarity": 8,
+   "attack": 200,
+   "affinity": 15,
+   "element": {
+    "type": "sleep",
+    "value": 200
+   },
+   "sharpness": {
+    "base": [
+     70,
+     40,
+     30,
+     60,
+     40,
+     110
+    ],
+    "handicraftMax": [
+     70,
+     40,
+     30,
+     60,
+     40,
+     160
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 280,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "影蜘蛛派生",
+   "gameId": 43
+  },
+  {
+   "id": 1026,
+   "name": "バーラブレイドⅠ",
+   "rarity": 2,
+   "attack": 110,
+   "affinity": 10,
+   "element": {
+    "type": "water",
+    "value": 100
+   },
+   "sharpness": {
+    "base": [
+     30,
+     30,
+     90,
+     50,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     30,
+     30,
+     90,
+     100,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 154,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "沙海竜派生",
+   "gameId": 44
+  },
+  {
+   "id": 1027,
+   "name": "バーラブレイドⅡ",
+   "rarity": 4,
+   "attack": 150,
+   "affinity": 10,
+   "element": {
+    "type": "water",
+    "value": 120
+   },
+   "sharpness": {
+    "base": [
+     40,
+     30,
+     100,
+     80,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     40,
+     30,
+     100,
+     130,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    1,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 210,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "沙海竜派生",
+   "gameId": 45
+  },
+  {
+   "id": 1028,
+   "name": "バーラブレイドⅢ",
+   "rarity": 5,
+   "attack": 160,
+   "affinity": 10,
+   "element": {
+    "type": "water",
+    "value": 150
+   },
+   "sharpness": {
+    "base": [
+     30,
+     30,
+     110,
+     90,
+     40,
+     0
+    ],
+    "handicraftMax": [
+     30,
+     30,
+     110,
+     90,
+     90,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 224,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "沙海竜派生",
+   "gameId": 46
+  },
+  {
+   "id": 1029,
+   "name": "バーラブレイドⅣ",
+   "rarity": 7,
+   "attack": 190,
+   "affinity": 10,
+   "element": {
+    "type": "water",
+    "value": 170
+   },
+   "sharpness": {
+    "base": [
+     30,
+     30,
+     110,
+     90,
+     70,
+     20
+    ],
+    "handicraftMax": [
+     30,
+     30,
+     110,
+     90,
+     70,
+     70
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 266,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "沙海竜派生",
+   "gameId": 47
+  },
+  {
+   "id": 1030,
+   "name": "沙海剣カトヌカドゥ",
+   "rarity": 8,
+   "attack": 210,
+   "affinity": 10,
+   "element": {
+    "type": "water",
+    "value": 200
+   },
+   "sharpness": {
+    "base": [
+     30,
+     30,
+     100,
+     80,
+     70,
+     40
+    ],
+    "handicraftMax": [
+     30,
+     30,
+     100,
+     80,
+     70,
+     90
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 294,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "沙海竜派生",
+   "gameId": 48
+  },
+  {
+   "id": 1031,
+   "name": "ボーンククリⅠ",
+   "rarity": 1,
+   "attack": 110,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     50,
+     70,
+     80,
+     0,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     70,
+     120,
+     10,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 141,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 154,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    4,
+    1
+   ],
+   "series": "骨素材派生",
+   "gameId": 49
+  },
+  {
+   "id": 1032,
+   "name": "ボーンククリⅡ",
+   "rarity": 2,
+   "attack": 130,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     50,
+     40,
+     110,
+     0,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     40,
+     130,
+     30,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 72,
+     "level": 1
+    },
+    {
+     "skillId": 141,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 182,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    2,
+    3
+   ],
+   "series": "骨素材派生",
+   "gameId": 50
+  },
+  {
+   "id": 1033,
+   "name": "ボーンククリⅢ",
+   "rarity": 4,
+   "attack": 170,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     50,
+     60,
+     100,
+     40,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     60,
+     100,
+     90,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    1,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 72,
+     "level": 1
+    },
+    {
+     "skillId": 141,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 238,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "骨素材派生",
+   "gameId": 51
+  },
+  {
+   "id": 1034,
+   "name": "ボーンククリⅣ",
+   "rarity": 6,
+   "attack": 200,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     50,
+     60,
+     80,
+     110,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     60,
+     80,
+     160,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 72,
+     "level": 1
+    },
+    {
+     "skillId": 141,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 280,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "骨素材派生",
+   "gameId": 52
+  },
+  {
+   "id": 1035,
+   "name": "チーフククリ",
+   "rarity": 8,
+   "attack": 230,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     50,
+     60,
+     60,
+     70,
+     110,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     60,
+     60,
+     70,
+     160,
+     0
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 72,
+     "level": 1
+    },
+    {
+     "skillId": 141,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 322,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "骨素材派生",
+   "gameId": 53
+  },
+  {
+   "id": 1036,
+   "name": "シーカ＝アルジャナルⅠ",
+   "rarity": 6,
+   "attack": 180,
+   "affinity": 15,
+   "element": {
+    "type": "thunder",
+    "value": 210
+   },
+   "sharpness": {
+    "base": [
+     40,
+     100,
+     100,
+     60,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     40,
+     100,
+     100,
+     70,
+     40,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 252,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    1,
+    4
+   ],
+   "series": "護雷顎竜派生",
+   "gameId": 54
+  },
+  {
+   "id": 1037,
+   "name": "護雷剣シーカガルデ",
+   "rarity": 8,
+   "attack": 210,
+   "affinity": 15,
+   "element": {
+    "type": "thunder",
+    "value": 250
+   },
+   "sharpness": {
+    "base": [
+     40,
+     90,
+     120,
+     40,
+     60,
+     0
+    ],
+    "handicraftMax": [
+     40,
+     90,
+     120,
+     40,
+     60,
+     50
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 82,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 294,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    0,
+    5
+   ],
+   "series": "護雷顎竜派生",
+   "gameId": 55
+  },
+  {
+   "id": 1038,
+   "name": "ヴェノムベインⅠ",
+   "rarity": 5,
+   "attack": 180,
+   "affinity": 0,
+   "element": {
+    "type": "poison",
+    "value": 160
+   },
+   "sharpness": {
+    "base": [
+     90,
+     50,
+     90,
+     70,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     90,
+     50,
+     90,
+     120,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 8,
+     "level": 2
+    },
+    {
+     "skillId": 103,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 252,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "毒怪鳥派生",
+   "gameId": 56
+  },
+  {
+   "id": 1039,
+   "name": "ヴェノムベインⅡ",
+   "rarity": 6,
+   "attack": 200,
+   "affinity": 0,
+   "element": {
+    "type": "poison",
+    "value": 190
+   },
+   "sharpness": {
+    "base": [
+     90,
+     50,
+     60,
+     60,
+     40,
+     0
+    ],
+    "handicraftMax": [
+     90,
+     50,
+     60,
+     60,
+     90,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 8,
+     "level": 2
+    },
+    {
+     "skillId": 103,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 280,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "毒怪鳥派生",
+   "gameId": 57
+  },
+  {
+   "id": 1040,
+   "name": "デスヴェノムサーベル",
+   "rarity": 8,
+   "attack": 230,
+   "affinity": 0,
+   "element": {
+    "type": "poison",
+    "value": 250
+   },
+   "sharpness": {
+    "base": [
+     90,
+     50,
+     90,
+     60,
+     60,
+     0
+    ],
+    "handicraftMax": [
+     90,
+     50,
+     90,
+     60,
+     110,
+     0
+    ]
+   },
+   "slots": [
+    3,
+    3,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 8,
+     "level": 3
+    },
+    {
+     "skillId": 103,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 322,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "毒怪鳥派生",
+   "gameId": 58
+  },
+  {
+   "id": 1041,
+   "name": "赫炎の護剣Ⅰ",
+   "rarity": 3,
+   "attack": 130,
+   "affinity": 10,
+   "element": {
+    "type": "blast",
+    "value": 120
+   },
+   "sharpness": {
+    "base": [
+     50,
+     60,
+     70,
+     70,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     60,
+     70,
+     120,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 182,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "赫猿獣派生",
+   "gameId": 59
+  },
+  {
+   "id": 1042,
+   "name": "赫炎の護剣Ⅱ",
+   "rarity": 6,
+   "attack": 180,
+   "affinity": 10,
+   "element": {
+    "type": "blast",
+    "value": 150
+   },
+   "sharpness": {
+    "base": [
+     50,
+     60,
+     90,
+     40,
+     60,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     60,
+     90,
+     40,
+     110,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 252,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "赫猿獣派生",
+   "gameId": 60
+  },
+  {
+   "id": 1043,
+   "name": "赫炎護剣スヴィンダ",
+   "rarity": 8,
+   "attack": 210,
+   "affinity": 10,
+   "element": {
+    "type": "blast",
+    "value": 180
+   },
+   "sharpness": {
+    "base": [
+     50,
+     60,
+     50,
+     90,
+     40,
+     60
+    ],
+    "handicraftMax": [
+     50,
+     60,
+     50,
+     90,
+     40,
+     110
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 294,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "赫猿獣派生",
+   "gameId": 61
+  },
+  {
+   "id": 1044,
+   "name": "雪白のジャンビーヤⅠ",
+   "rarity": 6,
+   "attack": 200,
+   "affinity": -10,
+   "element": {
+    "type": "ice",
+    "value": 140
+   },
+   "sharpness": {
+    "base": [
+     50,
+     30,
+     90,
+     80,
+     50,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     30,
+     90,
+     80,
+     100,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 1
+    },
+    {
+     "skillId": 103,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 280,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "雪獅子派生",
+   "gameId": 62
+  },
+  {
+   "id": 1045,
+   "name": "獅子のジャンビーヤ",
+   "rarity": 8,
+   "attack": 230,
+   "affinity": -10,
+   "element": {
+    "type": "ice",
+    "value": 180
+   },
+   "sharpness": {
+    "base": [
+     50,
+     30,
+     90,
+     80,
+     50,
+     50
+    ],
+    "handicraftMax": [
+     50,
+     30,
+     90,
+     80,
+     50,
+     100
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 1
+    },
+    {
+     "skillId": 103,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 322,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "雪獅子派生",
+   "gameId": 63
+  },
+  {
+   "id": 1046,
+   "name": "チャタクラブⅠ",
+   "rarity": 1,
+   "attack": 110,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     50,
+     10,
+     110,
+     30,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     10,
+     110,
+     80,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 154,
+   "defenseBonus": 15,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "纏蛙派生",
+   "gameId": 64
+  },
+  {
+   "id": 1047,
+   "name": "チャタクラブⅡ",
+   "rarity": 3,
+   "attack": 150,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     80,
+     10,
+     120,
+     40,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     80,
+     10,
+     120,
+     90,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    0,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 210,
+   "defenseBonus": 15,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "纏蛙派生",
+   "gameId": 65
+  },
+  {
+   "id": 1048,
+   "name": "チャタクラブⅢ",
+   "rarity": 5,
+   "attack": 180,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     70,
+     20,
+     110,
+     80,
+     20,
+     0
+    ],
+    "handicraftMax": [
+     70,
+     20,
+     110,
+     80,
+     70,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 252,
+   "defenseBonus": 15,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "纏蛙派生",
+   "gameId": 66
+  },
+  {
+   "id": 1049,
+   "name": "チャタクラブⅣ",
+   "rarity": 7,
+   "attack": 210,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     60,
+     10,
+     110,
+     110,
+     60,
+     0
+    ],
+    "handicraftMax": [
+     60,
+     10,
+     110,
+     110,
+     110,
+     0
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 1
+    },
+    {
+     "skillId": 59,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 294,
+   "defenseBonus": 15,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "纏蛙派生",
+   "gameId": 67
+  },
+  {
+   "id": 1050,
+   "name": "虚無の剣Ⅰ",
+   "rarity": 4,
+   "attack": 160,
+   "affinity": 0,
+   "element": {
+    "type": "water",
+    "value": 120
+   },
+   "sharpness": {
+    "base": [
+     20,
+     110,
+     40,
+     80,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     20,
+     110,
+     40,
+     130,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    1,
+    0,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 224,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "暗器蛸派生",
+   "gameId": 68
+  },
+  {
+   "id": 1051,
+   "name": "虚無の剣Ⅱ",
+   "rarity": 6,
+   "attack": 190,
+   "affinity": 0,
+   "element": {
+    "type": "water",
+    "value": 150
+   },
+   "sharpness": {
+    "base": [
+     20,
+     110,
+     50,
+     60,
+     60,
+     0
+    ],
+    "handicraftMax": [
+     20,
+     110,
+     50,
+     60,
+     110,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 266,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "暗器蛸派生",
+   "gameId": 69
+  },
+  {
+   "id": 1052,
+   "name": "暗彎刀コルディアル",
+   "rarity": 8,
+   "attack": 220,
+   "affinity": 0,
+   "element": {
+    "type": "water",
+    "value": 180
+   },
+   "sharpness": {
+    "base": [
+     20,
+     110,
+     50,
+     50,
+     40,
+     80
+    ],
+    "handicraftMax": [
+     20,
+     110,
+     50,
+     50,
+     40,
+     130
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 308,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "暗器蛸派生",
+   "gameId": 70
+  },
+  {
+   "id": 1053,
+   "name": "ガルシュムークロⅠ",
+   "rarity": 4,
+   "attack": 170,
+   "affinity": -10,
+   "element": {
+    "type": "dragon",
+    "value": 120
+   },
+   "sharpness": {
+    "base": [
+     100,
+     30,
+     80,
+     40,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     100,
+     30,
+     80,
+     90,
+     0,
+     0
+    ]
+   },
+   "slots": [
+    1,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 238,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "護鎖刃竜派生",
+   "gameId": 71
+  },
+  {
+   "id": 1054,
+   "name": "ガルシュムークロⅡ",
+   "rarity": 6,
+   "attack": 210,
+   "affinity": -10,
+   "element": {
+    "type": "dragon",
+    "value": 150
+   },
+   "sharpness": {
+    "base": [
+     100,
+     60,
+     80,
+     60,
+     0,
+     0
+    ],
+    "handicraftMax": [
+     100,
+     60,
+     80,
+     70,
+     40,
+     0
+    ]
+   },
+   "slots": [
+    2,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 294,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    1,
+    4
+   ],
+   "series": "護鎖刃竜派生",
+   "gameId": 72
+  },
+  {
+   "id": 1055,
+   "name": "護鎖刃剣ガルトリウス",
+   "rarity": 8,
+   "attack": 240,
+   "affinity": -10,
+   "element": {
+    "type": "dragon",
+    "value": 180
+   },
+   "sharpness": {
+    "base": [
+     100,
+     70,
+     50,
+     70,
+     60,
+     0
+    ],
+    "handicraftMax": [
+     100,
+     70,
+     50,
+     70,
+     70,
+     40
+    ]
+   },
+   "slots": [
+    3,
+    3,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 336,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    1,
+    4
+   ],
+   "series": "護鎖刃竜派生",
+   "gameId": 73
+  },
+  {
+   "id": 1056,
+   "name": "アルシュムークロⅠ",
+   "rarity": 7,
+   "attack": 200,
+   "affinity": 0,
+   "element": {
+    "type": "dragon",
+    "value": 220
+   },
+   "sharpness": {
+    "base": [
+     50,
+     70,
+     80,
+     70,
+     40,
+     40
+    ],
+    "handicraftMax": [
+     50,
+     70,
+     80,
+     70,
+     40,
+     90
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 280,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "鎖刃竜派生",
+   "gameId": 74
+  },
+  {
+   "id": 1057,
+   "name": "アーティアソードⅠ",
+   "rarity": 6,
+   "attack": 170,
+   "affinity": 5,
+   "element": null,
+   "sharpness": {
+    "base": [
+     80,
+     40,
+     60,
+     80,
+     40,
+     0
+    ],
+    "handicraftMax": [
+     80,
+     40,
+     60,
+     80,
+     60,
+     30
+    ]
+   },
+   "slots": [
+    2,
+    2,
+    2
+   ],
+   "skills": [],
+   "artian": true,
+   "gogmaArtian": false,
+   "note": "属性は手入力",
+   "attackDisplay": 238,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    2,
+    3
+   ],
+   "series": null,
+   "gameId": 75,
+   "mhwsAttributeValue": 230
+  },
+  {
+   "id": 1058,
+   "name": "アーティアソードⅡ",
+   "rarity": 7,
+   "attack": 180,
+   "affinity": 5,
+   "element": null,
+   "sharpness": {
+    "base": [
+     80,
+     40,
+     60,
+     80,
+     70,
+     20
+    ],
+    "handicraftMax": [
+     80,
+     40,
+     60,
+     80,
+     70,
+     70
+    ]
+   },
+   "slots": [
+    2,
+    2,
+    2
+   ],
+   "skills": [],
+   "artian": true,
+   "gogmaArtian": false,
+   "note": "属性は手入力",
+   "attackDisplay": 252,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": null,
+   "gameId": 76,
+   "mhwsAttributeValue": 230
+  },
+  {
+   "id": 1059,
+   "name": "ヴェルドロート",
+   "rarity": 8,
+   "attack": 190,
+   "affinity": 5,
+   "element": null,
+   "sharpness": {
+    "base": [
+     80,
+     40,
+     60,
+     80,
+     70,
+     20
+    ],
+    "handicraftMax": [
+     80,
+     40,
+     60,
+     80,
+     70,
+     70
+    ]
+   },
+   "slots": [
+    3,
+    3,
+    3
+   ],
+   "skills": [],
+   "artian": true,
+   "gogmaArtian": false,
+   "note": "属性は手入力",
+   "attackDisplay": 266,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": null,
+   "gameId": 77,
+   "mhwsAttributeValue": 260
+  },
+  {
+   "id": 1060,
+   "name": "ゾ・ミハーラⅠ",
+   "rarity": 7,
+   "attack": 210,
+   "affinity": 5,
+   "element": {
+    "type": "dragon",
+    "value": 100
+   },
+   "sharpness": {
+    "base": [
+     90,
+     40,
+     90,
+     40,
+     50,
+     40
+    ],
+    "handicraftMax": [
+     90,
+     40,
+     90,
+     40,
+     50,
+     90
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 96,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 294,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "白熾龍派生",
+   "gameId": 78
+  },
+  {
+   "id": 1061,
+   "name": "熾光たるミハーラ",
+   "rarity": 8,
+   "attack": 220,
+   "affinity": 5,
+   "element": {
+    "type": "dragon",
+    "value": 150
+   },
+   "sharpness": {
+    "base": [
+     90,
+     40,
+     90,
+     40,
+     30,
+     60
+    ],
+    "handicraftMax": [
+     90,
+     40,
+     90,
+     40,
+     30,
+     110
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 96,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 308,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "白熾龍派生",
+   "gameId": 79
+  },
+  {
+   "id": 1062,
+   "name": "エスペラソード",
+   "rarity": 8,
+   "attack": 210,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     50,
+     60,
+     50,
+     60,
+     40,
+     90
+    ],
+    "handicraftMax": [
+     50,
+     60,
+     50,
+     60,
+     40,
+     140
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 3,
+     "level": 2
+    },
+    {
+     "skillId": 126,
+     "level": 2
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 294,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "調査隊派生",
+   "gameId": 82
+  },
+  {
+   "id": 1063,
+   "name": "纏剣カータトルァ",
+   "rarity": 8,
+   "attack": 230,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     60,
+     10,
+     100,
+     90,
+     90,
+     0
+    ],
+    "handicraftMax": [
+     60,
+     10,
+     100,
+     90,
+     90,
+     50
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 1
+    },
+    {
+     "skillId": 59,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 322,
+   "defenseBonus": 15,
+   "elderseal": null,
+   "handicraft": [
+    0,
+    5
+   ],
+   "series": "纏蛙派生",
+   "gameId": 83
+  },
+  {
+   "id": 1064,
+   "name": "鎖刃剣アルトリウス",
+   "rarity": 8,
+   "attack": 220,
+   "affinity": 0,
+   "element": {
+    "type": "dragon",
+    "value": 250
+   },
+   "sharpness": {
+    "base": [
+     50,
+     50,
+     80,
+     60,
+     50,
+     60
+    ],
+    "handicraftMax": [
+     50,
+     50,
+     80,
+     60,
+     50,
+     110
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 59,
+     "level": 3
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 308,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "鎖刃竜派生",
+   "gameId": 84
+  },
+  {
+   "id": 1065,
+   "name": "狐扇ハナノナゴリヲⅠ",
+   "rarity": 6,
+   "attack": 180,
+   "affinity": 15,
+   "element": {
+    "type": "water",
+    "value": 180
+   },
+   "sharpness": {
+    "base": [
+     80,
+     60,
+     40,
+     40,
+     60,
+     20
+    ],
+    "handicraftMax": [
+     80,
+     60,
+     40,
+     40,
+     60,
+     70
+    ]
+   },
+   "slots": [
+    2,
+    1,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 39,
+     "level": 2
+    },
+    {
+     "skillId": 82,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 252,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "泡狐竜派生",
+   "gameId": 85
+  },
+  {
+   "id": 1066,
+   "name": "くれなゐの色扇の薄重",
+   "rarity": 8,
+   "attack": 210,
+   "affinity": 15,
+   "element": {
+    "type": "water",
+    "value": 230
+   },
+   "sharpness": {
+    "base": [
+     80,
+     60,
+     40,
+     40,
+     60,
+     70
+    ],
+    "handicraftMax": [
+     80,
+     60,
+     40,
+     40,
+     60,
+     120
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 39,
+     "level": 3
+    },
+    {
+     "skillId": 82,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 294,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "泡狐竜派生",
+   "gameId": 86
+  },
+  {
+   "id": 1125,
+   "name": "ナーブアルファルドⅠ",
+   "rarity": 7,
+   "attack": 190,
+   "affinity": 25,
+   "element": null,
+   "sharpness": {
+    "base": [
+     50,
+     70,
+     100,
+     50,
+     80,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     70,
+     100,
+     50,
+     80,
+     50
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 163,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 266,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    0,
+    5
+   ],
+   "series": "千刃竜派生",
+   "gameId": 10
+  },
+  {
+   "id": 1126,
+   "name": "叛牙アルファルド",
+   "rarity": 8,
+   "attack": 210,
+   "affinity": 25,
+   "element": null,
+   "sharpness": {
+    "base": [
+     50,
+     70,
+     100,
+     50,
+     50,
+     30
+    ],
+    "handicraftMax": [
+     50,
+     70,
+     100,
+     50,
+     50,
+     80
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 163,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 294,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "千刃竜派生",
+   "gameId": 11
+  },
+  {
+   "id": 1127,
+   "name": "マイニングピッケル",
+   "rarity": 7,
+   "attack": 170,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     20,
+     40,
+     70,
+     100,
+     80,
+     40
+    ],
+    "handicraftMax": [
+     20,
+     40,
+     70,
+     100,
+     80,
+     90
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 164,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 238,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "工房武器派生",
+   "gameId": 87
+  },
+  {
+   "id": 1128,
+   "name": "鶴嘴剣ディグモア",
+   "rarity": 8,
+   "attack": 180,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     10,
+     30,
+     60,
+     90,
+     90,
+     70
+    ],
+    "handicraftMax": [
+     10,
+     30,
+     60,
+     90,
+     90,
+     120
+    ]
+   },
+   "slots": [
+    3,
+    3,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 164,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 252,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "工房武器派生",
+   "gameId": 88
+  },
+  {
+   "id": 1129,
+   "name": "ラギアソードⅠ",
+   "rarity": 7,
+   "attack": 200,
+   "affinity": 0,
+   "element": {
+    "type": "thunder",
+    "value": 250
+   },
+   "sharpness": {
+    "base": [
+     70,
+     50,
+     40,
+     100,
+     40,
+     50
+    ],
+    "handicraftMax": [
+     70,
+     50,
+     40,
+     100,
+     40,
+     100
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 2
+    },
+    {
+     "skillId": 165,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 280,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "海竜派生",
+   "gameId": 90
+  },
+  {
+   "id": 1130,
+   "name": "ハイラギアソード",
+   "rarity": 8,
+   "attack": 220,
+   "affinity": 0,
+   "element": {
+    "type": "thunder",
+    "value": 300
+   },
+   "sharpness": {
+    "base": [
+     60,
+     40,
+     30,
+     80,
+     60,
+     80
+    ],
+    "handicraftMax": [
+     60,
+     40,
+     30,
+     80,
+     60,
+     130
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 66,
+     "level": 2
+    },
+    {
+     "skillId": 165,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 308,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "海竜派生",
+   "gameId": 91
+  },
+  {
+   "id": 1137,
+   "name": "ブレードオブオメガ",
+   "rarity": 7,
+   "attack": 200,
+   "affinity": 10,
+   "element": null,
+   "sharpness": {
+    "base": [
+     100,
+     30,
+     70,
+     30,
+     80,
+     40
+    ],
+    "handicraftMax": [
+     100,
+     30,
+     70,
+     30,
+     80,
+     90
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 3
+    },
+    {
+     "skillId": 169,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 280,
+   "defenseBonus": 25,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "オメガ派生",
+   "gameId": 89
+  },
+  {
+   "id": 1138,
+   "name": "ブレードオブオメガ・真",
+   "rarity": 8,
+   "attack": 220,
+   "affinity": 10,
+   "element": null,
+   "sharpness": {
+    "base": [
+     100,
+     20,
+     60,
+     20,
+     80,
+     70
+    ],
+    "handicraftMax": [
+     100,
+     20,
+     60,
+     20,
+     80,
+     120
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 16,
+     "level": 3
+    },
+    {
+     "skillId": 169,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 308,
+   "defenseBonus": 25,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "オメガ派生",
+   "gameId": 92
+  },
+  {
+   "id": 1178,
+   "name": "ねこ？ぱんち",
+   "rarity": 7,
+   "attack": 220,
+   "affinity": 10,
+   "element": {
+    "type": "paralysis",
+    "value": 100
+   },
+   "sharpness": {
+    "base": [
+     50,
+     30,
+     70,
+     100,
+     100,
+     0
+    ],
+    "handicraftMax": [
+     50,
+     30,
+     70,
+     100,
+     150,
+     0
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    0
+   ],
+   "skills": [
+    {
+     "skillId": 179,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 308,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "アイルー派生",
+   "gameId": 93
+  },
+  {
+   "id": 1179,
+   "name": "にゃんにゃんぼう",
+   "rarity": 8,
+   "attack": 240,
+   "affinity": 10,
+   "element": {
+    "type": "paralysis",
+    "value": 140
+   },
+   "sharpness": {
+    "base": [
+     40,
+     20,
+     60,
+     100,
+     130,
+     0
+    ],
+    "handicraftMax": [
+     40,
+     20,
+     60,
+     100,
+     180,
+     0
+    ]
+   },
+   "slots": [
+    3,
+    2,
+    1
+   ],
+   "skills": [
+    {
+     "skillId": 179,
+     "level": 1
+    }
+   ],
+   "artian": false,
+   "gogmaArtian": false,
+   "note": "",
+   "attackDisplay": 336,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": "アイルー派生",
+   "gameId": 94
+  },
+  {
+   "id": 1180,
+   "name": "破滅のキリエヴェルド",
+   "rarity": 8,
+   "attack": 200,
+   "affinity": -10,
+   "element": null,
+   "sharpness": {
+    "base": [
+     140,
+     40,
+     40,
+     80,
+     30,
+     20
+    ],
+    "handicraftMax": [
+     140,
+     40,
+     40,
+     80,
+     30,
+     70
+    ]
+   },
+   "slots": [
+    3,
+    3,
+    3
+   ],
+   "skills": [],
+   "artian": true,
+   "gogmaArtian": true,
+   "note": "巨戟アーティア (攻撃激化。攻撃力と会心率から判定)。属性は手入力。ランダムスキル・シリーズ/グループスキルも手入力 (data/my_weapons.json)",
+   "attackDisplay": 280,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": null,
+   "gameId": 95,
+   "variant": "攻撃激化",
+   "displayName": "破滅のキリエヴェルド (攻撃激化)",
+   "mhwsAttributeValue": 260
+  },
+  {
+   "id": 1181,
+   "name": "破滅のキリエヴェルド",
+   "rarity": 8,
+   "attack": 180,
+   "affinity": 15,
+   "element": null,
+   "sharpness": {
+    "base": [
+     140,
+     40,
+     40,
+     50,
+     70,
+     10
+    ],
+    "handicraftMax": [
+     140,
+     40,
+     40,
+     50,
+     70,
+     60
+    ]
+   },
+   "slots": [
+    3,
+    3,
+    3
+   ],
+   "skills": [],
+   "artian": true,
+   "gogmaArtian": true,
+   "note": "巨戟アーティア (会心激化。攻撃力と会心率から判定)。属性は手入力。ランダムスキル・シリーズ/グループスキルも手入力 (data/my_weapons.json)",
+   "attackDisplay": 252,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": null,
+   "gameId": 96,
+   "variant": "会心激化",
+   "displayName": "破滅のキリエヴェルド (会心激化)",
+   "mhwsAttributeValue": 240
+  },
+  {
+   "id": 1182,
+   "name": "破滅のキリエヴェルド",
+   "rarity": 8,
+   "attack": 190,
+   "affinity": 0,
+   "element": null,
+   "sharpness": {
+    "base": [
+     140,
+     40,
+     40,
+     80,
+     30,
+     20
+    ],
+    "handicraftMax": [
+     140,
+     40,
+     40,
+     80,
+     30,
+     70
+    ]
+   },
+   "slots": [
+    3,
+    3,
+    3
+   ],
+   "skills": [],
+   "artian": true,
+   "gogmaArtian": true,
+   "note": "巨戟アーティア (属性激化。攻撃力と会心率から判定)。属性は手入力。ランダムスキル・シリーズ/グループスキルも手入力 (data/my_weapons.json)",
+   "attackDisplay": 266,
+   "defenseBonus": 0,
+   "elderseal": null,
+   "handicraft": [
+    5
+   ],
+   "series": null,
+   "gameId": 97,
+   "variant": "属性激化",
+   "displayName": "破滅のキリエヴェルド (属性激化)",
+   "mhwsAttributeValue": 300
+  }
+ ]
+}

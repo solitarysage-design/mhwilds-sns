@@ -1,0 +1,74 @@
+{
+ "meta": {
+  "source": [
+   "https://github.com/dzxrly/MHWS-in-json/releases/tag/database-20261020-070700-4a99b26"
+  ],
+  "generatedAt": "2026-10-21T03:14:39Z",
+  "gameVersion": "1.042",
+  "gameDataBuild": "1.42.0.2",
+  "license": "ゲームデータの抽出は dzxrly/MHWS-in-json (MIT)。数値はカプコンのゲームデータ由来。",
+  "note": "技 (motions_sns.json の moves[].id) の並び。onWound=true の段は傷口の肉質で計算する。"
+ },
+ "combos": [
+  {
+   "id": "just_rush_perfect",
+   "name": "ジャストラッシュ1周 (全段ジャスト成功)",
+   "steps": [
+    {
+     "move": "just_rush_1_just"
+    },
+    {
+     "move": "just_rush_2_just"
+    },
+    {
+     "move": "just_rush_3_just"
+    }
+   ],
+   "confidence": "medium",
+   "note": "ラッシュ部分だけ (入り口の飛び込み斬りは含めない)。3段目の盾ヒット (MV25) は対応が推定。"
+  },
+  {
+   "id": "focus_wound",
+   "name": "集中弱点攻撃で傷を突く",
+   "steps": [
+    {
+     "move": "aim_attack_wound",
+     "onWound": true
+    }
+   ],
+   "confidence": "high",
+   "note": "全ヒットを傷口の肉質で計算する (傷口の会心補正も乗る)。"
+  },
+  {
+   "id": "ground_basic",
+   "name": "通常の地上コンボ (△連携)",
+   "steps": [
+    {
+     "move": "slash_1"
+    },
+    {
+     "move": "slash_2"
+    },
+    {
+     "move": "slash_3"
+    },
+    {
+     "move": "slash_4"
+    }
+   ],
+   "confidence": "medium",
+   "note": "斬り下ろし→横斬り→斜め斬り上げ→斜め斬り下ろし。入力の並びはゲーム内ガイドの『威力の高い連携』を参考にした代表例。MV7 の追加ヒット (A#40) は発生条件不明なので含めない。"
+  },
+  {
+   "id": "charged_chop",
+   "name": "溜め斬り落とし (単発)",
+   "steps": [
+    {
+     "move": "finish_slash"
+    }
+   ],
+   "confidence": "medium",
+   "note": "子弾は通常 (MV14×4・属性補正0.3) の側。"
+  }
+ ]
+}

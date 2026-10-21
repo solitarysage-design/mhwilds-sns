@@ -1,0 +1,5620 @@
+{
+ "meta": {
+  "source": [
+   "https://wilds.mhdb.io/ja/skills",
+   "https://wilds.mhdb.io/ja/decorations",
+   "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/4a99b267930a0a83bcf45274733f169455c7b641/MHWS-in-json/natives/STM/GameDesign/Common/Equip/SkillCommonData.user.3.json"
+  ],
+  "generatedAt": "2026-10-21T03:08:26+00:00",
+  "gameVersion": "1.042",
+  "sourceVersions": {
+   "mhdb": "wilds.mhdb.io /ja/ (取得日時は meta.source の各 fetchedAt)",
+   "mhwsInJson": "dzxrly/MHWS-in-json database-20261020-070700-4a99b26 (commit 4a99b26, ゲーム版 1.42.0.2)"
+  },
+  "license": {
+   "mhdb": "wilds.mhdb.io (LartTyler/mhdb-wilds-data)。ゲームデータの数値と名前のみ使用",
+   "mhwsInJson": "MIT (dzxrly/MHWS-in-json)"
+  },
+  "checks": {
+   "gameIdMatched": "179/179",
+   "kindMismatches": []
+  },
+  "note": "decoSize は Lv1 を付ける単体装飾品のスロット Lv (無ければ null)。internalId は MHWS-in-json SkillCommonData の _skillId (gameId で結合)"
+ },
+ "skills": [
+  {
+   "id": 1,
+   "gameId": -2125233152,
+   "name": "龍耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "龍耐性＋６"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "龍耐性＋１２"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "龍耐性＋２０、防御力＋１０"
+    }
+   ],
+   "description": "プレイヤーの龍耐性を上げる。 レベルが上がると防御力にも 影響がある。",
+   "internalId": "HunterSkill_081",
+   "decorations": [
+    {
+     "decorationId": 58,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "gameId": -2123993856,
+   "name": "散弾・剛射強化",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": 3,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "対象の弾、矢の威力がわずかに上昇"
+    }
+   ],
+   "description": "ボウガンの散弾または 弓の剛射、クイックショットの攻撃力が 上がる。",
+   "internalId": "HunterSkill_040",
+   "decorations": [
+    {
+     "decorationId": 246,
+     "slot": 3,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "gameId": -2096489472,
+   "name": "見切り",
+   "kind": "weapon",
+   "maxLevel": 5,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "会心率＋４％"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "会心率＋８％"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "会心率＋１２％"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "会心率＋１６％"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "会心率＋２０％"
+    }
+   ],
+   "description": "会心率がＵＰする。",
+   "internalId": "HunterSkill_001",
+   "decorations": [
+    {
+     "decorationId": 128,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 262,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 85,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "gameId": -2041451904,
+   "name": "護竜の守り",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "竜都の護り",
+     "description": "竜都の跡形にいると、属性ダメージや 特殊ダメージが軽減される。"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_173",
+   "decorations": []
+  },
+  {
+   "id": 5,
+   "gameId": -2022542848,
+   "name": "爆破ビン追加",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "爆破ビンの装填が可能になる"
+    }
+   ],
+   "description": "弓装備中、爆破ビンの装填を 可能にする。",
+   "internalId": "HunterSkill_054",
+   "decorations": [
+    {
+     "decorationId": 109,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "gameId": -1961297152,
+   "name": "通常弾・通常矢強化",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": 3,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "対象の弾、矢の威力がわずかに上昇"
+    }
+   ],
+   "description": "ボウガンの通常弾または 弓の通常射撃、飛燕射ちの攻撃力が 上がる。",
+   "internalId": "HunterSkill_038",
+   "decorations": [
+    {
+     "decorationId": 318,
+     "slot": 3,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "gameId": -1961116288,
+   "name": "高速変形",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "速度が１．１倍になる"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "速度が１．２倍になり、 変形攻撃の威力が１．１倍になる"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "速度が１．３倍になり、 変形攻撃の威力が１．２倍になる"
+    }
+   ],
+   "description": "スラッシュアックスと チャージアックスの変形アクションの 速度と火力が上昇する。",
+   "internalId": "HunterSkill_047",
+   "decorations": [
+    {
+     "decorationId": 319,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 258,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 46,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "gameId": -1946345856,
+   "name": "抜刀術【力】",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "気絶を誘発する効果がわずかに付く 武器出し攻撃の基礎攻撃力＋３"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "気絶を誘発する効果が付く 武器出し攻撃の基礎攻撃力＋５"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "気絶を誘発する効果が大きく付く 武器出し攻撃の基礎攻撃力＋７"
+    }
+   ],
+   "description": "武器出し攻撃に気絶を誘発する力が 追加・強化され、攻撃力も少し上がる。 （騎乗中は発動しません）",
+   "internalId": "HunterSkill_030",
+   "decorations": [
+    {
+     "decorationId": 89,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 315,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 244,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "gameId": -1863702144,
+   "name": "麻痺属性強化",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "麻痺の蓄積値を１．０５倍し、 麻痺の蓄積値に＋１０"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "麻痺の蓄積値を１．１倍し、 麻痺の蓄積値に＋２０"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "麻痺の蓄積値を１．２倍し、 麻痺の蓄積値に＋５０"
+    }
+   ],
+   "description": "麻痺属性の蓄積値を強化する。 （武器の属性値の強化には、 　上限があります）",
+   "internalId": "HunterSkill_011",
+   "decorations": [
+    {
+     "decorationId": 105,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 279,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 121,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "gameId": -1769550080,
+   "name": "ヌシの誇り",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "激励",
+     "description": "旋律効果など、一定範囲内の仲間に 作用する効果を発動した際、一時攻撃力 上昇効果を追加で付与する"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_170",
+   "decorations": []
+  },
+  {
+   "id": 11,
+   "gameId": -1768553344,
+   "name": "雷顎竜の闘志",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "無尽蔵Ⅰ",
+     "description": "追加のスタミナゲージを得る"
+    },
+    {
+     "level": 2,
+     "name": "無尽蔵Ⅱ",
+     "description": "長い追加のスタミナゲージを得る"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_187",
+   "decorations": []
+  },
+  {
+   "id": 12,
+   "gameId": -1716324608,
+   "name": "毒属性強化",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "毒の蓄積値を１．０５倍し、 毒の蓄積値に＋１０"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "毒の蓄積値を１．１倍し、 毒の蓄積値に＋２０"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "毒の蓄積値を１．２倍し、 毒の蓄積値に＋５０"
+    }
+   ],
+   "description": "毒属性の蓄積値を強化する。 （武器の属性値の強化には、 　上限があります）",
+   "internalId": "HunterSkill_010",
+   "decorations": [
+    {
+     "decorationId": 1,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 37,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 81,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 13,
+   "gameId": -1700743296,
+   "name": "災禍転福",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル発動中、属性攻撃値と 状態異常蓄積値がわずかに上昇"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "スキル発動中、属性攻撃値と 状態異常蓄積値が上昇"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "スキル発動中、属性攻撃値と 状態異常蓄積値が大きく上昇"
+    }
+   ],
+   "description": "状態異常や属性やられを解除すると 一定時間属性値、状態異常値が 上がる。",
+   "internalId": "HunterSkill_113",
+   "decorations": [
+    {
+     "decorationId": 283,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 14,
+   "gameId": -1689391744,
+   "name": "体術",
+   "kind": "armor",
+   "maxLevel": 5,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "固定スタミナ消費量１０％軽減"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "固定スタミナ消費量２０％軽減"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "固定スタミナ消費量３０％軽減"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "固定スタミナ消費量４０％軽減"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "固定スタミナ消費量５０％軽減"
+    }
+   ],
+   "description": "回避などの固定でスタミナを消費する 行動のスタミナ消費量が軽減される。",
+   "internalId": "HunterSkill_025",
+   "decorations": [
+    {
+     "decorationId": 63,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "gameId": -1684613760,
+   "name": "アイテム使用強化",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "効果時間１．１倍"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "効果時間１．２５倍"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "効果時間１．５倍"
+    }
+   ],
+   "description": "一部のアイテムの効果時間が長くなる。",
+   "internalId": "HunterSkill_097",
+   "decorations": [
+    {
+     "decorationId": 356,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 16,
+   "gameId": -1674114176,
+   "name": "ガード強化",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "ダメージを１０％軽減し、 条件を満たした時、さらに２０％軽減"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "ダメージを２０％軽減し、 条件を満たした時、さらに３０％軽減"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "ダメージを３０％軽減し、 条件を満たした時、さらに５０％軽減"
+    }
+   ],
+   "description": "ガード時に受けるダメージを軽減し、 通常はガードできない攻撃も、 ガードできるようになる。",
+   "internalId": "HunterSkill_027",
+   "decorations": [
+    {
+     "decorationId": 331,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 142,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 309,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 17,
+   "gameId": -1664678272,
+   "name": "鱗重ねの工夫",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "奮起",
+     "description": "体力が４０％以下になった時、 一定時間スタミナの消費量が 減少する"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_167",
+   "decorations": []
+  },
+  {
+   "id": 18,
+   "gameId": -1662120192,
+   "name": "無我の境地",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "狂竜ウイルスに感染した時、 わずかに克服しやすくなる。 克服状態の時、さらに会心率＋３％"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "狂竜ウイルスに感染した時、 克服しやすくなる。 克服状態の時、さらに会心率＋６％"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "狂竜ウイルスに感染した時、 かなり克服しやすくなる。 克服状態の時、さらに会心率＋１０％"
+    }
+   ],
+   "description": "狂竜ウイルスに感染した時、 狂竜症を克服しやすくなり、 克服状態の会心率が増加する。",
+   "internalId": "HunterSkill_195",
+   "decorations": [
+    {
+     "decorationId": 59,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 19,
+   "gameId": -1648695680,
+   "name": "革細工の柔性",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "採集の達人",
+     "description": "採集行動の速度が速くなり、 採集・剥ぎ取り中に攻撃を 受けてものけぞらなくなる"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_164",
+   "decorations": []
+  },
+  {
+   "id": 20,
+   "gameId": -1642078720,
+   "name": "先達の導き",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "探索者の幸運",
+     "description": "活性化している採取ポイントの 発生確率が上がる"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_174",
+   "decorations": []
+  },
+  {
+   "id": 21,
+   "gameId": -1629629184,
+   "name": "毒ダメージ強化",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "毒の効果時間が１．２倍になる"
+    }
+   ],
+   "description": "モンスターに与える毒の効果時間を 高める。",
+   "internalId": "HunterSkill_141",
+   "decorations": [
+    {
+     "decorationId": 22,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 22,
+   "gameId": -1607763456,
+   "name": "超会心",
+   "kind": "weapon",
+   "maxLevel": 5,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "会心攻撃時のダメージ倍率を １．２８倍に強化する"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "会心攻撃時のダメージ倍率を １．３１倍に強化する"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "会心攻撃時のダメージ倍率を １．３４倍に強化する"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "会心攻撃時のダメージ倍率を １．３７倍に強化する"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "会心攻撃時のダメージ倍率を １．４倍に強化する"
+    }
+   ],
+   "description": "会心攻撃のダメージが増加する。",
+   "internalId": "HunterSkill_002",
+   "decorations": [
+    {
+     "decorationId": 312,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 98,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 305,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 23,
+   "gameId": -1507579776,
+   "name": "速射強化",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": 3,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "速射弾の威力１．０５倍"
+    }
+   ],
+   "description": "ライトボウガンの 速射を強化する。",
+   "internalId": "HunterSkill_045",
+   "decorations": [
+    {
+     "decorationId": 27,
+     "slot": 3,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 24,
+   "gameId": -1475134080,
+   "name": "チャージマスター",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "溜め攻撃の属性攻撃値と 状態異常蓄積値がわずかに上昇"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "溜め攻撃の属性攻撃値と 状態異常蓄積値が上昇"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "溜め攻撃の属性攻撃値と 状態異常蓄積値が大きく上昇"
+    }
+   ],
+   "description": "溜め攻撃の属性値と状態異常蓄積値が 上がる。",
+   "internalId": "HunterSkill_048",
+   "decorations": [
+    {
+     "decorationId": 14,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 140,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 271,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 25,
+   "gameId": -1468066176,
+   "name": "暗器蛸の力",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "蛮勇の食卓Ⅰ",
+     "description": "こんがり肉などのアイテムを食べた時、 一定時間、基礎攻撃力＋１５"
+    },
+    {
+     "level": 2,
+     "name": "蛮勇の食卓Ⅱ",
+     "description": "こんがり肉などのアイテムを食べた時、 一定時間、基礎攻撃力＋３０"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_188",
+   "decorations": []
+  },
+  {
+   "id": 26,
+   "gameId": -1432692352,
+   "name": "護鎖刃竜の命脈",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "破壊衝動Ⅰ",
+     "description": "大型モンスターの傷口を破壊した時、 体力が少し回復する"
+    },
+    {
+     "level": 2,
+     "name": "破壊衝動Ⅱ",
+     "description": "大型モンスターの傷口を破壊した時、 体力が回復する"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_184",
+   "decorations": []
+  },
+  {
+   "id": 27,
+   "gameId": -1305836672,
+   "name": "護竜の脈動",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "竜乳活性",
+     "description": "竜乳結晶の近くにいると、赤ゲージと スタミナの回復速度が上昇する。"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_172",
+   "decorations": []
+  },
+  {
+   "id": 28,
+   "gameId": -1304512512,
+   "name": "飛び込み",
+   "kind": "armor",
+   "maxLevel": 1,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル発動可能"
+    }
+   ],
+   "description": "大型モンスターに向かってジャンプ 回避ができるようになる。 また、飛距離も延びる。",
+   "internalId": "HunterSkill_106",
+   "decorations": [
+    {
+     "decorationId": 132,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 29,
+   "gameId": -1237438336,
+   "name": "笛吹き名人",
+   "kind": "weapon",
+   "maxLevel": 2,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "狩猟笛の旋律効果時間延長 体力回復上昇率ＵＰ"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "狩猟笛の旋律効果時間を さらに延長"
+    }
+   ],
+   "description": "狩猟笛の旋律効果の持続時間が 長くなる。（武器変更をすると、この スキルの効果は失われます）",
+   "internalId": "HunterSkill_034",
+   "decorations": [
+    {
+     "decorationId": 123,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 30,
+   "gameId": -1235658624,
+   "name": "体力回復量ＵＰ",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "回復量がわずかに増加する"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "回復量が少し増加する"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "回復量がかなり増加する"
+    }
+   ],
+   "description": "体力回復がおこなわれたときに 回復量が上がる。",
+   "internalId": "HunterSkill_069",
+   "decorations": [
+    {
+     "decorationId": 270,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 31,
+   "gameId": -1121468544,
+   "name": "回復速度",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "赤ゲージの自動回復速度２倍"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "赤ゲージの自動回復速度３倍"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "赤ゲージの自動回復速度４倍"
+    }
+   ],
+   "description": "ダメージを受けた際の 赤ゲージ部分の回復速度が上がる。",
+   "internalId": "HunterSkill_070",
+   "decorations": [
+    {
+     "decorationId": 56,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 32,
+   "gameId": -1073401280,
+   "name": "納刀術",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "速度がわずかに上昇する"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "速度が上昇する"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "速度がかなり上昇する"
+    }
+   ],
+   "description": "武器をしまう速度が速くなる。",
+   "internalId": "HunterSkill_031",
+   "decorations": [
+    {
+     "decorationId": 141,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 33,
+   "gameId": -964369920,
+   "name": "鎖刃竜の飢餓",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "加速再生Ⅰ",
+     "description": "継続してモンスターに攻撃を当てると、 体力が少し回復する （武器種により回復量は変動）"
+    },
+    {
+     "level": 2,
+     "name": "加速再生Ⅱ",
+     "description": "継続してモンスターに攻撃を当てると、 体力が回復する （武器種により回復量は変動）"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_185",
+   "decorations": []
+  },
+  {
+   "id": 34,
+   "gameId": -911441792,
+   "name": "花舞の祈り",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "地の恵み【花舞】Ⅰ",
+     "description": "花舞の儀の期間中、クエストの報酬に 特別なアイテムが追加される （クエストの途中からは発動しない）"
+    },
+    {
+     "level": 2,
+     "name": "地の恵み【花舞】Ⅱ",
+     "description": "花舞の儀の期間中、クエストの報酬に 特別なアイテムが追加され、 攻撃力と防御力が大きく上昇する"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_207",
+   "decorations": []
+  },
+  {
+   "id": 35,
+   "gameId": -895828480,
+   "name": "風圧耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "風圧【小】を無効化し、 風圧【大】の影響を半減する"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "風圧【小】【大】を無効化し、 龍風圧の影響を半減する"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "全ての風圧を無効化する"
+    }
+   ],
+   "description": "風圧に対する耐性を持つ。",
+   "internalId": "HunterSkill_073",
+   "decorations": [
+    {
+     "decorationId": 104,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 36,
+   "gameId": -893407296,
+   "name": "ＫＯ術",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "気絶威力１．２倍"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "気絶威力１．３倍"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "気絶威力１．４倍"
+    }
+   ],
+   "description": "モンスターを気絶状態に しやすくなる。",
+   "internalId": "HunterSkill_032",
+   "decorations": [
+    {
+     "decorationId": 93,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 247,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 277,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 37,
+   "gameId": -857543744,
+   "name": "ボマー",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "威力１．１倍"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "威力１．２倍"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "威力１．３倍"
+    }
+   ],
+   "description": "爆弾系アイテムのダメージが上がる。",
+   "internalId": "HunterSkill_095",
+   "decorations": [
+    {
+     "decorationId": 135,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 38,
+   "gameId": -856322816,
+   "name": "鎖刃刺撃",
+   "kind": "armor",
+   "maxLevel": 5,
+   "decoSize": 3,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "わずかに傷をつけやすくなる。 追加で無属性ダメージが発生する。"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "少し傷をつけやすくなる。 追加で発生する無属性ダメージが わずかに上昇する。"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "傷をつけやすくなる。 追加で発生する無属性ダメージが 少し上昇する。"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "かなり傷をつけやすくなる。 追加で発生する無属性ダメージが 上昇する。"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "とても傷をつけやすくなる。 追加で発生する無属性ダメージが 大きく上昇する。"
+    }
+   ],
+   "description": "傷をつけやすくなる。攻撃でダメージを 蓄積させると、追加で無属性ダメージが 発生する。（一部特定の攻撃は対象外）",
+   "internalId": "HunterSkill_146",
+   "decorations": [
+    {
+     "decorationId": 3,
+     "slot": 3,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 39,
+   "gameId": -847539392,
+   "name": "濡れ刃紋",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "水に濡れている時、会心率UP＋３％ 泡状態の時、会心率UP＋７％"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "水に濡れている時、会心率UP＋６％ 泡状態の時、会心率UP＋１４％"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "水に濡れている時、会心率UP＋９％ 泡状態の時、会心率UP＋２１％"
+    }
+   ],
+   "description": "水に濡れた時、または泡状態の時、 一定時間、会心率が上昇する。 （それぞれの条件で重複して効果が発動）",
+   "internalId": "HunterSkill_202",
+   "decorations": []
+  },
+  {
+   "id": 40,
+   "gameId": -844978880,
+   "name": "爆破属性強化",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "爆破の蓄積値を１．０５倍し、 爆破の蓄積値に＋１０"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "爆破の蓄積値を１．１倍し、 爆破の蓄積値に＋２０"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "爆破の蓄積値を１．２倍し、 爆破の蓄積値に＋５０"
+    }
+   ],
+   "description": "爆破属性の蓄積値を強化する。 （武器の属性値の強化には、 　上限があります）",
+   "internalId": "HunterSkill_013",
+   "decorations": [
+    {
+     "decorationId": 91,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 97,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 344,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 41,
+   "gameId": -776946176,
+   "name": "龍属性攻撃強化",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "龍属性攻撃値＋４０"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "龍属性攻撃値を１．１倍し、 龍属性攻撃値に＋５０"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "龍属性攻撃値を１．２倍し、 龍属性攻撃値に＋６０"
+    }
+   ],
+   "description": "龍属性の力を強化する。 （武器の属性値の強化には、 　上限があります）",
+   "internalId": "HunterSkill_009",
+   "decorations": [
+    {
+     "decorationId": 357,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 144,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 32,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 42,
+   "gameId": -692636288,
+   "name": "クライマー",
+   "kind": "armor",
+   "maxLevel": 1,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スタミナ消費量５０％減少"
+    }
+   ],
+   "description": "ツタにつかまり中の行動で 消費するスタミナ量が減る。",
+   "internalId": "HunterSkill_109",
+   "decorations": [
+    {
+     "decorationId": 349,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 43,
+   "gameId": -682586176,
+   "name": "ランナー",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "継続スタミナ消費量１５％軽減"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "継続スタミナ消費量３０％軽減"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "継続スタミナ消費量５０％軽減"
+    }
+   ],
+   "description": "ダッシュなどの徐々にスタミナを 消費する行動のスタミナ消費量が 減少する。",
+   "internalId": "HunterSkill_024",
+   "decorations": [
+    {
+     "decorationId": 342,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 44,
+   "gameId": -676967744,
+   "name": "麻痺ビン追加",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": 3,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "麻痺ビンの装填が可能になる"
+    }
+   ],
+   "description": "弓装備中、麻痺ビンの装填を 可能にする。",
+   "internalId": "HunterSkill_052",
+   "decorations": [
+    {
+     "decorationId": 92,
+     "slot": 3,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 45,
+   "gameId": -632440576,
+   "name": "緩衝",
+   "kind": "armor",
+   "maxLevel": 1,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "同行する仲間に攻撃を当てた際、または 仲間からの攻撃が当たった際それぞれの ダメージリアクションを無効化する。",
+   "internalId": "HunterSkill_050",
+   "decorations": [
+    {
+     "decorationId": 293,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 46,
+   "gameId": -609509888,
+   "name": "耐震",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "振動やられ【極小】を無効化し、 振動やられ【小】の影響を半減する"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "振動やられ【小】までを無効化し、 振動やられ【大】の影響を 大きく軽減する"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "全ての振動を無効化する"
+    }
+   ],
+   "description": "地面振動に対する耐性を持つ。",
+   "internalId": "HunterSkill_074",
+   "decorations": [
+    {
+     "decorationId": 359,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 47,
+   "gameId": -596764096,
+   "name": "砲術",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "対象の攻撃威力が少し上昇 竜撃砲の発射を少し早くする 砲撃の火属性攻撃値＋３０"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "対象の攻撃威力が上昇 竜撃砲の発射を早くする 砲撃の火属性攻撃値＋６０"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "対象の攻撃威力が大きく上昇 竜撃砲の発射をかなり早くする 砲撃の火属性攻撃値＋９０"
+    }
+   ],
+   "description": "ガンランスの砲撃、竜撃砲、 盾斧のビン攻撃、徹甲榴弾など、 爆発を伴う攻撃の威力が上昇する。",
+   "internalId": "HunterSkill_035",
+   "decorations": [
+    {
+     "decorationId": 251,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 151,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 289,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 48,
+   "gameId": -593005376,
+   "name": "環境利用の知識",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "体力が５０回復する"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "体力が８０回復する"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "体力が１００回復する"
+    }
+   ],
+   "description": "任意発動できる環境利用時に、 体力が追加で回復できるようになる。",
+   "internalId": "HunterSkill_134",
+   "decorations": [
+    {
+     "decorationId": 68,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 49,
+   "gameId": -568838336,
+   "name": "属性やられ耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "すべての属性やられの 効果時間を５０％減らす"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "すべての属性やられの 効果時間を７５％減らす"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "すべての属性やられを 無効化する"
+    }
+   ],
+   "description": "全ての属性やられ状態に対する 耐性を得る。",
+   "internalId": "HunterSkill_082",
+   "decorations": []
+  },
+  {
+   "id": 50,
+   "gameId": -562534336,
+   "name": "火属性攻撃強化",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "火属性攻撃値＋４０"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "火属性攻撃値を１．１倍し、 火属性攻撃値に＋５０"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "火属性攻撃値を１．２倍し、 火属性攻撃値に＋６０"
+    }
+   ],
+   "description": "火属性の力を強化する。 （武器の属性値の強化には、 　上限があります）",
+   "internalId": "HunterSkill_005",
+   "decorations": [
+    {
+     "decorationId": 155,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 154,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 294,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 51,
+   "gameId": -555494336,
+   "name": "白熾龍の脈動",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "超回復力Ⅰ",
+     "description": "体力に赤ゲージが無い状態でも、 最大値までゆるやかに自動回復が 継続する。"
+    },
+    {
+     "level": 2,
+     "name": "超回復力Ⅱ",
+     "description": "体力に赤ゲージが無い状態でも 最大値まで自動回復が継続する。"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_203",
+   "decorations": []
+  },
+  {
+   "id": 52,
+   "gameId": -481419552,
+   "name": "キノコ大好き",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "アオキノコと毒テングダケを 食べられるようになる"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "更にニトロダケとマヒダケを 食べられるようになる"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "更にマンドラゴラ、鬼ニトロダケ、 ドキドキノコを食べられるようになる"
+    }
+   ],
+   "description": "普段は食べられないキノコが食べられる ようになり、有効な効果を得られるよう になる。",
+   "internalId": "HunterSkill_096",
+   "decorations": [
+    {
+     "decorationId": 152,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 53,
+   "gameId": -420608864,
+   "name": "弾導強化",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "適正距離がわずかに広くなる"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "適正距離が広くなる"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "適正距離が大幅に広くなる。 適正距離で命中した射撃の 威力が上昇する。"
+    }
+   ],
+   "description": "弾・矢の最大威力状態になる距離が 広くなる。レベルが上がると威力も 上昇する。",
+   "internalId": "HunterSkill_019",
+   "decorations": [
+    {
+     "decorationId": 75,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 6,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 324,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 54,
+   "gameId": -418246240,
+   "name": "鎧竜の守護",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "無傷の重装Ⅰ",
+     "description": "体力が最大の時、受けるダメージを ２０％軽減する"
+    },
+    {
+     "level": 2,
+     "name": "無傷の重装Ⅱ",
+     "description": "体力が最大の時、受けるダメージを ３５％軽減する"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_181",
+   "decorations": []
+  },
+  {
+   "id": 55,
+   "gameId": -411441344,
+   "name": "悪臭耐性",
+   "kind": "armor",
+   "maxLevel": 2,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "悪臭状態の時間を５０％減らす"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "悪臭状態にならない"
+    }
+   ],
+   "description": "悪臭状態に対する耐性を持つ。",
+   "internalId": "HunterSkill_122",
+   "decorations": [
+    {
+     "decorationId": 303,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 56,
+   "gameId": -403054144,
+   "name": "泡狐竜の力",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "泡沫の舞Ⅰ",
+     "description": "泡状態【大】にならなくなる。 回避行動を複数回行うことで 泡状態【小】になる。"
+    },
+    {
+     "level": 2,
+     "name": "泡沫の舞Ⅱ",
+     "description": "Ⅰと同様の効果が発動する。 泡状態の時に回避能力が強化される。"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_200",
+   "decorations": []
+  },
+  {
+   "id": 57,
+   "gameId": -397570464,
+   "name": "弱点特効",
+   "kind": "armor",
+   "maxLevel": 5,
+   "decoSize": 3,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "有効部位への攻撃時、会心率＋５％ 傷口への攻撃時、さらに会心率＋３％"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "有効部位への攻撃時、会心率＋１０％ 傷口への攻撃時、さらに会心率＋５％"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "有効部位への攻撃時、会心率＋１５％ 傷口への攻撃時、さらに会心率＋１０％"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "有効部位への攻撃時、会心率＋２０％ 傷口への攻撃時、さらに会心率＋１５％"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "有効部位への攻撃時、会心率＋３０％ 傷口への攻撃時、さらに会心率＋２０％"
+    }
+   ],
+   "description": "モンスターを攻撃した際、 その部位に攻撃がかなり有効であれば、 会心率が上がる。",
+   "internalId": "HunterSkill_062",
+   "decorations": [
+    {
+     "decorationId": 288,
+     "slot": 3,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 58,
+   "gameId": -315492576,
+   "name": "スタミナ急速回復",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "回復速度１．１倍"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "回復速度１．３倍"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "回復速度１．５倍"
+    }
+   ],
+   "description": "スタミナの回復速度が速くなる。",
+   "internalId": "HunterSkill_065",
+   "decorations": [
+    {
+     "decorationId": 112,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 59,
+   "gameId": -307644128,
+   "name": "ガード性能",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "攻撃の威力をわずかに軽減。 スタミナ消費量を１５％軽減。"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "攻撃の威力を軽減。 スタミナ消費量を３０％軽減。"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "攻撃の威力を大きく軽減。 スタミナ消費量を５０％軽減。"
+    }
+   ],
+   "description": "ガード時にのけぞりにくくなり、 消費スタミナも軽減される。",
+   "internalId": "HunterSkill_026",
+   "decorations": [
+    {
+     "decorationId": 149,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 350,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 354,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 60,
+   "gameId": -283334048,
+   "name": "集中",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "ゲージ上昇率がわずかに上がる 溜め時間５％短縮"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "ゲージ上昇率が少し上がる 溜め時間１０％短縮"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "ゲージ上昇率が上がる 溜め時間１５％短縮"
+    }
+   ],
+   "description": "溜め攻撃の溜まる速度が速くなり、 太刀、双剣、銃槍、剣斧、盾斧、弓、 ボウガンのゲージが溜まりやすくなる。",
+   "internalId": "HunterSkill_022",
+   "decorations": [
+    {
+     "decorationId": 347,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 291,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 106,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 61,
+   "gameId": -257693696,
+   "name": "閃光強化",
+   "kind": "armor",
+   "maxLevel": 1,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "閃光効果の効きやすさＵＰ"
+    }
+   ],
+   "description": "発生させた閃光が効きやすくなる。",
+   "internalId": "HunterSkill_136",
+   "decorations": [
+    {
+     "decorationId": 321,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 62,
+   "gameId": -215826112,
+   "name": "凍峰竜の反逆",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "束縛反攻Ⅰ",
+     "description": "糸拘束状態、凍結状態の回復時、または 拘束攻撃から解放された時、鍔迫り合い の後、一定時間、攻撃力が上昇"
+    },
+    {
+     "level": 2,
+     "name": "束縛反攻Ⅱ",
+     "description": "糸拘束状態、凍結状態の回復時、または 拘束攻撃から解放された時、鍔迫り合い の後、一定時間、攻撃力が大きく上昇"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_179",
+   "decorations": []
+  },
+  {
+   "id": 63,
+   "gameId": -201445760,
+   "name": "水場・油泥適応",
+   "kind": "armor",
+   "maxLevel": 2,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "水場・油泥の移動制限と 濁流の影響を無効化し、 龍骨油の移動制限を軽減する"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "さらに波による影響を無効化する"
+    }
+   ],
+   "description": "水場や油泥での行動制限や、水の流れ による行動制限に対する耐性を持つ。",
+   "internalId": "HunterSkill_088",
+   "decorations": [
+    {
+     "decorationId": 28,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 64,
+   "gameId": -193031552,
+   "name": "睡眠耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "睡眠状態の時間を３０％減らす"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "睡眠状態の時間を６０％減らす"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "睡眠状態にならない"
+    }
+   ],
+   "description": "睡眠状態の時間を短くする。",
+   "internalId": "HunterSkill_085",
+   "decorations": [
+    {
+     "decorationId": 57,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 65,
+   "gameId": -181774400,
+   "name": "減気ビン追加",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "減気ビンの装着が可能になる"
+    }
+   ],
+   "description": "弓装備中、減気ビンの装填を 可能にする。",
+   "internalId": "HunterSkill_199",
+   "decorations": [
+    {
+     "decorationId": 308,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 66,
+   "gameId": -181127504,
+   "name": "攻めの守勢",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル発動中、 攻撃力１．０５倍"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "スキル発動中、 攻撃力１．１倍"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "スキル発動中、 攻撃力１．１５倍"
+    }
+   ],
+   "description": "タイミング良くガードを成功させると、 一定時間、攻撃力が上がる。",
+   "internalId": "HunterSkill_028",
+   "decorations": [
+    {
+     "decorationId": 48,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 102,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 71,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 67,
+   "gameId": -171796848,
+   "name": "急襲",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル発動中、攻撃力１．０５倍"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "スキル発動中、攻撃力１．１倍"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "スキル発動中、攻撃力１．１５倍"
+    }
+   ],
+   "description": "大型モンスターへの奇襲攻撃が 成功すると一定時間、攻撃が上昇する。",
+   "internalId": "HunterSkill_116",
+   "decorations": [
+    {
+     "decorationId": 282,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 68,
+   "gameId": -168922880,
+   "name": "会心撃【特殊】",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "攻撃で会心が発生した際に、 与える状態異常値がわずかに上昇"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "攻撃で会心が発生した際に、 与える状態異常値が上昇"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "攻撃で会心が発生した際に、 与える状態異常値が大きく上昇"
+    }
+   ],
+   "description": "攻撃で会心が発生した際に、 与える状態異常値（麻痺、毒、 睡眠、爆破）が高くなる。",
+   "internalId": "HunterSkill_056",
+   "decorations": [
+    {
+     "decorationId": 254,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 329,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 34,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 69,
+   "gameId": -160562336,
+   "name": "特殊射撃強化",
+   "kind": "weapon",
+   "maxLevel": 2,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "対象の弾、矢の威力が少し上昇"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "対象の弾、矢の威力が上昇"
+    }
+   ],
+   "description": "ボウガンの特殊弾と 弓の竜の一矢、竜の千々矢、導ノ矢の 威力が上がる。",
+   "internalId": "HunterSkill_037",
+   "decorations": [
+    {
+     "decorationId": 325,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 60,
+     "slot": 2,
+     "level": 2
+    }
+   ]
+  },
+  {
+   "id": 70,
+   "gameId": -62248528,
+   "name": "闢獣の力",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "力自慢Ⅰ",
+     "description": "鍔迫り合い、または相殺が成功した時、 一定時間、基礎攻撃力＋１０"
+    },
+    {
+     "level": 2,
+     "name": "力自慢Ⅱ",
+     "description": "鍔迫り合い、または相殺が成功した時、 一定時間、基礎攻撃力＋２５"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_175",
+   "decorations": []
+  },
+  {
+   "id": 71,
+   "gameId": -3666104,
+   "name": "火竜の力",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "灼熱化Ⅰ",
+     "description": "攻撃を当てた時、確率で 追加の火属性ダメージを与える"
+    },
+    {
+     "level": 2,
+     "name": "灼熱化Ⅱ",
+     "description": "追加で与える火属性ダメージが 上昇する"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_180",
+   "decorations": []
+  },
+  {
+   "id": 72,
+   "gameId": 1,
+   "name": "攻撃",
+   "kind": "weapon",
+   "maxLevel": 5,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "基礎攻撃力＋３"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "基礎攻撃力＋５"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "基礎攻撃力＋７"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "攻撃力を１．０２倍し、 基礎攻撃力＋８"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "攻撃力を１．０４倍し、 基礎攻撃力＋９"
+    }
+   ],
+   "description": "プレイヤーの攻撃力を上げる。",
+   "internalId": "HunterSkill_000",
+   "decorations": [
+    {
+     "decorationId": 255,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 15,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 263,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 73,
+   "gameId": 2237,
+   "name": "栄光の誉れ",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "幸運",
+     "description": "クエストのターゲット報酬が増える （クエストの途中からは発動しない）"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_227",
+   "decorations": []
+  },
+  {
+   "id": 74,
+   "gameId": 13941,
+   "name": "祝祭の巡り",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "剥ぎ取り名人",
+     "description": "クエスト中、素材を剥ぎ取れる回数＋１ （クエストの途中からは発動しない）"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_219",
+   "decorations": []
+  },
+  {
+   "id": 75,
+   "gameId": 27684744,
+   "name": "攻勢",
+   "kind": "armor",
+   "maxLevel": 5,
+   "decoSize": 3,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "毒、麻痺状態の大型モンスターに対して 基礎攻撃力＋６"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "毒、麻痺状態の大型モンスターに対して 基礎攻撃力＋８、会心率＋５％"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "毒、麻痺状態の大型モンスターに対して 基礎攻撃力＋１０、会心率＋１０％"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "毒、麻痺状態の大型モンスターに対して 基礎攻撃力＋１２、会心率＋１５％"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "毒、麻痺状態の大型モンスターに対して 基礎攻撃力＋１５、会心率＋２０％"
+    }
+   ],
+   "description": "毒、麻痺状態の大型モンスターに対して 攻撃力と会心率が上がる。",
+   "internalId": "HunterSkill_111",
+   "decorations": [
+    {
+     "decorationId": 39,
+     "slot": 3,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 76,
+   "gameId": 78208296,
+   "name": "ジャンプ鉄人",
+   "kind": "armor",
+   "maxLevel": 1,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "ジャンプ中、のけぞり無効"
+    }
+   ],
+   "description": "ジャンプ中に攻撃を受けても、 のけぞらなくなる。",
+   "internalId": "HunterSkill_103",
+   "decorations": [
+    {
+     "decorationId": 80,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 77,
+   "gameId": 144660544,
+   "name": "回避性能",
+   "kind": "armor",
+   "maxLevel": 5,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "無敵時間が ほんのわずかに延長"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "無敵時間がわずかに延長"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "無敵時間が延長"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "無敵時間が大きく延長"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "無敵時間がとても大きく延長"
+    }
+   ],
+   "description": "回避時の無敵時間が長くなる。",
+   "internalId": "HunterSkill_075",
+   "decorations": [
+    {
+     "decorationId": 332,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 78,
+   "gameId": 166057120,
+   "name": "睡眠属性強化",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "睡眠の蓄積値を１．０５倍し、 睡眠の蓄積値に＋１０"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "睡眠の蓄積値を１．１倍し、 睡眠の蓄積値に＋２０"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "睡眠の蓄積値を１．２倍し、 睡眠の蓄積値に＋５０"
+    }
+   ],
+   "description": "睡眠属性の蓄積値を強化する。 （武器の属性値の強化には、 　上限があります）",
+   "internalId": "HunterSkill_012",
+   "decorations": [
+    {
+     "decorationId": 5,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 9,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 31,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 79,
+   "gameId": 169998480,
+   "name": "睡眠ビン追加",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": 3,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "睡眠ビンの装填が可能になる"
+    }
+   ],
+   "description": "弓装備中、睡眠ビンの装填を 可能にする。",
+   "internalId": "HunterSkill_053",
+   "decorations": [
+    {
+     "decorationId": 78,
+     "slot": 3,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 80,
+   "gameId": 192746944,
+   "name": "耳栓",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "咆哮【小】の影響を軽減する"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "咆哮【小】を無効化し、 咆哮【大】の影響を軽減する"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "咆哮【小】【大】を無効化する"
+    }
+   ],
+   "description": "大型モンスターの咆哮に対する 耐性を持つ。",
+   "internalId": "HunterSkill_072",
+   "decorations": [
+    {
+     "decorationId": 62,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 81,
+   "gameId": 280489184,
+   "name": "逆襲",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋１０"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋１５ 効果時間が少し延長される"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋２５ 効果時間が延長される"
+    }
+   ],
+   "description": "ふきとばされた後は、一定時間 攻撃力が上がる。",
+   "internalId": "HunterSkill_110",
+   "decorations": [
+    {
+     "decorationId": 323,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 82,
+   "gameId": 313598432,
+   "name": "会心撃【属性】",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "効果発動時、 属性ダメージがわずかに上昇"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "効果発動時、 属性ダメージが上昇"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "効果発動時、 属性ダメージが大きく上昇"
+    }
+   ],
+   "description": "攻撃で会心が発生した際に、 与える属性ダメージ （火、水、雷、氷、龍）が高くなる。",
+   "internalId": "HunterSkill_003",
+   "decorations": [
+    {
+     "decorationId": 103,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 320,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 343,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 83,
+   "gameId": 353114912,
+   "name": "溜打強化",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "ハンマーの溜め攻撃がヒットした際 気絶を誘発する力が強化され、 ダメージが増加する。",
+   "internalId": "HunterSkill_057",
+   "decorations": [
+    {
+     "decorationId": 290,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 84,
+   "gameId": 383104832,
+   "name": "水耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "水耐性＋６"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "水耐性＋１２"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "水耐性＋２０、防御力＋１０"
+    }
+   ],
+   "description": "プレイヤーの水耐性を上げる。 レベルが上がると防御力にも 影響がある。",
+   "internalId": "HunterSkill_078",
+   "decorations": [
+    {
+     "decorationId": 8,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 85,
+   "gameId": 397306144,
+   "name": "鈍器使い",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "斬れ味が黄色以下の時、 与えるダメージ１．０５倍"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "斬れ味が黄色以下の時、 与えるダメージ１．１倍"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "斬れ味が緑色以下の時、 与えるダメージ１．１倍"
+    }
+   ],
+   "description": "斬れ味が悪い時、与えるダメージが 上昇する。",
+   "internalId": "HunterSkill_020",
+   "decorations": [
+    {
+     "decorationId": 317,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 311,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 76,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 86,
+   "gameId": 402237312,
+   "name": "飛燕",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "ジャンプ攻撃の威力を１．１倍"
+    }
+   ],
+   "description": "ジャンプ攻撃が強化される。",
+   "internalId": "HunterSkill_055",
+   "decorations": [
+    {
+     "decorationId": 74,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 87,
+   "gameId": 422666624,
+   "name": "火事場力",
+   "kind": "armor",
+   "maxLevel": 5,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル発動中、防御力＋５０"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "スキル発動中、攻撃力１．０５倍 防御力＋５０"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "スキル発動中、攻撃力１．０５倍 防御力＋１００"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "スキル発動中、攻撃力１．１倍 防御力＋１００"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "スキル発動中、攻撃力１．３倍 防御力上昇効果は無くなる"
+    }
+   ],
+   "description": "体力が最大値の３５％以下の時に 攻撃力と防御力が上がる。",
+   "internalId": "HunterSkill_100",
+   "decorations": [
+    {
+     "decorationId": 328,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 88,
+   "gameId": 424768352,
+   "name": "環境適応",
+   "kind": "armor",
+   "maxLevel": 2,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "暑さ、寒さの影響を無効化する"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "地形によるダメージを無効化する"
+    }
+   ],
+   "description": "暑さや寒さ、ダメージを受ける地形に 対する耐性を得る。",
+   "internalId": "HunterSkill_144",
+   "decorations": [
+    {
+     "decorationId": 82,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 89,
+   "gameId": 451472896,
+   "name": "革細工の滑性",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "滑走強化",
+     "description": "地形を利用したスライディングを 行うと、一定時間会心率が上がる"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_165",
+   "decorations": []
+  },
+  {
+   "id": 90,
+   "gameId": 469540352,
+   "name": "整備",
+   "kind": "armor",
+   "maxLevel": 5,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "再使用時間１０％短縮"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "再使用時間２０％短縮"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "再使用時間３０％短縮"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "再使用時間４０％短縮"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "再使用時間５０％短縮"
+    }
+   ],
+   "description": "特殊装具が再び使用時間になる までの時間を短縮する。",
+   "internalId": "HunterSkill_138",
+   "decorations": [
+    {
+     "decorationId": 304,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 91,
+   "gameId": 508916704,
+   "name": "水属性攻撃強化",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "水属性攻撃値＋４０"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "水属性攻撃値を１．１倍し、 水属性攻撃値に＋５０"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "水属性攻撃値を１．２倍し、 水属性攻撃値に＋６０"
+    }
+   ],
+   "description": "水属性の力を強化する。 （武器の属性値の強化には、 　上限があります）",
+   "internalId": "HunterSkill_006",
+   "decorations": [
+    {
+     "decorationId": 61,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 73,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 334,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 92,
+   "gameId": 522288832,
+   "name": "麻痺耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "麻痺状態の時間を３０％減らす"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "麻痺状態の時間を６０％減らす"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "麻痺状態にならない"
+    }
+   ],
+   "description": "麻痺状態の時間を短くする。",
+   "internalId": "HunterSkill_084",
+   "decorations": [
+    {
+     "decorationId": 90,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 93,
+   "gameId": 539707072,
+   "name": "煌雷竜の力",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "雷々響鳴Ⅰ",
+     "description": "「力の解放」のスキル発動時間を 少し延長する"
+    },
+    {
+     "level": 2,
+     "name": "雷々響鳴Ⅱ",
+     "description": "「力の解放」のスキル発動時間を 延長する"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_176",
+   "decorations": []
+  },
+  {
+   "id": 94,
+   "gameId": 552982656,
+   "name": "貫通弾・竜の矢強化",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": 3,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "対象の弾、矢の威力がわずかに上昇"
+    }
+   ],
+   "description": "ボウガンの貫通弾または 弓の竜の一矢、竜の千々矢の攻撃力が 上がる。",
+   "internalId": "HunterSkill_039",
+   "decorations": [
+    {
+     "decorationId": 340,
+     "slot": 3,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 95,
+   "gameId": 565867136,
+   "name": "連撃",
+   "kind": "armor",
+   "maxLevel": 5,
+   "decoSize": 3,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "攻撃ヒット時、一定時間 基礎攻撃力と属性攻撃値がわずかに上昇 ５回継続で効果が強化される"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "５回継続以降の上昇効果が 少し強化される"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "５回継続以降の上昇効果が 更に強化される"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "５回継続以降の上昇効果が かなり強化される"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "５回継続以降の上昇効果が 大きく強化される"
+    }
+   ],
+   "description": "攻撃を当て続けることで、 段階的に攻撃力、属性値が上がる。 （上昇効果は武器種ごとに異なる）",
+   "internalId": "HunterSkill_114",
+   "decorations": [
+    {
+     "decorationId": 129,
+     "slot": 3,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 96,
+   "gameId": 576193792,
+   "name": "白熾の奔流",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動（灼熱化と併用した際、 灼熱化の効果は発動しなくなるが、 火属性ダメージが追加される）"
+    }
+   ],
+   "description": "攻撃を当てた時、確率で追加のダメージを 与える。",
+   "internalId": "HunterSkill_204",
+   "decorations": []
+  },
+  {
+   "id": 97,
+   "gameId": 583598144,
+   "name": "毛皮の誘惑",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "陽動",
+     "description": "攻撃を当てた時、モンスターの注意を より強く引くようになる"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_169",
+   "decorations": []
+  },
+  {
+   "id": 98,
+   "gameId": 595870656,
+   "name": "地質学",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "骨採取ポイントの取得数＋１"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "更に特産品採取ポイントの 取得数＋１"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "更に鉱石採掘ポイントの 取得数＋１"
+    }
+   ],
+   "description": "採取ポイントでの アイテム取得数が増える。",
+   "internalId": "HunterSkill_090",
+   "decorations": [
+    {
+     "decorationId": 136,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 99,
+   "gameId": 632127488,
+   "name": "渾身",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "効果発動時、会心率＋１０％"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "効果発動時、会心率＋２０％"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "効果発動時、会心率＋３０％"
+    }
+   ],
+   "description": "スタミナゲージが満タンの状態を しばらく維持していると、 会心率が上がる。",
+   "internalId": "HunterSkill_064",
+   "decorations": [
+    {
+     "decorationId": 47,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 100,
+   "gameId": 634068352,
+   "name": "早食い",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "食べる速度が少し速くなる"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "食べる速度が速くなる"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "食べる速度がかなり速くなる"
+    }
+   ],
+   "description": "肉やアイテムを食べる速度が速くなる。",
+   "internalId": "HunterSkill_071",
+   "decorations": [
+    {
+     "decorationId": 280,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 101,
+   "gameId": 652161472,
+   "name": "氷耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "氷耐性＋６"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "氷耐性＋１２"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "氷耐性＋２０、防御力＋１０"
+    }
+   ],
+   "description": "プレイヤーの氷耐性を上げる。 レベルが上がると防御力にも 影響がある。",
+   "internalId": "HunterSkill_079",
+   "decorations": [
+    {
+     "decorationId": 86,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 102,
+   "gameId": 673822976,
+   "name": "回避距離ＵＰ",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "回避距離がわずかに延長"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "回避距離が延長"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "回避距離が大きく延長"
+    }
+   ],
+   "description": "回避時の移動距離が長くなる。",
+   "internalId": "HunterSkill_076",
+   "decorations": [
+    {
+     "decorationId": 52,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 103,
+   "gameId": 686533440,
+   "name": "抜刀術【技】",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "会心率＋５０％"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "会心率＋７５％"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "会心率＋１００％"
+    }
+   ],
+   "description": "武器出し行動の後、 一定時間、会心率が上がる。 （騎乗中は発動しません）",
+   "internalId": "HunterSkill_029",
+   "decorations": [
+    {
+     "decorationId": 139,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 336,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 70,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 104,
+   "gameId": 691199232,
+   "name": "強化持続",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "強化時間を少し延長"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "強化時間を延長"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "強化時間を大きく延長"
+    }
+   ],
+   "description": "太刀、双剣、剣斧、盾斧、操虫棍で 発生する、強化状態の持続時間を 長くする。",
+   "internalId": "HunterSkill_023",
+   "decorations": [
+    {
+     "decorationId": 24,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 137,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 269,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 105,
+   "gameId": 705317568,
+   "name": "気絶耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "気絶状態の時間を３０％減らす"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "気絶状態の時間を６０％減らす"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "気絶状態にならない"
+    }
+   ],
+   "description": "気絶状態の時間を短くする。",
+   "internalId": "HunterSkill_086",
+   "decorations": [
+    {
+     "decorationId": 284,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 106,
+   "gameId": 722735744,
+   "name": "黒蝕竜の力",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "黒蝕一体Ⅰ",
+     "description": "大型モンスターと対峙した時、 狂竜症に感染する。"
+    },
+    {
+     "level": 2,
+     "name": "黒蝕一体Ⅱ",
+     "description": "大型モンスターと対峙した時、 狂竜症に感染し、攻撃力が上昇する。 克服時、さらに攻撃力が上昇する。"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_183",
+   "decorations": []
+  },
+  {
+   "id": 107,
+   "gameId": 741102208,
+   "name": "雪獅子の闘志",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "ウォークライⅠ",
+     "description": "ジェスチャー「雄叫び」をした時、一定 時間、周囲の攻撃力が少し上昇。オトモ とサポートハンターには効果が大きい。"
+    },
+    {
+     "level": 2,
+     "name": "ウォークライⅡ",
+     "description": "ジェスチャー「雄叫び」をした時、一定 時間、周囲の攻撃力が上昇。オトモと サポートハンターには効果が大きい。"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_182",
+   "decorations": []
+  },
+  {
+   "id": 108,
+   "gameId": 742695104,
+   "name": "ひるみ軽減",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "のけぞりを無効化"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "のけぞりを無効化 しりもちをのけぞりに軽減する"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "のけぞり、しりもちを無効化"
+    }
+   ],
+   "description": "小ダメージ時のリアクションを 軽減する。",
+   "internalId": "HunterSkill_102",
+   "decorations": [
+    {
+     "decorationId": 131,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 109,
+   "gameId": 802725120,
+   "name": "砲弾装填",
+   "kind": "weapon",
+   "maxLevel": 2,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "弾とビンの装填が速くなる"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "弾とビンの装填がさらに速くなる ガンランスの装填数＋１ 盾斧のチャージ数上昇"
+    }
+   ],
+   "description": "砲弾の装填がスムーズになり ガンランスの装填数が上昇、 盾斧のビン装填数が増える。",
+   "internalId": "HunterSkill_036",
+   "decorations": [
+    {
+     "decorationId": 264,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 29,
+     "slot": 2,
+     "level": 2
+    }
+   ]
+  },
+  {
+   "id": 110,
+   "gameId": 820385792,
+   "name": "爆破やられ耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "爆破までの時間が延長され、 爆破ダメージを軽減する"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "爆破までの時間がさらに延長され、 爆破ダメージを大きく軽減する"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "爆破やられ状態にならない"
+    }
+   ],
+   "description": "爆破やられに対する耐性を持つ。",
+   "internalId": "HunterSkill_087",
+   "decorations": [
+    {
+     "decorationId": 285,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 111,
+   "gameId": 850626240,
+   "name": "満足感",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "効果発動確率１０％"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "効果発動確率２５％"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "効果発動確率４５％"
+    }
+   ],
+   "description": "食べたり飲んだりするアイテムが 一定の確率で、もう一度使える。",
+   "internalId": "HunterSkill_099",
+   "decorations": [
+    {
+     "decorationId": 143,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 112,
+   "gameId": 860517760,
+   "name": "植生学",
+   "kind": "armor",
+   "maxLevel": 4,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "草系消費アイテムの取得数＋１"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "更に実、種系消費アイテムの 取得数＋１"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "更に虫系消費アイテムの 取得数＋１"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "更にキノコ系消費アイテムの 取得数＋１"
+    }
+   ],
+   "description": "薬草など、消費アイテムの取得数が 増える。",
+   "internalId": "HunterSkill_089",
+   "decorations": [
+    {
+     "decorationId": 351,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 113,
+   "gameId": 894530496,
+   "name": "広域化",
+   "kind": "armor",
+   "maxLevel": 5,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "効果の１／３を周囲の仲間にも与える"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "効果の１／３を広い範囲の 仲間にも与える"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "効果の２／３を広い範囲の 仲間にも与える"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "効果の２／３をかなり広い 範囲の仲間にも与える"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "そのままの効果をかなり広い 範囲の仲間にも与える"
+    }
+   ],
+   "description": "一部のアイテムの効果が一定範囲内の 仲間にも作用する。レベルが上がると 範囲と作用する効果が大きくなる。",
+   "internalId": "HunterSkill_098",
+   "decorations": [
+    {
+     "decorationId": 341,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 114,
+   "gameId": 898284480,
+   "name": "昆虫標本の達人",
+   "kind": "armor",
+   "maxLevel": 1,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "昆虫型の小型モンスターを攻撃で 討伐した時、必ずはぎ取れる状態で 残るようになる。（一部は対象外）",
+   "internalId": "HunterSkill_137",
+   "decorations": [
+    {
+     "decorationId": 26,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 115,
+   "gameId": 918165056,
+   "name": "兇爪竜の力",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "連撃強化Ⅰ",
+     "description": "「連撃」スキルの効果発動時、 有効時間を延長し、基礎攻撃力＋８"
+    },
+    {
+     "level": 2,
+     "name": "連撃強化Ⅱ",
+     "description": "「連撃」スキルの効果発動時、 有効時間をさらに延長し、 基礎攻撃力＋１８"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_186",
+   "decorations": []
+  },
+  {
+   "id": 116,
+   "gameId": 919683456,
+   "name": "毒ビン追加",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "毒ビンの装填が可能になる"
+    }
+   ],
+   "description": "弓装備中、毒ビンの装填を 可能にする。",
+   "internalId": "HunterSkill_051",
+   "decorations": [
+    {
+     "decorationId": 77,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 117,
+   "gameId": 1050520384,
+   "name": "業物",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "１０％の確率で、 斬れ味を消費しない"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "２５％の確率で、 斬れ味を消費しない"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "５０％の確率で、 斬れ味を消費しない"
+    }
+   ],
+   "description": "斬れ味の消耗を抑える。",
+   "internalId": "HunterSkill_015",
+   "decorations": [
+    {
+     "decorationId": 124,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 145,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 30,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 118,
+   "gameId": 1077686656,
+   "name": "防御",
+   "kind": "armor",
+   "maxLevel": 7,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "防御力＋５"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "防御力＋１０"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "防御力を１．０５倍し、防御力＋１０"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "防御力を１．０５倍し、防御力＋２０、 全属性耐性値＋３"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "防御力を１．０８倍し、防御力＋２０、 全属性耐性値＋３"
+    },
+    {
+     "level": 6,
+     "name": "",
+     "description": "防御力を１．０８倍し、防御力＋３５、 全属性耐性値＋５"
+    },
+    {
+     "level": 7,
+     "name": "",
+     "description": "防御力を１．１倍し、防御力＋３５、 全属性耐性値＋５"
+    }
+   ],
+   "description": "プレイヤーの防御力を上げる。 レベルが上がると耐性値にも 影響がある。",
+   "internalId": "HunterSkill_067",
+   "decorations": [
+    {
+     "decorationId": 241,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 119,
+   "gameId": 1160639488,
+   "name": "匠",
+   "kind": "weapon",
+   "maxLevel": 5,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "武器の斬れ味＋１０"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "武器の斬れ味＋２０"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "武器の斬れ味＋３０"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "武器の斬れ味＋４０"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "武器の斬れ味＋５０"
+    }
+   ],
+   "description": "武器の斬れ味ゲージが長くなる。 ただし、斬れ味ゲージの限界以上には 長くならない。",
+   "internalId": "HunterSkill_014",
+   "decorations": [
+    {
+     "decorationId": 268,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 2,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 256,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 120,
+   "gameId": 1174975744,
+   "name": "巧撃",
+   "kind": "armor",
+   "maxLevel": 5,
+   "decoSize": 3,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋１０"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋１５"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋２０"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋２５"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋３０"
+    }
+   ],
+   "description": "回避時、タイミングよくモンスターの 攻撃が重なると、一定時間攻撃力が 上がる。",
+   "internalId": "HunterSkill_115",
+   "decorations": [
+    {
+     "decorationId": 337,
+     "slot": 3,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 121,
+   "gameId": 1268070400,
+   "name": "氷属性攻撃強化",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "氷属性攻撃値＋４０"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "氷属性攻撃値を１．１倍し、 氷属性攻撃値に＋５０"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "氷属性攻撃値を１．２倍し、 氷属性攻撃値に＋６０"
+    }
+   ],
+   "description": "氷属性の力を強化する。 （武器の属性値の強化には、 　上限があります）",
+   "internalId": "HunterSkill_007",
+   "decorations": [
+    {
+     "decorationId": 259,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 295,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 266,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 122,
+   "gameId": 1346775424,
+   "name": "精霊の加護",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "効果発動時、ダメージを １５％軽減する"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "効果発動時、ダメージを ３０％軽減する"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "効果発動時、ダメージを ５０％軽減する"
+    }
+   ],
+   "description": "プレイヤーが受けるダメージを 一定確率で減少させる。",
+   "internalId": "HunterSkill_068",
+   "decorations": [
+    {
+     "decorationId": 120,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 123,
+   "gameId": 1359821952,
+   "name": "逆恨み",
+   "kind": "armor",
+   "maxLevel": 5,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋５"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋１０"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋１５"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋２０"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋２５"
+    }
+   ],
+   "description": "体力ゲージに赤い部分がある間、 攻撃力が上がる。",
+   "internalId": "HunterSkill_060",
+   "decorations": [
+    {
+     "decorationId": 274,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 124,
+   "gameId": 1389859584,
+   "name": "達人芸",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": 3,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "効果発動時、８０％で 斬れ味を消費しない"
+    }
+   ],
+   "description": "会心発生時、 斬れ味の消費を抑える。",
+   "internalId": "HunterSkill_004",
+   "decorations": [
+    {
+     "decorationId": 66,
+     "slot": 3,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 125,
+   "gameId": 1425756032,
+   "name": "火耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "火耐性＋６"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "火耐性＋１２"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "火耐性＋２０、防御力＋１０"
+    }
+   ],
+   "description": "プレイヤーの火耐性を上げる。 レベルが上がると防御力にも 影響がある。",
+   "internalId": "HunterSkill_077",
+   "decorations": [
+    {
+     "decorationId": 20,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 126,
+   "gameId": 1444935552,
+   "name": "砥石使用高速化",
+   "kind": "weapon",
+   "maxLevel": 2,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "研ぎ動作を１回省略"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "研ぎ動作を２回省略"
+    }
+   ],
+   "description": "砥石の使用時間が短くなる。",
+   "internalId": "HunterSkill_046",
+   "decorations": [
+    {
+     "decorationId": 242,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 240,
+     "slot": 2,
+     "level": 2
+    }
+   ]
+  },
+  {
+   "id": 127,
+   "gameId": 1452140672,
+   "name": "雷属性攻撃強化",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "雷属性攻撃値＋４０"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "雷属性攻撃値を１．１倍し、 雷属性攻撃値に＋５０"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "雷属性攻撃値を１．２倍し、 雷属性攻撃値に＋６０"
+    }
+   ],
+   "description": "雷属性の力を強化する。 （武器の属性値の強化には、 　上限があります）",
+   "internalId": "HunterSkill_008",
+   "decorations": [
+    {
+     "decorationId": 18,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 35,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 50,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 128,
+   "gameId": 1459579264,
+   "name": "毒耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "毒のダメージを受ける回数が 少なくなる"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "毒のダメージを受ける回数が とても少なくなる"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "毒状態にならない"
+    }
+   ],
+   "description": "毒状態の時に受けるダメージを減らす。",
+   "internalId": "HunterSkill_083",
+   "decorations": [
+    {
+     "decorationId": 134,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 129,
+   "gameId": 1470960256,
+   "name": "破壊王",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "部位に対する蓄積ダメージと 条件を満たした時のダメージが １．１倍になる"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "部位に対する蓄積ダメージと 条件を満たした時のダメージが １．２倍になる"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "部位に対する蓄積ダメージと 条件を満たした時のダメージが １．３倍になる"
+    }
+   ],
+   "description": "大型モンスターの部位を破壊しやすく なり、集中弱点攻撃で傷口を破壊した 時のダメージが上昇する。",
+   "internalId": "HunterSkill_091",
+   "decorations": [
+    {
+     "decorationId": 11,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 130,
+   "gameId": 1472632704,
+   "name": "威嚇",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "発見されていても戦闘状態に なりにくい"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "発見されていても戦闘状態に ほとんどならない"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "発見されていても戦闘状態に ならない"
+    }
+   ],
+   "description": "小型モンスターに発見されても戦闘に なりにくくなる。（甲虫種など、一部の モンスターには効果がない）",
+   "internalId": "HunterSkill_139",
+   "decorations": [
+    {
+     "decorationId": 361,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 131,
+   "gameId": 1484575872,
+   "name": "ヌシの魂",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "根性【果敢】",
+     "description": "致命的な大ダメージを一度だけ軽減 発動前は攻撃力が上がり防御力が下がる 発動後は防御力と耐性値が上がる"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_205",
+   "decorations": []
+  },
+  {
+   "id": 132,
+   "gameId": 1487598336,
+   "name": "鱗張りの技法",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "乗り名人",
+     "description": "モンスターに乗りやすくなり、 乗り状態で成功しやすくなる"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_166",
+   "decorations": []
+  },
+  {
+   "id": 133,
+   "gameId": 1489568384,
+   "name": "属性吸収",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル発動中、属性攻撃値がわずかに 上昇。発動時に受けた属性の耐性値＋４"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "スキル発動中、属性攻撃値が少し上昇。 発動時に受けた属性の耐性値＋６"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "スキル発動中、属性攻撃値が上昇。 発動時に受けた属性の耐性値＋８"
+    }
+   ],
+   "description": "属性攻撃を受けると発動し、一定時間、 属性に関する効果を得る。（効果終了 の後、一定時間は発動しなくなります）",
+   "internalId": "HunterSkill_190",
+   "decorations": []
+  },
+  {
+   "id": 134,
+   "gameId": 1500129152,
+   "name": "剛刃研磨",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "効果発動後、３０秒間 斬れ味を消費しない"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "効果発動後、６０秒間 斬れ味を消費しない"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "効果発動後、９０秒間 斬れ味を消費しない"
+    }
+   ],
+   "description": "武器を研磨すると一定時間、斬れ味が 下がらなくなる。",
+   "internalId": "HunterSkill_017",
+   "decorations": [
+    {
+     "decorationId": 249,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 49,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 313,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 135,
+   "gameId": 1522518528,
+   "name": "防御力ＤＯＷＮ耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "防御力ＤＯＷＮ状態の時間を ５０％減らす"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "防御力ＤＯＷＮ状態の時間を ７５％減らす"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "防御力ＤＯＷＮ状態にならない"
+    }
+   ],
+   "description": "防御力DOWNに対する耐性を持つ。",
+   "internalId": "HunterSkill_120",
+   "decorations": [
+    {
+     "decorationId": 41,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 136,
+   "gameId": 1594792704,
+   "name": "心眼",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "５０％の確率で弾かれず、 硬い部位への攻撃の威力が１．１倍"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "１００％の確率で弾かれず、 硬い部位への攻撃の威力が１．１５倍"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "１００％の確率で弾かれず、 硬い部位への攻撃の威力が１．３倍"
+    }
+   ],
+   "description": "攻撃が弾かれ辛くなり、 硬い部位への攻撃の威力が上がる。",
+   "internalId": "HunterSkill_018",
+   "decorations": [
+    {
+     "decorationId": 54,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 287,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 276,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 137,
+   "gameId": 1613139840,
+   "name": "フォースショット",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "条件を満たした射撃の会心率と 攻撃力がわずかに上昇する"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "条件を満たした射撃の会心率と 攻撃力が少し上昇する"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "条件を満たした射撃の会心率と 攻撃力が上昇する"
+    }
+   ],
+   "description": "ボウガンに装填された弾、または弓に 装填されたビンの４発目以降の会心率、 ４発目と６発目の攻撃力が上昇する。",
+   "internalId": "HunterSkill_197",
+   "decorations": [
+    {
+     "decorationId": 316,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 118,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 12,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 138,
+   "gameId": 1639440000,
+   "name": "研鑽",
+   "kind": "armor",
+   "maxLevel": 1,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "クエスト時間の経過に応じて 攻撃力と防御力が上昇する。 （３０分経過時に上昇値が最大となる）",
+   "internalId": "HunterSkill_145",
+   "decorations": [
+    {
+     "decorationId": 117,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 139,
+   "gameId": 1685697920,
+   "name": "甲虫の擬態",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "忍び歩き",
+     "description": "しゃがみ移動速度が上昇し、 大型モンスターに見つかりにくくなる"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_163",
+   "decorations": []
+  },
+  {
+   "id": 140,
+   "gameId": 1711950720,
+   "name": "ファーストショット",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "ボウガンの装填速度と条件を満たした 弾の威力が少し上昇する"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "ボウガンの装填速度と条件を満たした 弾の威力が上昇する"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "ボウガンの装填速度と条件を満たした 弾の威力が大きく上昇する"
+    }
+   ],
+   "description": "ボウガンの装填速度が上がる。 最大まで装填している時に発射した弾の 威力が上昇する。",
+   "internalId": "HunterSkill_198",
+   "decorations": [
+    {
+     "decorationId": 358,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 44,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 64,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 141,
+   "gameId": 1758661504,
+   "name": "スタミナ奪取",
+   "kind": "weapon",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "減気威力１．２倍"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "減気威力１．３倍"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "減気威力１．４倍"
+    }
+   ],
+   "description": "特定の攻撃が持つ、モンスターを 疲れさせる効果が上がる。",
+   "internalId": "HunterSkill_033",
+   "decorations": [
+    {
+     "decorationId": 286,
+     "slot": 1,
+     "level": 1
+    },
+    {
+     "decorationId": 38,
+     "slot": 2,
+     "level": 2
+    },
+    {
+     "decorationId": 10,
+     "slot": 3,
+     "level": 3
+    }
+   ]
+  },
+  {
+   "id": 142,
+   "gameId": 1763191040,
+   "name": "力の解放",
+   "kind": "armor",
+   "maxLevel": 5,
+   "decoSize": 3,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル発動中、会心率＋１０％ スタミナ消費量３０％軽減"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "スキル発動中、会心率＋２０％ スタミナ消費量３０％軽減"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "スキル発動中、会心率＋３０％ スタミナ消費量５０％軽減"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "スキル発動中、会心率＋４０％ スタミナ消費量５０％軽減"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "スキル発動中、会心率＋５０％ スタミナ消費量５０％軽減"
+    }
+   ],
+   "description": "特定の条件を満たすと、一定時間 会心率が上昇し、スタミナを固定で 消費する行動の消費量が軽減される。",
+   "internalId": "HunterSkill_063",
+   "decorations": [
+    {
+     "decorationId": 302,
+     "slot": 3,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 143,
+   "gameId": 1845834112,
+   "name": "ハンター生活",
+   "kind": "armor",
+   "maxLevel": 1,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "釣り、肉焼き、運搬の技術が向上する"
+    }
+   ],
+   "description": "釣り、肉焼き、運搬の技術が向上する。",
+   "internalId": "HunterSkill_126",
+   "decorations": [
+    {
+     "decorationId": 250,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 144,
+   "gameId": 1865909632,
+   "name": "挑戦者",
+   "kind": "armor",
+   "maxLevel": 5,
+   "decoSize": 3,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋４ 会心率＋３％"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋８ 会心率＋５％"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋１２ 会心率＋７％"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋１６ 会心率＋１０％"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋２０ 会心率＋１５％"
+    }
+   ],
+   "description": "戦闘中の大型モンスターが怒ると、 攻撃力と会心率が上昇する。",
+   "internalId": "HunterSkill_058",
+   "decorations": [
+    {
+     "decorationId": 352,
+     "slot": 3,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 145,
+   "gameId": 1934955136,
+   "name": "オトモへの采配",
+   "kind": "armor",
+   "maxLevel": 5,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "オトモの攻撃力と防御力が １．０５倍"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "オトモの攻撃力と防御力が １．１倍"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "オトモの攻撃力と防御力が １．１５倍"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "オトモの攻撃力と防御力が １．２倍"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "オトモの攻撃力と防御力が １．２５倍"
+    }
+   ],
+   "description": "オトモの攻撃力と防御力が強化される。",
+   "internalId": "HunterSkill_130",
+   "decorations": []
+  },
+  {
+   "id": 146,
+   "gameId": 1940820864,
+   "name": "裂傷耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "裂傷状態によるダメージを 軽減する"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "裂傷状態によるダメージを 大きく軽減する"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "裂傷状態にならない"
+    }
+   ],
+   "description": "裂傷状態に対する耐性を持つ。",
+   "internalId": "HunterSkill_119",
+   "decorations": [
+    {
+     "decorationId": 19,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 147,
+   "gameId": 1966172160,
+   "name": "拘束耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "糸拘束状態と凍結状態から 早く復帰できるようになる"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "糸拘束状態と凍結状態から とても早く復帰できるようになる"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "糸拘束状態と凍結状態にならない"
+    }
+   ],
+   "description": "糸拘束状態と凍結状態に対する 耐性を得る。",
+   "internalId": "HunterSkill_189",
+   "decorations": [
+    {
+     "decorationId": 13,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 148,
+   "gameId": 1968728576,
+   "name": "甲虫の知らせ",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "ハニーハンター",
+     "description": "フィールドでハチミツを採取した時の 取得数が増える"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_162",
+   "decorations": []
+  },
+  {
+   "id": 149,
+   "gameId": 1980404096,
+   "name": "獄焔蛸の反逆",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "恨撃Ⅰ",
+     "description": "「逆恨み」スキル発動中、追加で 少しダメージを与える"
+    },
+    {
+     "level": 2,
+     "name": "恨撃Ⅱ",
+     "description": "「逆恨み」スキル発動中、追加で ダメージを与える"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_178",
+   "decorations": []
+  },
+  {
+   "id": 150,
+   "gameId": 1998066176,
+   "name": "毛皮の昂揚",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "不屈",
+     "description": "クエスト中、力尽きる度に攻撃力と 防御力が上がる（最大２回まで）"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_168",
+   "decorations": []
+  },
+  {
+   "id": 151,
+   "gameId": 2045149568,
+   "name": "腹減り耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "減少までの時間を５０％延長"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "減少までの時間を１００％延長"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "スタミナ最大値の減少を無効化"
+    }
+   ],
+   "description": "時間経過による、スタミナゲージの 最大値の減少を抑える。",
+   "internalId": "HunterSkill_105",
+   "decorations": [
+    {
+     "decorationId": 23,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 152,
+   "gameId": 2083363072,
+   "name": "属性変換",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "効果発動中、属性ダメージを蓄積させる と追加で龍属性ダメージが発生する。 龍属性攻撃値がわずかに上昇する。"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "追加で発生する龍属性ダメージが 上昇する。龍属性攻撃値が上昇する。"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "追加で発生する龍属性ダメージが さらに上昇する。龍属性攻撃値が 大きく上昇する。"
+    }
+   ],
+   "description": "属性攻撃を受けると発動し、一定時間、 龍属性に関する効果を得る。（効果終了 の後、一定時間は発動しなくなります）",
+   "internalId": "HunterSkill_191",
+   "decorations": []
+  },
+  {
+   "id": 153,
+   "gameId": 2104075392,
+   "name": "波衣竜の守護",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "守護のヴェールⅠ",
+     "description": "特殊装具を使用した時、一定時間 防御力が上昇する"
+    },
+    {
+     "level": 2,
+     "name": "守護のヴェールⅡ",
+     "description": "特殊装具を使用した時、一定時間 防御力と耐性値が大きく上昇する"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_177",
+   "decorations": []
+  },
+  {
+   "id": 154,
+   "gameId": 2106877312,
+   "name": "フルチャージ",
+   "kind": "armor",
+   "maxLevel": 5,
+   "decoSize": 2,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋３"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋６"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋１０"
+    },
+    {
+     "level": 4,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋１５"
+    },
+    {
+     "level": 5,
+     "name": "",
+     "description": "スキル発動中、基礎攻撃力＋２０"
+    }
+   ],
+   "description": "体力が最大の時に攻撃力が 上がる。",
+   "internalId": "HunterSkill_059",
+   "decorations": [
+    {
+     "decorationId": 260,
+     "slot": 2,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 155,
+   "gameId": 2107855744,
+   "name": "ヌシの憤激",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "死中に活",
+     "description": "状態異常中、攻撃力が上昇する"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_171",
+   "decorations": []
+  },
+  {
+   "id": 156,
+   "gameId": 2143068800,
+   "name": "雷耐性",
+   "kind": "armor",
+   "maxLevel": 3,
+   "decoSize": 1,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "雷耐性＋６"
+    },
+    {
+     "level": 2,
+     "name": "",
+     "description": "雷耐性＋１２"
+    },
+    {
+     "level": 3,
+     "name": "",
+     "description": "雷耐性＋２０、防御力＋１０"
+    }
+   ],
+   "description": "プレイヤーの雷耐性を上げる。 レベルが上がると防御力にも 影響がある。",
+   "internalId": "HunterSkill_080",
+   "decorations": [
+    {
+     "decorationId": 69,
+     "slot": 1,
+     "level": 1
+    }
+   ]
+  },
+  {
+   "id": 157,
+   "gameId": 4554,
+   "name": "拳を極めし者",
+   "kind": "group",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "殺意の波動",
+     "description": "特殊アクションの威力が強化される。 ドライブインパクトで相殺が可能になり 成功すると一定時間さらに強化される。"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_209",
+   "decorations": []
+  },
+  {
+   "id": 158,
+   "gameId": 10503,
+   "name": "にぎりめし",
+   "kind": "armor",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "豪鬼専用アクションの攻撃力と 気絶を誘発する威力が上昇する。",
+   "internalId": "HunterSkill_211",
+   "decorations": []
+  },
+  {
+   "id": 159,
+   "gameId": 1826,
+   "name": "焼き砲モロコシ",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "ガンランスの竜撃ゲージが赤く点滅して いる時、砲撃の威力と火属性攻撃値が 上がる。",
+   "internalId": "HunterSkill_230",
+   "decorations": []
+  },
+  {
+   "id": 160,
+   "gameId": 3504,
+   "name": "刃鱗増装",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "抜刀時、タイミングよくモンスターの 攻撃を回避すると、特殊な装填された 弾／ビンを得る。",
+   "internalId": "HunterSkill_218",
+   "decorations": []
+  },
+  {
+   "id": 161,
+   "gameId": 8694,
+   "name": "踊火の祈り",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "地の恵み【踊火】Ⅰ",
+     "description": "踊火の儀の期間中、クエストの報酬に 特別なアイテムが追加される （クエストの途中からは発動しない）"
+    },
+    {
+     "level": 2,
+     "name": "地の恵み【踊火】Ⅱ",
+     "description": "踊火の儀の期間中、クエストの報酬に 特別なアイテムが追加され、 攻撃力と防御力が大きく上昇する"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_221",
+   "decorations": []
+  },
+  {
+   "id": 162,
+   "gameId": 16835,
+   "name": "海竜の渦雷",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "蒼雷一閃Ⅰ",
+     "description": "攻撃でダメージを蓄積させると、追加で 雷属性ダメージが発生し、一定時間、 会心率ＵＰ（一部特定の攻撃は対象外）"
+    },
+    {
+     "level": 2,
+     "name": "蒼雷一閃Ⅱ",
+     "description": "Ⅰと同様の効果が発動する。 追加の雷属性ダメージが上昇し、 会心率ＵＰの効果時間が少し増える。"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_212",
+   "decorations": []
+  },
+  {
+   "id": 163,
+   "gameId": 25070,
+   "name": "刃鱗研装",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "抜刀時、タイミングよくモンスターの 攻撃を回避すると、特殊な斬れ味を得る。",
+   "internalId": "HunterSkill_217",
+   "decorations": []
+  },
+  {
+   "id": 164,
+   "gameId": 28385,
+   "name": "パワーストーン",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "鉱石のレア度が高いほど、攻撃力が 大きく上昇する。 （上昇値には上限があります）"
+    }
+   ],
+   "description": "鉱石を入手すると、一定時間、攻撃力が 上がる。",
+   "internalId": "HunterSkill_229",
+   "decorations": []
+  },
+  {
+   "id": 165,
+   "gameId": 30201,
+   "name": "耐性変換【雷】",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "雷属性耐性の値が高いほど、武器の 属性攻撃値が上昇する。",
+   "internalId": "HunterSkill_214",
+   "decorations": []
+  },
+  {
+   "id": 166,
+   "gameId": 30828,
+   "name": "回避装填",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "回避行動をした時、選択中の弾が 自動で装填される。",
+   "internalId": "HunterSkill_232",
+   "decorations": []
+  },
+  {
+   "id": 167,
+   "gameId": 30992,
+   "name": "千刃竜の闘志",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "千刃の身躱しⅠ",
+     "description": "「巧撃」スキルの効果時間を延長する。 また、発動中に再び条件を満たすと 効果時間が少し増える。（１回のみ）"
+    },
+    {
+     "level": 2,
+     "name": "千刃の身躱しⅡ",
+     "description": "Ⅰと同様の効果が発動する。 発動中に再び条件を満たしたとき、 攻撃力が上昇する。"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_215",
+   "decorations": []
+  },
+  {
+   "id": 168,
+   "gameId": 3813,
+   "name": "暗黒",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動 （発動後、一定時間は再発動しないが、 溜め攻撃をした時にダメージは受ける）"
+    }
+   ],
+   "description": "一部の溜め斬りで、２段階以上に溜めて 攻撃した時、ダメージを受ける。また、 一定時間、攻撃力が上がる。",
+   "internalId": "HunterSkill_233",
+   "decorations": []
+  },
+  {
+   "id": 169,
+   "gameId": 7506,
+   "name": "シールドオプション",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "ジャストガード成功時、一定時間、 自分と一定範囲内の仲間の防御力が 上がる",
+   "internalId": "HunterSkill_234",
+   "decorations": []
+  },
+  {
+   "id": 170,
+   "gameId": 11709,
+   "name": "夢灯の祈り",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "地の恵み【夢灯】Ⅰ",
+     "description": "夢灯の儀の期間中、クエストの報酬に 特別なアイテムが追加される （クエストの途中からは発動しない）"
+    },
+    {
+     "level": 2,
+     "name": "地の恵み【夢灯】Ⅱ",
+     "description": "夢灯の儀の期間中、クエストの報酬に 特別なアイテムが追加され、 攻撃力と防御力が大きく上昇する"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_223",
+   "decorations": []
+  },
+  {
+   "id": 171,
+   "gameId": 16931,
+   "name": "炎の料理人",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "肉を焼くと斬れ味が回復し、一定時間 攻撃性能が上昇する。（結果によって 効果時間、内容が変化）",
+   "internalId": "HunterSkill_231",
+   "decorations": []
+  },
+  {
+   "id": 172,
+   "gameId": 24531,
+   "name": "暗黒騎士の証",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "ダークアーツ",
+     "description": "体力ゲージに赤い部分がある間、属性 攻撃力が上がる。大剣の一部の溜め斬り が、３段階まで溜めると強化される。"
+    },
+    {
+     "level": 2,
+     "name": "ブラックナイト",
+     "description": "特殊アクション「ブラックナイト」が 使用可能になる。"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_236",
+   "decorations": []
+  },
+  {
+   "id": 173,
+   "gameId": 31540,
+   "name": "オメガレゾナンス",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "レゾナンスⅠ",
+     "description": "クエスト開始後、レゾナンス：ファー もしくはニアーが交互に発動し、条件を 満たすと攻撃力、または会心率が上昇"
+    },
+    {
+     "level": 2,
+     "name": "レゾナンスⅡ",
+     "description": "レゾナンスⅠの効果と、武器スキル 「シールドオプション」または 「連携プログラム」の効果が上昇"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_237",
+   "decorations": []
+  },
+  {
+   "id": 174,
+   "gameId": 31998,
+   "name": "連携プログラム",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "飛天螺旋斬を使用した時、一定時間、 自分と一定範囲内の仲間の会心率が 上がる",
+   "internalId": "HunterSkill_235",
+   "decorations": []
+  },
+  {
+   "id": 178,
+   "gameId": 5590,
+   "name": "巨戟龍の黙示録",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "宣戦呼応Ⅰ",
+     "description": "戦闘中の大型モンスターが怒ると、 属性攻撃値が上昇する。"
+    },
+    {
+     "level": 2,
+     "name": "宣戦呼応Ⅱ",
+     "description": "Ⅰの効果が上昇し、一定時間、ダメージ を防ぐ防壁を得る。（防壁を得る効果は 一定時間経過しないと再発動しません）"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_239",
+   "decorations": []
+  },
+  {
+   "id": 179,
+   "gameId": 30554,
+   "name": "にゃんにゃんぼう",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "攻撃で会心が発生した際に、低確率で 様々なアイテムを入手できる",
+   "internalId": "HunterSkill_238",
+   "decorations": []
+  },
+  {
+   "id": 180,
+   "gameId": 30815,
+   "name": "祝謡の祈り",
+   "kind": "set",
+   "maxLevel": 2,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "地の恵み【祝謡】Ⅰ",
+     "description": "祝謡の儀の期間中、クエストの報酬に 特別なアイテムが追加される （クエストの途中からは発動しない）"
+    },
+    {
+     "level": 2,
+     "name": "地の恵み【祝謡】Ⅱ",
+     "description": "祝謡の儀の期間中、クエストの報酬に 特別なアイテムが追加され、 攻撃力と防御力が大きく上昇する"
+    }
+   ],
+   "description": "",
+   "internalId": "HunterSkill_225",
+   "decorations": []
+  },
+  {
+   "id": 181,
+   "gameId": 11481,
+   "name": "耐性変換【水】",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "水属性耐性の値が高いほど、武器の 属性攻撃値が上昇する。",
+   "internalId": "HunterSkill_243",
+   "decorations": []
+  },
+  {
+   "id": 182,
+   "gameId": 12877,
+   "name": "解キ放ツ鏡刃ノ破片",
+   "kind": "weapon",
+   "maxLevel": 1,
+   "decoSize": null,
+   "levels": [
+    {
+     "level": 1,
+     "name": "",
+     "description": "スキル効果発動"
+    }
+   ],
+   "description": "３段階まで溜めた溜め斬りを地面に 叩きつけた時、一定範囲にダメージを 与える。",
+   "internalId": "HunterSkill_244",
+   "decorations": []
+  }
+ ]
+}

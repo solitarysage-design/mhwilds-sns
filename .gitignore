@@ -1,0 +1,11 @@
+tools/.cache/
+__pycache__/
+*.pyc
+node_modules/
+.playwright/
+tests/artifacts/
+# 護石の写真は公開リポに入れない (画面に PSN 名などが写り込むため)
+*.jpeg
+*.jpg
+*.png
+!app/icons/*.png

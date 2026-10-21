@@ -1,0 +1,2586 @@
+{
+ "meta": {
+  "source": [
+   "https://wilds.mhdb.io/ja/charms"
+  ],
+  "generatedAt": "2026-10-21T03:08:26+00:00",
+  "gameVersion": "1.042",
+  "sourceVersions": {
+   "mhdb": "wilds.mhdb.io /ja/ (取得日時は meta.source の各 fetchedAt)",
+   "mhwsInJson": "dzxrly/MHWS-in-json database-20261020-070700-4a99b26 (commit 4a99b26, ゲーム版 1.42.0.2)"
+  },
+  "license": {
+   "mhdb": "wilds.mhdb.io (LartTyler/mhdb-wilds-data)。ゲームデータの数値と名前のみ使用",
+   "mhwsInJson": "MIT (dzxrly/MHWS-in-json)"
+  },
+  "note": "id は MHDB の charm rank id。charmId は MHDB の charm id (同じ系統の Ⅰ〜Ⅲ で共通)"
+ },
+ "charms": [
+  {
+   "id": 1,
+   "name": "防風の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 35,
+     "level": 1
+    }
+   ],
+   "charmId": 1,
+   "level": 1,
+   "gameId": -2084662144
+  },
+  {
+   "id": 2,
+   "name": "防風の護石Ⅱ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 35,
+     "level": 2
+    }
+   ],
+   "charmId": 1,
+   "level": 2,
+   "gameId": -2084662144
+  },
+  {
+   "id": 3,
+   "name": "防風の護石Ⅲ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 35,
+     "level": 3
+    }
+   ],
+   "charmId": 1,
+   "level": 3,
+   "gameId": -2084662144
+  },
+  {
+   "id": 4,
+   "name": "整備の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 90,
+     "level": 1
+    }
+   ],
+   "charmId": 2,
+   "level": 1,
+   "gameId": -1899364096
+  },
+  {
+   "id": 5,
+   "name": "整備の護石Ⅱ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 90,
+     "level": 2
+    }
+   ],
+   "charmId": 2,
+   "level": 2,
+   "gameId": -1899364096
+  },
+  {
+   "id": 6,
+   "name": "整備の護石Ⅲ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 90,
+     "level": 3
+    }
+   ],
+   "charmId": 2,
+   "level": 3,
+   "gameId": -1899364096
+  },
+  {
+   "id": 7,
+   "name": "耐火の護石Ⅰ",
+   "rarity": 2,
+   "skills": [
+    {
+     "skillId": 125,
+     "level": 1
+    }
+   ],
+   "charmId": 3,
+   "level": 1,
+   "gameId": -1817216768
+  },
+  {
+   "id": 8,
+   "name": "耐火の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 125,
+     "level": 2
+    }
+   ],
+   "charmId": 3,
+   "level": 2,
+   "gameId": -1817216768
+  },
+  {
+   "id": 9,
+   "name": "耐火の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 125,
+     "level": 3
+    }
+   ],
+   "charmId": 3,
+   "level": 3,
+   "gameId": -1817216768
+  },
+  {
+   "id": 10,
+   "name": "無食の護石Ⅰ",
+   "rarity": 2,
+   "skills": [
+    {
+     "skillId": 151,
+     "level": 1
+    }
+   ],
+   "charmId": 4,
+   "level": 1,
+   "gameId": -1814327808
+  },
+  {
+   "id": 11,
+   "name": "無食の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 151,
+     "level": 2
+    }
+   ],
+   "charmId": 4,
+   "level": 2,
+   "gameId": -1814327808
+  },
+  {
+   "id": 12,
+   "name": "無食の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 151,
+     "level": 3
+    }
+   ],
+   "charmId": 4,
+   "level": 3,
+   "gameId": -1814327808
+  },
+  {
+   "id": 13,
+   "name": "底力の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 87,
+     "level": 1
+    }
+   ],
+   "charmId": 5,
+   "level": 1,
+   "gameId": -1744301184
+  },
+  {
+   "id": 14,
+   "name": "底力の護石Ⅱ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 87,
+     "level": 2
+    }
+   ],
+   "charmId": 5,
+   "level": 2,
+   "gameId": -1744301184
+  },
+  {
+   "id": 15,
+   "name": "底力の護石Ⅲ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 87,
+     "level": 3
+    }
+   ],
+   "charmId": 5,
+   "level": 3,
+   "gameId": -1744301184
+  },
+  {
+   "id": 16,
+   "name": "小食の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 111,
+     "level": 1
+    }
+   ],
+   "charmId": 6,
+   "level": 1,
+   "gameId": -1709915136
+  },
+  {
+   "id": 17,
+   "name": "小食の護石Ⅱ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 111,
+     "level": 2
+    }
+   ],
+   "charmId": 6,
+   "level": 2,
+   "gameId": -1709915136
+  },
+  {
+   "id": 18,
+   "name": "小食の護石Ⅲ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 111,
+     "level": 3
+    }
+   ],
+   "charmId": 6,
+   "level": 3,
+   "gameId": -1709915136
+  },
+  {
+   "id": 19,
+   "name": "跳躍の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 102,
+     "level": 1
+    }
+   ],
+   "charmId": 7,
+   "level": 1,
+   "gameId": -1681870720
+  },
+  {
+   "id": 20,
+   "name": "跳躍の護石Ⅱ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 102,
+     "level": 2
+    }
+   ],
+   "charmId": 7,
+   "level": 2,
+   "gameId": -1681870720
+  },
+  {
+   "id": 21,
+   "name": "跳躍の護石Ⅲ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 102,
+     "level": 3
+    }
+   ],
+   "charmId": 7,
+   "level": 3,
+   "gameId": -1681870720
+  },
+  {
+   "id": 22,
+   "name": "無傷の護石Ⅰ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 154,
+     "level": 1
+    }
+   ],
+   "charmId": 8,
+   "level": 1,
+   "gameId": -1616219264
+  },
+  {
+   "id": 23,
+   "name": "無傷の護石Ⅱ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 154,
+     "level": 2
+    }
+   ],
+   "charmId": 8,
+   "level": 2,
+   "gameId": -1616219264
+  },
+  {
+   "id": 24,
+   "name": "耐眠の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 64,
+     "level": 1
+    }
+   ],
+   "charmId": 9,
+   "level": 1,
+   "gameId": -1575023104
+  },
+  {
+   "id": 25,
+   "name": "耐眠の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 64,
+     "level": 2
+    }
+   ],
+   "charmId": 9,
+   "level": 2,
+   "gameId": -1575023104
+  },
+  {
+   "id": 26,
+   "name": "耐眠の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 64,
+     "level": 3
+    }
+   ],
+   "charmId": 9,
+   "level": 3,
+   "gameId": -1575023104
+  },
+  {
+   "id": 27,
+   "name": "早食の護石Ⅰ",
+   "rarity": 2,
+   "skills": [
+    {
+     "skillId": 100,
+     "level": 1
+    }
+   ],
+   "charmId": 10,
+   "level": 1,
+   "gameId": -1537448960
+  },
+  {
+   "id": 28,
+   "name": "早食の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 100,
+     "level": 2
+    }
+   ],
+   "charmId": 10,
+   "level": 2,
+   "gameId": -1537448960
+  },
+  {
+   "id": 29,
+   "name": "早食の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 100,
+     "level": 3
+    }
+   ],
+   "charmId": 10,
+   "level": 3,
+   "gameId": -1537448960
+  },
+  {
+   "id": 30,
+   "name": "挑戦の護石Ⅰ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 144,
+     "level": 1
+    }
+   ],
+   "charmId": 11,
+   "level": 1,
+   "gameId": -1528900352
+  },
+  {
+   "id": 31,
+   "name": "挑戦の護石Ⅱ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 144,
+     "level": 2
+    }
+   ],
+   "charmId": 11,
+   "level": 2,
+   "gameId": -1528900352
+  },
+  {
+   "id": 32,
+   "name": "回避の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 77,
+     "level": 1
+    }
+   ],
+   "charmId": 12,
+   "level": 1,
+   "gameId": -1521981312
+  },
+  {
+   "id": 33,
+   "name": "回避の護石Ⅱ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 77,
+     "level": 2
+    }
+   ],
+   "charmId": 12,
+   "level": 2,
+   "gameId": -1521981312
+  },
+  {
+   "id": 34,
+   "name": "回避の護石Ⅲ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 77,
+     "level": 3
+    }
+   ],
+   "charmId": 12,
+   "level": 3,
+   "gameId": -1521981312
+  },
+  {
+   "id": 35,
+   "name": "回避の護石Ⅳ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 77,
+     "level": 4
+    }
+   ],
+   "charmId": 12,
+   "level": 4,
+   "gameId": -1521981312
+  },
+  {
+   "id": 36,
+   "name": "耐爆の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 110,
+     "level": 1
+    }
+   ],
+   "charmId": 13,
+   "level": 1,
+   "gameId": -1506168192
+  },
+  {
+   "id": 37,
+   "name": "耐爆の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 110,
+     "level": 2
+    }
+   ],
+   "charmId": 13,
+   "level": 2,
+   "gameId": -1506168192
+  },
+  {
+   "id": 38,
+   "name": "耐爆の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 110,
+     "level": 3
+    }
+   ],
+   "charmId": 13,
+   "level": 3,
+   "gameId": -1506168192
+  },
+  {
+   "id": 39,
+   "name": "渾身の護石Ⅰ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 99,
+     "level": 1
+    }
+   ],
+   "charmId": 14,
+   "level": 1,
+   "gameId": -1372186624
+  },
+  {
+   "id": 40,
+   "name": "渾身の護石Ⅱ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 99,
+     "level": 2
+    }
+   ],
+   "charmId": 14,
+   "level": 2,
+   "gameId": -1372186624
+  },
+  {
+   "id": 41,
+   "name": "耐絶の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 105,
+     "level": 1
+    }
+   ],
+   "charmId": 15,
+   "level": 1,
+   "gameId": -1369125504
+  },
+  {
+   "id": 42,
+   "name": "耐絶の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 105,
+     "level": 2
+    }
+   ],
+   "charmId": 15,
+   "level": 2,
+   "gameId": -1369125504
+  },
+  {
+   "id": 43,
+   "name": "耐絶の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 105,
+     "level": 3
+    }
+   ],
+   "charmId": 15,
+   "level": 3,
+   "gameId": -1369125504
+  },
+  {
+   "id": 44,
+   "name": "希望の護石",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 30,
+     "level": 1
+    },
+    {
+     "skillId": 138,
+     "level": 1
+    }
+   ],
+   "charmId": 16,
+   "level": 1,
+   "gameId": -1177344640
+  },
+  {
+   "id": 45,
+   "name": "耐麻の護石Ⅰ",
+   "rarity": 2,
+   "skills": [
+    {
+     "skillId": 92,
+     "level": 1
+    }
+   ],
+   "charmId": 17,
+   "level": 1,
+   "gameId": -1176873728
+  },
+  {
+   "id": 46,
+   "name": "耐麻の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 92,
+     "level": 2
+    }
+   ],
+   "charmId": 17,
+   "level": 2,
+   "gameId": -1176873728
+  },
+  {
+   "id": 47,
+   "name": "耐麻の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 92,
+     "level": 3
+    }
+   ],
+   "charmId": 17,
+   "level": 3,
+   "gameId": -1176873728
+  },
+  {
+   "id": 48,
+   "name": "環境の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 48,
+     "level": 1
+    }
+   ],
+   "charmId": 18,
+   "level": 1,
+   "gameId": -1172000256
+  },
+  {
+   "id": 49,
+   "name": "環境の護石Ⅱ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 48,
+     "level": 2
+    }
+   ],
+   "charmId": 18,
+   "level": 2,
+   "gameId": -1172000256
+  },
+  {
+   "id": 50,
+   "name": "環境の護石Ⅲ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 48,
+     "level": 3
+    }
+   ],
+   "charmId": 18,
+   "level": 3,
+   "gameId": -1172000256
+  },
+  {
+   "id": 51,
+   "name": "耳栓の護石Ⅰ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 80,
+     "level": 1
+    }
+   ],
+   "charmId": 19,
+   "level": 1,
+   "gameId": -1137475456
+  },
+  {
+   "id": 52,
+   "name": "耳栓の護石Ⅱ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 80,
+     "level": 2
+    }
+   ],
+   "charmId": 19,
+   "level": 2,
+   "gameId": -1137475456
+  },
+  {
+   "id": 53,
+   "name": "耐雷の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 156,
+     "level": 1
+    }
+   ],
+   "charmId": 20,
+   "level": 1,
+   "gameId": -982128896
+  },
+  {
+   "id": 54,
+   "name": "耐雷の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 156,
+     "level": 2
+    }
+   ],
+   "charmId": 20,
+   "level": 2,
+   "gameId": -982128896
+  },
+  {
+   "id": 55,
+   "name": "耐雷の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 156,
+     "level": 3
+    }
+   ],
+   "charmId": 20,
+   "level": 3,
+   "gameId": -982128896
+  },
+  {
+   "id": 56,
+   "name": "早気の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 58,
+     "level": 1
+    }
+   ],
+   "charmId": 21,
+   "level": 1,
+   "gameId": -957600192
+  },
+  {
+   "id": 57,
+   "name": "早気の護石Ⅱ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 58,
+     "level": 2
+    }
+   ],
+   "charmId": 21,
+   "level": 2,
+   "gameId": -957600192
+  },
+  {
+   "id": 58,
+   "name": "早気の護石Ⅲ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 58,
+     "level": 3
+    }
+   ],
+   "charmId": 21,
+   "level": 3,
+   "gameId": -957600192
+  },
+  {
+   "id": 59,
+   "name": "全開の護石Ⅰ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 142,
+     "level": 1
+    }
+   ],
+   "charmId": 22,
+   "level": 1,
+   "gameId": -922609472
+  },
+  {
+   "id": 60,
+   "name": "全開の護石Ⅱ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 142,
+     "level": 2
+    }
+   ],
+   "charmId": 22,
+   "level": 2,
+   "gameId": -922609472
+  },
+  {
+   "id": 61,
+   "name": "全開の護石Ⅲ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 142,
+     "level": 3
+    }
+   ],
+   "charmId": 22,
+   "level": 3,
+   "gameId": -922609472
+  },
+  {
+   "id": 62,
+   "name": "防御の護石Ⅰ",
+   "rarity": 2,
+   "skills": [
+    {
+     "skillId": 118,
+     "level": 1
+    }
+   ],
+   "charmId": 23,
+   "level": 1,
+   "gameId": -864112704
+  },
+  {
+   "id": 63,
+   "name": "防御の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 118,
+     "level": 2
+    }
+   ],
+   "charmId": 23,
+   "level": 2,
+   "gameId": -864112704
+  },
+  {
+   "id": 64,
+   "name": "防御の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 118,
+     "level": 3
+    }
+   ],
+   "charmId": 23,
+   "level": 3,
+   "gameId": -864112704
+  },
+  {
+   "id": 65,
+   "name": "防御の護石Ⅳ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 118,
+     "level": 4
+    }
+   ],
+   "charmId": 23,
+   "level": 4,
+   "gameId": -864112704
+  },
+  {
+   "id": 66,
+   "name": "防御の護石Ⅴ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 118,
+     "level": 5
+    }
+   ],
+   "charmId": 23,
+   "level": 5,
+   "gameId": -864112704
+  },
+  {
+   "id": 67,
+   "name": "耐毒の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 128,
+     "level": 1
+    }
+   ],
+   "charmId": 24,
+   "level": 1,
+   "gameId": -855795328
+  },
+  {
+   "id": 68,
+   "name": "耐毒の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 128,
+     "level": 2
+    }
+   ],
+   "charmId": 24,
+   "level": 2,
+   "gameId": -855795328
+  },
+  {
+   "id": 69,
+   "name": "耐毒の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 128,
+     "level": 3
+    }
+   ],
+   "charmId": 24,
+   "level": 3,
+   "gameId": -855795328
+  },
+  {
+   "id": 70,
+   "name": "逆襲の護石Ⅰ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 81,
+     "level": 1
+    }
+   ],
+   "charmId": 25,
+   "level": 1,
+   "gameId": -771118656
+  },
+  {
+   "id": 71,
+   "name": "逆襲の護石Ⅱ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 81,
+     "level": 2
+    }
+   ],
+   "charmId": 25,
+   "level": 2,
+   "gameId": -771118656
+  },
+  {
+   "id": 72,
+   "name": "逆襲の護石Ⅲ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 81,
+     "level": 3
+    }
+   ],
+   "charmId": 25,
+   "level": 3,
+   "gameId": -771118656
+  },
+  {
+   "id": 73,
+   "name": "納刀の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 32,
+     "level": 1
+    }
+   ],
+   "charmId": 26,
+   "level": 1,
+   "gameId": -633163904
+  },
+  {
+   "id": 74,
+   "name": "納刀の護石Ⅱ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 32,
+     "level": 2
+    }
+   ],
+   "charmId": 26,
+   "level": 2,
+   "gameId": -633163904
+  },
+  {
+   "id": 75,
+   "name": "納刀の護石Ⅲ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 32,
+     "level": 3
+    }
+   ],
+   "charmId": 26,
+   "level": 3,
+   "gameId": -633163904
+  },
+  {
+   "id": 76,
+   "name": "耐水の護石Ⅰ",
+   "rarity": 2,
+   "skills": [
+    {
+     "skillId": 84,
+     "level": 1
+    }
+   ],
+   "charmId": 27,
+   "level": 1,
+   "gameId": -575627136
+  },
+  {
+   "id": 77,
+   "name": "耐水の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 84,
+     "level": 2
+    }
+   ],
+   "charmId": 27,
+   "level": 2,
+   "gameId": -575627136
+  },
+  {
+   "id": 78,
+   "name": "耐水の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 84,
+     "level": 3
+    }
+   ],
+   "charmId": 27,
+   "level": 3,
+   "gameId": -575627136
+  },
+  {
+   "id": 79,
+   "name": "友愛の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 113,
+     "level": 1
+    }
+   ],
+   "charmId": 28,
+   "level": 1,
+   "gameId": -498059904
+  },
+  {
+   "id": 80,
+   "name": "友愛の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 113,
+     "level": 2
+    }
+   ],
+   "charmId": 28,
+   "level": 2,
+   "gameId": -498059904
+  },
+  {
+   "id": 81,
+   "name": "友愛の護石Ⅲ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 113,
+     "level": 3
+    }
+   ],
+   "charmId": 28,
+   "level": 3,
+   "gameId": -498059904
+  },
+  {
+   "id": 82,
+   "name": "友愛の護石Ⅳ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 113,
+     "level": 4
+    }
+   ],
+   "charmId": 28,
+   "level": 4,
+   "gameId": -498059904
+  },
+  {
+   "id": 83,
+   "name": "耐属の護石Ⅰ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 49,
+     "level": 1
+    }
+   ],
+   "charmId": 29,
+   "level": 1,
+   "gameId": -364548128
+  },
+  {
+   "id": 84,
+   "name": "耐属の護石Ⅱ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 49,
+     "level": 2
+    }
+   ],
+   "charmId": 29,
+   "level": 2,
+   "gameId": -364548128
+  },
+  {
+   "id": 85,
+   "name": "持続の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 15,
+     "level": 1
+    }
+   ],
+   "charmId": 30,
+   "level": 1,
+   "gameId": -290359904
+  },
+  {
+   "id": 86,
+   "name": "持続の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 15,
+     "level": 2
+    }
+   ],
+   "charmId": 30,
+   "level": 2,
+   "gameId": -290359904
+  },
+  {
+   "id": 87,
+   "name": "持続の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 15,
+     "level": 3
+    }
+   ],
+   "charmId": 30,
+   "level": 3,
+   "gameId": -290359904
+  },
+  {
+   "id": 88,
+   "name": "耐氷の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 101,
+     "level": 1
+    }
+   ],
+   "charmId": 31,
+   "level": 1,
+   "gameId": -223321168
+  },
+  {
+   "id": 89,
+   "name": "耐氷の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 101,
+     "level": 2
+    }
+   ],
+   "charmId": 31,
+   "level": 2,
+   "gameId": -223321168
+  },
+  {
+   "id": 90,
+   "name": "耐氷の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 101,
+     "level": 3
+    }
+   ],
+   "charmId": 31,
+   "level": 3,
+   "gameId": -223321168
+  },
+  {
+   "id": 91,
+   "name": "重撃の護石Ⅰ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 129,
+     "level": 1
+    }
+   ],
+   "charmId": 32,
+   "level": 1,
+   "gameId": 4075369
+  },
+  {
+   "id": 92,
+   "name": "重撃の護石Ⅱ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 129,
+     "level": 2
+    }
+   ],
+   "charmId": 32,
+   "level": 2,
+   "gameId": 4075369
+  },
+  {
+   "id": 93,
+   "name": "抗狂の護石Ⅰ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 18,
+     "level": 1
+    }
+   ],
+   "charmId": 33,
+   "level": 1,
+   "gameId": 367465856
+  },
+  {
+   "id": 94,
+   "name": "抗狂の護石Ⅱ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 18,
+     "level": 2
+    }
+   ],
+   "charmId": 33,
+   "level": 2,
+   "gameId": 367465856
+  },
+  {
+   "id": 95,
+   "name": "抗狂の護石Ⅲ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 18,
+     "level": 3
+    }
+   ],
+   "charmId": 33,
+   "level": 3,
+   "gameId": 367465856
+  },
+  {
+   "id": 96,
+   "name": "威嚇の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 130,
+     "level": 1
+    }
+   ],
+   "charmId": 34,
+   "level": 1,
+   "gameId": 478395008
+  },
+  {
+   "id": 97,
+   "name": "威嚇の護石Ⅱ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 130,
+     "level": 2
+    }
+   ],
+   "charmId": 34,
+   "level": 2,
+   "gameId": 478395008
+  },
+  {
+   "id": 98,
+   "name": "威嚇の護石Ⅲ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 130,
+     "level": 3
+    }
+   ],
+   "charmId": 34,
+   "level": 3,
+   "gameId": 478395008
+  },
+  {
+   "id": 99,
+   "name": "耐衝の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 108,
+     "level": 1
+    }
+   ],
+   "charmId": 35,
+   "level": 1,
+   "gameId": 510533376
+  },
+  {
+   "id": 100,
+   "name": "耐衝の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 108,
+     "level": 2
+    }
+   ],
+   "charmId": 35,
+   "level": 2,
+   "gameId": 510533376
+  },
+  {
+   "id": 101,
+   "name": "耐衝の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 108,
+     "level": 3
+    }
+   ],
+   "charmId": 35,
+   "level": 3,
+   "gameId": 510533376
+  },
+  {
+   "id": 102,
+   "name": "茸好の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 52,
+     "level": 1
+    }
+   ],
+   "charmId": 36,
+   "level": 1,
+   "gameId": 514922816
+  },
+  {
+   "id": 103,
+   "name": "茸好の護石Ⅱ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 52,
+     "level": 2
+    }
+   ],
+   "charmId": 36,
+   "level": 2,
+   "gameId": 514922816
+  },
+  {
+   "id": 104,
+   "name": "茸好の護石Ⅲ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 52,
+     "level": 3
+    }
+   ],
+   "charmId": 36,
+   "level": 3,
+   "gameId": 514922816
+  },
+  {
+   "id": 105,
+   "name": "反攻の護石Ⅰ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 120,
+     "level": 1
+    }
+   ],
+   "charmId": 37,
+   "level": 1,
+   "gameId": 728714240
+  },
+  {
+   "id": 106,
+   "name": "反攻の護石Ⅱ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 120,
+     "level": 2
+    }
+   ],
+   "charmId": 37,
+   "level": 2,
+   "gameId": 728714240
+  },
+  {
+   "id": 107,
+   "name": "強走の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 43,
+     "level": 1
+    }
+   ],
+   "charmId": 38,
+   "level": 1,
+   "gameId": 886754368
+  },
+  {
+   "id": 108,
+   "name": "強走の護石Ⅱ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 43,
+     "level": 2
+    }
+   ],
+   "charmId": 38,
+   "level": 2,
+   "gameId": 886754368
+  },
+  {
+   "id": 109,
+   "name": "強走の護石Ⅲ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 43,
+     "level": 3
+    }
+   ],
+   "charmId": 38,
+   "level": 3,
+   "gameId": 886754368
+  },
+  {
+   "id": 110,
+   "name": "耐震の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 46,
+     "level": 1
+    }
+   ],
+   "charmId": 39,
+   "level": 1,
+   "gameId": 905673984
+  },
+  {
+   "id": 111,
+   "name": "耐震の護石Ⅱ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 46,
+     "level": 2
+    }
+   ],
+   "charmId": 39,
+   "level": 2,
+   "gameId": 905673984
+  },
+  {
+   "id": 112,
+   "name": "耐震の護石Ⅲ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 46,
+     "level": 3
+    }
+   ],
+   "charmId": 39,
+   "level": 3,
+   "gameId": 905673984
+  },
+  {
+   "id": 113,
+   "name": "鎖刃の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 38,
+     "level": 1
+    }
+   ],
+   "charmId": 40,
+   "level": 1,
+   "gameId": 907750144
+  },
+  {
+   "id": 114,
+   "name": "鎖刃の護石Ⅱ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 38,
+     "level": 2
+    }
+   ],
+   "charmId": 40,
+   "level": 2,
+   "gameId": 907750144
+  },
+  {
+   "id": 115,
+   "name": "転福の護石Ⅰ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 13,
+     "level": 1
+    }
+   ],
+   "charmId": 41,
+   "level": 1,
+   "gameId": 1116710528
+  },
+  {
+   "id": 116,
+   "name": "転福の護石Ⅱ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 13,
+     "level": 2
+    }
+   ],
+   "charmId": 41,
+   "level": 2,
+   "gameId": 1116710528
+  },
+  {
+   "id": 117,
+   "name": "爆師の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 37,
+     "level": 1
+    }
+   ],
+   "charmId": 42,
+   "level": 1,
+   "gameId": 1172345600
+  },
+  {
+   "id": 118,
+   "name": "爆師の護石Ⅱ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 37,
+     "level": 2
+    }
+   ],
+   "charmId": 42,
+   "level": 2,
+   "gameId": 1172345600
+  },
+  {
+   "id": 119,
+   "name": "爆師の護石Ⅲ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 37,
+     "level": 3
+    }
+   ],
+   "charmId": 42,
+   "level": 3,
+   "gameId": 1172345600
+  },
+  {
+   "id": 120,
+   "name": "耐裂の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 146,
+     "level": 1
+    }
+   ],
+   "charmId": 43,
+   "level": 1,
+   "gameId": 1178535936
+  },
+  {
+   "id": 121,
+   "name": "耐裂の護石Ⅱ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 146,
+     "level": 2
+    }
+   ],
+   "charmId": 43,
+   "level": 2,
+   "gameId": 1178535936
+  },
+  {
+   "id": 122,
+   "name": "耐裂の護石Ⅲ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 146,
+     "level": 3
+    }
+   ],
+   "charmId": 43,
+   "level": 3,
+   "gameId": 1178535936
+  },
+  {
+   "id": 123,
+   "name": "属変の護石Ⅰ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 152,
+     "level": 1
+    }
+   ],
+   "charmId": 44,
+   "level": 1,
+   "gameId": 1247012608
+  },
+  {
+   "id": 124,
+   "name": "属変の護石Ⅱ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 152,
+     "level": 2
+    }
+   ],
+   "charmId": 44,
+   "level": 2,
+   "gameId": 1247012608
+  },
+  {
+   "id": 125,
+   "name": "加護の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 122,
+     "level": 1
+    }
+   ],
+   "charmId": 45,
+   "level": 1,
+   "gameId": 1268779776
+  },
+  {
+   "id": 126,
+   "name": "加護の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 122,
+     "level": 2
+    }
+   ],
+   "charmId": 45,
+   "level": 2,
+   "gameId": 1268779776
+  },
+  {
+   "id": 127,
+   "name": "加護の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 122,
+     "level": 3
+    }
+   ],
+   "charmId": 45,
+   "level": 3,
+   "gameId": 1268779776
+  },
+  {
+   "id": 128,
+   "name": "耐防の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 135,
+     "level": 1
+    }
+   ],
+   "charmId": 46,
+   "level": 1,
+   "gameId": 1315266688
+  },
+  {
+   "id": 129,
+   "name": "耐防の護石Ⅱ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 135,
+     "level": 2
+    }
+   ],
+   "charmId": 46,
+   "level": 2,
+   "gameId": 1315266688
+  },
+  {
+   "id": 130,
+   "name": "耐防の護石Ⅲ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 135,
+     "level": 3
+    }
+   ],
+   "charmId": 46,
+   "level": 3,
+   "gameId": 1315266688
+  },
+  {
+   "id": 131,
+   "name": "急襲の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 67,
+     "level": 1
+    }
+   ],
+   "charmId": 47,
+   "level": 1,
+   "gameId": 1327804928
+  },
+  {
+   "id": 132,
+   "name": "急襲の護石Ⅱ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 67,
+     "level": 2
+    }
+   ],
+   "charmId": 47,
+   "level": 2,
+   "gameId": 1327804928
+  },
+  {
+   "id": 133,
+   "name": "属吸の護石Ⅰ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 133,
+     "level": 1
+    }
+   ],
+   "charmId": 48,
+   "level": 1,
+   "gameId": 1355608320
+  },
+  {
+   "id": 134,
+   "name": "耐拘の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 147,
+     "level": 1
+    }
+   ],
+   "charmId": 49,
+   "level": 1,
+   "gameId": 1633903872
+  },
+  {
+   "id": 135,
+   "name": "耐拘の護石Ⅱ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 147,
+     "level": 2
+    }
+   ],
+   "charmId": 49,
+   "level": 2,
+   "gameId": 1633903872
+  },
+  {
+   "id": 136,
+   "name": "耐拘の護石Ⅲ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 147,
+     "level": 3
+    }
+   ],
+   "charmId": 49,
+   "level": 3,
+   "gameId": 1633903872
+  },
+  {
+   "id": 137,
+   "name": "早復の護石Ⅰ",
+   "rarity": 2,
+   "skills": [
+    {
+     "skillId": 31,
+     "level": 1
+    }
+   ],
+   "charmId": 50,
+   "level": 1,
+   "gameId": 1690664448
+  },
+  {
+   "id": 138,
+   "name": "早復の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 31,
+     "level": 2
+    }
+   ],
+   "charmId": 50,
+   "level": 2,
+   "gameId": 1690664448
+  },
+  {
+   "id": 139,
+   "name": "早復の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 31,
+     "level": 3
+    }
+   ],
+   "charmId": 50,
+   "level": 3,
+   "gameId": 1690664448
+  },
+  {
+   "id": 140,
+   "name": "治癒の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 30,
+     "level": 1
+    }
+   ],
+   "charmId": 51,
+   "level": 1,
+   "gameId": 1692326144
+  },
+  {
+   "id": 141,
+   "name": "治癒の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 30,
+     "level": 2
+    }
+   ],
+   "charmId": 51,
+   "level": 2,
+   "gameId": 1692326144
+  },
+  {
+   "id": 142,
+   "name": "治癒の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 30,
+     "level": 3
+    }
+   ],
+   "charmId": 51,
+   "level": 3,
+   "gameId": 1692326144
+  },
+  {
+   "id": 143,
+   "name": "体術の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 14,
+     "level": 1
+    }
+   ],
+   "charmId": 52,
+   "level": 1,
+   "gameId": 1744488448
+  },
+  {
+   "id": 144,
+   "name": "体術の護石Ⅱ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 14,
+     "level": 2
+    }
+   ],
+   "charmId": 52,
+   "level": 2,
+   "gameId": 1744488448
+  },
+  {
+   "id": 145,
+   "name": "体術の護石Ⅲ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 14,
+     "level": 3
+    }
+   ],
+   "charmId": 52,
+   "level": 3,
+   "gameId": 1744488448
+  },
+  {
+   "id": 146,
+   "name": "体術の護石Ⅳ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 14,
+     "level": 4
+    }
+   ],
+   "charmId": 52,
+   "level": 4,
+   "gameId": 1744488448
+  },
+  {
+   "id": 147,
+   "name": "体術の護石Ⅴ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 14,
+     "level": 5
+    }
+   ],
+   "charmId": 52,
+   "level": 5,
+   "gameId": 1744488448
+  },
+  {
+   "id": 148,
+   "name": "逆上の護石Ⅰ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 123,
+     "level": 1
+    }
+   ],
+   "charmId": 53,
+   "level": 1,
+   "gameId": 1772035584
+  },
+  {
+   "id": 149,
+   "name": "逆上の護石Ⅱ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 123,
+     "level": 2
+    }
+   ],
+   "charmId": 53,
+   "level": 2,
+   "gameId": 1772035584
+  },
+  {
+   "id": 150,
+   "name": "地学の護石Ⅰ",
+   "rarity": 2,
+   "skills": [
+    {
+     "skillId": 98,
+     "level": 1
+    }
+   ],
+   "charmId": 54,
+   "level": 1,
+   "gameId": 1885843456
+  },
+  {
+   "id": 151,
+   "name": "地学の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 98,
+     "level": 2
+    }
+   ],
+   "charmId": 54,
+   "level": 2,
+   "gameId": 1885843456
+  },
+  {
+   "id": 152,
+   "name": "地学の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 98,
+     "level": 3
+    }
+   ],
+   "charmId": 54,
+   "level": 3,
+   "gameId": 1885843456
+  },
+  {
+   "id": 153,
+   "name": "植学の護石Ⅰ",
+   "rarity": 2,
+   "skills": [
+    {
+     "skillId": 112,
+     "level": 1
+    }
+   ],
+   "charmId": 55,
+   "level": 1,
+   "gameId": 1974873600
+  },
+  {
+   "id": 154,
+   "name": "植学の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 112,
+     "level": 2
+    }
+   ],
+   "charmId": 55,
+   "level": 2,
+   "gameId": 1974873600
+  },
+  {
+   "id": 155,
+   "name": "植学の護石Ⅲ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 112,
+     "level": 3
+    }
+   ],
+   "charmId": 55,
+   "level": 3,
+   "gameId": 1974873600
+  },
+  {
+   "id": 156,
+   "name": "植学の護石Ⅳ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 112,
+     "level": 4
+    }
+   ],
+   "charmId": 55,
+   "level": 4,
+   "gameId": 1974873600
+  },
+  {
+   "id": 157,
+   "name": "耐龍の護石Ⅰ",
+   "rarity": 3,
+   "skills": [
+    {
+     "skillId": 1,
+     "level": 1
+    }
+   ],
+   "charmId": 56,
+   "level": 1,
+   "gameId": 2005262080
+  },
+  {
+   "id": 158,
+   "name": "耐龍の護石Ⅱ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 1,
+     "level": 2
+    }
+   ],
+   "charmId": 56,
+   "level": 2,
+   "gameId": 2005262080
+  },
+  {
+   "id": 159,
+   "name": "耐龍の護石Ⅲ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 1,
+     "level": 3
+    }
+   ],
+   "charmId": 56,
+   "level": 3,
+   "gameId": 2005262080
+  },
+  {
+   "id": 160,
+   "name": "痛撃の護石Ⅰ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 57,
+     "level": 1
+    }
+   ],
+   "charmId": 57,
+   "level": 1,
+   "gameId": 2009419008
+  },
+  {
+   "id": 161,
+   "name": "痛撃の護石Ⅱ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 57,
+     "level": 2
+    }
+   ],
+   "charmId": 57,
+   "level": 2,
+   "gameId": 2009419008
+  },
+  {
+   "id": 162,
+   "name": "攻勢の護石Ⅰ",
+   "rarity": 4,
+   "skills": [
+    {
+     "skillId": 75,
+     "level": 1
+    }
+   ],
+   "charmId": 58,
+   "level": 1,
+   "gameId": 2011238144
+  },
+  {
+   "id": 163,
+   "name": "攻勢の護石Ⅱ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 75,
+     "level": 2
+    }
+   ],
+   "charmId": 58,
+   "level": 2,
+   "gameId": 2011238144
+  },
+  {
+   "id": 164,
+   "name": "連撃の護石Ⅰ",
+   "rarity": 5,
+   "skills": [
+    {
+     "skillId": 95,
+     "level": 1
+    }
+   ],
+   "charmId": 59,
+   "level": 1,
+   "gameId": 2089594752
+  },
+  {
+   "id": 165,
+   "name": "連撃の護石Ⅱ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 95,
+     "level": 2
+    }
+   ],
+   "charmId": 59,
+   "level": 2,
+   "gameId": 2089594752
+  },
+  {
+   "id": 166,
+   "name": "にぎりめしの護石",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 158,
+     "level": 1
+    }
+   ],
+   "charmId": 60,
+   "level": 1,
+   "gameId": -2057181952
+  },
+  {
+   "id": 167,
+   "name": "渾身の護石Ⅲ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 99,
+     "level": 3
+    }
+   ],
+   "charmId": 14,
+   "level": 3,
+   "gameId": -1372186624
+  },
+  {
+   "id": 168,
+   "name": "整備の護石Ⅳ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 90,
+     "level": 4
+    }
+   ],
+   "charmId": 2,
+   "level": 4,
+   "gameId": -1899364096
+  },
+  {
+   "id": 169,
+   "name": "底力の護石Ⅳ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 87,
+     "level": 4
+    }
+   ],
+   "charmId": 5,
+   "level": 4,
+   "gameId": -1744301184
+  },
+  {
+   "id": 170,
+   "name": "無傷の護石Ⅲ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 154,
+     "level": 3
+    }
+   ],
+   "charmId": 8,
+   "level": 3,
+   "gameId": -1616219264
+  },
+  {
+   "id": 171,
+   "name": "友愛の護石Ⅴ",
+   "rarity": 6,
+   "skills": [
+    {
+     "skillId": 113,
+     "level": 5
+    }
+   ],
+   "charmId": 28,
+   "level": 5,
+   "gameId": -498059904
+  },
+  {
+   "id": 172,
+   "name": "反攻の護石Ⅲ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 120,
+     "level": 3
+    }
+   ],
+   "charmId": 37,
+   "level": 3,
+   "gameId": 728714240
+  },
+  {
+   "id": 173,
+   "name": "属吸の護石Ⅱ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 133,
+     "level": 2
+    }
+   ],
+   "charmId": 48,
+   "level": 2,
+   "gameId": 1355608320
+  },
+  {
+   "id": 178,
+   "name": "急襲の護石Ⅲ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 67,
+     "level": 3
+    }
+   ],
+   "charmId": 47,
+   "level": 3,
+   "gameId": 1327804928
+  },
+  {
+   "id": 179,
+   "name": "逆上の護石Ⅲ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 123,
+     "level": 3
+    }
+   ],
+   "charmId": 53,
+   "level": 3,
+   "gameId": 1772035584
+  },
+  {
+   "id": 180,
+   "name": "攻勢の護石Ⅲ",
+   "rarity": 7,
+   "skills": [
+    {
+     "skillId": 75,
+     "level": 3
+    }
+   ],
+   "charmId": 58,
+   "level": 3,
+   "gameId": 2011238144
+  },
+  {
+   "id": 181,
+   "name": "連撃の護石Ⅲ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 95,
+     "level": 3
+    }
+   ],
+   "charmId": 59,
+   "level": 3,
+   "gameId": 2089594752
+  },
+  {
+   "id": 182,
+   "name": "挑戦の護石Ⅲ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 144,
+     "level": 3
+    }
+   ],
+   "charmId": 11,
+   "level": 3,
+   "gameId": -1528900352
+  },
+  {
+   "id": 183,
+   "name": "耐属の護石Ⅲ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 49,
+     "level": 3
+    }
+   ],
+   "charmId": 29,
+   "level": 3,
+   "gameId": -364548128
+  },
+  {
+   "id": 184,
+   "name": "重撃の護石Ⅲ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 129,
+     "level": 3
+    }
+   ],
+   "charmId": 32,
+   "level": 3,
+   "gameId": 4075369
+  },
+  {
+   "id": 185,
+   "name": "転福の護石Ⅲ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 13,
+     "level": 3
+    }
+   ],
+   "charmId": 41,
+   "level": 3,
+   "gameId": 1116710528
+  },
+  {
+   "id": 186,
+   "name": "鎖刃の護石Ⅲ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 38,
+     "level": 3
+    }
+   ],
+   "charmId": 40,
+   "level": 3,
+   "gameId": 907750144
+  },
+  {
+   "id": 187,
+   "name": "痛撃の護石Ⅲ",
+   "rarity": 8,
+   "skills": [
+    {
+     "skillId": 57,
+     "level": 3
+    }
+   ],
+   "charmId": 57,
+   "level": 3,
+   "gameId": 2009419008
+  }
+ ]
+}

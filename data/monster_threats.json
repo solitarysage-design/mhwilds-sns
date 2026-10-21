@@ -1,0 +1,1365 @@
+{
+ "meta": {
+  "source": [
+   "https://wilds.mhdb.io/en/skills",
+   "https://wilds.mhdb.io/ja/skills",
+   "https://monsterhunterwiki.org/api.php",
+   "https://monsterhunterwiki.org/wiki/Status_Effects_(MHWilds)"
+  ],
+  "generatedAt": "2026-10-21T03:12:12+00:00",
+  "gameVersion": "1.042",
+  "nativeVersion": "1.42.0.2",
+  "license": {
+   "name": "CC BY-SA 4.0",
+   "url": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "attribution": "Monster Hunter Wiki (monsterhunterwiki.org) の寄稿者。Bucket API の monsters_games / quests と Status Effects (MHWilds) を加工。このファイルも同じ CC BY-SA 4.0 で提供する。"
+  },
+  "note": "咆哮 roar: none/weak(咆哮【小】)/strong(咆哮【大】)。風圧 windPressure: none/minor(風圧【小】)/major(風圧【大】)/dragon(龍風圧)。振動 tremor: none/minor(振動【小】)/major(振動【大】)。wiki に値が無いものは null。blights は wiki の status_effects の属性 (属性やられ)。",
+  "wiki": {
+   "rowsScanned": 2729,
+   "pages": 6,
+   "wildsRows": 53
+  }
+ },
+ "rules": {
+  "elementalBlight": {
+   "description": "属性耐性が 20 以上ならその属性の属性やられにならない。属性やられ耐性 Lv3 で全属性の属性やられを無効。Lv1/2 は効果時間を短くするだけ。",
+   "resistanceThreshold": 20,
+   "skill": {
+    "skill": "属性やられ耐性",
+    "skillEn": "Blight Resistance",
+    "skillId": 49,
+    "negateLevel": 3,
+    "mitigateLevel": 1,
+    "levelText": {
+     "1": "すべての属性やられの効果時間を５０％減らす",
+     "2": "すべての属性やられの効果時間を７５％減らす",
+     "3": "すべての属性やられを無効化する"
+    }
+   },
+   "source": "https://monsterhunterwiki.org/wiki/Status_Effects_(MHWilds)",
+   "confidence": "high"
+  },
+  "roar": {
+   "weak": {
+    "skill": "耳栓",
+    "skillEn": "Earplugs",
+    "skillId": 80,
+    "negateLevel": 2,
+    "mitigateLevel": 1,
+    "levelText": {
+     "1": "咆哮【小】の影響を軽減する",
+     "2": "咆哮【小】を無効化し、咆哮【大】の影響を軽減する",
+     "3": "咆哮【小】【大】を無効化する"
+    }
+   },
+   "strong": {
+    "skill": "耳栓",
+    "skillEn": "Earplugs",
+    "skillId": 80,
+    "negateLevel": 3,
+    "mitigateLevel": 2,
+    "levelText": {
+     "1": "咆哮【小】の影響を軽減する",
+     "2": "咆哮【小】を無効化し、咆哮【大】の影響を軽減する",
+     "3": "咆哮【小】【大】を無効化する"
+    }
+   }
+  },
+  "windPressure": {
+   "minor": {
+    "skill": "風圧耐性",
+    "skillEn": "Windproof",
+    "skillId": 35,
+    "negateLevel": 1,
+    "levelText": {
+     "1": "風圧【小】を無効化し、風圧【大】の影響を半減する",
+     "2": "風圧【小】【大】を無効化し、龍風圧の影響を半減する",
+     "3": "全ての風圧を無効化する"
+    }
+   },
+   "major": {
+    "skill": "風圧耐性",
+    "skillEn": "Windproof",
+    "skillId": 35,
+    "negateLevel": 2,
+    "mitigateLevel": 1,
+    "levelText": {
+     "1": "風圧【小】を無効化し、風圧【大】の影響を半減する",
+     "2": "風圧【小】【大】を無効化し、龍風圧の影響を半減する",
+     "3": "全ての風圧を無効化する"
+    }
+   },
+   "dragon": {
+    "skill": "風圧耐性",
+    "skillEn": "Windproof",
+    "skillId": 35,
+    "negateLevel": 3,
+    "mitigateLevel": 2,
+    "levelText": {
+     "1": "風圧【小】を無効化し、風圧【大】の影響を半減する",
+     "2": "風圧【小】【大】を無効化し、龍風圧の影響を半減する",
+     "3": "全ての風圧を無効化する"
+    }
+   }
+  },
+  "tremor": {
+   "minor": {
+    "skill": "耐震",
+    "skillEn": "Tremor Resistance",
+    "skillId": 46,
+    "negateLevel": 2,
+    "mitigateLevel": 1,
+    "levelText": {
+     "1": "振動やられ【極小】を無効化し、振動やられ【小】の影響を半減する",
+     "2": "振動やられ【小】までを無効化し、振動やられ【大】の影響を大きく軽減する",
+     "3": "全ての振動を無効化する"
+    }
+   },
+   "major": {
+    "skill": "耐震",
+    "skillEn": "Tremor Resistance",
+    "skillId": 46,
+    "negateLevel": 3,
+    "mitigateLevel": 2,
+    "levelText": {
+     "1": "振動やられ【極小】を無効化し、振動やられ【小】の影響を半減する",
+     "2": "振動やられ【小】までを無効化し、振動やられ【大】の影響を大きく軽減する",
+     "3": "全ての振動を無効化する"
+    }
+   }
+  },
+  "status": {
+   "poison": {
+    "skill": "毒耐性",
+    "skillEn": "Poison Resistance",
+    "skillId": 128,
+    "negateLevel": 3,
+    "mitigateLevel": 1,
+    "levelText": {
+     "1": "毒のダメージを受ける回数が少なくなる",
+     "2": "毒のダメージを受ける回数がとても少なくなる",
+     "3": "毒状態にならない"
+    }
+   },
+   "noxious-poison": {
+    "skill": "毒耐性",
+    "skillEn": "Poison Resistance",
+    "skillId": 128,
+    "negateLevel": 3,
+    "mitigateLevel": 1,
+    "levelText": {
+     "1": "毒のダメージを受ける回数が少なくなる",
+     "2": "毒のダメージを受ける回数がとても少なくなる",
+     "3": "毒状態にならない"
+    }
+   },
+   "paralysis": {
+    "skill": "麻痺耐性",
+    "skillEn": "Paralysis Resistance",
+    "skillId": 92,
+    "negateLevel": 3,
+    "mitigateLevel": 1,
+    "levelText": {
+     "1": "麻痺状態の時間を３０％減らす",
+     "2": "麻痺状態の時間を６０％減らす",
+     "3": "麻痺状態にならない"
+    }
+   },
+   "sleep": {
+    "skill": "睡眠耐性",
+    "skillEn": "Sleep Resistance",
+    "skillId": 64,
+    "negateLevel": 3,
+    "mitigateLevel": 1,
+    "levelText": {
+     "1": "睡眠状態の時間を３０％減らす",
+     "2": "睡眠状態の時間を６０％減らす",
+     "3": "睡眠状態にならない"
+    }
+   },
+   "stun": {
+    "skill": "気絶耐性",
+    "skillEn": "Stun Resistance",
+    "skillId": 105,
+    "negateLevel": 3,
+    "mitigateLevel": 1,
+    "levelText": {
+     "1": "気絶状態の時間を３０％減らす",
+     "2": "気絶状態の時間を６０％減らす",
+     "3": "気絶状態にならない"
+    }
+   },
+   "blast": {
+    "skill": "爆破やられ耐性",
+    "skillEn": "Blast Resistance",
+    "skillId": 110,
+    "negateLevel": 3,
+    "mitigateLevel": 1,
+    "levelText": {
+     "1": "爆破までの時間が延長され、爆破ダメージを軽減する",
+     "2": "爆破までの時間がさらに延長され、爆破ダメージを大きく軽減する",
+     "3": "爆破やられ状態にならない"
+    }
+   },
+   "bleeding": {
+    "skill": "裂傷耐性",
+    "skillEn": "Bleeding Resistance",
+    "skillId": 146,
+    "negateLevel": 3,
+    "mitigateLevel": 1,
+    "levelText": {
+     "1": "裂傷状態によるダメージを軽減する",
+     "2": "裂傷状態によるダメージを大きく軽減する",
+     "3": "裂傷状態にならない"
+    }
+   },
+   "webbed": {
+    "skill": "拘束耐性",
+    "skillEn": "Bind Resistance",
+    "skillId": 147,
+    "negateLevel": 3,
+    "mitigateLevel": 1,
+    "levelText": {
+     "1": "糸拘束状態と凍結状態から早く復帰できるようになる",
+     "2": "糸拘束状態と凍結状態からとても早く復帰できるようになる",
+     "3": "糸拘束状態と凍結状態にならない"
+    }
+   },
+   "frostblight": {
+    "skill": "拘束耐性",
+    "skillEn": "Bind Resistance",
+    "skillId": 147,
+    "negateLevel": 3,
+    "mitigateLevel": 1,
+    "levelText": {
+     "1": "糸拘束状態と凍結状態から早く復帰できるようになる",
+     "2": "糸拘束状態と凍結状態からとても早く復帰できるようになる",
+     "3": "糸拘束状態と凍結状態にならない"
+    }
+   },
+   "stench": {
+    "skill": "悪臭耐性",
+    "skillEn": "Stench Resistance",
+    "skillId": 55,
+    "negateLevel": 2,
+    "mitigateLevel": 1,
+    "levelText": {
+     "1": "悪臭状態の時間を５０％減らす",
+     "2": "悪臭状態にならない"
+    }
+   },
+   "defense-down": {
+    "skill": "防御力ＤＯＷＮ耐性",
+    "skillEn": "Iron Skin",
+    "skillId": 135,
+    "negateLevel": 3,
+    "mitigateLevel": 1,
+    "levelText": {
+     "1": "防御力ＤＯＷＮ状態の時間を５０％減らす",
+     "2": "防御力ＤＯＷＮ状態の時間を７５％減らす",
+     "3": "防御力ＤＯＷＮ状態にならない"
+    }
+   }
+  },
+  "noSkill": {
+   "bubbleblight-minor": "防具スキルでは防げない (狩猟笛の旋律などのみ)",
+   "bubbleblight-major": "防具スキルでは防げない (タマミツネのシリーズスキルで無効)",
+   "frenzy": "無効化するスキルは無い (無我の境地は克服を助けるだけ)",
+   "snowman": "wiki に防ぎ方の記載なし"
+  },
+  "source": [
+   "https://monsterhunterwiki.org/wiki/Status_Effects_(MHWilds)",
+   "https://wilds.mhdb.io/ja/skills"
+  ]
+ },
+ "monsters": [
+  {
+   "monsterId": 1,
+   "name": "ゾ・シア",
+   "nameEn": "Zoh Shia",
+   "wikiPage": "Zoh Shia (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Zoh_Shia_(MHWilds)",
+   "roar": "strong",
+   "windPressure": "dragon",
+   "tremor": "none",
+   "attackElements": [
+    "thunder",
+    "fire"
+   ],
+   "blights": [
+    {
+     "element": "thunder",
+     "name": "雷属性やられ"
+    },
+    {
+     "element": "fire",
+     "name": "火属性やられ"
+    }
+   ],
+   "statusEffects": [],
+   "issues": [
+    "wiki の値がマークアップの生文字列だったため 'Dragon Wind Pressure' を読み取った"
+   ]
+  },
+  {
+   "monsterId": 2,
+   "name": "護竜ドシャグマ",
+   "nameEn": "Guardian Doshaguma",
+   "wikiPage": "Guardian Doshaguma (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Guardian_Doshaguma_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "none",
+   "tremor": "minor",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "monsterId": 3,
+   "name": "レ・ダウ",
+   "nameEn": "Rey Dau",
+   "wikiPage": "Rey Dau (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Rey_Dau_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [
+    "thunder"
+   ],
+   "blights": [
+    {
+     "element": "thunder",
+     "name": "雷属性やられ"
+    }
+   ],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "monsterId": 4,
+   "name": "ラバラ・バリナ",
+   "nameEn": "Lala Barina",
+   "wikiPage": "Lala Barina (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Lala_Barina_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [
+    {
+     "key": "paralysis",
+     "name": "麻痺",
+     "wiki": "Paralysis",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 5,
+   "name": "ババコンガ",
+   "nameEn": "Congalala",
+   "wikiPage": "Congalala (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Congalala_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "minor",
+   "attackElements": [
+    "fire"
+   ],
+   "blights": [],
+   "statusEffects": [
+    {
+     "key": "poison",
+     "name": "毒",
+     "wiki": "Poison",
+     "nameConfidence": "high"
+    },
+    {
+     "key": "stench",
+     "name": "悪臭",
+     "wiki": "Soiled",
+     "nameConfidence": "medium"
+    },
+    {
+     "key": "blast",
+     "name": "爆破やられ",
+     "wiki": "Blast",
+     "nameConfidence": "high"
+    },
+    {
+     "key": "paralysis",
+     "name": "麻痺",
+     "wiki": "Paralysis",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 6,
+   "name": "ネルスキュラ",
+   "nameEn": "Nerscylla",
+   "wikiPage": "Nerscylla (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Nerscylla_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [
+    {
+     "key": "sleep",
+     "name": "睡眠",
+     "wiki": "Sleep",
+     "nameConfidence": "high"
+    },
+    {
+     "key": "webbed",
+     "name": "糸拘束",
+     "wiki": "Webbed",
+     "nameConfidence": "high"
+    },
+    {
+     "key": "poison",
+     "name": "毒",
+     "wiki": "Poison",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 7,
+   "name": "ゴア・マガラ",
+   "nameEn": "Gore Magala",
+   "wikiPage": "Gore Magala (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Gore_Magala_(MHWilds)",
+   "roar": "strong",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [
+    {
+     "key": "frenzy",
+     "name": "狂竜症",
+     "wiki": "Frenzy",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 8,
+   "name": "グラビモス",
+   "nameEn": "Gravios",
+   "wikiPage": "Gravios (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Gravios_(MHWilds)",
+   "roar": "strong",
+   "windPressure": "none",
+   "tremor": "minor",
+   "attackElements": [
+    "fire"
+   ],
+   "blights": [
+    {
+     "element": "fire",
+     "name": "火属性やられ"
+    }
+   ],
+   "statusEffects": [
+    {
+     "key": "sleep",
+     "name": "睡眠",
+     "wiki": "Sleep",
+     "nameConfidence": "high"
+    },
+    {
+     "key": "poison",
+     "name": "毒",
+     "wiki": "Poison",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 9,
+   "name": "護竜アルシュベルド",
+   "nameEn": "Guardian Arkveld",
+   "wikiPage": "Guardian Arkveld (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Guardian_Arkveld_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "minor",
+   "tremor": "none",
+   "attackElements": [
+    "dragon"
+   ],
+   "blights": [
+    {
+     "element": "dragon",
+     "name": "龍属性やられ"
+    }
+   ],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "monsterId": 10,
+   "name": "ケマトリス",
+   "nameEn": "Quematrice",
+   "wikiPage": "Quematrice (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Quematrice_(MHWilds)",
+   "roar": null,
+   "windPressure": null,
+   "tremor": null,
+   "attackElements": [
+    "fire"
+   ],
+   "blights": [
+    {
+     "element": "fire",
+     "name": "火属性やられ"
+    }
+   ],
+   "statusEffects": [],
+   "issues": [
+    "roar が wiki に無い (null)",
+    "windPressure が wiki に無い (null)",
+    "tremor が wiki に無い (null)"
+   ]
+  },
+  {
+   "monsterId": 11,
+   "name": "ドシャグマ",
+   "nameEn": "Doshaguma",
+   "wikiPage": "Doshaguma (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Doshaguma_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "none",
+   "tremor": "minor",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "monsterId": 12,
+   "name": "バーラハーラ",
+   "nameEn": "Balahara",
+   "wikiPage": "Balahara (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Balahara_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [
+    "water"
+   ],
+   "blights": [
+    {
+     "element": "water",
+     "name": "水属性やられ"
+    }
+   ],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "monsterId": 13,
+   "name": "リオレイア",
+   "nameEn": "Rathian",
+   "wikiPage": "Rathian (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Rathian_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "minor",
+   "tremor": "none",
+   "attackElements": [
+    "fire"
+   ],
+   "blights": [
+    {
+     "element": "fire",
+     "name": "火属性やられ"
+    }
+   ],
+   "statusEffects": [
+    {
+     "key": "poison",
+     "name": "毒",
+     "wiki": "Poison",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 14,
+   "name": "チャタカブラ",
+   "nameEn": "Chatacabra",
+   "wikiPage": "Chatacabra (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Chatacabra_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "monsterId": 15,
+   "name": "タマミツネ",
+   "nameEn": "Mizutsune",
+   "wikiPage": "Mizutsune (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Mizutsune_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [
+    "water",
+    "fire"
+   ],
+   "blights": [
+    {
+     "element": "water",
+     "name": "水属性やられ"
+    },
+    {
+     "element": "fire",
+     "name": "火属性やられ"
+    }
+   ],
+   "statusEffects": [
+    {
+     "key": "bubbleblight-major",
+     "name": "泡状態【大】",
+     "wiki": "Severe Bubbleblight",
+     "nameConfidence": "high"
+    },
+    {
+     "key": "bubbleblight-minor",
+     "name": "泡状態【小】",
+     "wiki": "Bubbleblight",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 16,
+   "name": "護竜アンジャナフ亜種",
+   "nameEn": "Guardian Fulgur Anjanath",
+   "wikiPage": "Guardian Fulgur Anjanath (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Guardian_Fulgur_Anjanath_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "minor",
+   "tremor": "none",
+   "attackElements": [
+    "thunder"
+   ],
+   "blights": [
+    {
+     "element": "thunder",
+     "name": "雷属性やられ"
+    }
+   ],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "monsterId": 17,
+   "name": "ヒラバミ",
+   "nameEn": "Hirabami",
+   "wikiPage": "Hirabami (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Hirabami_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [
+    "ice"
+   ],
+   "blights": [],
+   "statusEffects": [
+    {
+     "key": "frostblight",
+     "name": "凍結",
+     "wiki": "Frostblight",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 18,
+   "name": "イャンクック",
+   "nameEn": "Yian Kut-Ku",
+   "wikiPage": "Yian Kut-Ku (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Yian_Kut-Ku_(MHWilds)",
+   "roar": "none",
+   "windPressure": "minor",
+   "tremor": "none",
+   "attackElements": [
+    "fire"
+   ],
+   "blights": [
+    {
+     "element": "fire",
+     "name": "火属性やられ"
+    }
+   ],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "monsterId": 19,
+   "name": "ププロポル",
+   "nameEn": "Rompopolo",
+   "wikiPage": "Rompopolo (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Rompopolo_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [
+    {
+     "key": "poison",
+     "name": "毒",
+     "wiki": "Poison",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 20,
+   "name": "アルシュベルド",
+   "nameEn": "Arkveld",
+   "wikiPage": "Arkveld (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Arkveld_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "minor",
+   "tremor": "none",
+   "attackElements": [
+    "dragon"
+   ],
+   "blights": [
+    {
+     "element": "dragon",
+     "name": "龍属性やられ"
+    }
+   ],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "monsterId": 21,
+   "name": "アジャラカン",
+   "nameEn": "Ajarakan",
+   "wikiPage": "Ajarakan (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Ajarakan_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "none",
+   "tremor": "minor",
+   "attackElements": [
+    "fire"
+   ],
+   "blights": [],
+   "statusEffects": [
+    {
+     "key": "blast",
+     "name": "爆破やられ",
+     "wiki": "Blast",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 22,
+   "name": "ゲリョス",
+   "nameEn": "Gypceros",
+   "wikiPage": "Gypceros (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Gypceros_(MHWilds)",
+   "roar": "none",
+   "windPressure": "minor",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [
+    {
+     "key": "poison",
+     "name": "毒",
+     "wiki": "Poison",
+     "nameConfidence": "high"
+    },
+    {
+     "key": "stun",
+     "name": "気絶",
+     "wiki": "Stun",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 23,
+   "name": "シーウー",
+   "nameEn": "Xu Wu",
+   "wikiPage": "Xu Wu (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Xu_Wu_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "monsterId": 24,
+   "name": "護竜リオレウス",
+   "nameEn": "Guardian Rathalos",
+   "wikiPage": "Guardian Rathalos (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Guardian_Rathalos_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "minor",
+   "tremor": "none",
+   "attackElements": [
+    "fire"
+   ],
+   "blights": [
+    {
+     "element": "fire",
+     "name": "火属性やられ"
+    }
+   ],
+   "statusEffects": [
+    {
+     "key": "poison",
+     "name": "毒",
+     "wiki": "Poison",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 25,
+   "name": "ウズ・トゥナ",
+   "nameEn": "Uth Duna",
+   "wikiPage": "Uth Duna (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Uth_Duna_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [
+    "water"
+   ],
+   "blights": [
+    {
+     "element": "water",
+     "name": "水属性やられ"
+    }
+   ],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "monsterId": 26,
+   "name": "ジン・ダハド",
+   "nameEn": "Jin Dahaad",
+   "wikiPage": "Jin Dahaad (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Jin_Dahaad_(MHWilds)",
+   "roar": "strong",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [
+    "ice"
+   ],
+   "blights": [],
+   "statusEffects": [
+    {
+     "key": "frostblight",
+     "name": "凍結",
+     "wiki": "Frostblight",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 27,
+   "name": "ヌ・エグドラ",
+   "nameEn": "Nu Udra",
+   "wikiPage": "Nu Udra (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Nu_Udra_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [
+    "fire"
+   ],
+   "blights": [
+    {
+     "element": "fire",
+     "name": "火属性やられ"
+    }
+   ],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "monsterId": 28,
+   "name": "護竜オドガロン亜種",
+   "nameEn": "Guardian Ebony Odogaron",
+   "wikiPage": "Guardian Ebony Odogaron (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Guardian_Ebony_Odogaron_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [
+    "dragon"
+   ],
+   "blights": [
+    {
+     "element": "dragon",
+     "name": "龍属性やられ"
+    }
+   ],
+   "statusEffects": [
+    {
+     "key": "bleeding",
+     "name": "裂傷",
+     "wiki": "Bleeding",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 29,
+   "name": "リオレウス",
+   "nameEn": "Rathalos",
+   "wikiPage": "Rathalos (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Rathalos_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "minor",
+   "tremor": "none",
+   "attackElements": [
+    "fire"
+   ],
+   "blights": [
+    {
+     "element": "fire",
+     "name": "火属性やられ"
+    }
+   ],
+   "statusEffects": [
+    {
+     "key": "poison",
+     "name": "毒",
+     "wiki": "Poison",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 30,
+   "name": "ドドブランゴ",
+   "nameEn": "Blangonga",
+   "wikiPage": "Blangonga (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Blangonga_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "none",
+   "tremor": "minor",
+   "attackElements": [
+    "ice"
+   ],
+   "blights": [
+    {
+     "element": "ice",
+     "name": "氷属性やられ"
+    }
+   ],
+   "statusEffects": [
+    {
+     "key": "frostblight",
+     "name": "凍結",
+     "wiki": "Frostblight",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 31,
+   "name": "ラギアクルス",
+   "nameEn": "Lagiacrus",
+   "wikiPage": "Lagiacrus (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Lagiacrus_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [
+    "thunder"
+   ],
+   "blights": [
+    {
+     "element": "thunder",
+     "name": "雷属性やられ"
+    }
+   ],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "monsterId": 32,
+   "name": "セルレギオス",
+   "nameEn": "Seregios",
+   "wikiPage": "Seregios (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Seregios_(MHWilds)",
+   "roar": "weak",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [
+    {
+     "key": "bleeding",
+     "name": "裂傷",
+     "wiki": "Bleeding",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 33,
+   "name": "オメガ・プラネテス",
+   "nameEn": "Omega Planetes",
+   "wikiPage": "Omega Planetes (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Omega_Planetes_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [
+    "fire",
+    "ice"
+   ],
+   "blights": [
+    {
+     "element": "fire",
+     "name": "火属性やられ"
+    }
+   ],
+   "statusEffects": [
+    {
+     "key": "frostblight",
+     "name": "凍結",
+     "wiki": "Frostblight",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "monsterId": 34,
+   "name": "ゴグマジオス",
+   "nameEn": "Gogmazios",
+   "wikiPage": "Gogmazios (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Gogmazios_(MHWilds)",
+   "roar": "strong",
+   "windPressure": "none",
+   "tremor": "minor",
+   "attackElements": [
+    "fire"
+   ],
+   "blights": [
+    {
+     "element": "fire",
+     "name": "火属性やられ"
+    }
+   ],
+   "statusEffects": [],
+   "issues": []
+  }
+ ],
+ "otherMonsters": [
+  {
+   "nameEn": "Baunos",
+   "wikiPage": "Baunos (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Baunos_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "nameEn": "Blango",
+   "wikiPage": "Blango (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Blango_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [
+    "ice"
+   ],
+   "blights": [
+    {
+     "element": "ice",
+     "name": "氷属性やられ"
+    }
+   ],
+   "statusEffects": [
+    {
+     "key": "snowman",
+     "name": "雪だるま",
+     "wiki": "Snowman",
+     "nameConfidence": "low"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "nameEn": "Bulaqchi",
+   "wikiPage": "Bulaqchi (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Bulaqchi_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "nameEn": "Ceratonoth",
+   "wikiPage": "Ceratonoth (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Ceratonoth_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "nameEn": "Comaqchi",
+   "wikiPage": "Comaqchi (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Comaqchi_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [
+    {
+     "key": "sleep",
+     "name": "睡眠",
+     "wiki": "Sleep",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "nameEn": "Conga",
+   "wikiPage": "Conga (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Conga_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [
+    {
+     "key": "stench",
+     "name": "悪臭",
+     "wiki": "Soiled",
+     "nameConfidence": "medium"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "nameEn": "Dalthydon",
+   "wikiPage": "Dalthydon (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Dalthydon_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "nameEn": "Gajios",
+   "wikiPage": "Gajios (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Gajios_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "nameEn": "Gelidron",
+   "wikiPage": "Gelidron (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Gelidron_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "nameEn": "Guardian Seikret",
+   "wikiPage": "Guardian Seikret (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Guardian_Seikret_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "nameEn": "Harpios",
+   "wikiPage": "Harpios (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Harpios_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "nameEn": "Kranodath",
+   "wikiPage": "Kranodath (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Kranodath_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "nameEn": "Nerscylla Hatchling",
+   "wikiPage": "Nerscylla Hatchling (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Nerscylla_Hatchling_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "nameEn": "Omega Micros",
+   "wikiPage": "Omega Micros (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Omega_Micros_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "nameEn": "Piragill",
+   "wikiPage": "Piragill (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Piragill_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "nameEn": "Porkeplume",
+   "wikiPage": "Porkeplume (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Porkeplume_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "nameEn": "Rafma",
+   "wikiPage": "Rafma (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Rafma_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [
+    {
+     "key": "paralysis",
+     "name": "麻痺",
+     "wiki": "Paralysis",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  },
+  {
+   "nameEn": "Talioth",
+   "wikiPage": "Talioth (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Talioth_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [],
+   "issues": []
+  },
+  {
+   "nameEn": "Vespoid",
+   "wikiPage": "Vespoid (MHWilds)",
+   "wikiUrl": "https://monsterhunterwiki.org/wiki/Vespoid_(MHWilds)",
+   "roar": "none",
+   "windPressure": "none",
+   "tremor": "none",
+   "attackElements": [],
+   "blights": [],
+   "statusEffects": [
+    {
+     "key": "paralysis",
+     "name": "麻痺",
+     "wiki": "Paralysis",
+     "nameConfidence": "high"
+    }
+   ],
+   "issues": []
+  }
+ ]
+}

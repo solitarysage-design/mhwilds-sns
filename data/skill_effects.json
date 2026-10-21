@@ -1,0 +1,5074 @@
+{
+ "meta": {
+  "source": [
+   "https://github.com/dzxrly/MHWS-in-json/releases/tag/database-20261020-070700-4a99b26",
+   "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/database-20261020-070700-4a99b26/MHWS-in-json/natives/STM/GameDesign/Common/Equip/SkillCommonData.user.3.json",
+   "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/database-20261020-070700-4a99b26/MHWS-in-json/natives/STM/GameDesign/Common/Equip/SkillData.user.3.json",
+   "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/database-20261020-070700-4a99b26/MHWS-in-json/natives/STM/GameDesign/Player/ActionData/Common/GlobalParam/Part/PlayerSkillParam.user.3.json",
+   "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/database-20261020-070700-4a99b26/MHWS-in-json/natives/STM/GameDesign/Player/ActionData/Common/GlobalParam/Part/PlayerStatusParam.user.3.json",
+   "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/database-20261020-070700-4a99b26/MHWS-in-json/natives/STM/GameDesign/Enemy/CommonData/Data/EmCommonData.user.3.json",
+   "data/skills.json"
+  ],
+  "generatedAt": "2026-10-21T03:14:38Z",
+  "gameVersion": "1.042",
+  "gameDataBuild": "1.42.0.2",
+  "license": "ゲームデータの抽出は dzxrly/MHWS-in-json (MIT)。数値はカプコンのゲームデータ由来。",
+  "sourceSha256": {
+   "Common/Equip/SkillCommonData.user.3.json": "bce76909db7c66196a614d44497082d4229effbdd2943ece83c870f3c3ee13be",
+   "Common/Equip/SkillData.user.3.json": "ae5a0e4cbb5ab3e57d001f7a7f79dd32e009bee6c029ddac7c9764f7e23d4f55",
+   "Player/ActionData/Common/GlobalParam/Part/PlayerSkillParam.user.3.json": "bbe6114894b98bbabc0203bfb7d07fcb8007e11b7e3f26429666f15b9256b718",
+   "Player/ActionData/Common/GlobalParam/Part/PlayerStatusParam.user.3.json": "4e79094c06fb15176d049327738f891335c0bad5985611aa267c27696be696ed",
+   "Enemy/CommonData/Data/EmCommonData.user.3.json": "a4e13832ed607ad845d8702c4511b538013d1e729458cace8639da9ece08cbbe"
+  },
+  "skillIdSource": "data/skills.json"
+ },
+ "rules": {
+  "criticalBase": 1.25,
+  "criticalNegative": 0.75,
+  "affinityMin": -100,
+  "affinityMax": 100,
+  "elementCapRate": 2.3,
+  "elementCapAdd": 400.0,
+  "physicalRateLimit": 4.0,
+  "physicalAddLimit": 400.0,
+  "weakPointMinHitzone": 45,
+  "hardPartMaxHitzone": 44,
+  "frenzyOvercomeAffinity": 15.0,
+  "frenzyOvercomeSec": 60.0,
+  "sharpness": {
+   "red": {
+    "physical": 0.5,
+    "element": 0.25
+   },
+   "orange": {
+    "physical": 0.75,
+    "element": 0.5
+   },
+   "yellow": {
+    "physical": 1.0,
+    "element": 0.75
+   },
+   "green": {
+    "physical": 1.05,
+    "element": 1.0
+   },
+   "blue": {
+    "physical": 1.2,
+    "element": 1.0625
+   },
+   "white": {
+    "physical": 1.32,
+    "element": 1.15
+   },
+   "purple": {
+    "physical": 1.39,
+    "element": 1.25
+   }
+  },
+  "units": {
+   "attack": "係数なしの内部値 (片手剣の表示倍率 1.4 を掛けない)",
+   "element": "表示値 (ダメージ計算では /10)。elementAdd も表示値",
+   "affinity": "%"
+  },
+  "note": "属性の上限は max(元の値 + elementCapAdd, 元の値 × elementCapRate) と扱う (PlayerStatusParam._ElementAttack_RateLimit / _ElementAttack_AddLimit)。"
+ },
+ "effects": {
+  "3": {
+   "name": "見切り",
+   "kind": "weapon",
+   "gameId": -2096489472,
+   "gameSkill": "HunterSkill_001",
+   "conditional": false,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      4,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 4,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      8,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 8,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      12,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 12,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 4,
+     "gameLevel": 4,
+     "raw": [
+      16,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 16,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 5,
+     "gameLevel": 5,
+     "raw": [
+      20,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 20,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_001 _value[0]=会心率%",
+   "confidence": "high",
+   "note": "",
+   "verification": [
+    {
+     "item": "見切り",
+     "gameData": [
+      4,
+      8,
+      12,
+      16,
+      20
+     ],
+     "survey": [
+      4,
+      8,
+      12,
+      16,
+      20
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "8": {
+   "name": "抜刀術【力】",
+   "kind": "weapon",
+   "gameId": -1946345856,
+   "gameSkill": "HunterSkill_030",
+   "conditional": true,
+   "defaultUptime": 0.0,
+   "uptimeBasis": "武器出し攻撃だけに効く。代表コンボには含めない",
+   "condition": "武器出し攻撃のみ",
+   "supported": false,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "PlayerSkillParam._BattoPowerData (並びの意味が未確定)",
+   "confidence": "low",
+   "note": "説明文は武器出し攻撃の基礎攻撃力 +3/+5/+7。対象ヒットの判定が無いので計算は未対応。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "13": {
+   "name": "災禍転福",
+   "kind": "armor",
+   "gameId": -1700743296,
+   "gameSkill": "HunterSkill_113",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "状態異常・属性やられを解除した後の一定時間",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      110,
+      105,
+      105,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.05,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      120,
+      110,
+      110,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.1,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      130,
+      115,
+      115,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.15,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_113 _value[2]=属性倍率% (片手剣・双剣の段。_value[0] は大剣・ハンマー等)",
+   "confidence": "medium",
+   "note": "どの段が片手剣かは MHWS-in-json のネイティブ解析 (verified) に依った。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "18": {
+   "name": "無我の境地",
+   "kind": "armor",
+   "gameId": -1662120192,
+   "gameSkill": "HunterSkill_195",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "狂竜症の克服状態 (黒蝕竜の力などで感染しているとき)",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      10,
+      3,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 3,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      20,
+      6,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 6,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      30,
+      10,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 10,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_195 _value[1]=克服時の会心率% (_value[0]=克服しやすさ)",
+   "confidence": "high",
+   "note": "",
+   "verification": [
+    {
+     "item": "無我の境地",
+     "gameData": [
+      3,
+      6,
+      10
+     ],
+     "survey": [
+      3,
+      6,
+      10
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "22": {
+   "name": "超会心",
+   "kind": "weapon",
+   "gameId": -1607763456,
+   "gameSkill": "HunterSkill_002",
+   "conditional": false,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      128,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": 1.28,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      131,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": 1.31,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      134,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": 1.34,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 4,
+     "gameLevel": 4,
+     "raw": [
+      137,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": 1.37,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 5,
+     "gameLevel": 5,
+     "raw": [
+      140,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": 1.4,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_002 _value[0]=会心倍率%。基本 1.25 は PlayerStatusParam._CriticalAttackRate",
+   "confidence": "high",
+   "note": "",
+   "verification": [
+    {
+     "item": "超会心",
+     "gameData": [
+      1.28,
+      1.31,
+      1.34,
+      1.37,
+      1.4
+     ],
+     "survey": [
+      1.28,
+      1.31,
+      1.34,
+      1.37,
+      1.4
+     ],
+     "match": true
+    },
+    {
+     "item": "基本会心倍率",
+     "gameData": 1.25,
+     "survey": 1.25,
+     "match": true
+    },
+    {
+     "item": "マイナス会心倍率",
+     "gameData": 0.75,
+     "survey": 0.75,
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "24": {
+   "name": "チャージマスター",
+   "kind": "weapon",
+   "gameId": -1475134080,
+   "gameSkill": "HunterSkill_048",
+   "conditional": true,
+   "defaultUptime": 0.0,
+   "uptimeBasis": "未対応",
+   "condition": "溜め攻撃",
+   "supported": false,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      115,
+      105,
+      105,
+      105
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      120,
+      110,
+      110,
+      110
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      125,
+      115,
+      115,
+      115
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_048 _value[0]=属性倍率%",
+   "confidence": "low",
+   "note": "片手剣のどのヒットが対象か (isSkill_048_ValidAttack) が未確定なので計算は未対応。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "25": {
+   "name": "暗器蛸の力",
+   "kind": "set",
+   "gameId": -1468066176,
+   "gameSkill": "HunterSkill_188",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "こんがり肉などを食べた後 (_value[0]=180 秒)",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      180,
+      15,
+      0,
+      0
+     ],
+     "attackAdd": 15,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      180,
+      30,
+      0,
+      0
+     ],
+     "attackAdd": 30,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_188 _value[1]=攻撃加算",
+   "confidence": "high",
+   "note": "",
+   "verification": [
+    {
+     "item": "暗器蛸の力",
+     "gameData": [
+      15,
+      30
+     ],
+     "survey": [
+      15,
+      30
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "34": {
+   "name": "花舞の祈り",
+   "kind": "set",
+   "gameId": -911441792,
+   "gameSkill": "HunterSkill_207",
+   "conditional": true,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "儀式 (イベント) の期間中のみ。期間外は 0 にする",
+   "condition": "季節の儀式の期間中",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      100,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      109,
+      50,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.09,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_207 _value[0]=109 (Ⅱ) を攻撃倍率% と読んだ",
+   "confidence": "low",
+   "note": "説明文は『攻撃力と防御力が大きく上昇』。109 を ×1.09 と読んだが、加算の可能性もあり未確定。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "38": {
+   "name": "鎖刃刺撃",
+   "kind": "armor",
+   "gameId": -856322816,
+   "gameSkill": "HunterSkill_146",
+   "conditional": true,
+   "defaultUptime": 0.0,
+   "uptimeBasis": "未対応 (蓄積しきい値が非公開)",
+   "condition": "攻撃でダメージを蓄積させると追加の無属性ダメージ",
+   "supported": false,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      105,
+      100,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "woundEaseMul": 1.05,
+     "extraDamageRaw": 100
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      110,
+      120,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "woundEaseMul": 1.1,
+     "extraDamageRaw": 120
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      115,
+      160,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "woundEaseMul": 1.15,
+     "extraDamageRaw": 160
+    },
+    {
+     "level": 4,
+     "gameLevel": 4,
+     "raw": [
+      120,
+      200,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "woundEaseMul": 1.2,
+     "extraDamageRaw": 200
+    },
+    {
+     "level": 5,
+     "gameLevel": 5,
+     "raw": [
+      130,
+      250,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "woundEaseMul": 1.3,
+     "extraDamageRaw": 250
+    }
+   ],
+   "source": "SkillData HunterSkill_146 _value[0]=傷のつけやすさ% _value[1]=追加ダメージ。PlayerSkillParam._StabbingData",
+   "confidence": "low",
+   "note": "蓄積しきい値が非公開なので期待値は推定しない (計算は未対応)。_StabbingData=[140.0, 160.0, 220.0, 300.0, 400.0, 50.0, 0.5] の意味は未確定。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "39": {
+   "name": "濡れ刃紋",
+   "kind": "weapon",
+   "gameId": -847539392,
+   "gameSkill": "HunterSkill_202",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "水に濡れている (泡状態なら altAffinityAdd)",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      3,
+      7,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 3,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "whenInactive": {},
+     "altAffinityAdd": 7
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      6,
+      14,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 6,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "whenInactive": {},
+     "altAffinityAdd": 14
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      9,
+      21,
+      1,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 9,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "whenInactive": {},
+     "altAffinityAdd": 21
+    }
+   ],
+   "source": "SkillData HunterSkill_202 _value[0]=濡れ時 _value[1]=泡状態の会心率%",
+   "confidence": "medium",
+   "note": "計算は濡れ時の値。泡状態の値は altAffinityAdd に入れてある。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "41": {
+   "name": "龍属性攻撃強化",
+   "kind": "weapon",
+   "gameId": -776946176,
+   "gameSkill": "HunterSkill_009",
+   "conditional": false,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      100,
+      4,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 40,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "elementType": "dragon"
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      110,
+      5,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 50,
+     "elementMul": 1.1,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "elementType": "dragon"
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      120,
+      6,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 60,
+     "elementMul": 1.2,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "elementType": "dragon"
+    }
+   ],
+   "source": "SkillData HunterSkill_009 _value[0]=倍率% _value[1]=加算 (内部値。表示値は×10)",
+   "confidence": "high",
+   "note": "elementAdd は表示値 (武器の属性値と同じ単位)。",
+   "verification": [
+    {
+     "item": "属性攻撃強化 (表示値)",
+     "gameData": [
+      [
+       1.0,
+       40
+      ],
+      [
+       1.1,
+       50
+      ],
+      [
+       1.2,
+       60
+      ]
+     ],
+     "survey": [
+      [
+       1.0,
+       40
+      ],
+      [
+       1.1,
+       50
+      ],
+      [
+       1.2,
+       60
+      ]
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "50": {
+   "name": "火属性攻撃強化",
+   "kind": "weapon",
+   "gameId": -562534336,
+   "gameSkill": "HunterSkill_005",
+   "conditional": false,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      100,
+      4,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 40,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "elementType": "fire"
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      110,
+      5,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 50,
+     "elementMul": 1.1,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "elementType": "fire"
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      120,
+      6,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 60,
+     "elementMul": 1.2,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "elementType": "fire"
+    }
+   ],
+   "source": "SkillData HunterSkill_005 _value[0]=倍率% _value[1]=加算 (内部値。表示値は×10)",
+   "confidence": "high",
+   "note": "elementAdd は表示値 (武器の属性値と同じ単位)。",
+   "verification": [
+    {
+     "item": "属性攻撃強化 (表示値)",
+     "gameData": [
+      [
+       1.0,
+       40
+      ],
+      [
+       1.1,
+       50
+      ],
+      [
+       1.2,
+       60
+      ]
+     ],
+     "survey": [
+      [
+       1.0,
+       40
+      ],
+      [
+       1.1,
+       50
+      ],
+      [
+       1.2,
+       60
+      ]
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "57": {
+   "name": "弱点特効",
+   "kind": "armor",
+   "gameId": -397570464,
+   "gameSkill": "HunterSkill_062",
+   "conditional": false,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      5,
+      3,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 5,
+     "woundAffinity": 3,
+     "critElementMul": null,
+     "weakPointMinHitzone": 45
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      10,
+      5,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 10,
+     "woundAffinity": 5,
+     "critElementMul": null,
+     "weakPointMinHitzone": 45
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      15,
+      10,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 15,
+     "woundAffinity": 10,
+     "critElementMul": null,
+     "weakPointMinHitzone": 45
+    },
+    {
+     "level": 4,
+     "gameLevel": 4,
+     "raw": [
+      20,
+      15,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 20,
+     "woundAffinity": 15,
+     "critElementMul": null,
+     "weakPointMinHitzone": 45
+    },
+    {
+     "level": 5,
+     "gameLevel": 5,
+     "raw": [
+      30,
+      20,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 30,
+     "woundAffinity": 20,
+     "critElementMul": null,
+     "weakPointMinHitzone": 45
+    }
+   ],
+   "source": "SkillData HunterSkill_062 _value[0]=有効部位 _value[1]=傷口の追加。しきい値 PlayerSkillParam._WeakAttackMeatThreshold",
+   "confidence": "high",
+   "note": "物理肉質 45 以上で weakPointAffinity。傷口では woundAffinity を足す (傷口の追加分が肉質しきい値と無関係に付くかは未確定。現状は肉質に関係なく足す)。",
+   "verification": [
+    {
+     "item": "弱点特効 有効部位",
+     "gameData": [
+      5,
+      10,
+      15,
+      20,
+      30
+     ],
+     "survey": [
+      5,
+      10,
+      15,
+      20,
+      30
+     ],
+     "match": true
+    },
+    {
+     "item": "弱点特効 傷口",
+     "gameData": [
+      3,
+      5,
+      10,
+      15,
+      20
+     ],
+     "survey": [
+      3,
+      5,
+      10,
+      15,
+      20
+     ],
+     "match": true
+    },
+    {
+     "item": "弱点特効 肉質しきい値",
+     "gameData": 45,
+     "survey": 45,
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "62": {
+   "name": "凍峰竜の反逆",
+   "kind": "set",
+   "gameId": -215826112,
+   "gameSkill": "HunterSkill_179",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "拘束・凍結からの回復、鍔迫り合いの後 (_value[0]=90 秒)",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      90,
+      25,
+      0,
+      0
+     ],
+     "attackAdd": 25,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      90,
+      50,
+      0,
+      0
+     ],
+     "attackAdd": 50,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_179 _value[1]=攻撃加算 _value[0]=効果時間(秒)",
+   "confidence": "high",
+   "note": "",
+   "verification": [
+    {
+     "item": "凍峰竜の反逆",
+     "gameData": [
+      25,
+      50
+     ],
+     "survey": [
+      25,
+      50
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "66": {
+   "name": "攻めの守勢",
+   "kind": "weapon",
+   "gameId": -181127504,
+   "gameSkill": "HunterSkill_028",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "ジャストガード成功後の一定時間",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      105,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.05,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      110,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.1,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      115,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.15,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_028 _value[0]=倍率%",
+   "confidence": "medium",
+   "note": "どこに掛かるかは未確定。MHWS-in-json の加工は攻撃 Lv4/5 の倍率と同じ段 (attack.stat.rate) なので、武器攻撃力に掛けて加算より先に計算する。",
+   "verification": [
+    {
+     "item": "攻めの守勢",
+     "gameData": [
+      1.05,
+      1.1,
+      1.15
+     ],
+     "survey": [
+      1.05,
+      1.1,
+      1.15
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "67": {
+   "name": "急襲",
+   "kind": "armor",
+   "gameId": -171796848,
+   "gameSkill": "HunterSkill_116",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "奇襲攻撃が成功した後の一定時間 (_value[1]=30 秒)",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      105,
+      30,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.05,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      110,
+      30,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.1,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      115,
+      30,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.15,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_116 _value[0]=攻撃倍率%",
+   "confidence": "high",
+   "note": "",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "70": {
+   "name": "闢獣の力",
+   "kind": "set",
+   "gameId": -62248528,
+   "gameSkill": "HunterSkill_175",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "鍔迫り合い・相殺の成功後 (_value[1]=180 秒)",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      10,
+      180,
+      0,
+      0
+     ],
+     "attackAdd": 10,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      25,
+      180,
+      0,
+      0
+     ],
+     "attackAdd": 25,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_175 _value[0]=攻撃加算",
+   "confidence": "high",
+   "note": "",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "71": {
+   "name": "火竜の力",
+   "kind": "set",
+   "gameId": -3666104,
+   "gameSkill": "HunterSkill_180",
+   "conditional": false,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      33,
+      24,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "extraDamage": {
+      "kind": "scorch",
+      "chance": 0.33,
+      "fixed": 20.0,
+      "element": 600.0,
+      "elementType": "fire",
+      "cooldownSec": 2.4,
+      "appliesTo": "additionalDamageHits"
+     }
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      33,
+      60,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "extraDamage": {
+      "kind": "scorch",
+      "chance": 0.33,
+      "fixed": 40.0,
+      "element": 1200.0,
+      "elementType": "fire",
+      "cooldownSec": 2.4,
+      "appliesTo": "additionalDamageHits"
+     }
+    }
+   ],
+   "source": "SkillData HunterSkill_180 _value[0]=発生確率%。固定/火属性は PlayerSkillParam._ScorchingHeatData[7..10] (上位)",
+   "confidence": "medium",
+   "note": "_ScorchingHeatData=[2.4, 50.0, 100.0, 20.0, 24.0, 30.0, 60.0, 20.0, 60.0, 40.0, 120.0]。[7,8]/[9,10] を上位Ⅰ/Ⅱ の (固定, 火属性内部値) と読んだ (調査値と一致)。先頭 2.4 は再発生までの秒数の候補 (調査値は 2 秒)。SkillData _value[1]=[24, 60] と [1..6] の意味は未確定 (下位の値の可能性)。追加ダメージ = 固定 + 火属性(内部値) × 火肉質/100。クールタイムは秒数が無いので計算に入れていない (多段の技ほど過大評価)。対象ヒットは RCOL の _UseSkillAdditionalDamage が true のものと推定。",
+   "verification": [
+    {
+     "item": "灼熱化 確率",
+     "gameData": 0.33,
+     "survey": 0.33,
+     "match": true
+    },
+    {
+     "item": "灼熱化Ⅰ 固定/火(表示)",
+     "gameData": [
+      20.0,
+      600.0
+     ],
+     "survey": [
+      20.0,
+      600.0
+     ],
+     "match": true
+    },
+    {
+     "item": "灼熱化Ⅱ 固定/火(表示)",
+     "gameData": [
+      40.0,
+      1200.0
+     ],
+     "survey": [
+      40.0,
+      1200.0
+     ],
+     "match": true
+    },
+    {
+     "item": "灼熱化 CT(秒)",
+     "gameData": 2.4,
+     "survey": 2.0,
+     "match": false
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "72": {
+   "name": "攻撃",
+   "kind": "weapon",
+   "gameId": 1,
+   "gameSkill": "HunterSkill_000",
+   "conditional": false,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      100,
+      3,
+      0,
+      0
+     ],
+     "attackAdd": 3,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      100,
+      5,
+      0,
+      0
+     ],
+     "attackAdd": 5,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      100,
+      7,
+      0,
+      0
+     ],
+     "attackAdd": 7,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 4,
+     "gameLevel": 4,
+     "raw": [
+      102,
+      8,
+      0,
+      0
+     ],
+     "attackAdd": 8,
+     "attackMul": 1.02,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 5,
+     "gameLevel": 5,
+     "raw": [
+      104,
+      9,
+      0,
+      0
+     ],
+     "attackAdd": 9,
+     "attackMul": 1.04,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_000 _value[0]=倍率% _value[1]=加算",
+   "confidence": "high",
+   "note": "",
+   "verification": [
+    {
+     "item": "攻撃 Lv1-5",
+     "gameData": [
+      [
+       1.0,
+       3
+      ],
+      [
+       1.0,
+       5
+      ],
+      [
+       1.0,
+       7
+      ],
+      [
+       1.02,
+       8
+      ],
+      [
+       1.04,
+       9
+      ]
+     ],
+     "survey": [
+      [
+       1.0,
+       3
+      ],
+      [
+       1.0,
+       5
+      ],
+      [
+       1.0,
+       7
+      ],
+      [
+       1.02,
+       8
+      ],
+      [
+       1.04,
+       9
+      ]
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "75": {
+   "name": "攻勢",
+   "kind": "armor",
+   "gameId": 27684744,
+   "gameSkill": "HunterSkill_111",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "大型モンスターが毒または麻痺状態",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      6,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 6,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      8,
+      5,
+      0,
+      0
+     ],
+     "attackAdd": 8,
+     "attackMul": 1.0,
+     "affinityAdd": 5,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      10,
+      10,
+      0,
+      0
+     ],
+     "attackAdd": 10,
+     "attackMul": 1.0,
+     "affinityAdd": 10,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 4,
+     "gameLevel": 4,
+     "raw": [
+      12,
+      15,
+      0,
+      0
+     ],
+     "attackAdd": 12,
+     "attackMul": 1.0,
+     "affinityAdd": 15,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 5,
+     "gameLevel": 5,
+     "raw": [
+      15,
+      20,
+      0,
+      0
+     ],
+     "attackAdd": 15,
+     "attackMul": 1.0,
+     "affinityAdd": 20,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_111 _value[0]=攻撃加算 _value[1]=会心率%",
+   "confidence": "high",
+   "note": "",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "81": {
+   "name": "逆襲",
+   "kind": "armor",
+   "gameId": 280489184,
+   "gameSkill": "HunterSkill_110",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "ふきとばされた後の一定時間",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      10,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 10,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      15,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 15,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      25,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 25,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_110 _value[0]=攻撃加算。時間 PlayerSkillParam._CounterAttack_MaxActiveTime_Lv1-3",
+   "confidence": "high",
+   "note": "",
+   "verification": [
+    {
+     "item": "逆襲",
+     "gameData": [
+      10,
+      15,
+      25
+     ],
+     "survey": [
+      10,
+      15,
+      25
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "82": {
+   "name": "会心撃【属性】",
+   "kind": "weapon",
+   "gameId": 313598432,
+   "gameSkill": "HunterSkill_003",
+   "conditional": false,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": 1.05
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": 1.1
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": 1.15
+    }
+   ],
+   "source": "PlayerSkillParam._AttrPowerRateData[0..2] (片手剣の段)。[3..5]=1.07/1.14/1.21 は大剣・ハンマー・狩猟笛・ヘビィ",
+   "confidence": "high",
+   "note": "攻略サイトの値 (low) をゲームデータで確認できた。会心が出たときだけ属性ダメージに掛かる (マイナス会心は属性に掛からない扱い)。",
+   "verification": [
+    {
+     "item": "会心撃【属性】片手剣",
+     "gameData": [
+      1.05,
+      1.1,
+      1.15
+     ],
+     "survey": [
+      1.05,
+      1.1,
+      1.15
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "85": {
+   "name": "鈍器使い",
+   "kind": "weapon",
+   "gameId": 397306144,
+   "gameSkill": "HunterSkill_020",
+   "conditional": false,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      105,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "lowSharpnessMul": 1.05,
+     "lowSharpnessMaxColor": "yellow"
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      110,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "lowSharpnessMul": 1.1,
+     "lowSharpnessMaxColor": "yellow"
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      110,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "lowSharpnessMul": 1.1,
+     "lowSharpnessMaxColor": "green"
+    }
+   ],
+   "source": "SkillData HunterSkill_020 _value[0]=倍率%。色のしきい値はスキル説明文",
+   "confidence": "medium",
+   "note": "物理ダメージにだけ掛ける扱い (MHWS-in-json の加工は attack.hit.rate)。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "86": {
+   "name": "飛燕",
+   "kind": "weapon",
+   "gameId": 402237312,
+   "gameSkill": "HunterSkill_055",
+   "conditional": false,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      110,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "jumpMul": 1.1
+    }
+   ],
+   "source": "SkillData HunterSkill_055 _value[0]=倍率%。対象は RCOL の _IsSkillHien が true のヒット",
+   "confidence": "high",
+   "note": "motions_sns.json の hits[].hien が true のヒットにだけ掛ける。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "87": {
+   "name": "火事場力",
+   "kind": "armor",
+   "gameId": 422666624,
+   "gameSkill": "HunterSkill_100",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "体力が最大値の 35% 以下",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      100,
+      50,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      105,
+      50,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.05,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      105,
+      100,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.05,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 4,
+     "gameLevel": 4,
+     "raw": [
+      110,
+      100,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.1,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 5,
+     "gameLevel": 5,
+     "raw": [
+      130,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.3,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_100 _value[0]=攻撃倍率% (防御の上昇は火力外)",
+   "confidence": "high",
+   "note": "",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "89": {
+   "name": "革細工の滑性",
+   "kind": "group",
+   "gameId": 451472896,
+   "gameSkill": "HunterSkill_165",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "地形を利用したスライディングの後 (_value[0]=60 秒)",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 3,
+     "raw": [
+      60,
+      30,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 30,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_165 Lv3 _value[1]=会心率%",
+   "confidence": "medium",
+   "note": "",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "91": {
+   "name": "水属性攻撃強化",
+   "kind": "weapon",
+   "gameId": 508916704,
+   "gameSkill": "HunterSkill_006",
+   "conditional": false,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      100,
+      4,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 40,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "elementType": "water"
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      110,
+      5,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 50,
+     "elementMul": 1.1,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "elementType": "water"
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      120,
+      6,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 60,
+     "elementMul": 1.2,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "elementType": "water"
+    }
+   ],
+   "source": "SkillData HunterSkill_006 _value[0]=倍率% _value[1]=加算 (内部値。表示値は×10)",
+   "confidence": "high",
+   "note": "elementAdd は表示値 (武器の属性値と同じ単位)。",
+   "verification": [
+    {
+     "item": "属性攻撃強化 (表示値)",
+     "gameData": [
+      [
+       1.0,
+       40
+      ],
+      [
+       1.1,
+       50
+      ],
+      [
+       1.2,
+       60
+      ]
+     ],
+     "survey": [
+      [
+       1.0,
+       40
+      ],
+      [
+       1.1,
+       50
+      ],
+      [
+       1.2,
+       60
+      ]
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "93": {
+   "name": "煌雷竜の力",
+   "kind": "set",
+   "gameId": 539707072,
+   "gameSkill": "HunterSkill_176",
+   "conditional": true,
+   "defaultUptime": 0.0,
+   "uptimeBasis": "未対応",
+   "condition": "力の解放の発動時間を延長",
+   "supported": false,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      30,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      90,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_176 _value[0]=延長秒",
+   "confidence": "low",
+   "note": "直接の火力上昇は無い。力の解放の発動率を上げる形で人が入れる。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "95": {
+   "name": "連撃",
+   "kind": "armor",
+   "gameId": 565867136,
+   "gameSkill": "HunterSkill_114",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "5 ヒット継続後の強化状態 (非発動側は 1〜4 ヒット目の効果)",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 8,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 60,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "whenInactive": {
+      "attackAdd": 5,
+      "elementAdd": 50
+     }
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 10,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 80,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "whenInactive": {
+      "attackAdd": 5,
+      "elementAdd": 50
+     }
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 12,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 100,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "whenInactive": {
+      "attackAdd": 5,
+      "elementAdd": 50
+     }
+    },
+    {
+     "level": 4,
+     "gameLevel": 4,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 15,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 120,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "whenInactive": {
+      "attackAdd": 5,
+      "elementAdd": 50
+     }
+    },
+    {
+     "level": 5,
+     "gameLevel": 5,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 18,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 140,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "whenInactive": {
+      "attackAdd": 5,
+      "elementAdd": 50
+     }
+    }
+   ],
+   "source": "PlayerSkillParam._ContinuousAttackWp01Data。並び [?, 初期攻撃, 初期属性, Lv1強化攻撃, Lv1強化属性, ...] は MHWS-in-json の解釈",
+   "confidence": "medium",
+   "note": "元データ [4, 5, 5, 8, 6, 10, 8, 12, 10, 15, 12, 18, 14]。先頭 4 の意味は未確定 (強化までのヒット数の可能性)。属性は内部値なので表示値に直すため ×10。whenInactive は強化前 (1〜4 ヒット目) の効果で、攻撃を当てている前提。",
+   "verification": [
+    {
+     "item": "連撃 強化後の攻撃",
+     "gameData": [
+      8,
+      10,
+      12,
+      15,
+      18
+     ],
+     "survey": [
+      8,
+      10,
+      12,
+      15,
+      18
+     ],
+     "match": true
+    },
+    {
+     "item": "連撃 強化後の属性(表示)",
+     "gameData": [
+      60,
+      80,
+      100,
+      120,
+      140
+     ],
+     "survey": [
+      60,
+      80,
+      100,
+      120,
+      140
+     ],
+     "match": true
+    },
+    {
+     "item": "連撃 1〜4ヒット目",
+     "gameData": [
+      5,
+      50
+     ],
+     "survey": [
+      5,
+      50
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "96": {
+   "name": "白熾の奔流",
+   "kind": "weapon",
+   "gameId": 576193792,
+   "gameSkill": "HunterSkill_204",
+   "conditional": false,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": false,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "PlayerSkillParam._ViolentData (MHWS-in-json も『対応未確認』)",
+   "confidence": "low",
+   "note": "確率で追加ダメージ。灼熱化と併用すると灼熱化は出ず、火属性ダメージが足される。_ViolentData=[2.0, 45.0, 85.0] の意味が未確定なので計算は未対応。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "99": {
+   "name": "渾身",
+   "kind": "armor",
+   "gameId": 632127488,
+   "gameSkill": "HunterSkill_064",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "スタミナ満タンをしばらく維持",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      10,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 10,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      20,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 20,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      30,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 30,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_064 _value[0]=会心率%",
+   "confidence": "high",
+   "note": "",
+   "verification": [
+    {
+     "item": "渾身",
+     "gameData": [
+      10,
+      20,
+      30
+     ],
+     "survey": [
+      10,
+      20,
+      30
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "103": {
+   "name": "抜刀術【技】",
+   "kind": "weapon",
+   "gameId": 686533440,
+   "gameSkill": "HunterSkill_029",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "武器出し行動の後の一定時間 (騎乗中は無効)",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      50,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 50,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      75,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 75,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      100,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 100,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_029 _value[0]=会心率%",
+   "confidence": "high",
+   "note": "",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "106": {
+   "name": "黒蝕竜の力",
+   "kind": "set",
+   "gameId": 722735744,
+   "gameSkill": "HunterSkill_183",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "狂竜症を克服した状態 (会心 +15% は 60 秒)。非発動側は感染中",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 15,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "whenInactive": {
+      "attackAdd": 0
+     }
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      10,
+      15,
+      0,
+      0
+     ],
+     "attackAdd": 15,
+     "attackMul": 1.0,
+     "affinityAdd": 15,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "whenInactive": {
+      "attackAdd": 10
+     }
+    }
+   ],
+   "source": "SkillData HunterSkill_183 (_openSkill HunterSkill_196) _value[0]=感染中の攻撃 _value[1]=克服時の攻撃。会心は PlayerStatusParam._Frenzy_Overcome_CriticalRate/_Duration",
+   "confidence": "medium",
+   "note": "Ⅱ は感染中 +10、克服時 +15 (合計値と読んだ。MHWS-in-json の注記も『Ⅱ 攻撃力合計 +15』)。『さらに +15 (合計 +25)』の読み方もあり得るので未確定。Ⅰ は攻撃上昇なし・克服で会心のみ。",
+   "verification": [
+    {
+     "item": "黒蝕竜Ⅰ 克服時 会心",
+     "gameData": 15,
+     "survey": 15,
+     "match": true
+    },
+    {
+     "item": "黒蝕竜Ⅰ 攻撃",
+     "gameData": 0,
+     "survey": 0,
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "107": {
+   "name": "雪獅子の闘志",
+   "kind": "set",
+   "gameId": 741102208,
+   "gameSkill": "HunterSkill_182",
+   "conditional": true,
+   "defaultUptime": 0.0,
+   "uptimeBasis": "未対応",
+   "condition": "ジェスチャー「雄叫び」の後",
+   "supported": false,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      90,
+      10,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      90,
+      20,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_182 _value=[90,10]/[90,20]",
+   "confidence": "low",
+   "note": "自分への上昇量 (オトモ・サポートハンターより小さい) が分からないので未対応。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "115": {
+   "name": "兇爪竜の力",
+   "kind": "set",
+   "gameId": 918165056,
+   "gameSkill": "HunterSkill_186",
+   "conditional": true,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "連撃が発動している間 (攻撃を当て続けている間) は常に有効。連撃が無ければ効かない",
+   "condition": "「連撃」スキルの発動中",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      1,
+      8,
+      0,
+      0
+     ],
+     "attackAdd": 8,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      2,
+      18,
+      0,
+      0
+     ],
+     "attackAdd": 18,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_186 _value[1]=攻撃加算 (_value[0]=連撃の時間延長段階)",
+   "confidence": "high",
+   "note": "",
+   "verification": [
+    {
+     "item": "兇爪竜の力",
+     "gameData": [
+      8,
+      18
+     ],
+     "survey": [
+      8,
+      18
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": 95
+  },
+  "120": {
+   "name": "巧撃",
+   "kind": "armor",
+   "gameId": 1174975744,
+   "gameSkill": "HunterSkill_115",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "回避でモンスターの攻撃が重なった後の一定時間",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      10,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 10,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      15,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 15,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      20,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 20,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 4,
+     "gameLevel": 4,
+     "raw": [
+      25,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 25,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 5,
+     "gameLevel": 5,
+     "raw": [
+      30,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 30,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_115 _value[0]=攻撃加算",
+   "confidence": "high",
+   "note": "",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "121": {
+   "name": "氷属性攻撃強化",
+   "kind": "weapon",
+   "gameId": 1268070400,
+   "gameSkill": "HunterSkill_007",
+   "conditional": false,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      100,
+      4,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 40,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "elementType": "ice"
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      110,
+      5,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 50,
+     "elementMul": 1.1,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "elementType": "ice"
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      120,
+      6,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 60,
+     "elementMul": 1.2,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "elementType": "ice"
+    }
+   ],
+   "source": "SkillData HunterSkill_007 _value[0]=倍率% _value[1]=加算 (内部値。表示値は×10)",
+   "confidence": "high",
+   "note": "elementAdd は表示値 (武器の属性値と同じ単位)。",
+   "verification": [
+    {
+     "item": "属性攻撃強化 (表示値)",
+     "gameData": [
+      [
+       1.0,
+       40
+      ],
+      [
+       1.1,
+       50
+      ],
+      [
+       1.2,
+       60
+      ]
+     ],
+     "survey": [
+      [
+       1.0,
+       40
+      ],
+      [
+       1.1,
+       50
+      ],
+      [
+       1.2,
+       60
+      ]
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "123": {
+   "name": "逆恨み",
+   "kind": "armor",
+   "gameId": 1359821952,
+   "gameSkill": "HunterSkill_060",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "体力ゲージに赤い部分がある",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      5,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 5,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      10,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 10,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      15,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 15,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 4,
+     "gameLevel": 4,
+     "raw": [
+      20,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 20,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 5,
+     "gameLevel": 5,
+     "raw": [
+      25,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 25,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_060 _value[0]=攻撃加算",
+   "confidence": "high",
+   "note": "",
+   "verification": [
+    {
+     "item": "逆恨み",
+     "gameData": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "survey": [
+      5,
+      10,
+      15,
+      20,
+      25
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "127": {
+   "name": "雷属性攻撃強化",
+   "kind": "weapon",
+   "gameId": 1452140672,
+   "gameSkill": "HunterSkill_008",
+   "conditional": false,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      100,
+      4,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 40,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "elementType": "thunder"
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      110,
+      5,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 50,
+     "elementMul": 1.1,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "elementType": "thunder"
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      120,
+      6,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 60,
+     "elementMul": 1.2,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "elementType": "thunder"
+    }
+   ],
+   "source": "SkillData HunterSkill_008 _value[0]=倍率% _value[1]=加算 (内部値。表示値は×10)",
+   "confidence": "high",
+   "note": "elementAdd は表示値 (武器の属性値と同じ単位)。",
+   "verification": [
+    {
+     "item": "属性攻撃強化 (表示値)",
+     "gameData": [
+      [
+       1.0,
+       40
+      ],
+      [
+       1.1,
+       50
+      ],
+      [
+       1.2,
+       60
+      ]
+     ],
+     "survey": [
+      [
+       1.0,
+       40
+      ],
+      [
+       1.1,
+       50
+      ],
+      [
+       1.2,
+       60
+      ]
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "129": {
+   "name": "破壊王",
+   "kind": "armor",
+   "gameId": 1470960256,
+   "gameSkill": "HunterSkill_091",
+   "conditional": true,
+   "defaultUptime": 0.0,
+   "uptimeBasis": "未対応",
+   "condition": "傷口の破壊・部位破壊",
+   "supported": false,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      110,
+      110,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      120,
+      120,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      130,
+      130,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_091 _value[0]=部位蓄積% _value[1]=傷口破壊時%",
+   "confidence": "low",
+   "note": "集中弱点攻撃で傷口を破壊したときのダメージ倍率。どのヒットが『破壊時』かが未確定なので計算は未対応。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "131": {
+   "name": "ヌシの魂",
+   "kind": "group",
+   "gameId": 1484575872,
+   "gameSkill": "HunterSkill_205",
+   "conditional": true,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "根性が発動するまでは常時有効。発動後は攻撃上昇が消えるので、被弾が多い人は下げる",
+   "condition": "根性【果敢】の発動前",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 3,
+     "raw": [
+      105,
+      95,
+      105,
+      3
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.05,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_205 Lv3 _value[0]=攻撃倍率% (_value[1]=発動前の防御倍率)",
+   "confidence": "high",
+   "note": "武器攻撃力に掛ける倍率。",
+   "verification": [
+    {
+     "item": "ヌシの魂 攻撃倍率",
+     "gameData": [
+      1.05
+     ],
+     "survey": [
+      1.05
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "136": {
+   "name": "心眼",
+   "kind": "weapon",
+   "gameId": 1594792704,
+   "gameSkill": "HunterSkill_018",
+   "conditional": false,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      50,
+      110,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "hardPartMul": 1.1,
+     "hardPartMaxHitzone": 44
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      100,
+      115,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "hardPartMul": 1.15,
+     "hardPartMaxHitzone": 44
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      100,
+      130,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "hardPartMul": 1.3,
+     "hardPartMaxHitzone": 44
+    }
+   ],
+   "source": "SkillData HunterSkill_018 _value[1]=硬い部位への倍率%。しきい値 PlayerSkillParam._Shingan_MeatThreshold",
+   "confidence": "medium",
+   "note": "物理肉質 44 以下で物理ダメージに掛ける (しきい値が『以下』か『未満』かは未確定)。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "138": {
+   "name": "研鑽",
+   "kind": "armor",
+   "gameId": 1639440000,
+   "gameSkill": "HunterSkill_145",
+   "conditional": true,
+   "defaultUptime": 0.0,
+   "uptimeBasis": "未対応",
+   "condition": "クエスト経過時間",
+   "supported": false,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "PlayerSkillParam._Diligent_ActiveAttackParam / _Diligent_ActiveTimeInterval",
+   "confidence": "low",
+   "note": "攻撃の段階値 [0, 4, 8, 12]、間隔 300.0 秒 × 6 回。段階と経過時間の対応が未確定なので計算は未対応。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "142": {
+   "name": "力の解放",
+   "kind": "armor",
+   "gameId": 1763191040,
+   "gameSkill": "HunterSkill_063",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "発動条件を満たした後の一定時間",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      10,
+      70,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 10,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      20,
+      70,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 20,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      30,
+      50,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 30,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 4,
+     "gameLevel": 4,
+     "raw": [
+      40,
+      50,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 40,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 5,
+     "gameLevel": 5,
+     "raw": [
+      50,
+      50,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 50,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_063 _value[0]=会心率%",
+   "confidence": "high",
+   "note": "",
+   "verification": [
+    {
+     "item": "力の解放",
+     "gameData": [
+      10,
+      20,
+      30,
+      40,
+      50
+     ],
+     "survey": [
+      10,
+      20,
+      30,
+      40,
+      50
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "144": {
+   "name": "挑戦者",
+   "kind": "armor",
+   "gameId": 1865909632,
+   "gameSkill": "HunterSkill_058",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "戦闘中の大型モンスターが怒り状態",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      4,
+      3,
+      0,
+      0
+     ],
+     "attackAdd": 4,
+     "attackMul": 1.0,
+     "affinityAdd": 3,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      8,
+      5,
+      0,
+      0
+     ],
+     "attackAdd": 8,
+     "attackMul": 1.0,
+     "affinityAdd": 5,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      12,
+      7,
+      0,
+      0
+     ],
+     "attackAdd": 12,
+     "attackMul": 1.0,
+     "affinityAdd": 7,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 4,
+     "gameLevel": 4,
+     "raw": [
+      16,
+      10,
+      0,
+      0
+     ],
+     "attackAdd": 16,
+     "attackMul": 1.0,
+     "affinityAdd": 10,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 5,
+     "gameLevel": 5,
+     "raw": [
+      20,
+      15,
+      0,
+      0
+     ],
+     "attackAdd": 20,
+     "attackMul": 1.0,
+     "affinityAdd": 15,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_058 _value[0]=攻撃加算 _value[1]=会心率%",
+   "confidence": "high",
+   "note": "",
+   "verification": [
+    {
+     "item": "挑戦者 攻撃",
+     "gameData": [
+      4,
+      8,
+      12,
+      16,
+      20
+     ],
+     "survey": [
+      4,
+      8,
+      12,
+      16,
+      20
+     ],
+     "match": true
+    },
+    {
+     "item": "挑戦者 会心",
+     "gameData": [
+      3,
+      5,
+      7,
+      10,
+      15
+     ],
+     "survey": [
+      3,
+      5,
+      7,
+      10,
+      15
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "149": {
+   "name": "獄焔蛸の反逆",
+   "kind": "set",
+   "gameId": 1980404096,
+   "gameSkill": "HunterSkill_178",
+   "conditional": true,
+   "defaultUptime": 0.0,
+   "uptimeBasis": "未対応",
+   "condition": "逆恨み発動中",
+   "supported": false,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      23,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      50,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_178 _value[0]=23/50",
+   "confidence": "low",
+   "note": "追加ダメージの式が未確定なので計算は未対応。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "150": {
+   "name": "毛皮の昂揚",
+   "kind": "group",
+   "gameId": 1998066176,
+   "gameSkill": "HunterSkill_168",
+   "conditional": true,
+   "defaultUptime": 0.0,
+   "uptimeBasis": "未対応",
+   "condition": "力尽きる度 (最大 2 回)",
+   "supported": false,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 3,
+     "raw": [
+      110,
+      115,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_168 Lv3 _value=[110, 115]",
+   "confidence": "low",
+   "note": "1 回ごとの上昇量と攻撃/防御の割り当てが未確定なので計算は未対応。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "152": {
+   "name": "属性変換",
+   "kind": "armor",
+   "gameId": 2083363072,
+   "gameSkill": "HunterSkill_191",
+   "conditional": true,
+   "defaultUptime": 0.0,
+   "uptimeBasis": "未対応",
+   "condition": "属性攻撃を受けた後",
+   "supported": false,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      8,
+      110,
+      150,
+      60
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      12,
+      115,
+      200,
+      80
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      18,
+      120,
+      280,
+      100
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_191",
+   "confidence": "low",
+   "note": "龍属性への変換と追加ダメージ。計算は未対応。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "154": {
+   "name": "フルチャージ",
+   "kind": "armor",
+   "gameId": 2106877312,
+   "gameSkill": "HunterSkill_059",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "体力が最大",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      3,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 3,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      6,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 6,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      10,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 10,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 4,
+     "gameLevel": 4,
+     "raw": [
+      15,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 15,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 5,
+     "gameLevel": 5,
+     "raw": [
+      20,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 20,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_059 _value[0]=攻撃加算",
+   "confidence": "high",
+   "note": "",
+   "verification": [
+    {
+     "item": "フルチャージ",
+     "gameData": [
+      3,
+      6,
+      10,
+      15,
+      20
+     ],
+     "survey": [
+      3,
+      6,
+      10,
+      15,
+      20
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "155": {
+   "name": "ヌシの憤激",
+   "kind": "group",
+   "gameId": 2107855744,
+   "gameSkill": "HunterSkill_171",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "ハンターが状態異常中",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 3,
+     "raw": [
+      10,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 10,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_171 Lv3 _value[0]=10",
+   "confidence": "medium",
+   "note": "_value[0]=10 を攻撃加算と読んだ (倍率の可能性は低いが未確認)。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "161": {
+   "name": "踊火の祈り",
+   "kind": "set",
+   "gameId": 8694,
+   "gameSkill": "HunterSkill_221",
+   "conditional": true,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "儀式 (イベント) の期間中のみ。期間外は 0 にする",
+   "condition": "季節の儀式の期間中",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      100,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      109,
+      50,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.09,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_221 _value[0]=109 (Ⅱ) を攻撃倍率% と読んだ",
+   "confidence": "low",
+   "note": "説明文は『攻撃力と防御力が大きく上昇』。109 を ×1.09 と読んだが、加算の可能性もあり未確定。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "162": {
+   "name": "海竜の渦雷",
+   "kind": "set",
+   "gameId": 16835,
+   "gameSkill": "HunterSkill_212",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "蓄積で追加の雷ダメージが出た後の一定時間 (_value[2]=20/30 秒)",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      60,
+      15,
+      20,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 15,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      60,
+      15,
+      30,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 15,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_212 _value[1]=会心率% と読んだ。PlayerSkillParam._DischargeData",
+   "confidence": "low",
+   "note": "追加の雷属性ダメージは蓄積しきい値が非公開なので計算しない。会心率 +15 の読みも未確認。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "164": {
+   "name": "パワーストーン",
+   "kind": "weapon",
+   "gameId": 28385,
+   "gameSkill": "HunterSkill_229",
+   "conditional": true,
+   "defaultUptime": 0.0,
+   "uptimeBasis": "未対応",
+   "condition": "鉱石の入手後",
+   "supported": false,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "PlayerSkillParam (未特定)",
+   "confidence": "low",
+   "note": "上昇値の式が未確定なので未対応。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "167": {
+   "name": "千刃竜の闘志",
+   "kind": "set",
+   "gameId": 30992,
+   "gameSkill": "HunterSkill_215",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "「巧撃」発動中に再び条件を満たしたとき (Ⅱ)",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      15,
+      100,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      15,
+      105,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.05,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_215 _value[1]=100/105 を攻撃倍率% と読んだ",
+   "confidence": "low",
+   "note": "",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "170": {
+   "name": "夢灯の祈り",
+   "kind": "set",
+   "gameId": 11709,
+   "gameSkill": "HunterSkill_223",
+   "conditional": true,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "儀式 (イベント) の期間中のみ。期間外は 0 にする",
+   "condition": "季節の儀式の期間中",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      100,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      109,
+      50,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.09,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_223 _value[0]=109 (Ⅱ) を攻撃倍率% と読んだ",
+   "confidence": "low",
+   "note": "説明文は『攻撃力と防御力が大きく上昇』。109 を ×1.09 と読んだが、加算の可能性もあり未確定。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "171": {
+   "name": "炎の料理人",
+   "kind": "weapon",
+   "gameId": 16931,
+   "gameSkill": "HunterSkill_231",
+   "conditional": true,
+   "defaultUptime": 0.0,
+   "uptimeBasis": "未対応",
+   "condition": "肉焼きの後",
+   "supported": false,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "PlayerSkillParam._MeatGrillMasterData",
+   "confidence": "low",
+   "note": "焼き加減で効果が変わるので未対応。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "173": {
+   "name": "オメガレゾナンス",
+   "kind": "set",
+   "gameId": 31540,
+   "gameSkill": "HunterSkill_237",
+   "conditional": true,
+   "defaultUptime": 0.0,
+   "uptimeBasis": "未対応",
+   "condition": "レゾナンス",
+   "supported": false,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      20,
+      10,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      40,
+      20,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "PlayerSkillParam._ResonanceData",
+   "confidence": "low",
+   "note": "ファー/ニアーの条件と値の対応が未確定なので未対応。",
+   "verification": [],
+   "requiresSkillId": null
+  },
+  "178": {
+   "name": "巨戟龍の黙示録",
+   "kind": "set",
+   "gameId": 5590,
+   "gameSkill": "HunterSkill_239",
+   "conditional": true,
+   "defaultUptime": 0.5,
+   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "condition": "戦闘中の大型モンスターが怒り状態",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      120,
+      2,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 20,
+     "elementMul": 1.2,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      130,
+      4,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 40,
+     "elementMul": 1.3,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_239 (_openSkill HunterSkill_242) _value[0]=属性倍率% _value[1]=属性加算(内部値)",
+   "confidence": "high",
+   "note": "",
+   "verification": [
+    {
+     "item": "巨戟龍の黙示録 (表示値)",
+     "gameData": [
+      [
+       1.2,
+       20
+      ],
+      [
+       1.3,
+       40
+      ]
+     ],
+     "survey": [
+      [
+       1.2,
+       20
+      ],
+      [
+       1.3,
+       40
+      ]
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "180": {
+   "name": "祝謡の祈り",
+   "kind": "set",
+   "gameId": 30815,
+   "gameSkill": "HunterSkill_225",
+   "conditional": true,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "儀式 (イベント) の期間中のみ。期間外は 0 にする",
+   "condition": "季節の儀式の期間中",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 2,
+     "raw": [
+      100,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    },
+    {
+     "level": 2,
+     "gameLevel": 4,
+     "raw": [
+      109,
+      50,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.09,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null
+    }
+   ],
+   "source": "SkillData HunterSkill_225 _value[0]=109 (Ⅱ) を攻撃倍率% と読んだ",
+   "confidence": "low",
+   "note": "説明文は『攻撃力と防御力が大きく上昇』。109 を ×1.09 と読んだが、加算の可能性もあり未確定。",
+   "verification": [],
+   "requiresSkillId": null
+  }
+ }
+}

@@ -1,0 +1,3910 @@
+{
+ "meta": {
+  "source": [
+   "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/4a99b267930a0a83bcf45274733f169455c7b641/MHWS-in-json/natives/STM/GameDesign/Common/Equip/RandomAmuletPtTable.user.3.json",
+   "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/4a99b267930a0a83bcf45274733f169455c7b641/MHWS-in-json/natives/STM/GameDesign/Common/Equip/RandomAmuletLotSkillTable.user.3.json",
+   "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/4a99b267930a0a83bcf45274733f169455c7b641/MHWS-in-json/natives/STM/GameDesign/Common/Equip/RandomAmuletAccSlot.user.3.json",
+   "https://wilds.mhdb.io/ja/charms",
+   "https://wilds.mhdb.io/ja/skills",
+   "https://github.com/dzxrly/MHWS-in-json/releases/download/database-20261020-070700-4a99b26/PROCESSED_DATA_20261020-070700-4a99b26.zip"
+  ],
+  "generatedAt": "2026-10-21T03:08:28+00:00",
+  "gameVersion": "1.042",
+  "sourceVersions": {
+   "mhdb": "wilds.mhdb.io /ja/ (取得日時は meta.source の各 fetchedAt)",
+   "mhwsInJson": "dzxrly/MHWS-in-json database-20261020-070700-4a99b26 (commit 4a99b26, ゲーム版 1.42.0.2)"
+  },
+  "license": {
+   "mhdb": "wilds.mhdb.io (LartTyler/mhdb-wilds-data)。ゲームデータの数値と名前のみ使用",
+   "mhwsInJson": "MIT (dzxrly/MHWS-in-json)"
+  },
+  "checks": {
+   "rarityOffset": [
+    1
+   ],
+   "processedPoolMatch": true,
+   "processedSkillPoolMatch": true,
+   "nakiSimCompatible": {
+    "ok": true,
+    "outside": [],
+    "nakiSimChoicesUnused": [
+     [
+      1,
+      1,
+      1
+     ]
+    ],
+    "slotPtsDefinedButUnused": [
+     3
+    ]
+   }
+  },
+  "note": "rarities のキーはゲーム内のレア度。patterns が抽選表の 1 行 (重複は weight に畳んだ)。skillGroups[i] = スキル枠 i の群番号 (0 は枠なし)。groups[群番号] の Lv はその群で付く Lv。slotPatterns / skillSlots は patterns を枠ごとにまとめたもの (枠どうしの組み合わせは patterns を見る)"
+ },
+ "rarities": {
+  "5": {
+   "name": "未解の護石",
+   "amuletType": "AT_0189",
+   "amuletGameId": -1608406656,
+   "mhdbCharmId": 61,
+   "rows": 24,
+   "totalWeight": 24,
+   "minSkills": 2,
+   "maxSkills": 3,
+   "slotPatterns": [
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "weight": 6
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "weight": 6
+    },
+    {
+     "slotPt": 5,
+     "armor": [
+      2,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "weight": 6
+    },
+    {
+     "slotPt": 6,
+     "armor": [
+      3,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "weight": 6
+    }
+   ],
+   "skillSlots": [
+    {
+     "groups": [
+      1
+     ],
+     "kinds": [
+      "weapon"
+     ],
+     "optional": false
+    },
+    {
+     "groups": [
+      6,
+      7,
+      8,
+      9,
+      10
+     ],
+     "kinds": [
+      "armor"
+     ],
+     "optional": false
+    },
+    {
+     "groups": [
+      6,
+      8
+     ],
+     "kinds": [
+      "armor"
+     ],
+     "optional": true
+    }
+   ],
+   "patterns": [
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      6,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      7,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      8,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      8,
+      8
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      9,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      10,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      6,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      7,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      8,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      8,
+      8
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      9,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      10,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 5,
+     "armor": [
+      2,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      6,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 5,
+     "armor": [
+      2,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      7,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 5,
+     "armor": [
+      2,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      8,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 5,
+     "armor": [
+      2,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      8,
+      8
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 5,
+     "armor": [
+      2,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      9,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 5,
+     "armor": [
+      2,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      10,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 6,
+     "armor": [
+      3,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      6,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 6,
+     "armor": [
+      3,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      7,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 6,
+     "armor": [
+      3,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      8,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 6,
+     "armor": [
+      3,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      8,
+      8
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 6,
+     "armor": [
+      3,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      9,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 6,
+     "armor": [
+      3,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      10,
+      0
+     ],
+     "weight": 1
+    }
+   ],
+   "skillMaxLevel": {
+    "1": 3,
+    "3": 1,
+    "7": 1,
+    "8": 1,
+    "9": 1,
+    "12": 1,
+    "13": 2,
+    "14": 4,
+    "15": 3,
+    "16": 1,
+    "18": 3,
+    "24": 1,
+    "29": 1,
+    "30": 3,
+    "31": 3,
+    "32": 3,
+    "35": 3,
+    "36": 1,
+    "37": 3,
+    "38": 1,
+    "40": 1,
+    "41": 1,
+    "43": 3,
+    "46": 3,
+    "47": 1,
+    "48": 3,
+    "49": 2,
+    "50": 1,
+    "52": 2,
+    "53": 1,
+    "55": 2,
+    "57": 1,
+    "58": 2,
+    "59": 1,
+    "60": 1,
+    "63": 2,
+    "64": 3,
+    "66": 1,
+    "67": 2,
+    "68": 1,
+    "69": 1,
+    "72": 1,
+    "75": 1,
+    "77": 3,
+    "78": 1,
+    "80": 2,
+    "81": 2,
+    "82": 1,
+    "84": 3,
+    "85": 1,
+    "87": 3,
+    "88": 2,
+    "90": 3,
+    "91": 1,
+    "92": 3,
+    "95": 1,
+    "98": 3,
+    "99": 2,
+    "100": 3,
+    "101": 3,
+    "102": 2,
+    "103": 1,
+    "104": 1,
+    "105": 3,
+    "108": 3,
+    "109": 1,
+    "110": 3,
+    "111": 3,
+    "112": 4,
+    "113": 4,
+    "117": 1,
+    "118": 4,
+    "119": 1,
+    "120": 1,
+    "121": 1,
+    "122": 3,
+    "123": 2,
+    "125": 3,
+    "126": 1,
+    "127": 1,
+    "128": 3,
+    "129": 2,
+    "130": 3,
+    "133": 1,
+    "134": 1,
+    "135": 3,
+    "136": 1,
+    "137": 1,
+    "140": 1,
+    "141": 1,
+    "142": 1,
+    "144": 1,
+    "146": 3,
+    "147": 3,
+    "151": 3,
+    "152": 1,
+    "154": 2,
+    "156": 3
+   }
+  },
+  "6": {
+   "name": "史伝の護石",
+   "amuletType": "AT_0190",
+   "amuletGameId": 837371776,
+   "mhdbCharmId": 64,
+   "rows": 28,
+   "totalWeight": 28,
+   "minSkills": 2,
+   "maxSkills": 3,
+   "slotPatterns": [
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "weight": 7
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "weight": 7
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "weight": 7
+    },
+    {
+     "slotPt": 5,
+     "armor": [
+      2,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "weight": 7
+    }
+   ],
+   "skillSlots": [
+    {
+     "groups": [
+      1,
+      2
+     ],
+     "kinds": [
+      "weapon"
+     ],
+     "optional": false
+    },
+    {
+     "groups": [
+      1,
+      6,
+      8,
+      9,
+      10
+     ],
+     "kinds": [
+      "armor",
+      "weapon"
+     ],
+     "optional": false
+    },
+    {
+     "groups": [
+      6,
+      7,
+      8,
+      10
+     ],
+     "kinds": [
+      "armor"
+     ],
+     "optional": true
+    }
+   ],
+   "patterns": [
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      1,
+      7
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      1,
+      10
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      6,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      8,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      8,
+      8
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      9,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      10,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      1,
+      7
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      1,
+      10
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      6,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      8,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      8,
+      8
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      9,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      10,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      1,
+      7
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      1,
+      10
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      6,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      8,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      8,
+      8
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      9,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      10,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 5,
+     "armor": [
+      2,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      1,
+      7
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 5,
+     "armor": [
+      2,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      1,
+      1,
+      10
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 5,
+     "armor": [
+      2,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      6,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 5,
+     "armor": [
+      2,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      8,
+      6
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 5,
+     "armor": [
+      2,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      8,
+      8
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 5,
+     "armor": [
+      2,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      9,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 5,
+     "armor": [
+      2,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      10,
+      0
+     ],
+     "weight": 1
+    }
+   ],
+   "skillMaxLevel": {
+    "1": 3,
+    "3": 2,
+    "5": 1,
+    "7": 2,
+    "8": 2,
+    "9": 2,
+    "12": 2,
+    "13": 2,
+    "14": 4,
+    "15": 3,
+    "16": 2,
+    "18": 3,
+    "21": 1,
+    "24": 2,
+    "29": 2,
+    "30": 3,
+    "31": 3,
+    "32": 3,
+    "35": 3,
+    "36": 2,
+    "37": 3,
+    "38": 1,
+    "40": 2,
+    "41": 2,
+    "43": 3,
+    "46": 3,
+    "47": 2,
+    "48": 3,
+    "49": 2,
+    "50": 2,
+    "52": 2,
+    "53": 2,
+    "55": 2,
+    "57": 1,
+    "58": 2,
+    "59": 2,
+    "60": 2,
+    "63": 2,
+    "64": 3,
+    "65": 1,
+    "66": 2,
+    "67": 2,
+    "68": 2,
+    "69": 2,
+    "72": 2,
+    "75": 1,
+    "77": 3,
+    "78": 2,
+    "80": 2,
+    "81": 2,
+    "82": 2,
+    "83": 1,
+    "84": 3,
+    "85": 2,
+    "86": 1,
+    "87": 3,
+    "88": 2,
+    "90": 3,
+    "91": 2,
+    "92": 3,
+    "95": 1,
+    "98": 3,
+    "99": 2,
+    "100": 3,
+    "101": 3,
+    "102": 2,
+    "103": 2,
+    "104": 2,
+    "105": 3,
+    "108": 3,
+    "109": 2,
+    "110": 3,
+    "111": 3,
+    "112": 4,
+    "113": 4,
+    "116": 1,
+    "117": 2,
+    "118": 4,
+    "119": 2,
+    "120": 1,
+    "121": 2,
+    "122": 3,
+    "123": 2,
+    "125": 3,
+    "126": 2,
+    "127": 2,
+    "128": 3,
+    "129": 2,
+    "130": 3,
+    "133": 1,
+    "134": 2,
+    "135": 3,
+    "136": 2,
+    "137": 2,
+    "140": 2,
+    "141": 2,
+    "142": 1,
+    "144": 1,
+    "146": 3,
+    "147": 3,
+    "151": 3,
+    "152": 1,
+    "154": 2,
+    "156": 3
+   }
+  },
+  "7": {
+   "name": "秘歴の護石",
+   "amuletType": "AT_0191",
+   "amuletGameId": -1382563840,
+   "mhdbCharmId": 62,
+   "rows": 24,
+   "totalWeight": 24,
+   "minSkills": 2,
+   "maxSkills": 3,
+   "slotPatterns": [
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "weight": 7
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "weight": 8
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "weight": 8
+    },
+    {
+     "slotPt": 6,
+     "armor": [
+      3,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "weight": 1
+    }
+   ],
+   "skillSlots": [
+    {
+     "groups": [
+      2,
+      3,
+      4
+     ],
+     "kinds": [
+      "weapon"
+     ],
+     "optional": false
+    },
+    {
+     "groups": [
+      1,
+      6,
+      7,
+      8,
+      10
+     ],
+     "kinds": [
+      "armor",
+      "weapon"
+     ],
+     "optional": false
+    },
+    {
+     "groups": [
+      1,
+      5,
+      7,
+      8,
+      10
+     ],
+     "kinds": [
+      "armor",
+      "weapon"
+     ],
+     "optional": true
+    }
+   ],
+   "patterns": [
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      1,
+      7
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      1,
+      10
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      3,
+      6,
+      5
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      3,
+      7,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      3,
+      8,
+      5
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      3,
+      10,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 1,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      4,
+      1,
+      1
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      1,
+      7
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      1,
+      8
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      1,
+      10
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      3,
+      6,
+      5
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      3,
+      7,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      3,
+      8,
+      5
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      3,
+      10,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 2,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      4,
+      1,
+      1
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      1,
+      7
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      1,
+      8
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      1,
+      10
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      3,
+      6,
+      5
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      3,
+      7,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      3,
+      8,
+      5
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      3,
+      10,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 4,
+     "armor": [
+      2,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      4,
+      1,
+      1
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 6,
+     "armor": [
+      3,
+      0,
+      0
+     ],
+     "weapon": [
+      0
+     ],
+     "skillGroups": [
+      2,
+      1,
+      8
+     ],
+     "weight": 1
+    }
+   ],
+   "skillMaxLevel": {
+    "1": 3,
+    "2": 1,
+    "3": 3,
+    "5": 1,
+    "6": 1,
+    "7": 3,
+    "8": 3,
+    "9": 3,
+    "12": 3,
+    "13": 1,
+    "14": 4,
+    "15": 3,
+    "16": 3,
+    "18": 3,
+    "21": 1,
+    "22": 1,
+    "23": 1,
+    "24": 3,
+    "29": 2,
+    "30": 3,
+    "31": 3,
+    "32": 3,
+    "35": 3,
+    "36": 3,
+    "37": 3,
+    "38": 1,
+    "40": 3,
+    "41": 3,
+    "43": 3,
+    "44": 1,
+    "46": 3,
+    "47": 3,
+    "48": 3,
+    "49": 1,
+    "50": 3,
+    "52": 1,
+    "53": 3,
+    "55": 2,
+    "57": 1,
+    "58": 1,
+    "59": 3,
+    "60": 3,
+    "63": 2,
+    "64": 3,
+    "65": 1,
+    "66": 3,
+    "67": 1,
+    "68": 3,
+    "69": 2,
+    "72": 3,
+    "75": 1,
+    "77": 2,
+    "78": 3,
+    "79": 1,
+    "80": 1,
+    "81": 1,
+    "82": 3,
+    "83": 1,
+    "84": 3,
+    "85": 3,
+    "86": 1,
+    "87": 2,
+    "88": 2,
+    "90": 2,
+    "91": 3,
+    "92": 3,
+    "94": 1,
+    "95": 1,
+    "98": 3,
+    "99": 1,
+    "100": 3,
+    "101": 3,
+    "102": 1,
+    "103": 3,
+    "104": 3,
+    "105": 3,
+    "108": 3,
+    "109": 2,
+    "110": 3,
+    "111": 3,
+    "112": 4,
+    "113": 4,
+    "116": 1,
+    "117": 3,
+    "118": 4,
+    "119": 3,
+    "120": 1,
+    "121": 3,
+    "122": 3,
+    "123": 1,
+    "124": 1,
+    "125": 3,
+    "126": 2,
+    "127": 3,
+    "128": 3,
+    "129": 1,
+    "130": 3,
+    "133": 1,
+    "134": 3,
+    "135": 3,
+    "136": 3,
+    "137": 3,
+    "140": 3,
+    "141": 3,
+    "142": 1,
+    "144": 1,
+    "146": 3,
+    "147": 3,
+    "151": 3,
+    "152": 1,
+    "154": 1,
+    "156": 3
+   }
+  },
+  "8": {
+   "name": "栄世の護石",
+   "amuletType": "AT_0192",
+   "amuletGameId": 353607840,
+   "mhdbCharmId": 63,
+   "rows": 48,
+   "totalWeight": 48,
+   "minSkills": 2,
+   "maxSkills": 3,
+   "slotPatterns": [
+    {
+     "slotPt": 11,
+     "armor": [
+      0,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "weight": 24
+    },
+    {
+     "slotPt": 12,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "weight": 16
+    },
+    {
+     "slotPt": 13,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "weight": 8
+    }
+   ],
+   "skillSlots": [
+    {
+     "groups": [
+      2,
+      3,
+      4
+     ],
+     "kinds": [
+      "weapon"
+     ],
+     "optional": false
+    },
+    {
+     "groups": [
+      1,
+      6,
+      7,
+      8,
+      10
+     ],
+     "kinds": [
+      "armor",
+      "weapon"
+     ],
+     "optional": false
+    },
+    {
+     "groups": [
+      1,
+      5,
+      7,
+      8,
+      10
+     ],
+     "kinds": [
+      "armor",
+      "weapon"
+     ],
+     "optional": true
+    }
+   ],
+   "patterns": [
+    {
+     "slotPt": 11,
+     "armor": [
+      0,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      2,
+      1,
+      7
+     ],
+     "weight": 3
+    },
+    {
+     "slotPt": 11,
+     "armor": [
+      0,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      2,
+      1,
+      8
+     ],
+     "weight": 3
+    },
+    {
+     "slotPt": 11,
+     "armor": [
+      0,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      2,
+      1,
+      10
+     ],
+     "weight": 3
+    },
+    {
+     "slotPt": 11,
+     "armor": [
+      0,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      3,
+      6,
+      5
+     ],
+     "weight": 3
+    },
+    {
+     "slotPt": 11,
+     "armor": [
+      0,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      3,
+      7,
+      0
+     ],
+     "weight": 3
+    },
+    {
+     "slotPt": 11,
+     "armor": [
+      0,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      3,
+      8,
+      5
+     ],
+     "weight": 3
+    },
+    {
+     "slotPt": 11,
+     "armor": [
+      0,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      3,
+      10,
+      0
+     ],
+     "weight": 3
+    },
+    {
+     "slotPt": 11,
+     "armor": [
+      0,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      4,
+      1,
+      1
+     ],
+     "weight": 3
+    },
+    {
+     "slotPt": 12,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      2,
+      1,
+      7
+     ],
+     "weight": 2
+    },
+    {
+     "slotPt": 12,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      2,
+      1,
+      8
+     ],
+     "weight": 2
+    },
+    {
+     "slotPt": 12,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      2,
+      1,
+      10
+     ],
+     "weight": 2
+    },
+    {
+     "slotPt": 12,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      3,
+      6,
+      5
+     ],
+     "weight": 2
+    },
+    {
+     "slotPt": 12,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      3,
+      7,
+      0
+     ],
+     "weight": 2
+    },
+    {
+     "slotPt": 12,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      3,
+      8,
+      5
+     ],
+     "weight": 2
+    },
+    {
+     "slotPt": 12,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      3,
+      10,
+      0
+     ],
+     "weight": 2
+    },
+    {
+     "slotPt": 12,
+     "armor": [
+      1,
+      0,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      4,
+      1,
+      1
+     ],
+     "weight": 2
+    },
+    {
+     "slotPt": 13,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      2,
+      1,
+      7
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 13,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      2,
+      1,
+      8
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 13,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      2,
+      1,
+      10
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 13,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      3,
+      6,
+      5
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 13,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      3,
+      7,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 13,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      3,
+      8,
+      5
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 13,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      3,
+      10,
+      0
+     ],
+     "weight": 1
+    },
+    {
+     "slotPt": 13,
+     "armor": [
+      1,
+      1,
+      0
+     ],
+     "weapon": [
+      1
+     ],
+     "skillGroups": [
+      4,
+      1,
+      1
+     ],
+     "weight": 1
+    }
+   ],
+   "skillMaxLevel": {
+    "1": 3,
+    "2": 1,
+    "3": 3,
+    "5": 1,
+    "6": 1,
+    "7": 3,
+    "8": 3,
+    "9": 3,
+    "12": 3,
+    "13": 1,
+    "14": 4,
+    "15": 3,
+    "16": 3,
+    "18": 3,
+    "21": 1,
+    "22": 1,
+    "23": 1,
+    "24": 3,
+    "29": 2,
+    "30": 3,
+    "31": 3,
+    "32": 3,
+    "35": 3,
+    "36": 3,
+    "37": 3,
+    "38": 1,
+    "40": 3,
+    "41": 3,
+    "43": 3,
+    "44": 1,
+    "46": 3,
+    "47": 3,
+    "48": 3,
+    "49": 1,
+    "50": 3,
+    "52": 1,
+    "53": 3,
+    "55": 2,
+    "57": 1,
+    "58": 1,
+    "59": 3,
+    "60": 3,
+    "63": 2,
+    "64": 3,
+    "65": 1,
+    "66": 3,
+    "67": 1,
+    "68": 3,
+    "69": 2,
+    "72": 3,
+    "75": 1,
+    "77": 2,
+    "78": 3,
+    "79": 1,
+    "80": 1,
+    "81": 1,
+    "82": 3,
+    "83": 1,
+    "84": 3,
+    "85": 3,
+    "86": 1,
+    "87": 2,
+    "88": 2,
+    "90": 2,
+    "91": 3,
+    "92": 3,
+    "94": 1,
+    "95": 1,
+    "98": 3,
+    "99": 1,
+    "100": 3,
+    "101": 3,
+    "102": 1,
+    "103": 3,
+    "104": 3,
+    "105": 3,
+    "108": 3,
+    "109": 2,
+    "110": 3,
+    "111": 3,
+    "112": 4,
+    "113": 4,
+    "116": 1,
+    "117": 3,
+    "118": 4,
+    "119": 3,
+    "120": 1,
+    "121": 3,
+    "122": 3,
+    "123": 1,
+    "124": 1,
+    "125": 3,
+    "126": 2,
+    "127": 3,
+    "128": 3,
+    "129": 1,
+    "130": 3,
+    "133": 1,
+    "134": 3,
+    "135": 3,
+    "136": 3,
+    "137": 3,
+    "140": 3,
+    "141": 3,
+    "142": 1,
+    "144": 1,
+    "146": 3,
+    "147": 3,
+    "151": 3,
+    "152": 1,
+    "154": 1,
+    "156": 3
+   }
+  }
+ },
+ "groups": {
+  "1": [
+   {
+    "skillId": 72,
+    "level": 1
+   },
+   {
+    "skillId": 3,
+    "level": 1
+   },
+   {
+    "skillId": 82,
+    "level": 1
+   },
+   {
+    "skillId": 50,
+    "level": 1
+   },
+   {
+    "skillId": 91,
+    "level": 1
+   },
+   {
+    "skillId": 121,
+    "level": 1
+   },
+   {
+    "skillId": 127,
+    "level": 1
+   },
+   {
+    "skillId": 41,
+    "level": 1
+   },
+   {
+    "skillId": 12,
+    "level": 1
+   },
+   {
+    "skillId": 9,
+    "level": 1
+   },
+   {
+    "skillId": 78,
+    "level": 1
+   },
+   {
+    "skillId": 40,
+    "level": 1
+   },
+   {
+    "skillId": 119,
+    "level": 1
+   },
+   {
+    "skillId": 117,
+    "level": 1
+   },
+   {
+    "skillId": 134,
+    "level": 1
+   },
+   {
+    "skillId": 136,
+    "level": 1
+   },
+   {
+    "skillId": 53,
+    "level": 1
+   },
+   {
+    "skillId": 85,
+    "level": 1
+   },
+   {
+    "skillId": 60,
+    "level": 1
+   },
+   {
+    "skillId": 104,
+    "level": 1
+   },
+   {
+    "skillId": 59,
+    "level": 1
+   },
+   {
+    "skillId": 16,
+    "level": 1
+   },
+   {
+    "skillId": 66,
+    "level": 1
+   },
+   {
+    "skillId": 103,
+    "level": 1
+   },
+   {
+    "skillId": 8,
+    "level": 1
+   },
+   {
+    "skillId": 36,
+    "level": 1
+   },
+   {
+    "skillId": 141,
+    "level": 1
+   },
+   {
+    "skillId": 29,
+    "level": 1
+   },
+   {
+    "skillId": 47,
+    "level": 1
+   },
+   {
+    "skillId": 109,
+    "level": 1
+   },
+   {
+    "skillId": 69,
+    "level": 1
+   },
+   {
+    "skillId": 126,
+    "level": 1
+   },
+   {
+    "skillId": 7,
+    "level": 1
+   },
+   {
+    "skillId": 24,
+    "level": 1
+   },
+   {
+    "skillId": 68,
+    "level": 1
+   },
+   {
+    "skillId": 137,
+    "level": 1
+   },
+   {
+    "skillId": 140,
+    "level": 1
+   }
+  ],
+  "2": [
+   {
+    "skillId": 72,
+    "level": 2
+   },
+   {
+    "skillId": 3,
+    "level": 2
+   },
+   {
+    "skillId": 82,
+    "level": 2
+   },
+   {
+    "skillId": 50,
+    "level": 2
+   },
+   {
+    "skillId": 91,
+    "level": 2
+   },
+   {
+    "skillId": 121,
+    "level": 2
+   },
+   {
+    "skillId": 127,
+    "level": 2
+   },
+   {
+    "skillId": 41,
+    "level": 2
+   },
+   {
+    "skillId": 12,
+    "level": 2
+   },
+   {
+    "skillId": 9,
+    "level": 2
+   },
+   {
+    "skillId": 78,
+    "level": 2
+   },
+   {
+    "skillId": 40,
+    "level": 2
+   },
+   {
+    "skillId": 119,
+    "level": 2
+   },
+   {
+    "skillId": 117,
+    "level": 2
+   },
+   {
+    "skillId": 134,
+    "level": 2
+   },
+   {
+    "skillId": 136,
+    "level": 2
+   },
+   {
+    "skillId": 53,
+    "level": 2
+   },
+   {
+    "skillId": 85,
+    "level": 2
+   },
+   {
+    "skillId": 60,
+    "level": 2
+   },
+   {
+    "skillId": 104,
+    "level": 2
+   },
+   {
+    "skillId": 59,
+    "level": 2
+   },
+   {
+    "skillId": 16,
+    "level": 2
+   },
+   {
+    "skillId": 66,
+    "level": 2
+   },
+   {
+    "skillId": 103,
+    "level": 2
+   },
+   {
+    "skillId": 8,
+    "level": 2
+   },
+   {
+    "skillId": 36,
+    "level": 2
+   },
+   {
+    "skillId": 141,
+    "level": 2
+   },
+   {
+    "skillId": 29,
+    "level": 2
+   },
+   {
+    "skillId": 47,
+    "level": 2
+   },
+   {
+    "skillId": 109,
+    "level": 2
+   },
+   {
+    "skillId": 69,
+    "level": 2
+   },
+   {
+    "skillId": 126,
+    "level": 2
+   },
+   {
+    "skillId": 7,
+    "level": 2
+   },
+   {
+    "skillId": 24,
+    "level": 2
+   },
+   {
+    "skillId": 68,
+    "level": 2
+   },
+   {
+    "skillId": 137,
+    "level": 2
+   },
+   {
+    "skillId": 140,
+    "level": 2
+   },
+   {
+    "skillId": 116,
+    "level": 1
+   },
+   {
+    "skillId": 5,
+    "level": 1
+   },
+   {
+    "skillId": 65,
+    "level": 1
+   },
+   {
+    "skillId": 86,
+    "level": 1
+   },
+   {
+    "skillId": 83,
+    "level": 1
+   },
+   {
+    "skillId": 21,
+    "level": 1
+   }
+  ],
+  "3": [
+   {
+    "skillId": 72,
+    "level": 3
+   },
+   {
+    "skillId": 3,
+    "level": 3
+   },
+   {
+    "skillId": 82,
+    "level": 3
+   },
+   {
+    "skillId": 50,
+    "level": 3
+   },
+   {
+    "skillId": 91,
+    "level": 3
+   },
+   {
+    "skillId": 121,
+    "level": 3
+   },
+   {
+    "skillId": 127,
+    "level": 3
+   },
+   {
+    "skillId": 41,
+    "level": 3
+   },
+   {
+    "skillId": 12,
+    "level": 3
+   },
+   {
+    "skillId": 9,
+    "level": 3
+   },
+   {
+    "skillId": 78,
+    "level": 3
+   },
+   {
+    "skillId": 40,
+    "level": 3
+   },
+   {
+    "skillId": 119,
+    "level": 3
+   },
+   {
+    "skillId": 117,
+    "level": 3
+   },
+   {
+    "skillId": 134,
+    "level": 3
+   },
+   {
+    "skillId": 136,
+    "level": 3
+   },
+   {
+    "skillId": 53,
+    "level": 3
+   },
+   {
+    "skillId": 85,
+    "level": 3
+   },
+   {
+    "skillId": 60,
+    "level": 3
+   },
+   {
+    "skillId": 104,
+    "level": 3
+   },
+   {
+    "skillId": 59,
+    "level": 3
+   },
+   {
+    "skillId": 16,
+    "level": 3
+   },
+   {
+    "skillId": 66,
+    "level": 3
+   },
+   {
+    "skillId": 103,
+    "level": 3
+   },
+   {
+    "skillId": 8,
+    "level": 3
+   },
+   {
+    "skillId": 36,
+    "level": 3
+   },
+   {
+    "skillId": 141,
+    "level": 3
+   },
+   {
+    "skillId": 47,
+    "level": 3
+   },
+   {
+    "skillId": 7,
+    "level": 3
+   },
+   {
+    "skillId": 24,
+    "level": 3
+   },
+   {
+    "skillId": 68,
+    "level": 3
+   },
+   {
+    "skillId": 137,
+    "level": 3
+   },
+   {
+    "skillId": 140,
+    "level": 3
+   },
+   {
+    "skillId": 124,
+    "level": 1
+   },
+   {
+    "skillId": 6,
+    "level": 1
+   },
+   {
+    "skillId": 94,
+    "level": 1
+   },
+   {
+    "skillId": 2,
+    "level": 1
+   },
+   {
+    "skillId": 23,
+    "level": 1
+   },
+   {
+    "skillId": 44,
+    "level": 1
+   },
+   {
+    "skillId": 79,
+    "level": 1
+   }
+  ],
+  "4": [
+   {
+    "skillId": 72,
+    "level": 2
+   },
+   {
+    "skillId": 3,
+    "level": 2
+   },
+   {
+    "skillId": 22,
+    "level": 1
+   },
+   {
+    "skillId": 82,
+    "level": 2
+   },
+   {
+    "skillId": 50,
+    "level": 2
+   },
+   {
+    "skillId": 91,
+    "level": 2
+   },
+   {
+    "skillId": 121,
+    "level": 2
+   },
+   {
+    "skillId": 127,
+    "level": 2
+   },
+   {
+    "skillId": 41,
+    "level": 2
+   },
+   {
+    "skillId": 12,
+    "level": 2
+   },
+   {
+    "skillId": 9,
+    "level": 2
+   },
+   {
+    "skillId": 78,
+    "level": 2
+   },
+   {
+    "skillId": 40,
+    "level": 2
+   },
+   {
+    "skillId": 119,
+    "level": 2
+   },
+   {
+    "skillId": 117,
+    "level": 2
+   },
+   {
+    "skillId": 134,
+    "level": 2
+   },
+   {
+    "skillId": 59,
+    "level": 2
+   },
+   {
+    "skillId": 16,
+    "level": 2
+   },
+   {
+    "skillId": 53,
+    "level": 2
+   },
+   {
+    "skillId": 137,
+    "level": 2
+   },
+   {
+    "skillId": 140,
+    "level": 2
+   }
+  ],
+  "5": [
+   {
+    "skillId": 63,
+    "level": 1
+   },
+   {
+    "skillId": 55,
+    "level": 1
+   },
+   {
+    "skillId": 88,
+    "level": 1
+   },
+   {
+    "skillId": 43,
+    "level": 1
+   },
+   {
+    "skillId": 14,
+    "level": 2
+   },
+   {
+    "skillId": 32,
+    "level": 1
+   },
+   {
+    "skillId": 118,
+    "level": 2
+   },
+   {
+    "skillId": 122,
+    "level": 1
+   },
+   {
+    "skillId": 30,
+    "level": 1
+   },
+   {
+    "skillId": 31,
+    "level": 1
+   },
+   {
+    "skillId": 100,
+    "level": 1
+   },
+   {
+    "skillId": 35,
+    "level": 1
+   },
+   {
+    "skillId": 46,
+    "level": 1
+   },
+   {
+    "skillId": 125,
+    "level": 1
+   },
+   {
+    "skillId": 84,
+    "level": 1
+   },
+   {
+    "skillId": 101,
+    "level": 1
+   },
+   {
+    "skillId": 156,
+    "level": 1
+   },
+   {
+    "skillId": 1,
+    "level": 1
+   },
+   {
+    "skillId": 128,
+    "level": 1
+   },
+   {
+    "skillId": 92,
+    "level": 1
+   },
+   {
+    "skillId": 64,
+    "level": 1
+   },
+   {
+    "skillId": 105,
+    "level": 1
+   },
+   {
+    "skillId": 110,
+    "level": 1
+   },
+   {
+    "skillId": 112,
+    "level": 2
+   },
+   {
+    "skillId": 98,
+    "level": 1
+   },
+   {
+    "skillId": 37,
+    "level": 1
+   },
+   {
+    "skillId": 15,
+    "level": 1
+   },
+   {
+    "skillId": 113,
+    "level": 2
+   },
+   {
+    "skillId": 111,
+    "level": 1
+   },
+   {
+    "skillId": 108,
+    "level": 1
+   },
+   {
+    "skillId": 151,
+    "level": 1
+   },
+   {
+    "skillId": 146,
+    "level": 1
+   },
+   {
+    "skillId": 135,
+    "level": 1
+   },
+   {
+    "skillId": 48,
+    "level": 1
+   },
+   {
+    "skillId": 130,
+    "level": 1
+   },
+   {
+    "skillId": 147,
+    "level": 1
+   },
+   {
+    "skillId": 18,
+    "level": 1
+   }
+  ],
+  "6": [
+   {
+    "skillId": 63,
+    "level": 2
+   },
+   {
+    "skillId": 55,
+    "level": 2
+   },
+   {
+    "skillId": 88,
+    "level": 2
+   },
+   {
+    "skillId": 43,
+    "level": 2
+   },
+   {
+    "skillId": 14,
+    "level": 3
+   },
+   {
+    "skillId": 32,
+    "level": 2
+   },
+   {
+    "skillId": 118,
+    "level": 3
+   },
+   {
+    "skillId": 122,
+    "level": 2
+   },
+   {
+    "skillId": 30,
+    "level": 2
+   },
+   {
+    "skillId": 31,
+    "level": 2
+   },
+   {
+    "skillId": 100,
+    "level": 2
+   },
+   {
+    "skillId": 35,
+    "level": 2
+   },
+   {
+    "skillId": 46,
+    "level": 2
+   },
+   {
+    "skillId": 125,
+    "level": 2
+   },
+   {
+    "skillId": 84,
+    "level": 2
+   },
+   {
+    "skillId": 101,
+    "level": 2
+   },
+   {
+    "skillId": 156,
+    "level": 2
+   },
+   {
+    "skillId": 1,
+    "level": 2
+   },
+   {
+    "skillId": 128,
+    "level": 2
+   },
+   {
+    "skillId": 92,
+    "level": 2
+   },
+   {
+    "skillId": 64,
+    "level": 2
+   },
+   {
+    "skillId": 105,
+    "level": 2
+   },
+   {
+    "skillId": 110,
+    "level": 2
+   },
+   {
+    "skillId": 112,
+    "level": 3
+   },
+   {
+    "skillId": 98,
+    "level": 2
+   },
+   {
+    "skillId": 37,
+    "level": 2
+   },
+   {
+    "skillId": 15,
+    "level": 2
+   },
+   {
+    "skillId": 113,
+    "level": 3
+   },
+   {
+    "skillId": 111,
+    "level": 2
+   },
+   {
+    "skillId": 108,
+    "level": 2
+   },
+   {
+    "skillId": 151,
+    "level": 2
+   },
+   {
+    "skillId": 146,
+    "level": 2
+   },
+   {
+    "skillId": 135,
+    "level": 2
+   },
+   {
+    "skillId": 48,
+    "level": 2
+   },
+   {
+    "skillId": 130,
+    "level": 2
+   },
+   {
+    "skillId": 147,
+    "level": 2
+   },
+   {
+    "skillId": 18,
+    "level": 2
+   }
+  ],
+  "7": [
+   {
+    "skillId": 43,
+    "level": 3
+   },
+   {
+    "skillId": 14,
+    "level": 4
+   },
+   {
+    "skillId": 32,
+    "level": 3
+   },
+   {
+    "skillId": 118,
+    "level": 4
+   },
+   {
+    "skillId": 122,
+    "level": 3
+   },
+   {
+    "skillId": 30,
+    "level": 3
+   },
+   {
+    "skillId": 31,
+    "level": 3
+   },
+   {
+    "skillId": 100,
+    "level": 3
+   },
+   {
+    "skillId": 35,
+    "level": 3
+   },
+   {
+    "skillId": 46,
+    "level": 3
+   },
+   {
+    "skillId": 125,
+    "level": 3
+   },
+   {
+    "skillId": 84,
+    "level": 3
+   },
+   {
+    "skillId": 101,
+    "level": 3
+   },
+   {
+    "skillId": 156,
+    "level": 3
+   },
+   {
+    "skillId": 1,
+    "level": 3
+   },
+   {
+    "skillId": 128,
+    "level": 3
+   },
+   {
+    "skillId": 92,
+    "level": 3
+   },
+   {
+    "skillId": 64,
+    "level": 3
+   },
+   {
+    "skillId": 105,
+    "level": 3
+   },
+   {
+    "skillId": 110,
+    "level": 3
+   },
+   {
+    "skillId": 112,
+    "level": 4
+   },
+   {
+    "skillId": 98,
+    "level": 3
+   },
+   {
+    "skillId": 37,
+    "level": 3
+   },
+   {
+    "skillId": 15,
+    "level": 3
+   },
+   {
+    "skillId": 113,
+    "level": 4
+   },
+   {
+    "skillId": 111,
+    "level": 3
+   },
+   {
+    "skillId": 108,
+    "level": 3
+   },
+   {
+    "skillId": 151,
+    "level": 3
+   },
+   {
+    "skillId": 146,
+    "level": 3
+   },
+   {
+    "skillId": 135,
+    "level": 3
+   },
+   {
+    "skillId": 48,
+    "level": 3
+   },
+   {
+    "skillId": 130,
+    "level": 3
+   },
+   {
+    "skillId": 147,
+    "level": 3
+   },
+   {
+    "skillId": 18,
+    "level": 3
+   }
+  ],
+  "8": [
+   {
+    "skillId": 154,
+    "level": 1
+   },
+   {
+    "skillId": 123,
+    "level": 1
+   },
+   {
+    "skillId": 99,
+    "level": 1
+   },
+   {
+    "skillId": 58,
+    "level": 1
+   },
+   {
+    "skillId": 80,
+    "level": 1
+   },
+   {
+    "skillId": 77,
+    "level": 2
+   },
+   {
+    "skillId": 102,
+    "level": 1
+   },
+   {
+    "skillId": 49,
+    "level": 1
+   },
+   {
+    "skillId": 129,
+    "level": 1
+   },
+   {
+    "skillId": 52,
+    "level": 1
+   },
+   {
+    "skillId": 87,
+    "level": 2
+   },
+   {
+    "skillId": 81,
+    "level": 1
+   },
+   {
+    "skillId": 13,
+    "level": 1
+   },
+   {
+    "skillId": 67,
+    "level": 1
+   },
+   {
+    "skillId": 90,
+    "level": 2
+   }
+  ],
+  "9": [
+   {
+    "skillId": 154,
+    "level": 2
+   },
+   {
+    "skillId": 123,
+    "level": 2
+   },
+   {
+    "skillId": 99,
+    "level": 2
+   },
+   {
+    "skillId": 58,
+    "level": 2
+   },
+   {
+    "skillId": 80,
+    "level": 2
+   },
+   {
+    "skillId": 77,
+    "level": 3
+   },
+   {
+    "skillId": 102,
+    "level": 2
+   },
+   {
+    "skillId": 49,
+    "level": 2
+   },
+   {
+    "skillId": 129,
+    "level": 2
+   },
+   {
+    "skillId": 52,
+    "level": 2
+   },
+   {
+    "skillId": 87,
+    "level": 3
+   },
+   {
+    "skillId": 81,
+    "level": 2
+   },
+   {
+    "skillId": 13,
+    "level": 2
+   },
+   {
+    "skillId": 67,
+    "level": 2
+   },
+   {
+    "skillId": 90,
+    "level": 3
+   }
+  ],
+  "10": [
+   {
+    "skillId": 144,
+    "level": 1
+   },
+   {
+    "skillId": 57,
+    "level": 1
+   },
+   {
+    "skillId": 142,
+    "level": 1
+   },
+   {
+    "skillId": 75,
+    "level": 1
+   },
+   {
+    "skillId": 95,
+    "level": 1
+   },
+   {
+    "skillId": 120,
+    "level": 1
+   },
+   {
+    "skillId": 38,
+    "level": 1
+   },
+   {
+    "skillId": 133,
+    "level": 1
+   },
+   {
+    "skillId": 152,
+    "level": 1
+   }
+  ]
+ },
+ "groupKinds": {
+  "1": "weapon",
+  "2": "weapon",
+  "3": "weapon",
+  "4": "weapon",
+  "5": "armor",
+  "6": "armor",
+  "7": "armor",
+  "8": "armor",
+  "9": "armor",
+  "10": "armor"
+ },
+ "slotPts": {
+  "0": {
+   "armor": [
+    0,
+    0,
+    0
+   ],
+   "weapon": [
+    0
+   ]
+  },
+  "1": {
+   "armor": [
+    1,
+    0,
+    0
+   ],
+   "weapon": [
+    0
+   ]
+  },
+  "2": {
+   "armor": [
+    1,
+    1,
+    0
+   ],
+   "weapon": [
+    0
+   ]
+  },
+  "3": {
+   "armor": [
+    1,
+    1,
+    1
+   ],
+   "weapon": [
+    0
+   ]
+  },
+  "4": {
+   "armor": [
+    2,
+    0,
+    0
+   ],
+   "weapon": [
+    0
+   ]
+  },
+  "5": {
+   "armor": [
+    2,
+    1,
+    0
+   ],
+   "weapon": [
+    0
+   ]
+  },
+  "6": {
+   "armor": [
+    3,
+    0,
+    0
+   ],
+   "weapon": [
+    0
+   ]
+  },
+  "11": {
+   "armor": [
+    0,
+    0,
+    0
+   ],
+   "weapon": [
+    1
+   ]
+  },
+  "12": {
+   "armor": [
+    1,
+    0,
+    0
+   ],
+   "weapon": [
+    1
+   ]
+  },
+  "13": {
+   "armor": [
+    1,
+    1,
+    0
+   ],
+   "weapon": [
+    1
+   ]
+  }
+ },
+ "unmapped": [
+  {
+   "amuletType": "AT_0193",
+   "amuletGameId": -398465920,
+   "rows": 7,
+   "patterns": [
+    [
+     1,
+     1,
+     1,
+     7
+    ],
+    [
+     1,
+     1,
+     1,
+     10
+    ],
+    [
+     1,
+     2,
+     6,
+     6
+    ],
+    [
+     1,
+     2,
+     8,
+     6
+    ],
+    [
+     1,
+     2,
+     8,
+     8
+    ],
+    [
+     1,
+     2,
+     9,
+     0
+    ],
+    [
+     1,
+     2,
+     10,
+     0
+    ]
+   ],
+   "note": "MHDB の charms にも MHWS-in-json の AmuletCollection にも名前が無い。レア度不明のため検証には使わない"
+  }
+ ]
+}
