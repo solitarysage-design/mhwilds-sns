@@ -1,0 +1,4 @@
+/* 相手タブの段階 3 のカード (app/ui/tabs/target_hunt.js) の見た目。担当: ui-target (3d)。class は th-* にする
+   (target.js が head に足す tg-* とぶつけない)。
+   決まりは styles.css と同じ: 色は :root の変数だけ (ダーク表示は変数が変わる)・タップできるものは 44px 以上・
+   マウスを重ねたときの見た目は @media (hover: hover) の中に書く・vh を使うなら dvh も書く。index.html が styles.css の後に読む。 */

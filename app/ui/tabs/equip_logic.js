@@ -3,10 +3,20 @@
 // 火力タブなど他のタブからも使える関数:
 //   buildEquipIndex (画面で足した武器・護石を含めた索引) / localWeaponsFromState / resolveWeaponRef /
 //   autoSharpness (斬れ味の自動の色) / damageWeapon / pickDamageTarget / summarizePower
+// 武器の解決と斬れ味 (resolveWeaponRef / damageWeapon / autoSharpness / sharpnessResolver / handicraftSkillId ほか) は
+// 探索 (app/model/search/) からも使うので app/model/weapon.js に移した。ここからも今までどおり import できる (再 export)。
 import { indexEquipData, decorationFitError, targetKind, ARMOR_PARTS, DECO_TARGETS } from '../../model/build.js';
-import { SHARPNESS_ORDER } from '../../model/damage.js';
+import {
+  baseWeaponOf, resolveWeaponRef, damageWeapon, sharpnessGauge, gaugeWithHandicraft, topSharpness,
+  handicraftSkillId, sharpnessResolver, autoSharpness,
+} from '../../model/weapon.js';
 import { mixExpected, mixTotal } from './power_calc.js';
 import { ELEMENT_LABEL, DECO_TARGET_LABEL, PART_LABEL, formatSlots } from '../components/labels.js';
+
+export {
+  baseWeaponOf, resolveWeaponRef, damageWeapon, sharpnessGauge, gaugeWithHandicraft, topSharpness,
+  handicraftSkillId, sharpnessResolver, autoSharpness,
+};
 
 /** 護石タブが端末で足した護石を置くキー (docs/UI_API.md の store.js 節の例と同じ)。配列か {charms: 配列} */
 export const LOCAL_CHARMS_KEY = 'mhwilds-sns:charms-local';
@@ -21,8 +31,6 @@ export const DEFAULT_HITZONE = Object.freeze({ slash: 45, blunt: 45, fire: 20, w
 export const DEFAULT_TARGET = Object.freeze({ hitzone: DEFAULT_HITZONE, wound: null, isWound: false });
 /** 既定の肉質の言い方 (装備タブ・火力タブで同じ言い方にする) */
 export const DEFAULT_HITZONE_TEXT = '切断 45・打撃 45・属性 20';
-/** 斬れ味ゲージの長さの単位 (匠 1 Lv で伸びる長さ) */
-const HANDICRAFT_STEP = 10;
 const MAX_NAME = 60;
 
 const isObj = (x) => x != null && typeof x === 'object' && !Array.isArray(x);
@@ -83,12 +91,6 @@ export function setIdsOf(x) {
 
 // ---------------------------------------------------------------- 武器
 
-/** 所持武器 (my_weapons) の元の武器 (weapons_sns)。無ければ null */
-export function baseWeaponOf(w, idx) {
-  if (!w || w.baseWeaponId == null) return null;
-  return idx.weapons.get(w.baseWeaponId) || null;
-}
-
 /** アーティア武器か (所持武器なら元の武器で判断) */
 export function isArtian(w, idx) {
   if (!w) return false;
@@ -106,36 +108,6 @@ export function isGogmaArtian(w, idx) {
 /** 属性をその場で入れる必要があるか (属性が null のアーティア) */
 export function needsElementInput(w, idx) {
   return isArtian(w, idx) && !(w.element && w.element.type);
-}
-
-/**
- * 武器の参照 (数値 = weapons_sns の id / 文字列 = 所持武器の id) → 画面と計算に使う武器。
- * 所持武器は元の武器の攻撃力・スロット・斬れ味などで足りない所を補う。見つからなければ null。
- */
-export function resolveWeaponRef(ref, idx) {
-  if (ref == null) return null;
-  const w = typeof ref === 'number' ? idx.weapons.get(ref) : idx.myWeapons.get(ref);
-  if (!w) return null;
-  const base = baseWeaponOf(w, idx);
-  if (!base) return w;
-  return {
-    ...w,
-    attack: w.attack ?? base.attack,
-    affinity: w.affinity ?? base.affinity,
-    rarity: w.rarity ?? base.rarity,
-    slots: w.slots ?? base.slots,
-    skills: w.skills ?? base.skills,
-    sharpness: w.sharpness ?? base.sharpness,
-    artian: !!(w.artian || base.artian),
-    gogmaArtian: !!(w.gogmaArtian || base.gogmaArtian),
-  };
-}
-
-/** damage.js に渡す武器 ({attack, affinity, element}) */
-export function damageWeapon(w) {
-  if (!w) return { attack: 0, affinity: 0, element: null };
-  const el = w.element && w.element.type ? { type: w.element.type, value: Number(w.element.value) || 0 } : null;
-  return { attack: Number(w.attack) || 0, affinity: Number(w.affinity) || 0, element: el };
 }
 
 function bonusNames(x, idx) {
@@ -603,62 +575,7 @@ export function refitDecorations(decoIds, sizes, kind, idx) {
   return packed.kept.length > inPlace.kept.length ? packed : inPlace;
 }
 
-// ---------------------------------------------------------------- 斬れ味
-
-function pad6(a) {
-  const out = (Array.isArray(a) ? a : []).slice(0, 7).map((v) => Math.max(0, Number(v) || 0));
-  while (out.length < 6) out.push(0);
-  return out;
-}
-
-const sameArr = (a, b) => Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((v, i) => v === b[i]);
-
-/**
- * 武器の斬れ味ゲージ {base, handicraftMax}。各色の長さの配列 [赤, 橙, 黄, 緑, 青, 白] (データの順)。
- * 所持武器 (配列だけ持つ) は、元の武器と同じゲージなら元の武器の匠の伸びしろも使う。
- */
-export function sharpnessGauge(w, idx) {
-  if (!w) return null;
-  const base = baseWeaponOf(w, idx);
-  const s = w.sharpness ?? (base ? base.sharpness : null);
-  if (Array.isArray(s)) {
-    const bs = base && base.sharpness;
-    const hm = bs && sameArr(bs.base, s) ? bs.handicraftMax : null;
-    return { base: pad6(s), handicraftMax: hm ? pad6(hm) : null };
-  }
-  if (isObj(s) && Array.isArray(s.base)) {
-    return { base: pad6(s.base), handicraftMax: Array.isArray(s.handicraftMax) ? pad6(s.handicraftMax) : null };
-  }
-  return null;
-}
-
-/** 匠 Lv を入れたゲージ (1 Lv で 10 ずつ、handicraftMax まで。伸びる色の低い順に) */
-export function gaugeWithHandicraft(gauge, level = 0) {
-  if (!gauge) return null;
-  const out = [...gauge.base];
-  if (!gauge.handicraftMax || !(level > 0)) return out;
-  let budget = level * HANDICRAFT_STEP;
-  for (let i = 0; i < out.length && budget > 0; i++) {
-    const room = Math.max(0, (gauge.handicraftMax[i] || 0) - gauge.base[i]);
-    const add = Math.min(room, budget);
-    out[i] += add;
-    budget -= add;
-  }
-  return out;
-}
-
-/** ゲージの一番上の色 ('white' など)。ゲージが無ければ null */
-export function topSharpness(gauge) {
-  if (!Array.isArray(gauge)) return null;
-  for (let i = gauge.length - 1; i >= 0; i--) if (gauge[i] > 0) return SHARPNESS_ORDER[i] || null;
-  return null;
-}
-
-/** 匠のスキル id (名前で探す。無ければ null) */
-export function handicraftSkillId(idx) {
-  for (const s of idx.skills.values()) if (s.name === '匠') return s.id;
-  return null;
-}
+// ---------------------------------------------------------------- 斬れ味 (本体は app/model/weapon.js)
 
 /** 匠の {skillId, name, maxLevel} (火力タブの効き目・スキル火力表に匠の行を出すのに使う)。無ければ null */
 export function handicraftInfo(idx) {
@@ -666,39 +583,6 @@ export function handicraftInfo(idx) {
   if (id == null) return null;
   const s = idx.skills.get(id);
   return { skillId: id, name: s.name, maxLevel: s.maxLevel || (Array.isArray(s.levels) ? s.levels.length : 5) || 5 };
-}
-
-/**
- * 斬れ味の色をスキルの組から決める関数 (power_calc.js の input.perSkills)。
- * 斬れ味を固定しているとき (fixedColor がある)・武器が無いときは null (色は変わらない)。
- * 自動のときは匠の Lv で色が変わるので、スキルを外したとき・スキルなしのときの色を決め直すのに使う。
- */
-export function sharpnessResolver(weapon, idx, fixedColor) {
-  if (fixedColor || !weapon) return null;
-  const hid = handicraftSkillId(idx);
-  const cache = new Map();
-  return (skills) => {
-    let lv = 0;
-    for (const s of skills || []) if (hid != null && Number(s.skillId) === hid) lv = Number(s.level) || 0;
-    if (!cache.has(lv)) cache.set(lv, autoSharpness(weapon, idx, hid != null ? { [hid]: lv } : {}).color || 'white');
-    return { sharpness: cache.get(lv) };
-  };
-}
-
-/**
- * 斬れ味の自動の色: いまの装備で出る一番上の色 (匠の Lv を含む)。
- * @param skillLevels computeBuild(...).skillLevels
- * @returns {{color: string|null, handicraft: number, gauge: number[]|null, maxGauge: number[]|null}}
- */
-export function autoSharpness(w, idx, skillLevels = {}) {
-  const g = sharpnessGauge(w, idx);
-  const hid = handicraftSkillId(idx);
-  const handicraft = hid != null ? Number(skillLevels[hid]) || 0 : 0;
-  const gauge = gaugeWithHandicraft(g, handicraft);
-  return {
-    color: topSharpness(gauge), handicraft, gauge,
-    baseGauge: g ? g.base : null, maxGauge: g ? (g.handicraftMax || g.base) : null,
-  };
 }
 
 // ---------------------------------------------------------------- 火力の要約

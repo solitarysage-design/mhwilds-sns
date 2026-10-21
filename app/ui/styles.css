@@ -227,6 +227,19 @@ button:disabled { cursor: default; }
 .tab-button.is-active .tab-label { font-weight: 700; }
 .tab-icon { width: 24px; height: 24px; flex: none; }
 .tab-label { font-size: 11px; line-height: 1.2; white-space: nowrap; }
+/* タブの絵の点 (見ていないタブに新しい結果がある。shell.js の setTabDot) */
+.tab-icon-wrap { position: relative; display: inline-flex; flex: none; }
+.tab-dot {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--danger);
+  border: 2px solid var(--surface);
+  box-sizing: content-box;
+}
 
 /* 更新の帯 */
 .update-banner {

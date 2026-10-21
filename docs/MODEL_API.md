@@ -206,3 +206,113 @@ const c = skillContribution(input);
 - 追加ダメージ (灼熱化) = 確率 × (固定 + 属性/10 × その属性の肉質/100)。`additionalDamage` のヒットだけ。クールタイムは入れない
   (火竜の力の値は読み方が 2 通りあり確度 low。計算に使うと `lowConfidence` に入る)
 - 盾のヒットは属性 0 (`elementRate: 0`)。斬れ味補正は `sharpnessMul` が true のヒットだけ
+
+## weapon.js
+
+武器の解決と斬れ味の自動 (純粋関数)。探索 (`app/model/search/`) と Worker からも使うので、`app/ui/tabs/equip_logic.js` から
+移した (2026-10-21・`docs/SEARCH_DESIGN.md` 4 章の 1)。画面は今までどおり `equip_logic.js` から import できる (再 export。値も同じ)。
+import は相対パスの `./damage.js` だけ (preact を読まない)。
+
+```js
+import { resolveWeaponRef, damageWeapon, autoSharpness, sharpnessResolver, handicraftSkillId,
+         baseWeaponOf, sharpnessGauge, gaugeWithHandicraft, topSharpness, HANDICRAFT_STEP } from './app/model/weapon.js';
+
+const w = resolveWeaponRef(build.weapon, idx);         // 数値 = weapons_sns の id / 文字列 = 所持武器の id → 武器 (所持武器は元の武器で補う) か null
+const dw = damageWeapon(w);                            // damage.js に渡す {attack, affinity, element}
+const s = autoSharpness(w, idx, r.skillLevels);        // {color, handicraft, gauge, baseGauge, maxGauge}。color = 匠込みの一番上の色
+const perSkills = sharpnessResolver(w, idx, state.sharpness); // スキルの組 → {sharpness}。固定・武器なしなら null
+```
+
+| 関数 | 中身 |
+|---|---|
+| `resolveWeaponRef(ref, idx)` | 武器の参照 → 武器。所持武器 (my_weapons・画面で足した分) は `baseWeaponId` の武器で攻撃力・スロット・スキル・斬れ味などを補う |
+| `damageWeapon(w)` | `{attack, affinity, element}` (属性が無ければ null。null の武器は攻撃 0) |
+| `autoSharpness(w, idx, skillLevels)` | 斬れ味の自動の色 (匠 1 Lv で 10 ずつ、`handicraftMax` まで伸ばした一番上の色) |
+| `sharpnessResolver(w, idx, fixedColor)` | スキルの組ごとに色を決め直す関数 (power_calc.js の `perSkills`・探索の評価器)。匠の Lv ごとに覚える |
+| `handicraftSkillId(idx)` | 匠の skillId (名前で探す。無ければ null) |
+| `baseWeaponOf` / `sharpnessGauge` / `gaugeWithHandicraft` / `topSharpness` | 元の武器 / ゲージ `{base, handicraftMax}` / 匠を入れたゲージ / 一番上の色 |
+
+`idx` は `indexEquipData(...)` の結果 (`data.index` か `useEquipIndex` の `idx`)。
+
+## hunt.js
+
+相手 (モンスター・個体・クエスト) の体力・討伐までの回数・個体の肉質・クエストの選び方 (段階 3。`docs/RECOMMEND_DESIGN.md` 5.2 節)。
+純粋関数で、import は無い (node でも Worker でも動く)。テストは `tests/hunt.test.mjs`。
+
+`targetData` (下の `td`) は data.js の target データ (`useTargetData().data`) をそのまま渡す。`{monsters: monsters.json 丸ごと,
+quests: quests.json 丸ごと}` や `{monsters: [...], quests: [...]}` でもよい。`monster` は monsters.json の 1 件、`kind` は個体
+(null = 通常 / `'tempered'` / `'arch-tempered'` / `'frenzied'` / `'alpha'`)、`quest` は quests.json の 1 件。
+
+```js
+import { individualsOf, individualOf, elementRecommendationOf, hitzoneFor, questsFor, defaultQuestId,
+         questSubjects, targetHealth, combosToDefeat, attackView, woundVitalOf,
+         subjectIndexOf, clampPlayers, monsterById, questById, monstersOf, questsOf,
+         MARK_LABEL, INDIVIDUAL_KINDS, AVAILABLE_STATUSES, MAX_PLAYERS } from './app/model/hunt.js';
+
+const kinds = individualsOf(monster);                   // [{kind, label: '歴戦王', name: 'アルシュベルド（歴戦王）', stars, questCount}] 先頭が通常
+const qid = defaultQuestId(td, 20, 'arch-tempered');    // 'Freedom from Solitude' (『孤独から出でし君という自由』)
+const subs = questSubjects(questById(td, qid), td, { players: 4 });
+// subs[0] = {index: 0, key: '20:arch-tempered#0', monsterId: 20, name: 'アルシュベルド（歴戦王）', kind: 'arch-tempered',
+//            missionTarget, paramGroup: 'kingHard', health: targetHealth(missionTarget, {players: 4})}
+const n = combosToDefeat(subs[0].health, 920.6);        // {mid, min, max} (切り上げ) か null
+const hz = hitzoneFor(monster, 'head', 'arch-tempered', { useUncertain: state.target.useUncertainWound });
+```
+
+| 関数 | 中身 |
+|---|---|
+| `individualsOf(monster)` | 個体の一覧 `[{kind, label, name, stars, questCount}]` (individuals の並び。individuals が無い古いデータは通常 1 つ) |
+| `individualOf(monster, kind)` | individuals の 1 件 (無ければ null) |
+| `elementRecommendationOf(monster, kind, {useUncertain})` | 個体のおすすめ属性。`sameAsBase: false` の個体は置き換え後の傷口で計算し直したもの、`sameAsBase: null` (歴戦王アルシュベルド) は `useUncertain` のときだけそれ。ほかはモンスターの `elementRecommendation` |
+| `hitzoneFor(monster, part, kind, {useUncertain})` | 部位 (key か要素) の肉質。下の表 |
+| `questsFor(td, monsterId, kind)` | その個体のクエスト `[{quest, id, name, role: 'target'\|'intruder', stars, available, status, fixedEquipment, multi, subjectIndex, health}]`。狩猟対象 (questIds の並び = ★順) → 乱入の可能性。`health` = その個体の行のソロの体力 `{mid, min, max}` か null |
+| `defaultQuestId(td, monsterId, kind)` | 自動で選ぶクエスト (方針): 狩猟対象のうち 装備固定でない (`fixedEquipment === false`)・体力が分かる・多頭でない・受けられる (`permanent`/`standard`/`active`) ものの ★ が一番高いもの。同じ ★ なら一覧の先頭。無ければ null |
+| `questSubjects(quest, td, {players})` | 戦う大型 `[{index, key, monsterId, name, kind, missionTarget, health, paramGroup}]`。`index` = mission.targets の行の番号 (小型の行は除くので飛ぶことがある。`state.target.questTargetIndex` はこの番号)。mission の無いクエストは quest.targets の大型を数のぶん並べ、`health.known: false` |
+| `subjectIndexOf(quest, monsterId, kind)` | mission.targets のその個体の行 (無ければ null) |
+| `targetHealth(missionTarget, {players})` | 体力 `{known, solo: {mid, min, max}, players, multiplier, total, perPlayer: {mid}, confidence: {solo, multi}, reason}`。下の決まり |
+| `combosToDefeat(health, comboValue)` | 体力 (数 / `{mid, min, max}` / `targetHealth` の結果 = `total` を使う) ÷ 1 コンボの期待値を切り上げ `{mid, min, max}`。期待値が 0 以下・数でない・体力不明なら null |
+| `attackView(quest, subjectIndex, td)` | 攻撃の強さ `{calm, angry, paramGroup, compareTo: {questId, name, stars, calm, angry} \| null, ratio: {calm, angry} \| null, confidence: 'low'}`。attackRate が無い (通常の個体) なら null |
+| `woundVitalOf(monster, group)` | 傷の付きにくさ `{normal, tear, temperedScar, confidence: 'low'}` (`legendaryParams[group].woundVital`)。群が null・欄が無ければ null |
+| `clampPlayers(n)` / `monsterById` / `questById` / `monstersOf` / `questsOf` | 人数を 1〜4 に / データの取り出し |
+
+`hitzoneFor` の返り値 `{hitzone, wound, baseWound, overrideWound, woundSource, changed, sameAsBase, confidence, mark, note, dataNote}`:
+
+| 個体 (`individuals[].hitzone`) | `wound` (計算に使う傷口) | `woundSource` | `mark` |
+|---|---|---|---|
+| `sameAsBase: true` (通常・歴戦の個体・置き換えの無い歴戦王) | `parts[].wound` | `'base'` | null |
+| `sameAsBase: false` (歴戦王ウズ・トゥナ) で置き換えのある部位 | `woundOverrides[key]` (頭: 弾 88→70・雷 25→20) | `'override'` | `'unverified'` (未確認) |
+| `sameAsBase: null` で置き換えのある部位 (歴戦王アルシュベルド) | 既定は `parts[].wound`、`useUncertain` なら `woundOverrides[key]` | `'base'` / `'override-uncertain'` | `'uncertain'` (未確定) |
+| `sameAsBase: null` で確度も null (狂竜化・ボス個体 = 未調査) | `parts[].wound` | `'base'` | `'unverified'` |
+| 部位に傷口が無い (`parts[].wound` が null) | null (置き換えのデータがあっても作らない) | `'none'` | 上のどれか |
+
+- `hitzone` (通常の肉質) は個体で変わらない。`overrideWound` は使っていなくてもデータにあれば入る (「置き換わるとしたら」を見せる)。
+  `changed` は置き換えで値の変わる項目 (例 `['shot', 'thunder']`)。`note` は画面に出せる文、`dataNote` はデータの注記 (「くわしく」用)。
+- 印の出し方 (`MARK_LABEL`): `uncertain` → `<Badge kind="unconfirmed" />` (未確定)、`unverified` → `<Badge kind="warn">未確認</Badge>`、
+  `provisional` → `<Badge kind="warn">仮</Badge>` (`docs/RECOMMEND_DESIGN.md` 2.8 節)。
+- state.js の `resolveTarget` は `state.target.individual` があればこれで傷口を置き換える (装備・火力タブも歴戦王の傷口で計算される)。
+
+`targetHealth` の決まり:
+
+- ソロ = `mission.targets[].healthCalc` (`mid` = 乱数の等級 1.0、`min`/`max` = 出るたびの範囲。確度 `healthCalc.confidence` = medium)。
+  healthCalc が無い・mission が無い (フリーチャレンジなど) は `known: false` (`reason: 'no-health'`)。仮の値で埋めない。
+- 2 人以上 = ソロ × `multi.health[人数]` を四捨五入 (`_Count` を人数と読んだもので確度 low → 画面は未確定。掛けたあとの丸め方も未確認)。
+  その人数の倍率が無い (`maxPlayers` を超えたなど) ときは `multiplier`・`total` が null (`reason: 'no-multi'`)。人数は 1〜4 に丸める。
+  例: 4 人の『孤独から出でし君という自由』= 79,923 × 3.0 = 239,769。
+- `perPlayer` = total ÷ 人数 (全員が同じだけ当てる前提の目安)。
+
+そのほかの決まり:
+
+- MissionData は狂竜化・ボス個体を区別しない (`variant: null` の行)。`subjectIndexOf` / `questsFor` はその個体の行が無ければ同じモンスターの
+  null の行を使い、`questSubjects` は quest.targets に同じモンスターの frenzied / alpha があればそれを個体にする。
+- `attackView` の比べる相手 (方針): 同じモンスターの歴戦の個体 (`variant: 'tempered'`) が出る別のクエストのうち、装備固定でなく
+  attackRate のあるもの。★ が一番高いもの → 同じ ★ なら多頭でないもの → それも同じならデータの並びで先。
+  例: 歴戦王アルシュベルド ★10 (8.4) は狩猟演習 (★9・7.15) と比べて約 1.17 倍。
+
+## recommend.js (段階 3。担当: model-recommend)
+
+相手に合わせたおすすめ (守りのスキル・武器の属性・多頭の重み・並べ直し・守りのチェック・`createPlanRunner`)。API は
+`docs/RECOMMEND_DESIGN.md` 5.3 節。いまは置き場だけ (`buildPlan` は null を返す)。
+
+## search.js と search/ (段階 2。担当: solver)
+
+装備探索 (`createSearch`・評価器・下ごしらえ・ビームと分枝限定・結果の組み立て)。API は `docs/SEARCH_DESIGN.md` 3 章。
+いまは置き場だけ (`createSearch` は「準備中」の例外、`PHASES` は段階の名前)。Worker は `app/search_worker.js`。

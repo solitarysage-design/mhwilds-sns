@@ -560,21 +560,29 @@ import { individualsOf, individualOf, elementRecommendationOf, hitzoneFor, quest
 
 individualsOf(monster)                 // → [{kind, label, name, stars, questCount}] (monsters.json の individuals の並び)
 individualOf(monster, kind)            // → individuals の 1 件 (kind = null は通常)
-elementRecommendationOf(monster, kind) // → 個体のおすすめ (置き換えがあればそちら)
+elementRecommendationOf(monster, kind, { useUncertain = false })
+  // → 個体のおすすめ (置き換えがあればそちら。sameAsBase: null の個体は useUncertain のときだけ)
 hitzoneFor(monster, part, kind, { useUncertain = false })
-  // → {hitzone, wound, woundSource: 'base'|'override'|'override-uncertain'|'none', confidence, note}
-  //   sameAsBase false なら woundOverrides、null なら useUncertain のときだけ
-questsFor(targetData, monsterId, kind) // → [{quest, role: 'target'|'intruder', stars, available, status, fixedEquipment, multi, health}]
+  // → {hitzone, wound, baseWound, overrideWound, woundSource: 'base'|'override'|'override-uncertain'|'none', changed,
+  //    sameAsBase, confidence, mark: null|'unverified'|'uncertain', note, dataNote}
+  //   sameAsBase false なら woundOverrides、null なら useUncertain のときだけ (印はどちらでも未確定)
+questsFor(targetData, monsterId, kind) // → [{quest, id, name, role: 'target'|'intruder', stars, available, status, fixedEquipment, multi,
+                                       //     subjectIndex, health}]
 defaultQuestId(targetData, monsterId, kind)   // → 2.2 節の規則で選んだ id か null
-questSubjects(quest, targetData)       // → [{index, key, monsterId, name, kind, missionTarget, health}] (mission.targets の行ごと)
+questSubjects(quest, targetData, { players = 1 })
+  // → [{index, key, monsterId, name, kind, missionTarget, health, paramGroup}] (mission.targets の行ごと。小型の行は除く)
 targetHealth(missionTarget, { players = 1 })
   // → {known, solo: {mid, min, max}, players, multiplier, total: {mid, min, max}, perPlayer: {mid},
-  //    confidence: {solo: 'medium', multi: 'low' | null}}   (mission が無ければ known: false)
+  //    confidence: {solo: 'medium', multi: 'low' | null}, reason}   (mission が無ければ known: false)
 combosToDefeat(health, comboValue)     // → {mid, min, max} (切り上げ) か null (値が 0 以下・体力不明)
 attackView(quest, subjectIndex, targetData)
-  // → {calm, angry, compareTo: {questId, name, calm, angry} | null, ratio: {calm, angry} | null, confidence: 'low'}
+  // → {calm, angry, paramGroup, compareTo: {questId, name, stars, calm, angry} | null, ratio: {calm, angry} | null,
+  //    confidence: 'low'}   (attackRate が無い通常の個体は null)
 woundVitalOf(monster, group)           // → {normal, tear, temperedScar, confidence: 'low'} (legendaryParams[group].woundVital)
 ```
+
+- (実装 2026-10-21) 細かい決まり (狂竜化・ボス個体の行の探し方、`attackView` の比べる相手の選び方、人数の倍率の丸め方など) と
+  ほかに出しているもの (`subjectIndexOf` / `clampPlayers` / `monsterById` / `questById` / `MARK_LABEL` など) は `docs/MODEL_API.md` の「hunt.js」節。
 
 ### 5.3 app/model/recommend.js
 
@@ -681,12 +689,21 @@ search: {                    // 探すタブの条件 (小さいので state に
   placeholders: 'zero',      // 'zero' | 'keep' (仮の発動率)
   budgetSec: 6,
   K: 10,
+  autoStart: null,           // (実装で追加) 「この相手で装備を探す」から来た印 {id, from, at}。保存からは戻さない
 }
 ```
 
 - 変更関数: `selectIndividual(kind)` (クエストも選び直す)・`selectQuest(questId, {targetIndex})`・`setPlayers(n)`・
   `setSearch(patch)`・`setSearchToggle(key, on)`・`addRequired(skillId, level)`・`setRequiredLevel(skillId, level)`・
   `removeRequired(skillId)`。`sanitizeState` に `search` と `target` の新しい項目の検査を足す。
+  - (実装 2026-10-21) `selectIndividual(kind, {targetData, questId})` は `targetData` を渡すと `defaultQuestId` で選び直す
+    (state.js はデータを持たないため)。`selectQuest(questId, {targetIndex, monsterId, individual, partKey})` はモンスター・個体・部位も
+    いっしょに替えられる (クエストの名前から選ぶ・多頭の相手の行)。ほかに `setUseUncertainWound(on)`・`setSearchLevel(key, level)`・
+    `setArchTemperedHunted(monsterId, hunted)`・`setArmorExcluded(armorId, excluded)` を足した。
+  - (実装 2026-10-21) 「この相手で装備を探す」→ 探すタブで自動で探し始める受け渡し: 相手タブは `requestSearch({from: 'target'})` で
+    `search.autoStart` に印を置き (`useTarget` も true に)、`goToTab('search', {top: true})`。探すタブは印を見て
+    `takeSearchRequest(id)` で消してから探し始める。`sanitizeState` は印を戻さない (開き直しで勝手に探さない)。`docs/UI_API.md`。
+  - (実装 2026-10-21) 探すタブ以外を見ているときに結果が出たらタブの絵に点を付ける関数は shell.js の `setTabDot(tab)`。
 - `selectMonster` は `individual` を null に、`questId` を null にする (今は questId を残している。多頭の途中で別のモンスターを選んだら
   クエストから外れる)。
 - `resolveTarget` (state.js) と `resolveTargetMix` (target_mix.js) は `target.individual` を見て `hunt.hitzoneFor` で傷口を置き換える
@@ -821,6 +838,11 @@ search: {                    // 探すタブの条件 (小さいので state に
 ## 9. 未確定・本人に確かめること・リスク
 
 ### 本人に確かめること
+
+(2026-10-21 本人の決定) 1〜5 と 7 は既定の案どおりで進める (画面では変えられる形で出す): 「探す」を 6 つ目のタブに・
+仮置きの発動率は探索では 0% (「火力タブの値のまま探す」も選べる。探す前に仮置きの条件を一覧で見せる)・守りはバランス・
+歴戦王 5 体とも倒した扱い (外せる)・多頭で属性が違えば武器 2 本の案も出す (1 本にも切り替えられる)・体力・回復系は自動で足さない。
+あわせて、装飾品は全部持っている扱い (`decorations.owned` は形だけ)。6 (部位の狙い方の既定) は案のまま (`asSelected`) で、まだ確かめていない。
 
 1. タブを 6 つにして「探す」を足してよいか (ほかの案: 装備タブの中のシート)。
 2. 仮の発動率の条件 (23 個) を、探索では 0% として扱ってよいか (既定案)。それとも火力タブの値 (50%) のままか。

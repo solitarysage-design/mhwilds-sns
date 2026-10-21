@@ -91,8 +91,14 @@ function main() {
     const m = load('monsters.json').monsters.find((x) => x.id === t.monsterId);
     const p = m && m.parts.find((x) => x.key === t.partKey);
     if (p) {
-      target = { hitzone: p.hitzone, wound: p.wound || null, isWound: !!t.isWound };
-      targetLabel = `${m.name} ${p.name}`;
+      // 個体 (歴戦王など) の傷口の置き換えは monsters.json の individuals[].hitzone から直接読む (hunt.js は使わない):
+      // sameAsBase が false なら置き換え、null なら useUncertainWound のときだけ。傷口の無い部位は置き換えない
+      const ind = t.individual ? (m.individuals || []).find((i) => i.kind === t.individual) : null;
+      const hz = ind && ind.hitzone;
+      const ov = hz && hz.woundOverrides && hz.woundOverrides[p.key];
+      const useOv = !!(p.wound && ov && (hz.sameAsBase === false || (hz.sameAsBase == null && t.useUncertainWound === true)));
+      target = { hitzone: p.hitzone, wound: useOv ? ov : (p.wound || null), isWound: !!t.isWound };
+      targetLabel = `${(ind && ind.name) || m.name} ${p.name}`;
     }
     if (m) {
       const row = load('monster_threats.json').monsters.find((x) => x.monsterId === m.id);

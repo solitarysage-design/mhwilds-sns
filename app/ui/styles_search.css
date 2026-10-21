@@ -1,0 +1,3 @@
+/* 探すタブ (段階 2・3) の見た目。担当: ui-search (3e)。class は sr-* にする (ほかのタブとぶつけない)。
+   決まりは styles.css と同じ: 色は :root の変数だけ (ダーク表示は変数が変わる)・タップできるものは 44px 以上・
+   マウスを重ねたときの見た目は @media (hover: hover) の中に書く・vh を使うなら dvh も書く。index.html が styles.css の後に読む。 */

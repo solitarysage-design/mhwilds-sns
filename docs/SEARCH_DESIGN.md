@@ -401,6 +401,8 @@ search.extend({ ms: 6000 });        // 「続けて探す」: B&B の続きと�
 1. **武器の解決と斬れ味を app/model へ移す** (`resolveWeaponRef` / `damageWeapon` / `autoSharpness` / `sharpnessResolver` /
    `handicraftSkillId`)。いまは `app/ui/tabs/equip_logic.js` にあり、探索 (model) から ui を読む向きになる。
    `app/model/weapon.js` に移して、`equip_logic.js` からは再 export する (画面の import は変えない)。
+   → (済 2026-10-21) 支えの `baseWeaponOf` / `sharpnessGauge` / `gaugeWithHandicraft` / `topSharpness` / `HANDICRAFT_STEP` も移した
+   (`docs/MODEL_API.md` の「weapon.js」節)。
 2. **`MAX_PATTERNS` (16,384) を超える構成**: 速い評価器は計算できるが、`comboExpected` は例外になる。ランダムな 300 組のうち 13 組が
    超えた。既定の発動率 (仮置き 0.5) だと、探索の上位は条件つきスキルを 13 個前後積む構成 (8,192 パターン) になり、上限のすぐ手前。
    - 推奨: damage.js に因子分解の合計 (速い評価器と同じ考え。独立の仮定は今と同じなので値は変わらない) を足し、

@@ -17,7 +17,7 @@
 //   画面を開く要求 (navigate) は、アプリの入口 (/mhwilds-sns/ と index.html) だけキャッシュの index.html を返す
 //   (ライセンスの文書や CC BY-SA のデータを開いたときは、そのファイルを返す)。
 
-const VERSION = '2026-10-21-3ff598d329';
+const VERSION = '2026-10-21-cab3027cac';
 const CACHE_PREFIX = 'mhwilds-sns:app-';
 const CACHE = `${CACHE_PREFIX}${VERSION}`;
 
@@ -33,6 +33,8 @@ const PRECACHE = [
   './app/store.js',
   './app/ui/shell.js',
   './app/ui/styles.css',
+  './app/ui/styles_search.css',
+  './app/ui/styles_target.css',
   './app/ui/components/index.js',
   './app/ui/components/html.js',
   './app/ui/components/card.js',
@@ -50,12 +52,27 @@ const PRECACHE = [
   './app/ui/tabs/power_calc.js',
   './app/ui/tabs/target.js',
   './app/ui/tabs/target_mix.js',
+  './app/ui/tabs/target_hunt.js',
+  './app/ui/tabs/search.js',
+  './app/ui/tabs/search_form.js',
+  './app/ui/tabs/search_results.js',
+  './app/ui/tabs/search_client.js',
   './app/ui/tabs/charms.js',
   './app/ui/tabs/settings.js',
   // 計算
   './app/model/build.js',
   './app/model/charms.js',
   './app/model/damage.js',
+  './app/model/weapon.js',
+  './app/model/hunt.js',
+  './app/model/recommend.js',
+  './app/model/search.js',
+  './app/model/search/evaluator.js',
+  './app/model/search/problem.js',
+  './app/model/search/solver.js',
+  './app/model/search/realize.js',
+  // 探索の Worker (電波が無くても探せるように)
+  './app/search_worker.js',
   // ライブラリ
   './app/vendor/preact.module.js',
   './app/vendor/hooks.module.js',

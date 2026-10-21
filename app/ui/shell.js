@@ -17,9 +17,39 @@ const TAB_DEFS = {
   equip: { load: () => import('./tabs/equip.js'), needsData: true },
   power: { load: () => import('./tabs/power.js'), needsData: true },
   target: { load: () => import('./tabs/target.js'), needsData: true, onOpen: () => loadTargetData().catch(() => {}) },
+  // 探す (段階 2・3)。相手のデータが要るときは、タブの中で useTargetData() を呼べば読み始める
+  search: { load: () => import('./tabs/search.js'), needsData: true },
   charms: { load: () => import('./tabs/charms.js'), needsData: true },
   settings: { load: () => import('./tabs/settings.js'), needsData: false },
 };
+
+// ---------------------------------------------------------------- タブの絵の点 (見ていないタブに新しいものがある)
+
+const tabDots = new Set();
+const dotListeners = new Set();
+
+/**
+ * タブの絵に小さな点を付ける / 消す (探すタブ以外を見ているときに結果が出た、など)。
+ * 点はそのタブを開くと自動で消える。今開いているタブには付けない。
+ */
+export function setTabDot(tab, on = true) {
+  if (!TAB_DEFS[tab]) return;
+  if (on && getState().tab === tab) return;
+  const had = tabDots.has(tab);
+  if (on) tabDots.add(tab);
+  else tabDots.delete(tab);
+  if (had !== tabDots.has(tab)) for (const fn of [...dotListeners]) fn();
+}
+
+function useTabDots() {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const fn = () => setTick((t) => t + 1);
+    dotListeners.add(fn);
+    return () => dotListeners.delete(fn);
+  }, []);
+  return tabDots;
+}
 
 // ---------------------------------------------------------------- タブの切り替え (スクロール位置)
 
@@ -60,6 +90,8 @@ const ICON_PATHS = {
   power: () => html`<path d="M13 2 4 14h7l-1 8 9-12h-7z" />`,
   // 相手: 照準
   target: () => html`<circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /><path d="M12 1v4M12 19v4M1 12h4M19 12h4" />`,
+  // 探す: 虫眼鏡
+  search: () => html`<circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.2 15.2 21 21" />`,
   // 護石: 宝石
   charms: () => html`<path d="M6 3h12l4 6-10 12L2 9z" /><path d="M2 9h20M9 3l3 18M15 3l-3 18" />`,
   // 設定: つまみ
@@ -200,6 +232,7 @@ export function Shell() {
   const tab = useAppState((s) => s.tab);
   const core = useData();
   const updateReady = useUpdateReady();
+  const dots = useTabDots();
   const [visited, setVisited] = useState(() => new Set([tab]));
 
   // タブを切り替えたらそのタブの前のスクロール位置に戻す (goToTab の top なら先頭)
@@ -211,6 +244,7 @@ export function Shell() {
       window.scrollTo(0, scrollPos[tab] || 0);
     }
     if (!visited.has(tab)) setVisited(new Set([...visited, tab]));
+    setTabDot(tab, false);
     const def = TAB_DEFS[tab];
     if (def && def.onOpen) def.onOpen();
   }, [tab]);
@@ -256,8 +290,12 @@ export function Shell() {
           <button type="button" role="tab" id=${`tab-${t}`} class=${`tab-button${t === tab ? ' is-active' : ''}`}
             aria-selected=${t === tab ? 'true' : 'false'} aria-controls=${`panel-${t}`} data-tab=${t}
             onClick=${() => choose(t)}>
-            <${TabIcon} tab=${t} />
+            <span class="tab-icon-wrap">
+              <${TabIcon} tab=${t} />
+              ${dots.has(t) && t !== tab && html`<span class="tab-dot" data-tab-dot=${t}></span>`}
+            </span>
             <span class="tab-label">${TAB_LABEL[t]}</span>
+            ${dots.has(t) && t !== tab && html`<span class="visually-hidden">(新しい結果があります)</span>`}
           </button>`)}
       </nav>
       <${ToastHost} />

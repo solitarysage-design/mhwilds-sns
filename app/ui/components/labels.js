@@ -28,7 +28,7 @@ export const SKILL_KIND_LABEL = { weapon: '武器スキル', armor: '防具ス�
 export const DECO_KIND_LABEL = { weapon: '武器用', armor: '防具用' };
 
 /** 下のタブ */
-export const TAB_LABEL = { equip: '装備', power: '火力', target: '相手', charms: '護石', settings: '設定' };
+export const TAB_LABEL = { equip: '装備', power: '火力', target: '相手', search: '探す', charms: '護石', settings: '設定' };
 
 // ---------------------------------------------------------------- 数値の書き方
 

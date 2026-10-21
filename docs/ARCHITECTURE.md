@@ -11,10 +11,15 @@ manifest.webmanifest    ホーム画面に追加用
 sw.js                   Service Worker (オフライン・更新検知)
 app/
   vendor/               preact / preact-hooks / htm を同梱 (CDN に依存しない)
-  model/                計算の純粋関数 (DOM に触らない。node --test でテストする)
+  model/                計算の純粋関数 (DOM に触らない。node --test でテストする。Worker からも読むので import は相対パスだけ)
     damage.js           ダメージ期待値
     build.js            装備一式 → スキル合計 (シリーズ/グループ発動を含む)
     charms.js           護石の検証・泣シミュ形式の書き出し/読み込み
+    weapon.js           武器の解決・斬れ味の自動 (段階 2 の前提で equip_logic.js から移した)
+    hunt.js             相手の体力・討伐までの回数・個体の肉質・クエストの選び方 (段階 3)
+    recommend.js        相手に合わせたおすすめ・多頭の重み・守りのチェック (段階 3)
+    search.js, search/  装備探索 (段階 2。evaluator / problem / solver / realize)
+  search_worker.js      装備探索の Web Worker (段階 2)
   ui/                   画面 (Preact + htm)
   store.js              IndexedDB (キーは必ず "mhwilds-sns:" 接頭辞。同じ github.io オリジンに他のサイトがある)
   data.js               data/*.json の読み込み
@@ -407,6 +412,14 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
 
 ## 段階
 
-1. データ + 計算モデル + 装備からスキル表示 + 火力比較 + 護石一覧 (←いまここ)
-2. 所持護石を使った装備探索
-3. モンスター別・多頭クエストの推奨
+1. データ + 計算モデル + 装備からスキル表示 + 火力比較 + 護石一覧 (済み)
+2. 所持護石を使った装備探索 (←いまここ。設計は `docs/SEARCH_DESIGN.md`)
+3. モンスター別・多頭クエストの推奨 (←いまここ。設計は `docs/RECOMMEND_DESIGN.md`)
+
+### 段階 2・3 の置き場 (2026-10-21 土台を入れた)
+
+- 画面: 6 つ目のタブ「探す」(並び: 装備・火力・相手・探す・護石・設定)。状態は `state.search` と `state.target` の
+  個体・クエスト・人数の項目 (`docs/UI_API.md`)。見た目は `app/ui/styles_search.css` / `styles_target.css`。
+- 計算: `app/model/hunt.js` (済み)・`weapon.js` (済み)・`recommend.js` / `search.js` / `search/` (置き場だけ)。`docs/MODEL_API.md`。
+- 端末に保存: `mhwilds-sns:search-last` (最後の結果・書き出しに入る) と `mhwilds-sns:search-timing` (時間の記録・この端末だけ)。
+- データに足すもの: `skill_effects.json` の `rules.resistSkills` (`docs/RECOMMEND_DESIGN.md` 5.8 節。担当: data)。

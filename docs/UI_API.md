@@ -14,10 +14,14 @@ app/state.js          アプリ全体の状態 (1 か所)。変更は関数で�
 app/data.js           data/*.json を読んで配る (相手タブのデータは遅延読み込み)
 app/store.js          IndexedDB の薄いラッパ・全データの書き出し/読み込み
 app/ui/shell.js       骨組み (見出し・タブバー・更新の帯・お知らせ・ホーム画面に追加の案内)。タブは開いたときに読み込む。
-                      goToTab(tab, {top}) / reloadPage() (保存してから再読み込み) / isStandalone() を出す
+                      goToTab(tab, {top}) / reloadPage() (保存してから再読み込み) / isStandalone() / setTabDot(tab, on) を出す
 app/ui/styles.css     見た目 (色は :root の変数。ダーク表示も変数の差し替えだけ)
+app/ui/styles_search.css  探すタブの見た目 (段階 2・3。class は sr-*。担当: ui-search)
+app/ui/styles_target.css  相手タブの段階 3 のカードの見た目 (class は th-*。担当: ui-target)
 app/ui/components/    共通部品 (index.js からまとめて import できる)
-app/ui/tabs/          equip.js (装備) / power.js (火力) / target.js (相手) / charms.js (護石) / settings.js (設定)
+app/ui/tabs/          equip.js (装備) / power.js (火力) / target.js (相手) / search.js (探す) / charms.js (護石) / settings.js (設定)
+                      ほかに target_hunt.js (相手タブの段階 3 のカード)・search_form.js / search_client.js / search_results.js (探すタブ)
+app/search_worker.js  装備探索の Web Worker (段階 2。担当: solver)
 app/vendor/           preact 10.24.3・htm 3.1.1 (README.md に取得元と版)
 app/icons/            単色の文字アイコン (make_icons.py で作り直せる)
 tests/smoke_ui.py     iPhone 幅の画面のスモークテスト (Playwright)
@@ -88,6 +92,8 @@ export default function EquipTab({ data, active }) {
   「DPS」は「1 秒あたりの火力」、「MV」は「モーション値」と書く。名前を文の中に入れるときは「」で囲む (「の」「は」の前に空白を入れない)。
 - タブの中のボタンで別のタブへ移るときは `setTab` ではなく shell.js の `goToTab(tab, {top})` を使う (今のタブのスクロール位置を
   覚え、`top: true` なら移った先を先頭から出す)。
+- 見ていないタブに新しいもの (探すタブの結果など) ができたら shell.js の `setTabDot(tab)` でタブの絵に小さな点を付ける
+  (そのタブを開くと消える。開いているタブには付かない。`setTabDot(tab, false)` で消す)。
 - Monster Hunter Wiki 由来 (`monster_threats.json`・`quests.json`) の内容を出す画面には、出典とライセンス (CC BY-SA 4.0) を小さく添える
   (設定タブにも全体の表記がある)。
 - 親の要素に `transform` を付けない (シートが position: fixed で出るため、ずれる)。
@@ -103,7 +109,7 @@ export default function EquipTab({ data, active }) {
 ```js
 {
   schema: 1,
-  tab: 'equip',                 // 'equip' | 'power' | 'target' | 'charms' | 'settings' (次回もこのタブで開く)
+  tab: 'equip',                 // 'equip' | 'power' | 'target' | 'search' | 'charms' | 'settings' (次回もこのタブで開く)
   build: {                      // 装備一式。computeBuild(state.build, data.index) にそのまま渡せる
     weapon: null,               // 数値 = weapons_sns.json の id / 文字列 = my_weapons.json の id / null
     armor: { head: null, chest: null, arms: null, waist: null, legs: null },   // armor.json の id
@@ -118,10 +124,33 @@ export default function EquipTab({ data, active }) {
     monsterId: null,            // monsters.json の id
     partKey: null,              // monsters.json の parts[].key
     isWound: false,             // 傷口を狙う
-    questId: null,              // quests.json の id (多頭クエスト用。段階 3)
+    questId: null,              // quests.json の id。クエストを選んでいなければ null
     manual: { name: '手入力',
               hitzone: { slash: 45, blunt: 45, fire: 20, water: 20, thunder: 20, ice: 20, dragon: 20 },
               wound: null },    // 傷口の肉質 (同じ形) か null
+    // 段階 3 (docs/RECOMMEND_DESIGN.md 5.6 節)
+    individual: null,           // 個体 (monsters.json の individuals[].kind)。null = 通常 | 'tempered' | 'arch-tempered' | 'frenzied' | 'alpha'
+    questTargetIndex: 0,        // 多頭のとき、下のカードに出す相手 (mission.targets の行の番号 = hunt.js の questSubjects の index)
+    players: 1,                 // 人数 1〜4 (体力の表示だけ)
+    useUncertainWound: false,   // 確度の低い傷口の置き換え (歴戦王アルシュベルド) を計算に使う
+  },
+  search: {                     // 探すタブの条件 (段階 2・3。docs/RECOMMEND_DESIGN.md 5.6 節。既定は defaultSearch())
+    useTarget: true,            // 相手に合わせたおすすめを使う (false = 段階 2: 自分で決める)
+    preset: 'balance',          // 守りのスキルの段 'power' (火力優先) | 'balance' | 'safe' (安全)
+    toggles: {},                // {要件の key: true|false} プリセットから変えたものだけ
+    levels: {},                 // {要件の key: Lv} 軽減の Lv を選んだものだけ
+    required: [],               // 自分で足した必須スキル [{skillId, level}] (最大 30)
+    weaponMode: 'auto',         // 'auto' | 'current' (いまの武器) | 'element' (おすすめの属性から) | 'all' (全部から)
+    twoWeapons: 'auto',         // 多頭で武器を 2 本にする案 'auto' (属性の違う相手がいれば) | 'on' | 'off'
+    partsPolicy: 'asSelected',  // 'asSelected' (相手タブの部位) | 'weak1' (弱点 1 か所) | 'main3' (主な部位 3 か所)
+    charms: { owned: true, local: true, fixed: true },  // 持っている護石 / この端末で足した護石 / 生産する護石
+    limitBreak: 'build',        // 'build' (装備タブと同じ) | 'all' | 'none'
+    archTemperedHunted: {},     // {monsterId: false} 倒していない歴戦王だけ (無い = 倒した扱い)
+    armorExclude: [],           // 使わない防具の id
+    placeholders: 'zero',       // 仮置きの発動率の条件 'zero' (0% で探す) | 'keep' (火力タブの値のまま)
+    budgetSec: 6,               // 探す時間の目安 (秒・1〜60)
+    K: 10,                      // 出す件数 (1〜50)
+    autoStart: null,            // 「この相手で装備を探す」から来た印 {id, from, at} (下の「自動で探し始める受け渡し」。保存からは戻さない)
   },
   combo: null,                  // combos_sns.json の id か 技 id の配列。null = 先頭の代表コンボ
   uptimes: {},                  // 条件グループの発動率。damage.js の uptimes にそのまま渡せる (例 {enraged: 0.7, chain: {hit5plus: 0.7}})
@@ -157,7 +186,15 @@ const off = subscribe((s) => { … });                 // 変わるたびに呼�
 | `setBuild(build)` / `clearBuild()` | 装備一式を入れ替える (探索の結果など) / 全部外す |
 | `setTarget(patch)` | 相手を浅いマージで変える |
 | `setTargetMode('monster' \| 'manual')` | 選び方の切り替え |
-| `selectMonster(monsterId, partKey?)` / `selectPart(partKey)` / `setWound(on)` | モンスター・部位・傷口 |
+| `selectMonster(monsterId, partKey?)` / `selectPart(partKey)` / `setWound(on)` | モンスター・部位・傷口。`selectMonster` は個体を通常に戻し、クエストから外す (`questId: null`・`questTargetIndex: 0`) |
+| `selectIndividual(kind, {targetData, questId})` | 個体 (null = 通常)。クエストも選び直す: `questId` を渡せばそれ (null で外す)、`targetData` (`useTargetData().data`) を渡せば hunt.js の `defaultQuestId` の規則で、どちらも無ければ外す。`questTargetIndex` はそのクエストのこの個体の行 |
+| `selectQuest(questId, {targetIndex, monsterId, individual, partKey})` | クエスト (null で外す) と下のカードに出す相手の行。`monsterId` などを渡すといっしょに替える (「クエストの名前から選ぶ」・多頭の相手の行をタップ。クエストは残る)。モンスターが替わると部位 (渡さなければ未選択) と傷口の指定を外す |
+| `setPlayers(n)` / `setUseUncertainWound(on)` | 人数 (1〜4) / 確度の低い傷口の置き換えを使うか |
+| `setSearch(patch)` | 探すタブの条件 (浅いマージ。`charms` だけ中身もマージ。値は `sanitizeSearch` でそろえる。`autoStart` は変えない) |
+| `setSearchToggle(key, on)` / `setSearchLevel(key, level)` | 守りの要件 1 つのオン/オフ・軽減の Lv (null でプリセット・既定に戻す) |
+| `addRequired(skillId, level)` / `setRequiredLevel(skillId, level)` / `removeRequired(skillId)` | 自分で足す必須スキル (同じスキルは 1 行。`addRequired` はあれば Lv を変える) |
+| `setArchTemperedHunted(monsterId, hunted)` / `setArmorExcluded(armorId, excluded)` | 倒した歴戦王 / 使わない防具 |
+| `requestSearch({from})` → id / `takeSearchRequest(id)` → 印 か null | 自動で探し始める受け渡し (下) |
 | `setManualHitzone(patch, {wound})` | 手入力の肉質 (0〜100 に丸める)。`{wound: true}` で傷口の肉質、`setManualHitzone(null, {wound: true})` で傷口の手入力をやめる |
 | `setCombo(comboIdOrMoves)` | コンボ (null で既定) |
 | `setUptime(groupId, value)` | 条件グループの発動率。binary は 0〜1 の数、categorical は `{段 id: 0〜1}` |
@@ -179,6 +216,8 @@ import { useTargetData } from '../../data.js';
 
 const t = useTargetData();                                  // 相手のデータ (遅延読み込み)
 const target = resolveTarget(state.target, t.data);         // → {hitzone, wound, isWound, label, monster?, part?} か null (未選択・未読み込み)
+// 個体 (state.target.individual) があれば hunt.js の hitzoneFor で傷口を置き換え、ラベルは「ウズ・トゥナ（歴戦王） 頭」。
+// 返り値に individual・woundSource・woundMark ('unverified' = 未確認 / 'uncertain' = 未確定 / null) も入る (docs/MODEL_API.md の hunt.js)
 const combo = resolveCombo(state.combo, data.combos);       // → combos[] の 1 件か 技 id の配列
 const r = comboExpected({ weapon, sharpness, skills: build.skills, uptimes: state.uptimes,
                           effects: data.skillEffects, motions: data.motions, combo, target });
@@ -194,8 +233,31 @@ const r = comboExpected({ weapon, sharpness, skills: build.skills, uptimes: stat
 - `getSaveStatus()` / `subscribeSaveStatus(fn)`: 保存の状態 `{status: 'idle'|'saved'|'memory', at}` と、変わったときの通知
   (shell.js が、初めて `memory` になったときに「この端末に保存できていません」の toast を出す)。
 - 保存領域を開くのが時間切れ (4 秒) になったあとで開けたら、まだ何も変えていなければ保存してある状態を読み直す。
-- `sanitizeState(raw)` / `sanitizeBuild(raw)`: 保存データや読み込んだデータを今の形にそろえる (足りない項目は初期値)。
-- 定数: `TABS`, `ARMOR_PARTS`, `DECO_TARGETS`, `SHARPNESS_ORDER`, `HITZONE_KEYS`, `STATE_KEY`。
+- `sanitizeState(raw)` / `sanitizeBuild(raw)` / `sanitizeSearch(raw)`: 保存データや読み込んだデータを今の形にそろえる (足りない項目は初期値)。
+  段階 2・3 の項目 (`target.individual` など・`search`) は足しただけなので `STATE_SCHEMA` は 1 のまま。古い保存データ (項目が無い) は初期値になる。
+- 初期値: `emptyBuild()` / `emptyTarget()` / `defaultSearch()` / `defaultState()`。
+- 定数: `TABS`, `ARMOR_PARTS`, `DECO_TARGETS`, `SHARPNESS_ORDER`, `HITZONE_KEYS`, `STATE_KEY`, `INDIVIDUAL_KINDS` (個体の値)、
+  `SEARCH_CHOICES` (探すタブの選び方の候補 `{preset, weaponMode, twoWeapons, partsPolicy, limitBreak, placeholders}`)。
+
+### 自動で探し始める受け渡し (相手タブ →「この相手で装備を探す」→ 探すタブ)
+
+```js
+// 相手タブ (target_hunt.js) のボタン
+import { requestSearch } from '../../state.js';
+import { goToTab } from '../shell.js';
+requestSearch({ from: 'target' });     // state.search.autoStart = {id, from: 'target', at} を置き、useTarget を true に
+goToTab('search', { top: true });      // 探すタブへ
+
+// 探すタブ (search.js): 開いたとき・印が置かれたときに 1 回だけ受け取って探し始める
+const req = useAppState((s) => s.search.autoStart);
+useEffect(() => {
+  if (!req || !ready) return;          // ready = core と相手のデータが読めている
+  if (takeSearchRequest(req.id)) start();  // 受け取ると印は消える (2 回目は null)。探索の条件はその時の state から作る
+}, [req, ready]);
+```
+
+- 印は保存されるが、`sanitizeState` が戻さない (開き直しや全データの読み込みで勝手に探し始めない)。
+- 探すタブがまだ一度も開かれていなくても、開いたときに印を見て始める (タブは開いたときに読み込まれるため)。
 - 状態の形を変える (項目を足す) ときは `defaultState()` と `sanitizeState()` の両方に足す。消す・意味を変えるときは `STATE_SCHEMA` を上げて
   古い保存データを読み替える処理を `sanitizeState` に書く (古いデータで画面が壊れないように)。担当外なら報告に書く。
 
@@ -250,7 +312,13 @@ const list = (await kvGet('mhwilds-sns:charms-local')) ?? [];
 
 - DB 名 `mhwilds-sns:db`、ストア `kv`。値は構造化複製できるもの (JSON にできる値なら安全)。失敗しても投げない (メモリに置く)。
 - 接続が切れていた (iPhone で長く裏に回すと Safari が切ることがある) ときは、開き直して 1 回だけやり直す。`db.onclose` でも開き直す。
-- 書き出さない「この端末だけの記録」: `mhwilds-sns:persist-asked`・`mhwilds-sns:hint-home-screen` (読み込み・初期化でも扱いは同じ)。
+- 書き出さない「この端末だけの記録」: `mhwilds-sns:persist-asked`・`mhwilds-sns:hint-home-screen`・`mhwilds-sns:search-timing`
+  (読み込み・初期化でも扱いは同じ)。
+- 探すタブの記録 (段階 2・3。`docs/RECOMMEND_DESIGN.md` 5.7 節):
+  - `loadSearchLast()` → `{savedAt, appVersion, inputKey, summary, result}` か null / `saveSearchLast({inputKey, summary, result, appVersion})` /
+    `clearSearchLast()`。キーは `SEARCH_LAST_KEY` (`mhwilds-sns:search-last`。書き出しに入る)。結果の build は使う前に `sanitizeBuild` を通す。
+  - `loadSearchTiming()` → 配列 (古い → 新しい・最大 `SEARCH_TIMING_MAX` = 20 回) / `appendSearchTiming(entry)` (`at` が無ければ足す。
+    古いものから消す) / `clearSearchTiming()`。キーは `SEARCH_TIMING_KEY` (`mhwilds-sns:search-timing`。この端末だけ)。
 - `copyText(text)` の text は文字列か Promise (作るのに時間がかかる文字は Promise のまま渡す。iPhone の Safari はタップの処理の中で
   すぐ書き込まないと断るため、`ClipboardItem` に Promise を渡す形で書く)。
 - 装備・相手・発動率などは state.js が保存するので、タブが直接保存するのは state に載らない大きめのもの (端末で足した護石など) だけ。
@@ -352,7 +420,7 @@ toast('武器の装飾品 1 個 (…) は入らないので外しました', { a
 
 | ファイル | 中身 (主なもの) | 使っている所 |
 |---|---|---|
-| `tabs/equip_logic.js` (純粋関数) | `resolveWeaponRef(ref, idx)` (所持武器は元の武器で補う) / `damageWeapon(w)` / `autoSharpness(w, idx, skillLevels)` (斬れ味の自動 = 匠込みの一番上の色) / `sharpnessResolver(w, idx, fixedColor)` (スキルの組ごとに斬れ味の色を決め直す関数。power_calc の `perSkills`) / `handicraftInfo(idx)` / `weaponName(w)` / `DEFAULT_TARGET` と `DEFAULT_HITZONE_TEXT` (相手が決まらないときの肉質: 切断・打撃 45、属性 20) / `pickDamageTarget` / `summarizePower({…, target, targets?, perSkills?, monsterStatus?})` (targets を渡すと部位の割合で平均) / `refitDecorations(ids, sizes, kind, idx)` (装備を替えたとき入る珠を残す) ほか一覧づくり | 装備・火力・相手 |
+| `tabs/equip_logic.js` (純粋関数) | (武器の解決・斬れ味の 9 関数の本体は `app/model/weapon.js`。ここから再 export) `resolveWeaponRef(ref, idx)` (所持武器は元の武器で補う) / `damageWeapon(w)` / `autoSharpness(w, idx, skillLevels)` (斬れ味の自動 = 匠込みの一番上の色) / `sharpnessResolver(w, idx, fixedColor)` (スキルの組ごとに斬れ味の色を決め直す関数。power_calc の `perSkills`) / `handicraftInfo(idx)` / `weaponName(w)` / `DEFAULT_TARGET` と `DEFAULT_HITZONE_TEXT` (相手が決まらないときの肉質: 切断・打撃 45、属性 20) / `pickDamageTarget` / `summarizePower({…, target, targets?, perSkills?, monsterStatus?})` (targets を渡すと部位の割合で平均) / `refitDecorations(ids, sizes, kind, idx)` (装備を替えたとき入る珠を残す) ほか一覧づくり | 装備・火力・相手 |
 | `tabs/equip_index.js` (hook) | `useEquipIndex(data, {active})` → `{idx, localWeapons, localCharms}`。画面で足した武器・護石も入った索引 (`computeBuild` にそのまま渡す) | 装備・火力・相手 |
 | `tabs/power_calc.js` (純粋関数) | `mixExpected(input, targets)` / `mixTotal` / `mixContribution` (狙う部位の割合で加重平均した comboExpected・スキルなし比・外したときの低下) / スキル火力表 (`skillTableCandidates(effects, weapon, {handicraft})` `tableContext` `skillTableRow` (行の `conflict` = 同時に起きない条件の合計が 100% 超え) `skillTable` `sortTableRows`) / `conditionSummary(effects, uptimes, groupId, {entry, skillIds, monsterStatus})` (スキルが効く段だけ・段ごと) / `effectiveStates` / `exclusiveConflict` / `inputFor` / `rebalanceCategorical`。input に `perSkills` (斬れ味の自動) と `handicraft` (匠の行) を足せる | 火力・装備 (summarizePower 経由) |
 | `tabs/target_mix.js` (純粋関数) | `resolveTargetMix(state.target, state.tabs.target, targetData)` → `{targets: [{weight, label, partKey, target}], label, mixed}` か null / `partLabel(part, monster)` (部位不明は「部位不明 1」) / `readMix` `mixShares` `mainPartKey` `setShare` `addShare` `removeShare` (割合のつまみ) / `visibleParts` `defaultPartKey` `isWeakPart` `weakInfo` (剣・盾・傷口のどれに弱点特効が効くか) `manualTarget` / `recommendationView` (おすすめ属性の見せ方。近い・低いときは 1 つを大きく出さない) / `monsterStatusOf` (相手が使う状態異常) / `threatInfo` (咆哮などと防ぐスキル) | 相手・火力・装備 |
@@ -375,6 +443,19 @@ toast('武器の装飾品 1 個 (…) は入らないので外しました', { a
 
 `equip.js` は `<style>` を部品の中に、`power.js` / `target.js` は `<style id="mhwilds-sns-power-style">` などを head に足して持つ
 (class は `eq-*` / `pw-*` / `tg-*`。色は :root の変数だけ)。styles.css に移すときは class 名を変えないこと (スモークテストが使う)。
+段階 2・3 の画面は別のファイル: 探すタブは `app/ui/styles_search.css` (class は `sr-*`)、相手タブの新しいカード (`target_hunt.js`) は
+`app/ui/styles_target.css` (class は `th-*`)。どちらも index.html が styles.css の後に読む。スモークテストの `:hover`・`vh` の検査は
+`app/ui/*.css` を全部見る。
+
+## 探すタブ (段階 2・3。担当: ui-search)
+
+持っている護石で火力の高い装備を探し、相手に合わせたおすすめ (守りのスキル・武器の属性) も使う画面 (`docs/RECOMMEND_DESIGN.md` 4.3〜4.6 節)。
+いまは「準備中」のカードだけ。
+
+## 相手タブの段階 3 のカード (担当: ui-target)
+
+個体・クエスト・人数・体力と強さ・この相手のおすすめ・このクエストの相手・歴戦王で変わること (`docs/RECOMMEND_DESIGN.md` 4.2 節。
+`tabs/target_hunt.js`)。いまは置き場だけ。
 
 ## sw.js (オフラインと更新)
 

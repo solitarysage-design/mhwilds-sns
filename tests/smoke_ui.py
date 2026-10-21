@@ -50,7 +50,7 @@ from typing import Callable
 REPO = Path(__file__).resolve().parent.parent
 BASE_PATH = "/mhwilds-sns/"
 ART = REPO / "tests" / "artifacts"
-TABS = ["equip", "power", "target", "charms", "settings"]
+TABS = ["equip", "power", "target", "search", "charms", "settings"]
 TAP_MIN = 43.5  # 44px (小数の丸めの分だけ緩める)
 
 # ---------------------------------------------------------------- 配信 (Pages と同じパス)
@@ -1176,6 +1176,89 @@ def target_tab_pick_monster_and_parts(page, ctx: Ctx):
         page.evaluate(JS_STATE_RESTORE, snap)
 
 
+# ---------------------------------------------------------------- 探すタブ (段階 2・3。いまは「準備中」のカードだけ)
+
+SEARCH_PANEL = '[data-tab-panel="search"]'
+# 下のタブの並び (docs/RECOMMEND_DESIGN.md 4.1 節)
+TAB_LABELS = ["装備", "火力", "相手", "探す", "護石", "設定"]
+
+JS_TABBAR = """() => [...document.querySelectorAll('.tabbar [role=tab]')].map((b) => {
+  const r = b.getBoundingClientRect();
+  const l = b.querySelector('.tab-label');
+  const lr = l.getBoundingClientRect();
+  const icon = b.querySelector('.tab-icon');
+  const ir = icon ? icon.getBoundingClientRect() : null;
+  return { tab: b.dataset.tab, text: l.textContent.trim(), w: r.width, h: r.height, left: r.left, right: r.right,
+           lLeft: lr.left, lRight: lr.right, lScroll: l.scrollWidth, lClient: l.clientWidth,
+           fs: parseFloat(getComputedStyle(l).fontSize), icon: ir ? ir.width : 0,
+           iconInside: !!ir && ir.left >= r.left - 0.5 && ir.right <= r.right + 0.5 };
+})"""
+
+
+@tab_check("search")
+def search_tab_placeholder(page, ctx: Ctx):
+    """探すタブ: 「準備中」のカードが出て、見出しが「探す」・state.tab が search。"""
+    text = page.inner_text(SEARCH_PANEL)
+    if "準備中" not in text:
+        ctx.fail(f"探すタブに「準備中」が出ていません: {text[:80]!r}")
+    if page.inner_text(".app-title").strip() != "探す":
+        ctx.fail(f"探すタブの見出しが「探す」になっていません: {page.inner_text('.app-title')!r}")
+    if _app_state(page, "s.tab") != "search":
+        ctx.fail("探すタブを開いても state.tab が search になっていません")
+
+
+@tab_check("search")
+def tabbar_six_tabs_fit(page, ctx: Ctx):
+    """下のタブ 6 つが幅いっぱいに並び、どれも 44px 以上で押せて、文字が切れず、絵がボタンの中にある。"""
+    tabs = page.evaluate(JS_TABBAR)
+    vw = page.evaluate("document.documentElement.clientWidth")
+    if [t["tab"] for t in tabs] != TABS:
+        ctx.fail(f"タブの並びが違います: {[t['tab'] for t in tabs]}")
+    if [t["text"] for t in tabs] != TAB_LABELS:
+        ctx.fail(f"タブの名前が違います: {[t['text'] for t in tabs]}")
+    for t in tabs:
+        where = f"幅 {vw}px の「{t['text']}」タブ"
+        if t["w"] < TAP_MIN or t["h"] < TAP_MIN:
+            ctx.fail(f"{where}: 押せる大きさが足りません ({t['w']:.0f}x{t['h']:.0f})")
+        if t["lScroll"] > t["lClient"] + 0.5 or t["lLeft"] < t["left"] - 0.5 or t["lRight"] > t["right"] + 0.5:
+            ctx.fail(f"{where}: 名前が切れています (文字の幅 {t['lScroll']} / 欄 {t['lClient']})")
+        if t["fs"] < 10.5:
+            ctx.fail(f"{where}: 名前の文字が小さすぎます ({t['fs']}px)")
+        if t["icon"] < 20 or not t["iconInside"]:
+            ctx.fail(f"{where}: 絵が小さいか、ボタンからはみ出しています")
+    for a, b in zip(tabs, tabs[1:]):
+        if b["left"] < a["right"] - 0.5:
+            ctx.fail(f"「{a['text']}」と「{b['text']}」のタブが重なっています")
+    if tabs and (tabs[0]["left"] < -0.5 or tabs[-1]["right"] > vw + 0.5):
+        ctx.fail(f"幅 {vw}px でタブが画面からはみ出しています")
+    ctx.shot("tabbar", full_page=False)
+
+
+@scenario_check
+def tab_dot_marks_unseen_tab(page, ctx: Ctx):
+    """shell.js の setTabDot: 見ていないタブの絵に点が付き、そのタブを開くと消える。開いているタブには付けない。"""
+    before = _app_state(page, "s.tab")
+    set_dot = "async (tab) => { const m = await import('./app/ui/shell.js'); m.setTabDot(tab); }"
+    try:
+        open_tab(page, "equip")
+        page.evaluate(set_dot, "search")
+        page.wait_for_selector('.tabbar [data-tab-dot="search"]', timeout=5000)
+        if "新しい結果" not in page.inner_text('.tabbar [data-tab="search"]'):
+            ctx.fail("点の付いたタブに、読み上げ用の「新しい結果があります」がありません")
+        check_layout(page, ctx, "タブの点")
+        ctx.shot("tab-dot", full_page=False)
+        open_tab(page, "search")
+        if page.locator(".tabbar [data-tab-dot]").count():
+            ctx.fail("点の付いたタブを開いても点が消えません")
+        page.evaluate(set_dot, "search")
+        page.wait_for_timeout(100)
+        if page.locator(".tabbar [data-tab-dot]").count():
+            ctx.fail("開いているタブにも点が付きます")
+    finally:
+        if before in TABS:
+            open_tab(page, before)
+
+
 @scenario_check
 def power_uses_target_mix(page, ctx: Ctx):
     """相手タブの「割合で混ぜる」が火力タブの期待値 (加重平均) に入ること。傷口の無い部位を狙うと警告が出ること。"""
@@ -1863,7 +1946,7 @@ def robust_static_check() -> list[str]:
                              "同じ github.io の別サイトのアプリと同じ id になるので、mhwilds-sns を含めてください")
     except Exception as e:
         fails.append(f"manifest.webmanifest が読めません: {e}")
-    ui_files = [REPO / "app" / "ui" / "styles.css", *sorted((REPO / "app" / "ui").rglob("*.js"))]
+    ui_files = [*sorted((REPO / "app" / "ui").glob("*.css")), *sorted((REPO / "app" / "ui").rglob("*.js"))]
     for f in ui_files:
         text = f.read_text(encoding="utf-8")
         rel = f.relative_to(REPO).as_posix()

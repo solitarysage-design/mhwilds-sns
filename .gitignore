@@ -9,3 +9,5 @@ tests/artifacts/
 *.jpg
 *.png
 !app/icons/*.png
+# Claude Code の作業フォルダ (worktree など) を取り込まない
+.claude/

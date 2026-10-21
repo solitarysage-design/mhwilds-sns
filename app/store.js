@@ -20,8 +20,13 @@ let dbPromise = null;
 let available = null;           // null = まだ試していない
 let lastError = null;
 const lateListeners = new Set(); // 時間切れの後に開けたときに呼ぶ (state.js が保存してある状態を読み直す)
+/** 探すタブの最後の結果 (書き出しに入れる) と、探すのにかかった時間の記録 (この端末だけ。docs/RECOMMEND_DESIGN.md 5.7 節) */
+export const SEARCH_LAST_KEY = 'mhwilds-sns:search-last';
+export const SEARCH_TIMING_KEY = 'mhwilds-sns:search-timing';
+/** search-timing に残す回数 */
+export const SEARCH_TIMING_MAX = 20;
 /** 書き出さない「この端末だけの記録」のキー */
-const DEVICE_ONLY_KEYS = new Set([PERSIST_KEY, 'mhwilds-sns:hint-home-screen']);
+const DEVICE_ONLY_KEYS = new Set([PERSIST_KEY, 'mhwilds-sns:hint-home-screen', SEARCH_TIMING_KEY]);
 
 function assertKey(key) {
   if (typeof key !== 'string' || !key.startsWith(PREFIX)) {
@@ -232,6 +237,72 @@ export async function kvClear() {
   }
 }
 
+// ---------------------------------------------------------------- 探すタブの記録 (段階 2・3)
+
+const isPlainObj = (x) => x != null && typeof x === 'object' && !Array.isArray(x);
+
+/**
+ * 探すタブの最後の結果を読む。無い・形が違えば null。
+ * 結果の build は古い版のものかもしれないので、使う側で state.js の sanitizeBuild を通し、
+ * inputKey (いまの条件から作ったもの) と比べて「条件が変わりました」を出す。
+ * @returns {Promise<{savedAt, appVersion, inputKey, summary, result} | null>}
+ */
+export async function loadSearchLast() {
+  const v = await kvGet(SEARCH_LAST_KEY);
+  if (!isPlainObj(v) || !isPlainObj(v.result)) return null;
+  return {
+    savedAt: typeof v.savedAt === 'string' ? v.savedAt : null,
+    appVersion: typeof v.appVersion === 'string' ? v.appVersion : null,
+    inputKey: typeof v.inputKey === 'string' ? v.inputKey : null,
+    summary: v.summary ?? null,
+    result: v.result,
+  };
+}
+
+/**
+ * 探すタブの最後の結果を保存する (上書き。全データの書き出しに入る)。
+ * @param entry {inputKey, summary, result, appVersion} (構造化複製できる値。関数は入れない)
+ * @returns {Promise<boolean>} 端末に保存できたら true (メモリだけなら false)
+ */
+export async function saveSearchLast({ inputKey = null, summary = null, result, appVersion = null } = {}) {
+  if (!isPlainObj(result)) return false;
+  return kvSet(SEARCH_LAST_KEY, { savedAt: new Date().toISOString(), appVersion, inputKey, summary, result });
+}
+
+/** 探すタブの最後の結果を消す。 */
+export function clearSearchLast() {
+  return kvDelete(SEARCH_LAST_KEY);
+}
+
+/**
+ * 探すのにかかった時間の記録 (新しい順ではなく、古い → 新しい順。最大 SEARCH_TIMING_MAX 回)。
+ * この端末だけの記録で、書き出しには入れない (iPhone での実測を見るため。設定タブの「くわしく」にも出す)。
+ * @returns {Promise<object[]>}
+ */
+export async function loadSearchTiming() {
+  const v = await kvGet(SEARCH_TIMING_KEY);
+  return Array.isArray(v) ? v.filter(isPlainObj).slice(-SEARCH_TIMING_MAX) : [];
+}
+
+/**
+ * 探すのにかかった時間を 1 回ぶん足す (古いものから消して SEARCH_TIMING_MAX 回まで)。
+ * @param entry 例 {at, device, label, phases: [{name, endMs}], partialMs, doneMs, status} (形は探すタブの担当が決める。at は無ければ足す)
+ * @returns {Promise<object[]>} 足した後の記録
+ */
+export async function appendSearchTiming(entry) {
+  if (!isPlainObj(entry)) return loadSearchTiming();
+  const list = await loadSearchTiming();
+  list.push({ at: new Date().toISOString(), ...entry });
+  const next = list.slice(-SEARCH_TIMING_MAX);
+  await kvSet(SEARCH_TIMING_KEY, next);
+  return next;
+}
+
+/** 探すのにかかった時間の記録を消す。 */
+export function clearSearchTiming() {
+  return kvDelete(SEARCH_TIMING_KEY);
+}
+
 // ---------------------------------------------------------------- 保存領域の状態
 
 /**
@@ -294,7 +365,7 @@ export function backupFileName(date = new Date()) {
 /**
  * 保存してある全データを 1 つのテキストにする。
  * 形: {"kind": "mhwilds-sns-backup", "format": 1, "exportedAt": "...", "appVersion": "...", "entries": {"mhwilds-sns:state": {...}, ...}}
- * 書き出さないキー: persist-asked・hint-home-screen (端末ごとの記録)
+ * 書き出さないキー: persist-asked・hint-home-screen・search-timing (端末ごとの記録)
  */
 export async function exportAllText({ appVersion = null } = {}) {
   const entries = await kvGetAll();
