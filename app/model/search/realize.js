@@ -1,4 +1,138 @@
 // 探索の結果 → 装備一式 (珠の位置まで)・同じ類のほかの防具 (alternatives)・空きスロット、
-// computeBuild + comboExpected での計算し直し。docs/SEARCH_DESIGN.md 3.4 節。担当: solver (2a)。
-// import は相対パスだけ。いまは置き場だけ。
-export {};
+// computeBuild + comboExpected での計算し直し (docs/SEARCH_DESIGN.md 3.4 節)。
+// ソルバの中の評価 (速い評価器・Lv の足し算) とずれていないかをここで確かめる。import は相対パスだけ。
+import { computeBuild, ARMOR_PARTS } from '../build.js';
+import { comboExpected } from '../damage.js';
+import { resolveWeaponRef, damageWeapon, autoSharpness } from '../weapon.js';
+
+const DECO_LISTS = ['weapon', ...ARMOR_PARTS, 'charmArmor', 'charmWeapon'];
+
+/**
+ * 珠をスロットに入れる: 大きい珠から、入る一番小さいスロットへ (「Lv t 以上の珠の数 ≤ Lv t 以上のスロットの数」なら必ず入る)。
+ * @param slots [{t (入れ先), i (何番目), size}]、list [珠 (decorations.json の要素) | null]
+ * @returns [{t, i, id}] 入れた所 (入らない珠があれば例外)
+ */
+export function placeDecos(slots, list) {
+  const free = slots.filter((s) => s.size > 0).sort((a, b) => a.size - b.size);
+  const sorted = list.filter((d) => d != null).sort((a, b) => b.slot - a.slot);
+  const out = [];
+  for (const d of sorted) {
+    const k = free.findIndex((s) => s.size >= d.slot);
+    if (k < 0) throw new Error(`珠 ${d.name} が入らない`);
+    const s = free.splice(k, 1)[0];
+    out.push({ t: s.t, i: s.i, id: d.id });
+  }
+  return out;
+}
+
+/**
+ * ソルバの結果の 1 件 (e = {wi, charm, parts, ws, deco}) を装備一式にする。ソルバの状態には触らない
+ * (探索の途中で呼んでもよい)。
+ * @param P prepare() の結果、S ソルバ (類の並び partCls / charmCls / partOrder を読むだけ)
+ * @returns {{build, alternatives}}  build は computeBuild にそのまま渡せる (state.build と同じ形)
+ */
+export function realizeEntry(P, S, e) {
+  const idx = P.idx;
+  const wp = P.weapons[e.wi];
+  const charmCls = S.charmCls[e.charm];
+  const charmRef = charmCls.members[0];
+  const armor = {};
+  const alternatives = {};
+  S.partOrder.forEach((part, i) => {
+    const cls = S.partCls[i][e.parts[i]];
+    armor[part] = cls.members[0];
+    alternatives[part] = cls.members.slice(1);
+  });
+  alternatives.charm = charmCls.members.slice(1);
+  const charm = charmRef == null ? null : (typeof charmRef === 'number' ? idx.charmsFixed.get(charmRef) : idx.charms.get(charmRef));
+  const isFixed = !charm || (!('armorSlots' in charm) && !('weaponSlots' in charm));
+
+  const decos = Object.fromEntries(DECO_LISTS.map((k) => [k, []]));
+  const placeInto = (slots, list) => {
+    for (const p of placeDecos(slots, list)) decos[p.t][p.i] = p.id;
+  };
+  // 武器用の珠: 武器スロット + 護石の武器用スロット
+  const wSlots = (wp.w.slots || []).map((x, i) => ({ t: 'weapon', i, size: Number(x) || 0 }));
+  const cwSlots = isFixed ? [] : (charm.weaponSlots || []).map((x, i) => ({ t: 'charmWeapon', i, size: Number(x) || 0 }));
+  placeInto([...wSlots, ...cwSlots], (e.ws ? e.ws.decos : []).map((id) => (id == null ? null : idx.decorations.get(id))));
+  // 防具用の珠: 防具 5 部位 (限界突破の指定どおりのスロット) + 護石の防具用スロット
+  const aSlots = [];
+  const lbOf = (part) => {
+    const lb = P.opts.limitBreak;
+    return lb && typeof lb === 'object' ? !!lb[part] : !!lb;
+  };
+  for (const part of ARMOR_PARTS) {
+    const a = idx.armor.get(armor[part]);
+    const sl = lbOf(part) && Array.isArray(a.slotsLimitBreak) ? a.slotsLimitBreak : a.slots;
+    (sl || []).forEach((x, i) => aSlots.push({ t: part, i, size: Number(x) || 0 }));
+  }
+  if (!isFixed) (charm.armorSlots || []).forEach((x, i) => aSlots.push({ t: 'charmArmor', i, size: Number(x) || 0 }));
+  const aList = [];
+  for (let r = 0; r < P.R; r++) for (let n = 0; n < (e.deco ? e.deco[r] : 0); n++) aList.push(idx.decorations.get(P.armorDeco[r].id));
+  placeInto(aSlots, aList);
+  // 空きは null で、スロットの数まで埋める
+  const lenOf = (k) => {
+    if (k === 'weapon') return (wp.w.slots || []).length;
+    if (k === 'charmArmor') return isFixed ? 0 : (charm.armorSlots || []).length;
+    if (k === 'charmWeapon') return isFixed ? 0 : (charm.weaponSlots || []).length;
+    const a = idx.armor.get(armor[k]);
+    return (lbOf(k) && Array.isArray(a.slotsLimitBreak) ? a.slotsLimitBreak : a.slots || []).length;
+  };
+  for (const k of DECO_LISTS) {
+    const n = Math.max(lenOf(k), decos[k].length);
+    for (let i = 0; i < n; i++) if (decos[k][i] === undefined) decos[k][i] = null;
+  }
+  // 限界突破は実際に使った部位だけ true (限界突破後のスロットが分からない防具は通常のスロットで探しているので false)
+  const limitBreak = Object.fromEntries(ARMOR_PARTS.map((p) => [p, lbOf(p) && Array.isArray(idx.armor.get(armor[p]).slotsLimitBreak)]));
+  const build = { weapon: wp.ref, armor, charm: charmRef, decorations: decos, limitBreak };
+  return { build, alternatives };
+}
+
+/**
+ * 装備一式を computeBuild + comboExpected で計算し直す (部位の割合で加重平均)。
+ * @param ctx {idx, effects, motions, combo, targets: [{weight, group?, target}], uptimes, monsterStatus, buffs,
+ *             sharpness: null (自動) | 色}
+ * @returns {{value, perTarget: number[], perGroup, r (computeBuild の結果), sharpness, overMaxPatterns: bool, error}}
+ *   value は相手・コンボが無ければ null。条件の組み合わせが MAX_PATTERNS を超えると overMaxPatterns: true (value は null)
+ */
+export function checkBuild(build, ctx) {
+  const r = computeBuild(build, ctx.idx);
+  const w = resolveWeaponRef(build.weapon, ctx.idx) || (typeof build.weapon === 'object' ? build.weapon : null);
+  const sharpness = ctx.sharpness || (w ? autoSharpness(w, ctx.idx, r.skillLevels).color : null) || 'white';
+  const out = { value: null, perTarget: [], perGroup: null, r, sharpness, overMaxPatterns: false, error: null };
+  if (!ctx.targets || !ctx.targets.length || !ctx.combo) return out;
+  const skills = r.skills.filter((s) => s.level > 0).map((s) => ({ skillId: s.skillId, level: s.level }));
+  try {
+    let v = 0;
+    for (const t of ctx.targets) {
+      const x = comboExpected({
+        weapon: damageWeapon(w), sharpness, skills, uptimes: ctx.uptimes || {}, effects: ctx.effects,
+        motions: ctx.motions, combo: ctx.combo, target: t.target, monsterStatus: ctx.monsterStatus, buffs: ctx.buffs,
+      }).total;
+      out.perTarget.push(x);
+      v += t.weight * x;
+    }
+    out.value = v;
+  } catch (e) {
+    if (/条件の組み合わせが多すぎる/.test(String(e && e.message))) out.overMaxPatterns = true;
+    else out.error = String((e && e.message) || e);
+    return out;
+  }
+  // 相手のまとまり (多頭の相手ごと) の値 = そのまとまりの行だけの加重平均
+  const groups = new Map();
+  ctx.targets.forEach((t, i) => {
+    if (t.group == null) return;
+    const g = groups.get(t.group) || { w: 0, v: 0 };
+    g.w += t.weight; g.v += t.weight * out.perTarget[i];
+    groups.set(t.group, g);
+  });
+  if (groups.size) out.perGroup = Object.fromEntries([...groups].map(([k, g]) => [k, g.w > 0 ? g.v / g.w : 0]));
+  return out;
+}
+
+/** computeBuild の結果 → 結果に載せるスキルと空きスロット */
+export function summarize(r) {
+  const skills = r.skills.filter((s) => s.level > 0).map((s) => ({ skillId: s.skillId, name: s.name, level: s.level }));
+  const fb = (k) => ({ ...r.slotSummary[k].freeBySize });
+  return { skills, freeSlots: { weapon: fb('weapon'), armor: fb('armor') } };
+}

@@ -314,5 +314,103 @@ const hz = hitzoneFor(monster, 'head', 'arch-tempered', { useUncertain: state.ta
 
 ## search.js と search/ (段階 2。担当: solver)
 
-装備探索 (`createSearch`・評価器・下ごしらえ・ビームと分枝限定・結果の組み立て)。API は `docs/SEARCH_DESIGN.md` 3 章。
-いまは置き場だけ (`createSearch` は「準備中」の例外、`PHASES` は段階の名前)。Worker は `app/search_worker.js`。
+装備探索 (2026-10-21 実装)。所持護石などで、期待値 (`comboExpected` を部位の割合で加重平均) が高い装備一式を探す。
+設計と測った値は `docs/SEARCH_DESIGN.md` (3 章が API・10 章が実装の記録)。DOM も Worker も知らない純粋な JS で、import は相対パスだけ
+(Worker から読むため)。Worker は `app/search_worker.js`。
+
+| ファイル | 中身 |
+|---|---|
+| `search.js` | 入口: `createSearch(input, data)`・`optimizeWeaponSide(input, fixed, data, {score, N})` (武器の側だけを選び直す)・`PHASES`・`DEFAULT_BUDGET_MS` (6000)・`MISMATCH_REL` (1e-9) |
+| `search/evaluator.js` | `makeEvaluator(o)` 速い評価器 (Lv の並び → 期待値)。damage.js の式を写している (直したら両方。`tests/search_eval.test.mjs`) |
+| `search/problem.js` | `prepare(data, o)` 下ごしらえ・`gainTable`・`concaveSlopes` (増え方の表) |
+| `search/solver.js` | `BnbSolver` ビーム・B&B・葉の珠詰め・仕上げ・`MEMO_LIMITS` (覚えの上限) |
+| `search/realize.js` | `realizeEntry` (結果 → 装備一式)・`checkBuild` (computeBuild + comboExpected で計算し直す)・`summarize` |
+
+```js
+import { createSearch, PHASES } from './app/model/search.js';
+
+const search = createSearch({
+  weapons: ['w0001'],              // 武器の参照の配列 (数値 = weapons_sns / 文字列 = my_weapons か extraWeapons)。'sns-all' = 片手剣全部 + 所持アーティア
+  extraWeapons: [],                // 端末の所持アーティア (my_weapons の形)
+  targets: [{ weight: 1, group: 'a', target: { hitzone, wound, isWound } }],  // 割合は足して 1 にそろえる。group は任意 (perGroup)
+  combo, uptimes, monsterStatus, buffs,   // 火力タブと同じもの
+  sharpness: null,                 // null = 自動 (匠の Lv で決め直す) / 'white' など = 固定
+  required: [{ skillId, level }],  // 必須 (武器/防具/シリーズ/グループ)。知らない id は外して警告
+  charms: { owned: true, extra: [], fixed: true, fixedExclude: [] },  // 所持 / 端末で足した護石 / 生産護石 / 使わない生産護石の id
+  limitBreak: true,                // true/false か { head: true, ... }
+  decorations: { owned: null },    // null = 全部いくつでも / { [decoId]: 個数 } (0 = 持っていない。いまは持っているか だけを見る)
+  armorExclude: [],                // 使わない防具の id
+  objective: 'damage',             // 'damage' | 'none' (泣シミュ型: 必須を満たす構成を K 件。value は null)
+  K: 10,
+  budget: { ms: 6000 },            // 打ち切り: ms = 始めてからの時間 / activeMs = 計算した時間の合計 / work = B&B で上界を求めた回数 (結果が決まる)
+  mode: 'fast',                    // 'fast' | 'exact' (保証のある上界。小さい問題のテスト用)
+  stopAfter: undefined,            // 'partial' = 仕上げ 1 (途中の結果) で止める
+  current: state.build,            // 渡すと result().baseline = {value} (同じ式で計算した今の装備の値)
+}, data);                          // data = data.js の core のデータ (index・skillEffects・motions を読む) か {index, effects, motions}
+
+while (!search.step(80)) {         // 80ms ぶん進める。終わったら (中止・失敗を含む) true
+  const p = search.progress();     // {phase, elapsedMs, partialReady, best: [{value, exact}], stats: {nodes, leaves, boundCalls}}
+}
+const r = search.result();         // 途中で呼んでもよい
+search.cancel();                   // 次の step で止まる
+search.extend({ ms: 6000 });       // 続けて探す (B&B の続き + 仕上げ 2)。続ける所が無ければ false。予算は今から数える
+```
+
+`result()` の形 (`docs/SEARCH_DESIGN.md` 3.4 節):
+
+| 項目 | 中身 |
+|---|---|
+| `status` | `'partial'` (途中。partialReady より前は results が空のこともある・stopAfter で止めた) / `'done'` (B&B を最後まで回した) / `'stopped'` (予算で打ち切り。ふつうはこれ) / `'cancelled'` / `'infeasible'` (必須を満たす構成が無いと分かった) / `'error'` (計算中の例外。warnings に code `error`) |
+| `results[]` | `{rank, value, exact, weapon, build, alternatives, skills, freeSlots, check, perGroup?}`。`build` は state.build と同じ形 (computeBuild にそのまま渡せる。限界突破は実際に使った部位だけ true)。`alternatives` = 同じ類のほかの防具・護石 (`{head: [id...], ..., charm: [ref...]}`。入れ替えても値も珠の位置も同じ)。`check = {value, relDiff, errors, warnings}` は computeBuild + comboExpected の値 |
+| `infeasible` | `{missing: [{skillId, name, level, reason}]}` か null。必須を 1 つずつ外して判定し直した「同時には届かない」最小の組 |
+| `warnings[]` | `{code, message}`。下の表 |
+| `baseline` | `{value}` か null (`current` を渡したとき) |
+| `quality` | `'exact'` (mode exact で最後まで) / `'heuristic'` |
+| `stats` | `{prepareMs, elapsedMs, activeMs, phases: [{name, endMs, best}], classes: {head: 42, ...}, charms, relevantSkills, weapons: {before, after}, nodes, leaves, boundCalls, memoClears, firstSolutionMs}` |
+
+警告のコード: `placeholder-uptimes` (仮置きの発動率で探した。`groups` に条件の id) / `exclusive-over-100` / `blunt-handicraft` /
+`budget-stopped` / `evaluator-mismatch` (`count`。comboExpected の値で並べ直した) / `over-max-patterns` (`count`。comboExpected が
+MAX_PATTERNS で計算できない候補を外して繰り上げた) / `unknown-skill` / `unknown-weapon` / `required-over-max` / `unknown-sharpness` /
+`realize-failed` / `check-failed` (comboExpected が MAX_PATTERNS 以外の例外になった候補を外した) / `error`。
+`message` はそのまま画面に出せる日本語。
+
+- 入力の誤りで続けられないもの (武器が無い・相手が無い・コンボが無い・データが無い) は `createSearch` が例外を投げる。ほかは warnings。
+- 計算し直し (`check`) は result() のたびに上位 K 件ぶん comboExpected を呼ぶ (同じ構成は覚える)。仮置きの発動率のままだと 1 件 20〜30ms (Node)。
+- テスト用の入力: `beam: [幅, ...]` (ビームの幅) / `dominance: false` (優越の除去をしない。総当たりと同じ数え方になる)。
+
+武器の側だけを選び直す (`docs/RECOMMEND_DESIGN.md` 3.3 節・5.4 節。武器 2 本の案で、1 回目の防具の組に 2 本目を合わせる):
+
+```js
+import { optimizeWeaponSide } from './app/model/search.js';
+
+const list = optimizeWeaponSide(input, fixed, data, { score: (perGroup, value) => -(H.a / perGroup.a + H.b / perGroup.b), N: 5 });
+// input = createSearch の入力 (weapons = 候補の武器、targets[].group、required など。防具・護石の項目は使わない)
+// fixed = {armor: {head, ...}, charm, limitBreak, decorations: {head, ..., charmArmor, charmWeapon}} (decorations.weapon は無視)
+// → [{weapon, decorations: {weapon: [珠の id | null]}, build, perGroup, value, score,
+//     check: {value, perGroup, relDiff, overMaxPatterns, errors} | null}]   score の大きい順。武器 1 本につき一番良い珠の組 1 件
+//   {check: false} で計算し直しを省く (check: null)
+```
+
+- 武器の珠は武器スロットの分だけ選ぶ。護石の武器用スロットの珠は `fixed` のまま (2 本で共有する扱い・未確認)。必須を満たさない組は出さない。
+- 候補の武器は支配除去 (`problem.js`) をしてから測る (`input.dominance: false` で外せる)。刈り込みは「武器の珠で届く Lv の箱の上」の
+  score なので、**score は各 group の値について単調** (値が上がって下がらない) であること。既定の score は全体の加重平均 `value`。
+- 同じ `input` の物で何度も呼ぶと下ごしらえ (評価器・武器の珠の組) を使い回す (WeakMap)。片手剣 95 本が候補で、最初の 1 回は
+  0.2〜1 秒、2 回目から防具の組 1 つあたり 約 10ms (仮置きの発動率 0%) / 約 60ms (仮置き 50% のまま) (Node)。
+  返す前の計算し直し (`check`) は 1 件 50〜100ms (仮置き 50% のまま) かかるので、途中で何度も呼ぶときは `{check: false}` で省き、
+  最後に出す物だけ確かめる (省くと `check: null`)。`build` は computeBuild にそのまま渡せる。
+- 総当たり (候補の武器 × 武器の珠の全組) との一致は `tests/search_weapon_side.test.mjs`。
+
+Worker のメッセージ (`app/search_worker.js`。`docs/SEARCH_DESIGN.md` 3.5 節・`docs/RECOMMEND_DESIGN.md` 5.5 節):
+
+| 向き | type | 中身 |
+|---|---|---|
+| 画面 → Worker | `start` | `{id, job}` (`job = {kind: 'search', input}` か `{kind: 'plan', runs, merge, K}`)。`{id, input}` だけでもよい (= search) |
+| 画面 → Worker | `cancel` / `extend` | `{id}` / `{id, budget}` |
+| Worker → 画面 | `ready` | 作られたらすぐ data/*.json を読み、索引を作り終えたら 1 回 (以後の探索で使い回す) |
+| Worker → 画面 | `progress` | `{id, phase, elapsedMs, best: [値...], run?}` (段階が変わったときと 0.5 秒ごと) |
+| Worker → 画面 | `partial` / `done` | `{id, result}`。同じ区切りで終わったら partial は送らず done だけ。cancel の後も done (status `cancelled`)。続ける所の無い extend には今の結果で done をもう一度 |
+| Worker → 画面 | `error` | `{id, message}` (データを読めない・入力の誤り・plan がまだ無い) |
+
+- 80ms ごとに `setTimeout(0)` で手を離して cancel を受ける。新しい `start` が来たら前の探索は捨てる (前の id のメッセージはもう来ない)。
+- `job.kind === 'plan'` は `recommend.createPlanRunner(job, data, {createSearch, optimizeWeaponSide})` を呼ぶ (まだ無いので「準備中」の error)。
+  `data` は Worker が読んだ core のデータ (生データ + `index`)。

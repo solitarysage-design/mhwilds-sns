@@ -420,6 +420,7 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
 
 - 画面: 6 つ目のタブ「探す」(並び: 装備・火力・相手・探す・護石・設定)。状態は `state.search` と `state.target` の
   個体・クエスト・人数の項目 (`docs/UI_API.md`)。見た目は `app/ui/styles_search.css` / `styles_target.css`。
-- 計算: `app/model/hunt.js` (済み)・`weapon.js` (済み)・`recommend.js` / `search.js` / `search/` (置き場だけ)。`docs/MODEL_API.md`。
+- 計算: `app/model/hunt.js` (済み)・`weapon.js` (済み)・`search.js` / `search/` と `app/search_worker.js` (済み 2026-10-21)・
+  `recommend.js` (置き場だけ)。`docs/MODEL_API.md`。
 - 端末に保存: `mhwilds-sns:search-last` (最後の結果・書き出しに入る) と `mhwilds-sns:search-timing` (時間の記録・この端末だけ)。
 - データに足すもの: `skill_effects.json` の `rules.resistSkills` (`docs/RECOMMEND_DESIGN.md` 5.8 節。担当: data)。

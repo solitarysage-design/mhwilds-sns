@@ -647,6 +647,11 @@ const runner = createPlanRunner(job, data, { createSearch, optimizeWeaponSide })
 - `optimizeWeaponSide` の目標: 防具の組 1 つあたり Node で 0.1 秒以内 (候補の武器の支配除去と、武器の珠の組のパレート集合と、
   上界での刈り込み)。届かなければ合わせる防具の組を上位 3 件に減らす。
 - `armorExclude` と `required` は `SEARCH_DESIGN.md` のまま使う。「または」の条件・耐性の値の条件はソルバに足さない (2.4 節)。
+- (実装 2026-10-21) 6 つとも `app/model/search.js` にある (`docs/MODEL_API.md` の「search.js と search/」節)。`optimizeWeaponSide` は
+  武器 1 本につき一番良い珠の組 1 件を返す (同じ武器の珠違いは並べない)。刈り込みのため `score` は各 group の値について単調であること。
+  護石の武器用スロットの珠は `fixed` のまま (2 本で共有する扱い)。同じ `input` の物で呼ぶと下ごしらえを使い回し、2 回目からは
+  防具の組 1 つあたり約 10ms (仮置きの発動率 0%) / 約 60ms (50% のまま) (Node・片手剣 95 本が候補)。最初の 1 回は 0.2〜1 秒。
+  返す前の計算し直しは 1 件 50〜100ms (仮置き 50% のまま) なので、途中の合わせでは `{check: false}` で省ける。
 
 ### 5.5 Worker のメッセージ (SEARCH_DESIGN.md 3.5 節への追加)
 
