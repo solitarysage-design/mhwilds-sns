@@ -1424,15 +1424,17 @@ def target_arch_tempered(page, ctx: Ctx):
         open_tab(page, "target")
         page.locator(f'{TARGET_PANEL} .toggle:has-text("傷口を狙う")').click()
 
-        # --- ヌ・エグドラの歴戦王: 作り物の Plan で「この相手のおすすめ」の見た目 → 「この相手で装備を探す」
+        # --- ヌ・エグドラの歴戦王: 本物の buildPlan の「この相手のおすすめ」(環境適応 Lv2 がオン) →
+        #     作り物の Plan で見た目 (印・注意・いま) → 「この相手で装備を探す」
         page.evaluate(JS_POWER_SETUP)
         _th_pick_monster(page, "ぬえぐ", "ヌ・エグドラ")
         _th_individual(page, "歴戦王")
         page.wait_for_selector(f"{TARGET_PANEL} [data-th-search]", timeout=10000)
-        stub = page.evaluate("""async () => { const R = await import('./app/model/recommend.js');
-          try { return R.buildPlan() === null; } catch { return false; } }""")
-        if stub and page.locator(f'{TARGET_PANEL} [data-th-card="plan"]').count():
-            ctx.fail("buildPlan が null なのに「この相手のおすすめ」のカードが出ています")
+        page.wait_for_selector(f'{TARGET_PANEL} [data-th-card="plan"] [data-th-plan-on]', timeout=10000)
+        real_on = page.inner_text(f'{TARGET_PANEL} [data-th-card="plan"] [data-th-plan-on]')
+        for word in ["環境適応 Lv2", "火属性やられ"]:
+            if word not in real_on:
+                ctx.fail(f"本物の buildPlan の「この相手のおすすめ」の守りに「{word}」がありません: {real_on!r}")
         page.evaluate(JS_TH_FAKE_PLAN)
         page.wait_for_selector(f'{TARGET_PANEL} [data-th-card="plan"]', timeout=10000)
         plan_card = page.locator(f"{TARGET_PANEL} section.card", has=page.locator('[data-th-card="plan"]'))
@@ -1452,6 +1454,13 @@ def target_arch_tempered(page, ctx: Ctx):
         seen = page.evaluate(JS_TH_TAKE_AUTOSTART)
         if not seen or seen[0].get("from") != "target" or seen[0].get("useTarget") is not True:
             ctx.fail(f"「この相手で装備を探す」で探すタブへの印 (search.autoStart) が置かれていません: {seen}")
+        # 探すタブに 環境適応 Lv2 の行がオンで出て、自動で探し始める (探す流れは run_search の本物の Worker の節で確かめる。ここでは止める)
+        page.wait_for_selector(f'{SEARCH_PANEL} [data-sr-req][data-sr-req-on="1"]', timeout=10000)
+        if not page.locator(f'{SEARCH_PANEL} [data-sr-req][data-sr-req-on="1"]', has_text="環境適応").count():
+            ctx.fail("「この相手で装備を探す」のあと、探すタブに 環境適応 Lv2 の行がオンで出ていません")
+        page.wait_for_function("""async () => { const m = await import('./app/ui/tabs/search_client.js');
+          const s = m.getSearchController().getSnapshot(); return s.busy || s.status !== 'idle'; }""", timeout=10000)
+        page.evaluate("""async () => { const m = await import('./app/ui/tabs/search_client.js'); m.getSearchController().cancel(); }""")
         page.evaluate("async () => (await import('./app/ui/tabs/target_hunt.js')).setPlanBuilderForTest(null)")
         open_tab(page, "target")
     finally:
@@ -1491,6 +1500,12 @@ def target_multi_quest(page, ctx: Ctx):
             ctx.fail("1 体目の行の回数と、体力と強さのカードの回数が違います")
         if "このクエストで装備を探す" not in page.inner_text(f"{TARGET_PANEL} [data-th-search]"):
             ctx.fail("多頭のクエストで「このクエストで装備を探す」になっていません")
+        # 属性の違う歴戦王が 4 体なので、探すタブで「武器を 2 本使う」(探す流れは run_search の本物の Worker の節)
+        open_tab(page, "search")
+        page.wait_for_selector(f'{SEARCH_PANEL} [data-sr="weapon"]', timeout=15000)
+        if not page.locator(f'{SEARCH_PANEL} [data-sr-two-weapons="on"]').count():
+            ctx.fail("『英雄の証』で探すタブに「武器を 2 本使う」が出ていません")
+        open_tab(page, "target")
         check_layout(page, ctx, "相手タブ (多頭)")
         ctx.shot("target-multi")
         # 1 体目の部位を替えてから 2 体目へ → 2 体目に替わり、1 体目へ戻すと部位も戻る
@@ -1526,7 +1541,7 @@ def target_multi_quest(page, ctx: Ctx):
         page.evaluate(JS_STATE_RESTORE, snap)
 
 
-# ---------------------------------------------------------------- 探すタブ (段階 2・3。いまは「準備中」のカードだけ)
+# ---------------------------------------------------------------- 探すタブ (段階 2・3)
 
 SEARCH_PANEL = '[data-tab-panel="search"]'
 # 下のタブの並び (docs/RECOMMEND_DESIGN.md 4.1 節)
@@ -1548,7 +1563,7 @@ JS_TABBAR = """() => [...document.querySelectorAll('.tabbar [role=tab]')].map((b
 @tab_check("search")
 def search_tab_opens(page, ctx: Ctx):
     """探すタブ: 条件のカードと「この条件で探す」が出て (「準備中」の置き場ではない)、見出しが「探す」・state.tab が search。
-    探す流れの確認は下の「探すタブ (担当: ui-search)」節 (作り物の Worker を使う run_search)。"""
+    探す流れの確認は下の run_search (作り物の Worker で画面の流れ・本物の Worker で通し)。"""
     if page.locator(f'{SEARCH_PANEL} [data-search-tab="placeholder"]').count():
         ctx.fail("探すタブが「準備中」の置き場のままです")
     for key in SEARCH_CARDS:
@@ -1616,8 +1631,8 @@ def tab_dot_marks_unseen_tab(page, ctx: Ctx):
 
 # ---------------------------------------------------------------- 探すタブ (担当: ui-search)
 #
-# 探す流れは作り物の Worker (tests/fixtures/fake_search_worker.js) で確かめる。探索の本体が無くても、段階ごとの進み・
-# 途中の結果・終わり・やめる・続けて探す・失敗が決まった順で来る (値は本物の計算モデルで計算したもの)。
+# 画面の流れ (1〜5) は作り物の Worker (tests/fixtures/fake_search_worker.js) で確かめる。段階ごとの進み・途中の結果・終わり・
+# やめる・続けて探す・失敗が決まった順で来る (値は本物の計算モデルで計算したもの)。本物の探索との通しは 6・7 (本物の Worker)。
 # 作り物への切り替えは init script の window.__mhwSearchWorker = {url} (app/ui/tabs/search_client.js。本番では置かない)。
 # まっさらな保存領域 (新しい context) で 1 つずつ動かす。main() から run_search(...) を 1 行で呼ぶ (--only で search を外すと動かない)。
 #   1. 通し (iPhone 13・ライト): 仮置きの発動率の一覧 → 「火力タブの値で探す」→ 探す → 段階の文 → 途中の結果 → 終わり
@@ -1629,6 +1644,7 @@ def tab_dot_marks_unseen_tab(page, ctx: Ctx):
 #   3. 必須スキルを足す (Lv の ＋/−) → 満たせない → 「〇〇を外して探す」
 #   4. Worker の失敗 (error を返す → もう一度で直る / 落ちる) と、Worker が無い端末 (画面のスレッドで回る)
 #   5. 幅 375・ダークで結果とシートの見た目 (はみ出し・44px)
+#   6・7. 本物の Worker (下の「本物の Worker でつなぐ」節)
 
 SEARCH_CARDS = ["target", "weapon", "defense", "required", "equip-options", "placeholders", "budget", "start"]
 SEARCH_FAKE = "./tests/fixtures/fake_search_worker.js"
@@ -1694,7 +1710,9 @@ def _same_build(a: dict, b: dict) -> bool:
 
 def search_walkthrough(browser, ctx_opts, server, base_url) -> Ctx:
     """1. 通し: 探す → 途中の結果 → 終わり → 装備に入れる → 元に戻す → 続けて探す → 保存して開き直す → やめる → タブを移る など。"""
-    context, page, ctx = _search_open(browser, ctx_opts, server, base_url, "iphone13-light")
+    # 段階は 0.4 秒ずつ (途中の結果が出ている間に、計算中の画面の確かめとスクリーンショットを撮り終えるため。
+    # 2026-10-21 のまとめ (相手に合わせた Job で探すようになった) のあと、0.15 秒ずつでは途中の結果を見る前に終わることがあった)
+    context, page, ctx = _search_open(browser, ctx_opts, server, base_url, "iphone13-light", fake="step=400")
     P = SEARCH_PANEL
     try:
         page.evaluate(JS_SEARCH_SETUP)
@@ -2046,6 +2064,219 @@ def search_dark_375(browser, ctx_opts, server, base_url) -> Ctx:
     return ctx
 
 
+# ---------------------------------------------------------------- 探すタブ: 本物の Worker でつなぐ (3f)
+#
+# 作り物の Worker を使わず、app/search_worker.js (本物の createSearch / recommend.createPlanRunner) で通しを確かめる。
+# 結果が時間で変わらないよう、予算は仕事量 (window.__mhwSearchBudget = {work: n}。画面には出さない) にする。
+#   6. 相手タブで歴戦王アルシュベルド (置き換わった傷口・傷口を狙う) →「この相手で装備を探す」→ 探すタブで自動で始まる (Plan の Job) →
+#      途中の結果 → 終わり → 1 位を装備に入れる → 火力タブの期待値 = 結果の値
+#   7. 多頭クエスト『英雄の証』(倒していない歴戦王を 1 体外す) →「このクエストで装備を探す」→ 武器 2 本の案 →
+#      2 本目を装備に入れる。外した歴戦王の γ 防具は探索の入力から外れ、結果にも出ない
+
+SEARCH_REAL_BUDGET = "{ work: 3000 }"
+
+JS_REAL_SNAP = """async () => { const m = await import('./app/ui/tabs/search_client.js'); const s = m.getSearchController().getSnapshot();
+  const r = s.result; const job = s.job; const run0 = job && job.runs ? job.runs[0] : null;
+  return { status: s.status, inline: s.inline, partialMs: s.partialMs, doneMs: s.doneMs, phases: s.phases.map((x) => x.name),
+    kind: job ? job.kind : null, runs: job && job.runs ? job.runs.map((x) => x.key) : [], merge: job && job.merge ? job.merge.mode : null,
+    targets: run0 ? run0.input.targets : null, armorExclude: run0 ? run0.input.armorExclude : null,
+    fixedExclude: run0 ? run0.input.charms.fixedExclude : null,
+    n: r ? r.results.length : 0, top: r && r.results[0] ? r.results[0].score.value : null,
+    topBuild: r && r.results[0] ? r.results[0].build : null, topBuilds: r && r.results[0] ? r.results[0].builds : null,
+    allBuilds: r ? r.results.flatMap((x) => x.builds || [x.build]) : [], gamma: r ? r.results.flatMap((x) => (x.gamma || []).map((g) => g.monsterId)) : [],
+    defenseOk: r ? r.results.map((x) => !!(x.defense && x.defense.ok)) : [], twoWeapons: r ? r.results.filter((x) => x.twoWeapons).length : 0,
+    error: s.error, warnings: r ? r.warnings.map((w) => w.code) : [] }; }"""
+
+
+def _real_open(browser, ctx_opts: dict, server: Server, base_url: str, name: str):
+    """本物の Worker (app/search_worker.js) を使う context を開く (Service Worker は使わない・予算は仕事量)。"""
+    context = browser.new_context(**ctx_opts, service_workers="block")
+    context.add_init_script(ROBUST_UNHANDLED)
+    context.add_init_script(f"window.__mhwSearchBudget = {SEARCH_REAL_BUDGET};")
+    page = context.new_page()
+    ctx = Ctx(scenario=name, page=page, base_url=base_url, server=server)
+    page.on("console", lambda m: ctx.errors.append(f"console.error: {m.text}") if m.type == "error" else None)
+    page.on("pageerror", lambda e: ctx.errors.append(f"pageerror: {e}"))
+    page.on("response", lambda r: ctx.errors.append(f"HTTP {r.status}: {r.url}")
+            if r.url.startswith(base_url) and r.status >= 400 else None)
+    page.goto(base_url, wait_until="load")
+    wait_app_ready(page)
+    return context, page, ctx
+
+
+def _real_wait_finished(page, timeout=90000):
+    """本物の探索が終わる (done か、仕事量の予算で打ち切った stopped) まで待つ。"""
+    page.wait_for_selector(f'{SEARCH_RESULTS}[data-sr-status="done"], {SEARCH_RESULTS}[data-sr-status="stopped"]', timeout=timeout)
+
+
+def search_real_arch_tempered(browser, ctx_opts, server, base_url) -> Ctx:
+    """6. 本物の Worker: 相手タブで歴戦王アルシュベルド → この相手で装備を探す → 途中の結果 → 終わり → 装備に入れる → 火力タブ。"""
+    context, page, ctx = _real_open(browser, ctx_opts, server, base_url, "search-real-arch")
+    P = SEARCH_PANEL
+    try:
+        page.evaluate(JS_SEARCH_SETUP)
+        # 火力タブと値を比べるので、仮置きの発動率も火力タブの値のまま探す
+        page.evaluate("""async () => { const S = await import('./app/state.js'); S.setSearch({ placeholders: 'keep' });
+          S.selectMonster(null); await S.flushState(); }""")
+        open_tab(page, "target")
+        page.evaluate(JS_TH_RESET)
+        _th_pick_monster(page, "あるしゅべるど", "アルシュベルド")
+        _th_individual(page, "歴戦王")
+        page.wait_for_selector(f"{TARGET_PANEL} [data-th-search]", timeout=15000)
+        # 置き換わった傷口 (確度の低い woundOverrides) を使い、置き換えのある部位の傷口を狙う
+        part = page.evaluate("""async () => { const D = await import('./app/data.js');
+          const m = D.getTargetData().lists.monsters.find((x) => x.name === 'アルシュベルド');
+          const ov = m.individuals.find((i) => i.kind === 'arch-tempered').hitzone.woundOverrides || {};
+          const p = m.parts.find((x) => x.wound && ov[x.key] && Object.keys(ov[x.key]).some((k) => ov[x.key][k] !== x.wound[k]));
+          return p ? { key: p.key, override: ov[p.key], base: p.wound } : null; }""")
+        if not part:
+            ctx.fail("探す (本物): 歴戦王アルシュベルドに傷口の置き換えのある部位が見つかりません")
+            return ctx
+        page.click(f'{TARGET_PANEL} [data-target-parts] [data-part="{part["key"]}"]')
+        page.evaluate("""async () => { const S = await import('./app/state.js'); S.setWound(true); S.setUseUncertainWound(true); }""")
+        plan_card = page.locator(f"{TARGET_PANEL} section.card", has=page.locator('[data-th-card="plan"]'))
+        plan_card.wait_for(timeout=15000)
+        plan_text = plan_card.inner_text()
+        for word in ["この相手のおすすめ", "龍属性やられ", "仮"]:
+            if word not in plan_text:
+                ctx.fail(f"探す (本物): 相手タブの「この相手のおすすめ」(本物の buildPlan) に「{word}」がありません: {plan_text[:200]!r}")
+        ctx.shot("real-target-plan")
+        # --- この相手で装備を探す → 探すタブで自動で始まる
+        plan_card.locator("[data-th-search]").click()
+        page.wait_for_selector('.app[data-active-tab="search"]', timeout=10000)
+        page.wait_for_selector(f'{P} [data-sr="running"]', timeout=15000)
+        if not page.locator(f'{P} [data-sr-req][data-sr-req-on="1"]', has_text="龍属性やられ").count():
+            ctx.fail("探す (本物): 守りのスキルのカードに「龍属性やられ」の行がオンで出ていません")
+        _real_wait_finished(page)
+        snap = page.evaluate(JS_REAL_SNAP)
+        if snap["kind"] != "plan" or snap["inline"]:
+            ctx.fail(f"探す (本物): 相手に合わせた Job (plan) を Worker で回していません: {snap['kind']} / inline {snap['inline']}")
+        if snap["runs"] != ["blight-skill", "blight-resist"]:
+            ctx.fail(f"探す (本物): 属性やられの「または」で探索が 2 回になっていません: {snap['runs']}")
+        if snap["partialMs"] is None or (snap["doneMs"] is not None and snap["partialMs"] > snap["doneMs"]):
+            ctx.fail(f"探す (本物): 途中の結果が終わりより先に届いていません: {snap['partialMs']} / {snap['doneMs']}")
+        t0 = (snap["targets"] or [{}])[0].get("target") or {}
+        if t0.get("wound") != part["override"] or t0.get("isWound") is not True:
+            ctx.fail(f"探す (本物): 探索の相手に歴戦王の置き換わった傷口が入っていません: {t0.get('wound')} / {part['override']}")
+        if not snap["n"] or not all(snap["defenseOk"]):
+            ctx.fail(f"探す (本物): 結果が無いか、守り (龍属性やられ) を満たさない組があります: {snap['n']} / {snap['defenseOk']}")
+        text = page.inner_text(SEARCH_RESULTS)
+        for word in ["近似", "守り", "いまより"]:
+            if word not in text:
+                ctx.fail(f"探す (本物): 結果に「{word}」がありません")
+        check_layout(page, ctx, "探す (本物・歴戦王の結果)")
+        ctx.shot("real-arch-results")
+        top = _search_top(page)
+        if not _close(top, snap["top"], 1e-12):
+            ctx.fail(f"探す (本物): 画面の 1 位 {top} がコントローラの 1 位 {snap['top']} と違います")
+        # --- 1 位を装備に入れる → 火力タブの期待値 = 結果の値
+        page.locator(f"{P} .sr-result").first.click()
+        page.wait_for_selector('[data-sr-sheet="result"]')
+        _wait_sheet_ready(page)
+        if "守り" not in page.inner_text(".sheet"):
+            ctx.fail("探す (本物): 結果の詳しくに「守り」がありません")
+        page.locator('.sheet [data-sr-action="apply"]').click()
+        page.wait_for_selector(".sheet", state="detached")
+        if not _same_build(page.evaluate(JS_SEARCH_BUILD), snap["topBuild"]):
+            ctx.fail("探す (本物): 装備に入れても state.build が結果と違います")
+        open_tab(page, "power")
+        page.wait_for_selector(f"{POWER_PANEL} [data-power-total]", timeout=15000)
+        if "アルシュベルド（歴戦王）" not in page.inner_text(f"{POWER_PANEL} [data-power-target]"):
+            ctx.fail(f"探す (本物): 火力タブの相手が歴戦王になっていません: {page.inner_text(f'{POWER_PANEL} [data-power-target]')!r}")
+        if not _close(_power_total(page), top, 1e-9):
+            ctx.fail(f"探す (本物): 装備に入れたあとの火力タブの期待値 {_power_total(page)} が結果の値 {top} と違います")
+        model = _walk_model(page, ctx)
+        if model and not _close(model["total"], top, 1e-9):
+            ctx.fail(f"探す (本物): 計算モデル (calc_from_state) の値 {model['total']} が結果の値 {top} と違います")
+        open_tab(page, "search")
+        page.wait_for_timeout(300)
+        if page.locator(f'{P} [data-sr-note="stale"]').count():
+            ctx.fail("探す (本物): 結果の組を装備に入れただけで「条件が変わりました」が出ます")
+        check_errors(ctx, "探す (本物・歴戦王)")
+    except Exception as e:
+        ctx.fail(f"探す (本物・歴戦王) が途中で止まりました: {_search_err(e)}")
+        try:
+            ctx.shot("real-arch-stopped")
+        except Exception:
+            pass
+    finally:
+        context.close()
+    return ctx
+
+
+def search_real_multi_two_weapons(browser, ctx_opts, server, base_url) -> Ctx:
+    """7. 本物の Worker: 多頭『英雄の証』→ このクエストで装備を探す → 武器 2 本の案 → 2 本目を装備に入れる。倒していない歴戦王の γ を外す。"""
+    context, page, ctx = _real_open(browser, ctx_opts, server, base_url, "search-real-multi")
+    P = SEARCH_PANEL
+    search, qid, hps = TH_MULTI_QUEST
+    try:
+        page.evaluate(JS_SEARCH_SETUP)
+        page.evaluate("""async () => { const S = await import('./app/state.js'); S.selectMonster(null); await S.flushState(); }""")
+        open_tab(page, "target")
+        page.evaluate(JS_TH_RESET)
+        page.click(f"{TARGET_PANEL} [data-th-quest-by-name]")
+        _th_choose_in_sheet(page, search, search)
+        page.wait_for_selector(f'{TARGET_PANEL} [data-th-card="multi"] [data-th-subject]', timeout=15000)
+        # ヌ・エグドラの歴戦王は倒していないことにする (γ 防具・狩猟証γ の護石を使わない)
+        gnu = page.evaluate("""async () => { const S = await import('./app/state.js'); const D = await import('./app/data.js');
+          const H = await import('./app/model/hunt.js');
+          const r = H.archTemperedRewards(D.getTargetData()).find((x) => x.monster === 'ヌ・エグドラ');
+          S.setArchTemperedHunted(r.monsterId, false); return r; }""")
+        plan_card = page.locator(f"{TARGET_PANEL} section.card", has=page.locator('[data-th-card="plan"]'))
+        plan_card.wait_for(timeout=15000)
+        if "このクエストのおすすめ" not in plan_card.inner_text() or "2 本" not in plan_card.inner_text():
+            ctx.fail(f"探す (本物): 相手タブの「このクエストのおすすめ」に武器 2 本の案がありません: {plan_card.inner_text()[:200]!r}")
+        plan_card.locator("[data-th-search]").click()
+        page.wait_for_selector('.app[data-active-tab="search"]', timeout=10000)
+        page.wait_for_selector(f'{P} [data-sr="running"]', timeout=15000)
+        if not page.locator(f'{P} [data-sr-two-weapons="on"]').count():
+            ctx.fail("探す (本物): 多頭で属性が違うのに、武器のカードに「武器を 2 本使う」が出ていません")
+        _real_wait_finished(page)
+        snap = page.evaluate(JS_REAL_SNAP)
+        if snap["kind"] != "plan" or snap["merge"] != "twoWeapons":
+            ctx.fail(f"探す (本物): 多頭の Job が武器 2 本になっていません: {snap['kind']} / {snap['merge']}")
+        if not snap["twoWeapons"] or not snap["topBuilds"] or len(snap["topBuilds"]) != 2:
+            ctx.fail(f"探す (本物): 武器 2 本の案が結果にありません: {snap['twoWeapons']}")
+        # 倒していない歴戦王の γ は探索の入力から外れ、結果にも出ない
+        if not all(i in (snap["armorExclude"] or []) for i in gnu["armorIds"]) \
+                or not all(i in (snap["fixedExclude"] or []) for i in gnu["charmFixedIds"]):
+            ctx.fail("探す (本物): 倒していない歴戦王の γ 防具・狩猟証γ の護石が探索の入力から外れていません")
+        used = {v for b in snap["allBuilds"] for v in list((b.get("armor") or {}).values()) + [b.get("charm")]}
+        if used & set(gnu["armorIds"] + gnu["charmFixedIds"]) or gnu["monsterId"] in snap["gamma"]:
+            ctx.fail("探す (本物): 倒していない歴戦王の γ 防具・護石が結果に出ています")
+        rows = page.locator(f"{P} .sr-result")
+        if not rows.count() or "回" not in page.inner_text(f"{P} .sr-result >> nth=0"):
+            ctx.fail("探す (本物): 多頭の結果が「全部倒すまで 約 n 回」になっていません")
+        if not page.locator(f"{P} [data-sr-row-second]").count():
+            ctx.fail("探す (本物): 結果の行に 2 本目の武器が出ていません")
+        if "回数の少ない順" not in page.inner_text(f"{P} #sr-results"):
+            ctx.fail("探す (本物): 多頭の結果の見出しが「回数の少ない順」になっていません")
+        check_layout(page, ctx, "探す (本物・多頭の結果)")
+        ctx.shot("real-multi-results")
+        rows.first.click()
+        page.wait_for_selector('[data-sr-sheet="result"]')
+        _wait_sheet_ready(page)
+        if page.locator("[data-sr-per-subject] li").count() != len(hps):
+            ctx.fail(f"探す (本物): 結果の詳しくの「相手ごと」が {len(hps)} 行ではありません")
+        check_layout(page, ctx, "探す (本物・多頭の詳しく)")
+        ctx.shot("real-multi-sheet", full_page=False)
+        page.locator('.sheet [data-sr-action="apply2"]').click()
+        page.wait_for_selector(".sheet", state="detached")
+        after = page.evaluate(JS_SEARCH_BUILD)
+        if not _same_build(after, snap["topBuilds"][1]):
+            ctx.fail(f"探す (本物): 「2 本目の武器で装備に入れる」で 2 本目の組が入りません: {after.get('weapon')} / {snap['topBuilds'][1].get('weapon')}")
+        check_errors(ctx, "探す (本物・多頭)")
+    except Exception as e:
+        ctx.fail(f"探す (本物・多頭) が途中で止まりました: {_search_err(e)}")
+        try:
+            ctx.shot("real-multi-stopped")
+        except Exception:
+            pass
+    finally:
+        context.close()
+    return ctx
+
+
 def run_search(browser, device: dict, bname: str, server: Server, base_url: str, args, failures: list, notes: list):
     """探すタブの流れを全部動かし、失敗とメモを failures / notes に足す (--robust-only か、--only に search が無ければ何もしない)。"""
     if args.robust_only or (args.only and "search" not in args.only.split(",")):
@@ -2058,6 +2289,9 @@ def run_search(browser, device: dict, bname: str, server: Server, base_url: str,
         ("search-required", lambda: search_guidance_and_required(browser, light, server, base_url)),
         ("search-failures", lambda: search_failures(browser, light, server, base_url)),
         ("search-dark-375", lambda: search_dark_375(browser, dark, server, base_url)),
+        # 本物の Worker でつなぐ (3f)
+        ("search-real-arch", lambda: search_real_arch_tempered(browser, light, server, base_url)),
+        ("search-real-multi", lambda: search_real_multi_two_weapons(browser, dark, server, base_url)),
     ]
     for name, fn in runs:
         print(f"--- {bname} {name}", flush=True)
@@ -3503,7 +3737,7 @@ def main() -> int:
                 f, n = run_robust(browser, device, bname)
                 failures += f
                 notes += n
-            run_search(browser, device, bname, server, base_url, args, failures, notes)  # 探すタブ (作り物の Worker)
+            run_search(browser, device, bname, server, base_url, args, failures, notes)  # 探すタブ (作り物の Worker と本物の Worker)
             browser.close()
     finally:
         server.shutdown()

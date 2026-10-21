@@ -446,3 +446,47 @@ export function attackView(quest, subjectIndex, targetData) {
   } : null;
   return { calm, angry, paramGroup: row.paramGroup ?? null, compareTo, ratio, confidence: ar.confidence || 'low' };
 }
+
+// ---------------------------------------------------------------- 歴戦王の素材が要る防具・護石 (γ)
+
+/**
+ * 歴戦王の報酬 (monsters.json の individuals[].rewards) の一覧。γ 防具と狩猟証γ の護石は、その歴戦王を狩らないと作れない。
+ * 探索 (search.js の gammaIndexOf)・おすすめ (recommend.js の gammaIndex / gammaExclusions)・探すタブ (search_form.js の gammaInfo) は
+ * どれもこれを使う (表を作る所を 1 つにしてある)。
+ * @param targetData target データ / monsters.json 丸ごと / モンスターの配列
+ * @returns {{monsterId, monster (モンスターの名前), name (「レ・ダウ（歴戦王）」), armorIds, armorSets (防具の組の名前), charmFixedIds,
+ *            certificate (狩猟証の名前 | null), groupSkills: [{skillId, name}]}[]}
+ */
+export function archTemperedRewards(targetData) {
+  const out = [];
+  for (const m of Array.isArray(targetData) ? targetData : monstersOf(targetData)) {
+    for (const ind of (m && m.individuals) || []) {
+      const r = ind && ind.rewards;
+      if (!isObj(r)) continue;
+      out.push({
+        monsterId: m.id, monster: m.name, name: ind.name || m.name,
+        armorIds: (r.armorSets || []).flatMap((s) => s.armorIds || []),
+        armorSets: (r.armorSets || []).map((s) => s.name).filter(Boolean),
+        charmFixedIds: [...(r.charmFixedIds || [])],
+        certificate: r.certificate ? r.certificate.name ?? null : null,
+        groupSkills: (r.groupSkills || []).map((g) => ({ skillId: g.skillId, name: g.name })),
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * γ の印の表 (結果に「歴戦王〇〇の素材が要ります」の印を付ける)。探索の入力 `gamma` にそのまま渡せる (postMessage で送れる形)。
+ * @returns {{armor: {[armorId]: {monsterId, name}}, charmsFixed: {[charmId]: {monsterId, name}}, monsters: archTemperedRewards の結果}}
+ */
+export function gammaIndex(targetData) {
+  const armor = {};
+  const charmsFixed = {};
+  const monsters = archTemperedRewards(targetData);
+  for (const r of monsters) {
+    for (const id of r.armorIds) armor[id] = { monsterId: r.monsterId, name: r.name };
+    for (const id of r.charmFixedIds) charmsFixed[id] = { monsterId: r.monsterId, name: r.name };
+  }
+  return { armor, charmsFixed, monsters };
+}

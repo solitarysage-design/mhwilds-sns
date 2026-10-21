@@ -4,6 +4,9 @@
 //                                           [--ms 2500] [--work 60000] [--out 結果.jsonl]
 //   node --expose-gc tools/bench_search.mjs --make-ref [--cases B1,B2,B3,B5] [--ref-ms 120000]
 //   node --expose-gc tools/bench_search.mjs --weapon-side [--runs 3]   (武器の側だけを選び直す optimizeWeaponSide。WS / WSz)
+//   node --expose-gc tools/bench_search.mjs --plans [--cases S1,S1z,S2,S2z,S3,S3z] [--runs 3] [--ms 2500]
+//       (相手に合わせて探す。recommend.js の createPlanRunner で Job を回す。docs/RECOMMEND_DESIGN.md 6.4 節の S1〜S3。
+//        --ms は Job 全体の時間の予算 (計算した時間。回の数で分ける))
 //
 // - ケースごとに毎回新しいプロセス (同じ node) で走らせる (前のケースの覚えやキャッシュを持ち越さない)。
 // - 時間 (--mode time): 予算は時間 (--ms。画面と同じ「始めてからの時間」)。partial / done の時刻・段階ごとの時刻。
@@ -21,8 +24,9 @@ const ROOT = new URL('../', import.meta.url);
 const REF_PATH = new URL('tests/fixtures/search_ref.json', ROOT);
 const SELF = fileURLToPath(import.meta.url);
 
-/** 目標 (docs/SEARCH_DESIGN.md 5.1 節) */
+/** 目標 (docs/SEARCH_DESIGN.md 5.1 節。S は docs/RECOMMEND_DESIGN.md 6.4 節: 1 体 (S1) で Node 3 秒・多頭 (S2) で Node 6 秒) */
 const TARGETS = {
+  S1: { doneMs: 3000 }, S2: { doneMs: 6000 }, S3: { doneMs: 6000 },
   B1: { partialMs: 1000, doneMs: 3000, heapMB: 200 }, B2: { partialMs: 1000, doneMs: 3000, heapMB: 200 },
   B5: { partialMs: 1000, doneMs: 3000, heapMB: 200 }, B3: { partialMs: 3000, doneMs: 4000, heapMB: 300 },
   B4: { firstMs: 100 }, B4x: { doneMs: 50 },
@@ -52,6 +56,7 @@ function args() {
     else if (k === '--ref-ms') o.refMs = Number(v());
     else if (k === '--child') o.child = JSON.parse(v());
     else if (k === '--weapon-side') o.weaponSide = true;
+    else if (k === '--plans') o.plans = true;
   }
   return o;
 }
@@ -129,9 +134,64 @@ async function childWeaponSide(spec) {
 `);
 }
 
+// ---------------------------------------------------------------- 子プロセス: 相手に合わせて探す (S1〜S3) を 1 回
+// 画面と同じ buildPlan → planToJob の Job を、Worker と同じ createPlanRunner(job, data, {createSearch, optimizeWeaponSide}) で回す。
+async function childPlan(spec) {
+  const { createSearch, optimizeWeaponSide } = await import(new URL('app/model/search.js', ROOT).href);
+  const { createPlanRunner } = await import(new URL('app/model/recommend.js', ROOT).href);
+  const { loadRepoData, makePlanCases } = await import(new URL('tests/search_cases.mjs', ROOT).href);
+  const raw = await loadRepoData();
+  const tPlan = performance.now();
+  const { jobs, data } = await makePlanCases(raw, spec.mode === 'work' ? { budget: { work: spec.work } } : { budgetMs: spec.ms });
+  const planMs = performance.now() - tPlan;
+  const job = jobs[spec.case];
+  const gc = globalThis.gc || (() => {});
+  gc(); gc();
+  const heap0 = process.memoryUsage().heapUsed;
+  let peak = heap0;
+  const t0 = performance.now();
+  const runner = createPlanRunner(job, data, { createSearch, optimizeWeaponSide });
+  let partialMs = null;
+  let partialTop = null;
+  const phases = [];
+  while (!runner.step(80)) {
+    const h = process.memoryUsage().heapUsed;
+    if (h > peak) peak = h;
+    const p = runner.progress();
+    const tag = `${p.run ? p.run.key : '-'}:${p.phase}`;
+    if (!phases.length || phases[phases.length - 1].tag !== tag) phases.push({ tag, atMs: performance.now() - t0 });
+    if (partialMs == null && p.partialReady) {
+      partialMs = performance.now() - t0;
+      // 画面が受け取る途中の結果 (Worker は partialReady のときに result() を送る。その分の時間も入れる)
+      const r = runner.result();
+      partialTop = r.results.slice(0, 3).map((x) => x.score.value);
+      partialMs = performance.now() - t0;
+    }
+  }
+  const doneMs = performance.now() - t0;
+  peak = Math.max(peak, process.memoryUsage().heapUsed);
+  const r = runner.result();
+  gc(); gc();
+  const out = {
+    case: spec.case, mode: spec.mode, status: r.status, planMs, partialMs, doneMs, heapPeakMB: (peak - heap0) / 1e6,
+    heapRetainedMB: (process.memoryUsage().heapUsed - heap0) / 1e6,
+    runs: job.runs.length, cost: !!job.costRun, merge: job.merge.mode, subjects: job.subjects.length,
+    scoreKind: r.results[0] ? r.results[0].score.kind : null, top: r.results.map((x) => x.score.value), partialTop,
+    twoWeapons: r.results.filter((x) => x.twoWeapons).length, twoWeaponsGain: r.twoWeaponsGain ? r.twoWeaponsGain.combos : null,
+    costOfDefense: r.costOfDefense ? r.costOfDefense.pct : null,
+    defenseOk: r.results.filter((x) => !x.defense || x.defense.ok).length,
+    stats: { mergeMs: r.stats.mergeMs, twoWeaponsMs: r.stats.twoWeaponsMs,
+      runs: r.stats.runs.map((x) => ({ key: x.key, status: x.status, ms: Math.round(x.ms), weapons: x.stats ? x.stats.weapons : null })) },
+    phases: phases.map((x) => `${x.tag}@${Math.round(x.atMs)}`).join(' '),
+    warnings: r.warnings.map((w) => w.code),
+  };
+  process.stdout.write(`${JSON.stringify(out)}\n`);
+}
+
 // ---------------------------------------------------------------- 子プロセス: 1 ケースを 1 回
 async function child(spec) {
   if (spec.case === 'WS' || spec.case === 'WSz') { await childWeaponSide(spec); return; }
+  if (/^S\d/.test(spec.case)) { await childPlan(spec); return; }
   const { createSearch } = await import(new URL('app/model/search.js', ROOT).href);
   const { loadRepoData, makeCases, searchDataOf } = await import(new URL('tests/search_cases.mjs', ROOT).href);
   const raw = await loadRepoData();
@@ -245,6 +305,34 @@ async function main() {
       };
       console.log(JSON.stringify(line));
     }
+    return;
+  }
+
+  if (o.plans) {
+    console.log(JSON.stringify({ env: { node: process.version, cpus: os.cpus().length, otherNodesBefore: otherNodes() }, budget: { ms: o.ms }, runs: o.runs }));
+    const lines = [];
+    for (const name of o.cases || ['S1', 'S1z', 'S2', 'S2z', 'S3', 'S3z']) {
+      const meter = cpuMeter();
+      const runs = [];
+      for (let i = 0; i < o.runs; i++) runs.push(runChild({ case: name, mode: 'time', ms: o.ms }));
+      const r0 = runs[0];
+      const line = {
+        case: name, status: r0.status, runs: r0.runs, cost: r0.cost, merge: r0.merge, subjects: r0.subjects,
+        partialMs: Math.round(med(runs.map((x) => x.partialMs))), doneMs: Math.round(med(runs.map((x) => x.doneMs))),
+        runsDoneMs: runs.map((x) => Math.round(x.doneMs)), planMs: r3(med(runs.map((x) => x.planMs))),
+        heapPeakMB: r3(med(runs.map((x) => x.heapPeakMB))), heapRetainedMB: r3(med(runs.map((x) => x.heapRetainedMB))),
+        scoreKind: r0.scoreKind, top: r0.top.map(r3), partialTop: r0.partialTop && r0.partialTop.map(r3),
+        sameTop1: new Set(runs.map((x) => (x.top[0] == null ? null : x.top[0].toFixed(6)))).size === 1,
+        twoWeapons: r0.twoWeapons, twoWeaponsGain: r3(r0.twoWeaponsGain), costOfDefensePct: r3(r0.costOfDefense),
+        defenseOk: r0.defenseOk, mergeMs: r3(med(runs.map((x) => x.stats.mergeMs))), twoWeaponsMs: r3(med(runs.map((x) => x.stats.twoWeaponsMs))),
+        perRun: r0.stats.runs, phases: r0.phases, warnings: r0.warnings, cpuBusyDuring: r3(meter()), otherNodes: otherNodes(),
+      };
+      const tg = TARGETS[name.replace(/z$/, '')];
+      if (tg) { line.target = tg; line.meets = { done: line.doneMs <= tg.doneMs }; }
+      lines.push(line);
+      console.log(JSON.stringify(line));
+    }
+    if (o.out) fs.writeFileSync(o.out, lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
     return;
   }
 

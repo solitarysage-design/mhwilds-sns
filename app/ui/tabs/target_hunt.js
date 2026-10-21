@@ -7,7 +7,7 @@
 // 討伐までの回数 = 体力 ÷ いまの装備の 1 コンボの期待値 (火力タブと同じ計算: power_calc.js の mixTotal。部位の割合で平均)。
 // 拘束・部位破壊・ダウン・状態異常などは入れない目安。印の使い分けは docs/RECOMMEND_DESIGN.md 2.8 節
 // (おすすめの判断 = 仮、確かめていないデータ = 未確認、根拠の弱い数値 = 未確定)。
-// buildPlan がまだ null を返す間は「この相手のおすすめ」は出さず、「装備を探す」のカードだけを出す。
+// buildPlan が Plan を作れない (null・例外) ときは「この相手のおすすめ」は出さず、「装備を探す」のカードだけを出す。
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import {
   html, Card, Button, Hint, Badge, Notice, Segmented, Select, PickerField, Picker, ELEMENT_LABEL, formatNumber,

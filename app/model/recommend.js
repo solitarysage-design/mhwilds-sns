@@ -13,7 +13,7 @@
 import { ARMOR_PARTS, computeBuild } from './build.js';
 import { comboExpected, ELEMENTAL_TYPES } from './damage.js';
 import {
-  clampPlayers, elementRecommendationOf, hitzoneFor, individualOf, monsterById, monstersOf, questById,
+  archTemperedRewards, clampPlayers, elementRecommendationOf, gammaIndex, hitzoneFor, individualOf, monsterById, monstersOf, questById,
   questSubjects, targetHealth,
 } from './hunt.js';
 import { autoSharpness, damageWeapon, resolveWeaponRef } from './weapon.js';
@@ -46,6 +46,11 @@ export const DEFENSE_SKILL_NAMES = Object.freeze([
 ]);
 /** 武器 2 本の案で、2 本目を合わせる防具の組の数 (3.3 節) */
 export const TWO_WEAPON_TOP = 5;
+/**
+ * 火力の差を測る回・武器 2 本の合わせがある Job で、探索の回に使う予算の割合 (planToJob)。
+ * 残りは予算で切れない段 (合わせ・火力の差の途中の結果まで) の分 (2026-10-21 のベンチ S1〜S3 で決めた。docs/SEARCH_DESIGN.md 5 章)
+ */
+export const RUN_SHARE = 0.6;
 
 // target_mix.js・equip_logic.js と同じ値 (model から ui を読まないので写している。同じことを tests/recommend.test.mjs で確かめる)
 /** 相手が決まっていないときの肉質 (装備タブ・火力タブと同じ既定の肉質: 切断・打撃 45、属性 20) */
@@ -508,7 +513,13 @@ function weaponsOfTypes(types, index, extraWeapons) {
   if (!set.size || !index) return out;
   for (const w of index.weapons ? index.weapons.values() : []) if (set.has(elementOfWeapon(w))) out.push(w.id);
   for (const w of index.myWeapons ? index.myWeapons.values() : []) if (set.has(elementOfWeapon(weaponOf(w.id, index)))) out.push(w.id);
-  for (const w of Array.isArray(extraWeapons) ? extraWeapons : []) if (w && set.has(elementOfWeapon(weaponOf(w, index)))) out.push(w);
+  // この端末の所持アーティア (my_weapons の形)。探索の weapons には id で入れる (要素は input.extraWeapons で渡す)。
+  // 索引に入っている (画面の索引は端末の武器も入れる) ものは上で数えたので重ねない
+  for (const w of Array.isArray(extraWeapons) ? extraWeapons : []) {
+    const id = isObj(w) ? w.id : w;
+    if (id == null || out.includes(id)) continue;
+    if (set.has(elementOfWeapon(weaponOf(w, index)))) out.push(id);
+  }
   return out;
 }
 
@@ -718,39 +729,12 @@ export function multiWeights(subjects, dRef) {
 
 // ---------------------------------------------------------------- γ 防具・狩猟証γ の護石
 
-/** 歴戦王の報酬の一覧 [{monsterId, monster, name, armorIds, charmFixedIds, armorSets, certificate, groupSkills}] */
-function archTemperedRewards(targetData) {
-  const out = [];
-  for (const m of monstersOf(targetData)) {
-    for (const ind of (m && m.individuals) || []) {
-      const r = ind && ind.rewards;
-      if (!isObj(r)) continue;
-      out.push({
-        monsterId: m.id, monster: m.name, name: ind.name || m.name,
-        armorIds: (r.armorSets || []).flatMap((s) => s.armorIds || []),
-        armorSets: (r.armorSets || []).map((s) => s.name),
-        charmFixedIds: [...(r.charmFixedIds || [])],
-        certificate: r.certificate ? r.certificate.name : null,
-        groupSkills: (r.groupSkills || []).map((g) => ({ skillId: g.skillId, name: g.name })),
-      });
-    }
-  }
-  return out;
-}
-
 /**
  * γ 防具・狩猟証γ の護石と、それを作るのに倒す歴戦王 (結果に「歴戦王〇〇の素材が要ります」の印を付ける)。
- * @returns {{armor: {[armorId]: {monsterId, name}}, charmsFixed: {[charmId]: {monsterId, name}}}}
+ * 表は hunt.js の gammaIndex (探索の gammaIndexOf・探すタブと同じもの)。
+ * @returns {{armor: {[armorId]: {monsterId, name}}, charmsFixed: {[charmId]: {monsterId, name}}, monsters}}
  */
-export function gammaIndex(targetData) {
-  const armor = {};
-  const charmsFixed = {};
-  for (const r of archTemperedRewards(targetData)) {
-    for (const id of r.armorIds) armor[id] = { monsterId: r.monsterId, name: r.name };
-    for (const id of r.charmFixedIds) charmsFixed[id] = { monsterId: r.monsterId, name: r.name };
-  }
-  return { armor, charmsFixed };
-}
+export { gammaIndex };
 
 /**
  * 倒していない歴戦王の γ 防具と狩猟証γ の護石を外す (docs/RECOMMEND_DESIGN.md 2.7 節)。
@@ -1227,10 +1211,18 @@ export function planToJob(plan, opts = {}) {
     objective: 'damage', K: searchK, mode: 'fast',
     // いまの装備 (「いまより +x%」を探索と同じ式で出す。docs/RECOMMEND_DESIGN.md 5.4 節)
     current: opts.current !== undefined ? opts.current || null : plan.inputs.currentBuild || null,
+    // γ の印の表 (探索が同じ値の γ でない防具・護石を代表にする。docs/SEARCH_DESIGN.md 3.7 節)
+    gamma: ex.gamma || null,
   };
   const runCount = blightRows.length && blightRows.every((r) => r.bySkill) && blightRows.every((r) => r.byResist) ? 2 : 1;
+  const willCost = opts.costRun !== false && opts.tryKey == null && (skillReq.length > 0 || blightRows.length > 0);
+  const two = !!(plan.element.twoWeapons && plan.element.twoWeapons.suggested && opts.tryKey == null);
   const budgetMs = Math.max(500, Number(opts.budgetMs) || 6000);
-  const budgetOf = () => (isObj(opts.budget) ? { ...opts.budget } : { ms: Math.round(budgetMs / runCount) });
+  // 予算は回の数で分ける。既定は計算した時間の合計で数える (activeMs。iPhone で裏に回っていた時間を数えない。5.4 節)。
+  // 火力の差を測る回・武器 2 本の合わせがあるときは、探索の回に予算の RUN_SHARE だけを使う (残りはそれらの分。
+  // 合わせと火力の差は予算で切れないので、全部で予算の近くに収める。iPhone で 10 秒以内にするため。docs/SEARCH_DESIGN.md 5 章)
+  const share = willCost || two ? RUN_SHARE : 1;
+  const budgetOf = () => (isObj(opts.budget) ? { ...opts.budget } : { activeMs: Math.round((budgetMs * share) / runCount) });
   const stopAfter = opts.tryKey != null ? { stopAfter: 'partial' } : {};
   const req = merged([...userReq, ...skillReq]);
   if (blightRows.length) {
@@ -1255,13 +1247,12 @@ export function planToJob(plan, opts = {}) {
     if (blightRows.length) job.warnings.push({ code: 'blight-not-required', message: '属性やられの防ぎ方のデータが足りないので、必須にせずに探します' });
     job.runs.push({ key: 'main', label: '装備を探しています', input: { ...base, required: req, budget: budgetOf(), ...stopAfter } });
   }
-  if (opts.costRun !== false && opts.tryKey == null && (skillReq.length || blightRows.length)) {
+  if (willCost) {
     job.costRun = {
       key: 'cost', label: '守りのスキルの火力の差を測っています',
       input: { ...base, required: merged(userReq), budget: budgetOf(), stopAfter: 'partial', K: Math.min(searchK, 3) },
     };
   }
-  const two = plan.element.twoWeapons && plan.element.twoWeapons.suggested && opts.tryKey == null;
   job.merge = {
     mode: two ? 'twoWeapons' : (multi ? 'multi' : 'single'),
     subjects: plan.subjects.map((s) => s.key), weights: (plan.weights || []).map((w) => ({ key: w.key, weight: w.weight })),
@@ -1379,6 +1370,20 @@ function gammaMarksOf(build, gamma) {
   return out;
 }
 
+/** 索引に、入力の端末の所持アーティア (extraWeapons) と護石 (charms.extra) を足したもの (search.js の normalizeInput と同じ足し方) */
+function indexWithExtras(index, input) {
+  if (!index || !isObj(input)) return index || null;
+  const listOf = (x, key) => (Array.isArray(x) ? x : isObj(x) && Array.isArray(x[key]) ? x[key] : []);
+  const weapons = listOf(input.extraWeapons, 'weapons').filter((w) => isObj(w) && w.id != null);
+  const charms = listOf(isObj(input.charms) ? input.charms.extra : null, 'charms').filter((c) => isObj(c) && c.id != null);
+  if (!weapons.length && !charms.length) return index;
+  return {
+    ...index,
+    myWeapons: new Map([...(index.myWeapons || new Map()), ...weapons.map((w) => [w.id, w])]),
+    charms: new Map([...(index.charms || new Map()), ...charms.map((c) => [c.id, c])]),
+  };
+}
+
 /**
  * Job を Worker の中で回す (docs/RECOMMEND_DESIGN.md 5.3 節)。createSearch と同じ形:
  *   runner.step(ms) → 終わったら true / runner.progress() / runner.result() / runner.cancel() / runner.extend({ms})
@@ -1394,7 +1399,9 @@ export function createPlanRunner(job, data, deps = {}) {
   const now = typeof deps.now === 'function' ? deps.now
     : () => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now());
   const effects = data && (data.effects || data.skillEffects);
-  const index = data && data.index;
+  // 端末の所持アーティア・護石 (入力の extraWeapons・charms.extra) も引ける索引 (Worker の索引は data/*.json だけで作るため。
+  // 守りのチェック・いまの装備の値・相手ごとの値の計算し直しで、端末の武器・護石の組が読めないことが無いように)
+  const index = indexWithExtras(data && data.index, job && job.runs && job.runs[0] ? job.runs[0].input : null);
   const K = job ? job.K : 10;
   const subjects = job ? job.subjects : [];
   const multi = subjects.length > 1;
@@ -1586,10 +1593,13 @@ export function createPlanRunner(job, data, deps = {}) {
       armor: b.armor, charm: b.charm, limitBreak: b.limitBreak,
       decorations: Object.fromEntries(Object.entries(b.decorations || {}).filter(([k]) => k !== 'weapon')),
     };
-    const input = { ...run.input, targets: fullTargets };
+    // 同じ入力の物を渡すと optimizeWeaponSide は下ごしらえを使い回す (WeakMap)。回ごとに 1 つだけ作る
+    if (!run.sideInput) run.sideInput = { ...run.input, targets: fullTargets };
+    const input = run.sideInput;
     const pick = (score) => {
       try {
-        const list = optimizeWeaponSide(input, fixed, data, { score, N: 1 }) || [];
+        // 計算し直し (computeBuild + comboExpected) は省く (評価器の値は comboExpected と相対 1e-13 で同じ。1 件 50〜100ms 速い)
+        const list = optimizeWeaponSide(input, fixed, data, { score, N: 1, check: false }) || [];
         return list[0] || null;
       } catch (e) {
         addWarning(st.warnings, { code: 'two-weapons-failed', message: `武器 2 本の案を作れなかった組があります (${(e && e.message) || e})` });
@@ -1606,6 +1616,8 @@ export function createPlanRunner(job, data, deps = {}) {
     st.two.results.push({
       ...r, weapon: w1.weapon, build: build1, builds: [build1, build2], weapons: [w1.weapon, w2.weapon],
       perGroup: w1.perGroup, perGroup2: w2.perGroup, twoWeapons: true,
+      // 武器の側は計算し直していない (check: false)。1 本の組の計算し直しの値は武器が変わると合わないので外す
+      check: w1.weapon === r.weapons[0] ? r.check : null,
       defense: index ? defenseCheck(build1, job.requirements, index, effects) : r.defense,
       defense2: index ? defenseCheck(build2, job.requirements, index, effects) : null,
       gamma: gammaMarksOf(build1, job.gamma),
@@ -1849,17 +1861,21 @@ export function createPlanRunner(job, data, deps = {}) {
    * 「続けて探す」: 終わった回 (満たせなかった回を除く) の探索を延長して、もう一度合わせる。
    * 武器 2 本の案では、2 本目の武器で倒す相手に合わせた回を 1 つ足す (3.3 節の 4。良くなれば上位が入れ替わる)。
    */
-  function extend({ ms = 6000 } = {}) {
+  function extend({ ms, activeMs } = {}) {
     if (!finished() || st.cancelled || st.error || !job || job.blocked) return false;
     const runs = st.runs.filter((r) => r.search && r.status !== 'infeasible' && typeof r.search.extend === 'function');
     const focus = focusRun();
     if (!runs.length && !focus) return false;
-    const each = Math.max(200, Math.round((Number(ms) || 6000) / (runs.length + (focus ? 1 : 0))));
+    // activeMs (計算した時間の合計) で受けたらそれで、ms (始めてからの時間) ならそれで、回の数で分ける
+    const active = activeMs != null && Number(activeMs) > 0;
+    const total = Number(active ? activeMs : ms) || 6000;
+    const each = Math.max(200, Math.round(total / (runs.length + (focus ? 1 : 0))));
+    const slice = active ? { activeMs: each } : { ms: each };
     // 前の結果は新しい結果が出るまで残す (延長中に result() を呼んでも上位が消えない)
-    for (const r of runs) r.search.extend({ ms: each });
+    for (const r of runs) r.search.extend({ ...slice });
     if (focus) {
       const b = focus.input.budget;
-      focus.input.budget = isObj(b) && b.work != null ? { ...b } : { ms: each };
+      focus.input.budget = isObj(b) && b.work != null ? { ...b } : { ...slice };
       st.runs.push(focus);
     }
     st.extendQueue = focus ? [...runs, focus] : runs;

@@ -469,6 +469,12 @@ test('elementPlan: いまの武器と同じ/近い → いまの武器、はっ�
   assert.deepEqual(s2.element.weapons, [FIRE_SNS]);
   assert.deepEqual(s2.requirements, []);
   assert.equal(R.planToJob(s2).runs.length, 1);
+  // この端末の所持アーティア (要素で渡す): weapons には id で入る。索引に入っているものは重ねない
+  const artian = { id: 'w-local', name: '端末のアーティア', baseWeaponId: FIRE_SNS, attack: 170, affinity: 0, element: { type: 'water', value: 400 } };
+  const ep = R.elementPlan([{ key: 'a', rec: nu.subjects[0].element.rec }], { build: { weapon: FIRE_SNS }, extraWeapons: [artian, artian] }, index);
+  assert.ok(ep.weapons.includes('w-local'));
+  assert.ok(ep.weapons.every((w) => typeof w !== 'object'), '要素ではなく id');
+  assert.equal(ep.weapons.filter((w) => w === 'w-local').length, 1);
 });
 
 test('多頭『英雄の証』: 4 体・時間の比の重み・武器 2 本の案 (時間の割合の大きい 2 つの属性)', () => {
@@ -655,7 +661,7 @@ function scriptedSearch(make, log, clock = null) {
         return { status: me.status || (me.cancelled ? 'cancelled' : 'partial'), results: o.results || [], infeasible: o.infeasible || null, warnings: [], stats: {} };
       },
       cancel() { me.cancelled = true; },
-      extend() { me.extended += 1; me.phase = PHASES.indexOf('dfs'); me.status = null; },
+      extend(b) { me.extended += 1; me.lastExtend = b; me.phase = PHASES.indexOf('dfs'); me.status = null; },
     };
   };
 }
@@ -1089,7 +1095,7 @@ test('通常の数体と多頭クエスト数件: Plan が作れて、Job の入
       assert.ok(Math.abs(sum - 1) < 1e-9, '部位の割合の合計が 1 でない');
       assert.ok(Array.isArray(run.input.required));
       assert.equal(run.input.objective, 'damage');
-      assert.ok(run.input.budget.ms > 0);
+      assert.ok(run.input.budget.activeMs > 0, '予算は計算した時間の合計 (activeMs) で数える');
     }
     if (c.questId === 'Every Hunter\'s Dream') {
       assert.equal(plan.subjects.length, 5);
@@ -1199,6 +1205,10 @@ test('createPlanRunner: 2 本目の相手に合わせた回の重みは H_i / D_
   const want = [raw.b / (raw.b + raw.c), raw.c / (raw.b + raw.c)];
   focus.input.targets.forEach((g, i) => assert.ok(Math.abs(g.weight - want[i]) < 1e-12, `${g.group}: ${g.weight} と ${want[i]}`));
   assert.deepEqual(focus.input.budget, { ms: 1000 / 2 });
+  // activeMs (計算した時間の合計) で延長したら、足す回も activeMs で切る
+  runner.extend({ activeMs: 900 });
+  while (!runner.step(50));
+  assert.deepEqual(log.map((x) => x.lastExtend), [{ activeMs: 900 / 2 }, { activeMs: 900 / 2 }]);
   const r = runner.result();
   assert.equal(r.results[0].builds[0].armor.head, 2, '2 本目の相手に合わせた回の組を合わせていない');
   assert.ok(Math.abs(r.results[0].score.value - (1000 / 180 + 50000 / 90 + 80000 / 85)) < 1e-9);
@@ -1264,6 +1274,28 @@ test('createPlanRunner: いまの装備との比べは探索の入力 (発動率
   while (!runner.step(5));
   assert.equal(runner.result().results[0].baseline.value, 500);
   assert.ok(Math.abs(runner.result().results[0].vsBaselinePct - 100) < 1e-9);
+});
+
+test('createPlanRunner: 端末の所持アーティア (入力の extraWeapons) の組も、いまの装備の値と守りのチェックを計算できる', () => {
+  // Worker の索引は data/*.json だけで作る (端末の武器は入らない)。入力の extraWeapons を足した索引で計算すること
+  const artian = { id: 'w-local', name: '端末のアーティア', baseWeaponId: FIRE_SNS, attack: 170, affinity: 0, element: { type: 'fire', value: 400 } };
+  const plan = planOf(NU_UDRA, AT, { search: { preset: 'power' } });
+  const job = R.planToJob(plan, { K: 3, current: simpleBuild('w-local', 1), extraWeapons: [artian] });
+  assert.equal(job.runs[0].input.current.weapon, 'w-local');
+  const runner = R.createPlanRunner(job, data, {
+    createSearch: scriptedSearch({ results: [{ rank: 1, value: 1000, build: simpleBuild('w-local', 1), weapon: 'w-local' }] }, []),
+  });
+  while (!runner.step(5));
+  const r = runner.result().results[0];
+  const input = job.runs[0].input;
+  const idx2 = { ...index, myWeapons: new Map([...index.myWeapons, ['w-local', artian]]) };
+  const want = R.evaluateBuild(input.current, input.targets, {
+    index: idx2, effects, motions, combo: input.combo, uptimes: input.uptimes, monsterStatus: input.monsterStatus, sharpness: input.sharpness,
+  }).value;
+  assert.ok(R.evaluateBuild(input.current, input.targets, { index, effects, motions, combo: input.combo, uptimes: input.uptimes }) == null,
+    'data の索引だけでは端末の武器を引けない (この確かめの前提)');
+  assert.ok(r.baseline && Math.abs(r.baseline.value - want) / want < 1e-12, `いまの装備の値: ${r.baseline && r.baseline.value} と ${want}`);
+  assert.ok(r.defense, '守りのチェックがある');
 });
 
 test('planToJob: 属性やられの防ぎ方が行ごとにそろわないときは、必須にせず 1 回で探して警告を出す', () => {

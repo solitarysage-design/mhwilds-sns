@@ -327,6 +327,10 @@ w_i ∝ H_i / D_ref_i²        (= 基準の装備での「その相手にかか�
 | 多頭・武器 2 本 | 1〜2 + 合わせ (上位 5 件) | 合わせの目標は 1 件 0.1 秒以内 | 8〜15 秒の見込み |
 
 - 途中の結果 (1 回目の仕上げのあと) を先に出し、残りは裏で続ける。ベンチに S1〜S3 (6.4 節) を足して測ってから予算を決める。
+- (測った 2026-10-21・3f) 値は `docs/SEARCH_DESIGN.md` 5.3 節。予算 6 秒で Node の done は S1 4.6 秒・S2 5.9 秒・S3 5.0 秒、WebKit は
+  S1 5.0 秒・S2 6.4 秒。探すタブの既定 (仮置きの発動率 0%) では 3 つとも予算より前に終わる (Node 0.8〜1.7 秒・WebKit S2z 2.1 秒)。
+  合わせは 1 組 約 47ms (仮置き 50%) / 約 11ms (0%)。予算の既定は 6 秒のまま、火力の差の回か武器 2 本があるときは探索の回に予算の 6 割
+  (`RUN_SHARE`) を使う。仮置き 50% のまま多頭・武器 2 本で探すと iPhone で 10 秒をこえることがある見込み (途中の結果は 3〜4.5 秒)。
 
 ---
 
@@ -485,7 +489,7 @@ w_i ∝ H_i / D_ref_i²        (= 基準の装備での「その相手にかか�
   相手のカードは「相手を選ぶとおすすめも使えます」と既定の肉質の説明だけ。
 - 「スキルを足す」「守りのスキルを足す」は `Picker` (スキル一覧。種類で見出し)。足した行は Lv を −/＋ で (1〜最大 Lv)。
   シリーズ/グループスキルは段の Lv (例 ヌシの魂 Lv1・鎖刃竜の飢餓 Lv2)。ソルバがシリーズ/グループの必須に対応するまで
-  (`SEARCH_DESIGN.md` の 2b) は選べない (行に「準備中」)。
+  (`SEARCH_DESIGN.md` の 2b) は選べない (行に「準備中」)。→ (3f) 2b で対応したので選べるようにした (一覧に「Lv1 = 2 部位・Lv2 = 4 部位」)。
 - 発動率の扱いは既定を「仮の条件は 0% で探す」にする案 (`SEARCH_DESIGN.md` 4 章の 3。条件つきスキルを積んだ現実的でない構成ばかり
   出るのを防ぐ)。本人に確かめる (9 章)。0% で探したときは、結果に「火力タブの値と違うのは、仮の発動率を 0% にしたため」と出す。
   本人が入れた発動率 (`state.uptimes` にあるもの) はどちらでもそのまま使う。
@@ -693,7 +697,11 @@ const runner = createPlanRunner(job, data, { createSearch, optimizeWeaponSide })
   画面のつなぎ方・保存・作り物の Worker は `docs/UI_API.md` の「探すタブ」節。
 - 同時に 1 つだけ。新しい `start` が来たら前の job を捨てる (今の決まりのまま)。
 - (実装 2026-10-21・2b) progress は段階が変わったときに加えて、回 (`run.index`) が変わったときにも送る。5.3 節の形の作り物の
-  `createPlanRunner` でメッセージを確かめた (`tests/search_worker_plan.test.mjs`。本物とつなぐのは 3f)。
+  `createPlanRunner` でメッセージを確かめた (`tests/search_worker_plan.test.mjs`)。
+- (実装 2026-10-21・3f) 本物の `createPlanRunner` とつないだ。画面は `{type: 'start', id, job}` に planToJob の Job をそのまま送る
+  (`search_form.js` の `buildJob`)。Worker の data は data/*.json の生データ + 索引で、Runner は入力の `extraWeapons`・`charms.extra`
+  (端末の所持アーティア・護石) を足した索引で守りのチェックと計算し直しをする。`tests/search_worker.test.mjs` が S1z の Job を
+  Worker で回し、`tests/smoke_ui.py` の 6・7 が本物の Worker で通しを確かめる (6.5 節)。
 
 ### 5.6 state.js に足すもの (足すだけなので `STATE_SCHEMA` は 1 のまま)
 
@@ -820,6 +828,9 @@ search: {                    // 探すタブの条件 (小さいので state に
 
 - 測るもの: 途中の結果と終わりまでの時間 (3 回の中央値)・上位の値・合わせ (`optimizeWeaponSide`) 1 件の時間・ヒープの増え。
   WebKit (Playwright) でも S1・S2 を測る。目標は 1 体 (S1) で Node 3 秒・多頭 (S2) で Node 6 秒以内。
+- (実装 2026-10-21・3f) `node --expose-gc tools/bench_search.mjs --plans` と `tools/bench_search_webkit.py --cases S1,...`。
+  条件の作り方は `tests/search_cases.mjs` の `makePlanCases` (S1 は「B1 の武器」= いまの武器、S3 は武器 1 本 = `twoWeapons: 'off'`。
+  発動率は B1 と同じ仮置き 50% のまま、`S1z`〜`S3z` は探すタブの既定の 0%)。測った値は `docs/SEARCH_DESIGN.md` 5.3 節。
 
 ### 6.5 画面 (`tests/smoke_ui.py` に足す)
 
@@ -841,7 +852,15 @@ search: {                    // 探すタブの条件 (小さいので state に
 - (実装 2026-10-21・3d) 相手タブの分は `target_arch_tempered` / `target_multi_quest` に入れた (装備固定は `target_arch_tempered` の中)。
   ほかに: 討伐までの回数に使った期待値が火力タブの期待値と同じ・2 人で倍率が変わる・保存して開き直すと残る・ウズ・トゥナの歴戦王で
   火力タブも置き換え後の傷口・多頭の行のタップと部位の覚え・幅 300px (文字を大きくしたとき)。「この相手で装備を探す」は
-  探すタブへ移って `search.autoStart` が置かれるところまで。探すタブ側 (環境適応 Lv2 の行がオン・「武器を 2 本使う」) は 3e / 3f で足す。
+  探すタブへ移って `search.autoStart` が置かれるところまで。探すタブ側 (環境適応 Lv2 の行がオン・「武器を 2 本使う」) は 3f で足した
+  (`target_arch_tempered` / `target_multi_quest` の中)。
+- (実装 2026-10-21・3f) 本物の Worker で通しを 2 本足した (`run_search` の 6・7。予算は `window.__mhwSearchBudget = {work: 3000}`):
+  `search_real_arch_tempered` = 相手タブで歴戦王アルシュベルド (置き換わった傷口・傷口を狙う) →「この相手で装備を探す」→ 探すタブで自動で始まる
+  (Plan の Job・属性やられで探索 2 回) → 途中の結果が終わりより先 → 終わり (守りを満たす) → 1 位を装備に入れる → 火力タブと
+  `tests/calc_from_state.mjs` の期待値が結果の値と相対 1e-9 で一致 → 「条件が変わりました」は出ない。探索の入力の傷口が置き換え後の値。
+  `search_real_multi_two_weapons` (幅 375・ダーク) = 『英雄の証』でヌ・エグドラの歴戦王を倒していないことにする →「このクエストで装備を探す」→
+  武器 2 本の案 (結果の行に 2 本目・詳しくに相手ごとの 4 行) →「2 本目の武器で装備に入れる」。倒していない歴戦王の γ 防具・狩猟証γ の
+  護石が探索の入力から外れ、結果にも出ない。
 - 計算中にほかのタブへ移って戻っても続いている。結果が出たらタブの絵に点が付く。
 
 ---
@@ -857,11 +876,11 @@ search: {                    // 探すタブの条件 (小さいので state に
 | 3d | ui-target | `target_hunt.js`・target.js の並べ替え・`target_mix.js` の個体の傷口・相手タブのスモークテスト | 3-0・3a (`buildPlan` は 3c の作り物でも可) | `buildPlan` の返り値 |
 | 3e | ui-search | `search.js`・`search_form.js`・`search_results.js`・`search_client.js`・探すタブのスモークテスト | 3-0。探索ができるまでは**作り物の Worker** (決まった結果を段階ごとに返す) | 5.5 節のメッセージ |
 | 2a〜2b | solver (`SEARCH_DESIGN.md` 9 章) | 探索の本体 + 5.4 節の追加 + Worker (`job.kind` で `createSearch` / `createPlanRunner` を選ぶ) | — | 5.4・5.5 節 |
-| 3f | まとめ | 本物の Worker でつなぐ・ベンチ S1〜S3・WebKit・iPhone で 1 回 (本人) | 全部 | — |
+| 3f | まとめ | 本物の Worker でつなぐ・ベンチ S1〜S3・WebKit・iPhone で 1 回 (本人) | 全部 | — (済 2026-10-21。iPhone の 1 回は本人に頼む) |
 
 - 3a・3b・3c・3d・3e・2a は並列で書ける。ぶつかりやすいのは state.js (3-0 で先に入れる) と target_mix.js (3d だけが触る) と
   sw.js (`PRECACHE` は 3-0 で先に足し、中身のハッシュは最後に `sw_version.py`)。
-- 3c の `createPlanRunner` は 2a の `createSearch` が無くても、テストの作り物で段の進み方を書ける。本物とつなぐのは 3f。
+- 3c の `createPlanRunner` は 2a の `createSearch` が無くても、テストの作り物で段の進み方を書ける。本物とつなぐのは 3f (済)。
 - 2b の残り (シリーズ/グループの必須・`MAX_PATTERNS` の扱い・`armorExclude`) は 3c より前に入っていると良いが、必須ではない
   (無い間は「準備中」・γ は印だけ)。
 - 後回し: 耐性の値 ≥ 20 をソルバの条件にする (3c の後、効くと分かれば)、`state.build` に 2 本目の武器を持たせる、
@@ -869,12 +888,16 @@ search: {                    // 探すタブの条件 (小さいので state に
 
 ---
 
-## 8. 実装の段で直す文書
+## 8. 実装の段で直す文書 (2026-10-21 3f で済み)
 
 - `docs/UI_API.md`: タブの一覧・state の形 (5.6 節)・`search_client.js` の使い方・保存キー (5.7 節)・この端末だけの記録に `search-timing`。
-- `docs/MODEL_API.md`: hunt.js・recommend.js の節。
-- `docs/ARCHITECTURE.md`: `rules.resistSkills`、段階 3 の行、`app/model/` の一覧。
-- `docs/SEARCH_DESIGN.md`: 3 章に 5.4・5.5 節の追加、3.6 節 (画面) はこの文書を見るように。
+  → 済み。3-0・3d・3e で書き、3f で本物の Worker とつないだこと・`buildJob` の Plan の道・予算 `{activeMs}`・結果の守りと回数の差・
+  画面の目印・スモークテストの 6・7 を直した。
+- `docs/MODEL_API.md`: hunt.js・recommend.js の節。→ 済み。3a・3c で書き、3f で γ の表を hunt.js の `gammaIndex` / `archTemperedRewards` の
+  1 か所にしたこと・`RUN_SHARE`・`extend({activeMs})`・端末の武器と護石を足した索引・武器 2 本の合わせの `check: false` を足した。
+- `docs/ARCHITECTURE.md`: `rules.resistSkills`、段階 3 の行、`app/model/` の一覧。→ 済み (3b・3f)。
+- `docs/SEARCH_DESIGN.md`: 3 章に 5.4・5.5 節の追加、3.6 節 (画面) はこの文書を見るように。→ 済み (2a・2b の 3.7 節)。
+  3f で 5 章に測った値 (5.3 節。S1〜S3・WebKit) と予算の既定の決め方を書き、7 章を「持ち込んだ先」の表にした。
 
 ---
 
@@ -909,6 +932,7 @@ search: {                    // 探すタブの条件 (小さいので state に
 
 - **時間**: 段階 3 は探索を 2〜4 回回すことがある (属性やられの「または」・火力の差・武器 2 本)。iPhone では多頭・2 本で 10 秒を
   超える見込み。途中の結果を先に出し、重いものは「試す」「続けて探す」に回す。S1〜S3 を測ってから予算を決める。
+  → (3f) 測った (3.5 節)。既定 (仮置き 0%) は収まる見込み、仮置き 50% のままの多頭・武器 2 本は 10 秒をこえることがある見込み。iPhone 実機は未計測。
 - **多頭の重みは近似** (基準の装備のまわりの 1 次)。並べ直しで出す順は正しいが、探索が見る範囲は重みで決まる。小さい問題で差を測る。
 - **武器 2 本は近似** (1 回目の防具に 2 本目を合わせる)。2 本を前提にした防具の最良は保証しない。
 - **属性やられの耐性の値**は探索の条件にできない (防具の耐性値だけで届く組は狙って探さない)。

@@ -57,7 +57,10 @@ function TargetCard({ form, search, target, targetData }) {
             ${tg.name}${quest ? `・${quest.name}${quest.stars ? ` ★${quest.stars}` : ''}` : ''}
           </p>
           <p class="sr-target-line">狙う部位: ${tg.partsText} ${(tg.marks || []).map((m) => html`<${MarkBadge} key=${m} mark=${m} />`)}
-            ${target.isWound ? '・傷口を狙う' : ''}</p>`
+            ${target.isWound ? '・傷口を狙う' : ''}</p>
+          ${form.plan && form.plan.mode === 'multi' && search.useTarget && html`
+            <p class="sr-target-line" data-sr-multi=${form.plan.subjects.length}>このクエストの相手 ${form.plan.subjects.length} 体
+              (${form.plan.subjects.map((x) => x.name).join('・')}) を、全部倒すまでの回数が少ない順に探します。</p>`}`
           : tg.source === 'manual' ? html`
             <p class="sr-target-name" data-sr-target-label>${tg.label} (手入力の肉質)</p>`
             : html`
@@ -80,20 +83,21 @@ function TargetCard({ form, search, target, targetData }) {
 // ---------------------------------------------------------------- 武器
 
 function WeaponCard({ form, search }) {
-  const w = form.weapon || {};
   const plan = form.plan;
   const two = plan && plan.element && plan.element.twoWeapons;
+  const multi = !!(plan && plan.mode === 'multi');
   return html`
     <${Card} title="武器">
       <div data-sr="weapon">
         <${Segmented} label="探す武器" value=${search.weaponMode} options=${F.WEAPON_MODE_OPTIONS}
           onChange=${(v) => setSearch({ weaponMode: v })} />
-        ${w.text && html`<p class="hint" data-sr-weapon-text>${w.text}</p>`}
-        ${w.mode === 'all' && html`<p class="hint">片手剣すべてから探すと、いまの武器だけより時間がかかります (iPhone で 10 秒をこえることがあります)。</p>`}
-        ${two && (two.suggested || search.twoWeapons !== 'auto') && html`
+        ${form.weaponText && html`<p class="hint" data-sr-weapon-text>${form.weaponText}</p>`}
+        ${form.weaponMode === 'all' && html`<p class="hint">片手剣すべてから探すと、いまの武器だけより時間がかかります (iPhone で 10 秒をこえることがあります)。</p>`}
+        ${multi && two && html`
           <${Segmented} label="属性の違う相手がいるとき" value=${search.twoWeapons} options=${F.TWO_WEAPON_OPTIONS}
             onChange=${(v) => setSearch({ twoWeapons: v })} />
-          <p class="hint">2 本の案は、防具と護石は同じで、武器だけを相手ごとに持ち替えます。</p>`}
+          <p class="hint" data-sr-two-weapons=${two.suggested ? 'on' : 'off'}>${two.reason || ''}。
+            2 本の案は、防具と護石は同じで、武器だけを相手ごとに持ち替えます。</p>`}
         <p class="hint">状態異常の武器 (毒・麻痺・睡眠・爆破) は、蓄積を計算に入れていないので物理だけで比べます。</p>
       </div>
     </${Card}>`;
@@ -113,12 +117,14 @@ function DefenseCard({ form, search }) {
         <p class="hint">火力優先 = 守りは付けない。バランス = 歴戦王の防げる攻撃と、確かな属性やられだけ。安全 = 咆哮・風圧・振動・状態異常も。
           (どれも決めごとで、根拠のある値ではありません)</p>
         ${!search.useTarget ? html`<p class="hint">「相手に合わせたおすすめを使う」がオフなので、守りのスキルは自分で「必須スキル」に足してください。</p>`
+          : !plan ? html`
+            <p class="hint" data-sr-defense-none>モンスターを選ぶと、その相手に合わせた守りのスキルが出ます。いまは火力だけで探します。</p>`
           : reqs.length === 0 ? html`
-            <p class="hint" data-sr-defense-pending>相手に合わせた守りのスキルのおすすめは準備中です。いまは火力だけで探します。要るスキルは下の「自分で決める必須スキル」に足してください。</p>`
+            <p class="hint" data-sr-defense-none>この相手には、防ぐスキルの候補はありません。</p>`
             : html`
             <ul class="sr-req-list">
               ${reqs.map((q) => html`
-                <li key=${q.key}>
+                <li key=${q.key} data-sr-req=${q.key} data-sr-req-on=${q.on ? '1' : '0'}>
                   <${Toggle} label=${html`${q.label} ${q.provisional && html`<${Badge} kind="warn">仮</${Badge}>`} ${q.unconfirmed && html`<${Badge} kind="warn">未確認</${Badge}>`}`}
                     checked=${!!q.on} hint=${(q.why || []).map((x) => x.text).filter(Boolean).join('、') || (q.tier === 'ref' ? '参考' : '')}
                     onChange=${(on) => setSearchToggle(q.key, on)} />
@@ -137,7 +143,7 @@ function DefenseCard({ form, search }) {
 function RequiredCard({ data, idx, search }) {
   const [open, setOpen] = useState(false);
   const rows = F.requiredRows(search.required, idx);
-  const items = useMemo(() => F.requiredPickerItems(data.lists.skills, search.required), [data, search.required]);
+  const items = useMemo(() => F.requiredPickerItems(data.lists.skills, search.required, data.bonuses), [data, search.required]);
   return html`
     <${Card} title="自分で決める必須スキル">
       <div data-sr="required">
@@ -145,7 +151,7 @@ function RequiredCard({ data, idx, search }) {
         <ul class="sr-req-rows">
           ${rows.map((r) => html`
             <li key=${r.skillId} class="sr-req-row" data-sr-required=${r.skillId}>
-              <span class="sr-req-name">${r.name}${r.pending ? html` <${Badge} kind="unsupported">準備中</${Badge}>` : ''}</span>
+              <span class="sr-req-name">${r.name}</span>
               <span class="sr-req-ctrl">
                 <button type="button" class="btn btn-secondary btn-square" aria-label=${`${r.name}の Lv を下げる`}
                   disabled=${r.level <= 1} onClick=${() => setRequiredLevel(r.skillId, r.level - 1)} data-sr-action="lv-down">−</button>
@@ -160,7 +166,7 @@ function RequiredCard({ data, idx, search }) {
         <div class="btn-row">
           <${Button} small onClick=${() => setOpen(true)} data-sr-action="add-required">＋ スキルを足す</${Button}>
         </div>
-        <p class="hint">シリーズスキル・グループスキルは、まだ必須にできません (準備中)。</p>
+        <p class="hint">シリーズスキル・グループスキルの Lv は段です (例 黒蝕竜の力 Lv2 = 4 部位)。巨戟アーティアのシリーズ・グループは 1 部位に数えます。</p>
         <${Picker} open=${open} title="必須にするスキルを選ぶ" items=${items} value=${null}
           searchPlaceholder="スキルの名前で探す" onClose=${() => setOpen(false)}
           onSelect=${(v) => { if (v != null) addRequired(v, (search.required.find((x) => x.skillId === v) || {}).level || 1); }} />
@@ -432,7 +438,7 @@ export default function SearchTab({ data, active }) {
         <${Button} variant="primary" block disabled=${snap.busy || !form.ok || !ready} onClick=${start} data-sr-action="start">
           この条件で探す
         </${Button}>
-        <p class="hint sr-start-hint">${snap.busy ? '探しています…' : `${search.budgetSec} 秒くらい${form.weapon && form.weapon.mode === 'all' ? ' (片手剣すべてなので、もっとかかることがあります)' : ''}`}</p>
+        <p class="hint sr-start-hint" data-sr-time-hint>${snap.busy ? '探しています…' : F.startHintText(form, search)}</p>
       </div>
       <${ResultsCard} snap=${snap} rows=${rows} stale=${stale} zeroed=${zeroed} budgetMs=${budgetMs} timings=${timings}
         requiredIds=${requiredIds}

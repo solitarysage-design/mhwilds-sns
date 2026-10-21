@@ -2,7 +2,8 @@
 // 実行: node --test tests/*.test.mjs  (Node 24 では tests/ とディレクトリで渡すと落ちる)
 // search_client.js は 'preact/hooks' を名前で import する (ブラウザでは index.html の import map)。node では
 // module.registerHooks で app/vendor の同じファイルに向ける (state.test.mjs と同じ)。
-// 探索の本体はまだ無いので、コントローラは作り物の探索 (tests/fixtures/fake_search_worker.js の createEngine) でつなぐ。
+// コントローラの順番 (途中の結果・やめる・続けて探す) は、決まった結果を返す作り物の探索 (tests/fixtures/fake_search_worker.js の
+// createEngine) でつなぐ。本物の探索 (search.js / recommend.js) は Job の作り方と、画面のスレッドで回す道で確かめる。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -26,6 +27,7 @@ const L = await import('../app/ui/tabs/equip_logic.js');
 const T = await import('../app/ui/tabs/target_mix.js');
 const C = await import('../app/ui/tabs/search_client.js');
 const FAKE = await import('./fixtures/fake_search_worker.js');
+const R = await import('../app/model/recommend.js');
 
 const readJson = (rel) => JSON.parse(readFileSync(new URL(`../${rel}`, import.meta.url), 'utf8'));
 const raw = {
@@ -240,7 +242,8 @@ test('Job: 段階 2 の入力 (createSearch の形) と inputKey', () => {
   assert.deepEqual(inp.decorations, { owned: null });
   assert.equal(inp.objective, 'damage');
   assert.equal(inp.K, 10);
-  assert.deepEqual(inp.budget, { ms: 6000, activeMs: 6000 });
+  assert.deepEqual(inp.budget, { activeMs: 6000 }, '予算は計算した時間で数える (裏に回っていた時間を数えない)');
+  assert.equal(Object.keys(inp.gamma.armor).length, 25, 'γ の印の表を渡す');
   assert.equal(inp.current, build);
   assert.deepEqual(inp.monsterStatus, T.monsterStatusOf({ ...emptyTarget(), monsterId: ark.id, partKey: 'head' }, targetData));
   assert.equal(f.summary.zeroed, F.placeholderConditions(raw.skillEffects, { enraged: 0.6 }).filter((p) => !p.fromInput).length);
@@ -301,47 +304,113 @@ test('Job: 探せないとき (武器が無い・装備固定のクエスト) �
   assert.equal(loading.loading, true);
 });
 
-test('Job: おすすめ (recommend.js) があれば plan の Job にし、無い・壊れていれば段階 2 で探す', () => {
-  const ark = monsterByName('アルシュベルド');
-  const target = { ...emptyTarget(), monsterId: ark.id, partKey: 'head' };
+test('Job: 相手に合わせるときは本物の recommend.js の Plan → Job (kind plan)。相手が無い・おすすめを使わない・壊れていれば段階 2', () => {
+  const nu = monsterByName('ヌ・エグドラ');
+  const quest = QUESTS.quests.find((q) => q.name === '黒き揺り篭の吾子');
+  const target = { ...emptyTarget(), monsterId: nu.id, individual: 'arch-tempered', questId: quest.id };
   const build = { ...emptyBuild(), weapon: FIRE_WEAPON.id };
-  const seen = {};
-  const recommend = {
-    buildPlan: (p) => { seen.plan = p; return { requirements: [{ key: 'r1', label: '耳栓 Lv2', on: true }], notes: [], subjects: [] }; },
-    planToJob: (plan, o) => { seen.opts = o; return { runs: [{ label: 'a', input: { weapons: [1], targets: [], K: 10 } }, { label: 'b', input: { weapons: [1], targets: [], K: 10 } }], merge: { mode: 'single' }, K: 10 }; },
-  };
-  const f = F.buildJob(ctxOf({ build, target, recommend, localCharms: [{ id: 'cl1', skills: [] }] }));
+  const localCharms = [{ id: 'cl1', name: '端末の護石', rarity: 5, skills: [], slots: { armor: [], weapon: [] } }];
+  const f = F.buildJob(ctxOf({ build, target, recommend: R, localCharms }));
+  assert.equal(f.ok, true, JSON.stringify(f.blockers));
   assert.equal(f.job.kind, 'plan');
-  assert.equal(f.job.runs.length, 2);
-  assert.equal(f.job.runs[0].input.weapons[0], 1, 'planToJob の入力が優先');
-  assert.deepEqual(f.job.runs[0].input.budget, { ms: 6000, activeMs: 6000 });
-  assert.equal(f.job.runs[0].input.charms.extra.length, 1, '端末の護石は足す');
-  assert.equal(f.job.runs[0].input.current, build);
-  assert.equal(seen.plan.search.preset, 'balance');
-  assert.equal(seen.opts.placeholders, 'zero');
-  assert.equal(f.plan.requirements[0].key, 'r1');
+  // 環境適応 Lv2 + 火属性やられ (バランス) → 属性やられの「または」で探索 2 回 + 守りの火力の差を測る回
+  assert.deepEqual(f.job.runs.map((r) => r.key), ['blight-skill', 'blight-resist']);
+  assert.ok(f.job.costRun);
+  assert.deepEqual(f.job.subjects.map((x) => x.name), ['ヌ・エグドラ（歴戦王）']);
+  assert.ok(f.job.requirements.some((x) => x.label.includes('環境適応')));
+  assert.ok(f.job.gamma && Object.keys(f.job.gamma.armor).length === 25, 'γ の印の表');
+  for (const r of f.job.runs) {
+    assert.deepEqual(r.input.budget, { activeMs: Math.round((6000 * R.RUN_SHARE) / 2) }, '予算は回の数で分ける (火力の差の回の分を残す)');
+    assert.equal(r.input.charms.extra.length, 1, '端末の護石は足す');
+    assert.equal(r.input.current, build);
+    assert.ok(r.input.gamma);
+    assert.ok(r.input.targets.every((x) => x.group === f.job.subjects[0].key));
+  }
+  assert.ok(f.plan.requirements.some((x) => x.on && x.label.includes('環境適応')));
+  assert.match(f.weaponText, /おすすめの属性 \(水\)/, f.weaponText);
+  assert.doesNotThrow(() => structuredClone(f.job), 'Worker に送れる形');
+  // 倒していない歴戦王の γ 防具・狩猟証γ の護石は探索の入力から外れる
+  const hunted = F.buildJob(ctxOf({ build, target, recommend: R, search: { ...defaultSearch(), archTemperedHunted: { [String(nu.id)]: false } } }));
+  const gNu = F.gammaInfo(targetData).monsters.find((x) => x.monsterId === nu.id);
+  for (const r of hunted.job.runs) {
+    assert.ok(gNu.armorIds.every((id) => r.input.armorExclude.includes(id)));
+    assert.ok(gNu.charmFixedIds.every((id) => r.input.charms.fixedExclude.includes(id)));
+  }
+  assert.notEqual(hunted.inputKey, f.inputKey);
+  // 歴戦王ウズ・トゥナの傷口 (woundOverrides) が探索の targets に入る (頭の傷口 弾 88 → 70)
+  const uth = monsterByName('ウズ・トゥナ');
+  const tu = F.buildJob(ctxOf({ build, target: { ...emptyTarget(), monsterId: uth.id, individual: 'arch-tempered', partKey: 'head', isWound: true }, recommend: R }));
+  assert.equal(tu.job.kind, 'plan');
+  assert.equal(tu.job.runs[0].input.targets[0].target.wound.shot, 70);
+  assert.equal(tu.job.runs[0].input.targets[0].target.isWound, true);
+  // 多頭 (英雄の証): 武器 2 本の案
+  const hero = QUESTS.quests.find((q) => q.name === '英雄の証');
+  const first = hero.mission.targets.find((x) => x.monsterId != null);
+  const heroTarget = { ...emptyTarget(), monsterId: first.monsterId, individual: first.variant, questId: hero.id };
+  const multi = F.buildJob(ctxOf({ build, target: heroTarget, recommend: R }));
+  assert.equal(multi.job.merge.mode, 'twoWeapons');
+  assert.equal(multi.job.subjects.length, 4);
+  assert.equal(multi.summary.multi, true);
+  const one = F.buildJob(ctxOf({ build, target: heroTarget, recommend: R, search: { ...defaultSearch(), twoWeapons: 'off' } }));
+  assert.equal(one.job.merge.mode, 'multi', '1 本だけにも切り替えられる');
 
-  // 置き場の buildPlan (null) → 段階 2
-  assert.equal(F.buildJob(ctxOf({ build, target, recommend: { buildPlan: () => null } })).job.kind, 'search');
+  // 時間の目安: 既定 (仮置き 0%) はそのまま、火力タブの値のまま相手に合わせると「もっとかかる」
+  assert.match(F.startHintText(f, defaultSearch()), /^6 秒くらい \(途中/);
+  const keep = { ...defaultSearch(), placeholders: 'keep' };
+  assert.match(F.startHintText(F.buildJob(ctxOf({ build, target, recommend: R, search: keep })), keep), /もっとかかる/);
+
   // 相手に合わせない → 段階 2
-  assert.equal(F.buildJob(ctxOf({ build, target, recommend, search: { ...defaultSearch(), useTarget: false } })).job.kind, 'search');
+  assert.equal(F.buildJob(ctxOf({ build, target, recommend: R, search: { ...defaultSearch(), useTarget: false } })).job.kind, 'search');
+  // 相手を選んでいない → 段階 2 (既定の肉質)
+  assert.equal(F.buildJob(ctxOf({ build, recommend: R })).job.kind, 'search');
+  // 武器が無くても、Plan で探すときはほかの武器から (段階 2 の「武器を選んでいません」で止めない)
+  const noW = F.buildJob(ctxOf({ target, recommend: R, search: { ...defaultSearch(), weaponMode: 'current' } }));
+  assert.equal(noW.ok, true, JSON.stringify(noW.blockers));
+  assert.equal(noW.job.kind, 'plan');
   // 壊れた buildPlan → 段階 2 と注意
   const broken = F.buildJob(ctxOf({ build, target, recommend: { buildPlan: () => { throw new Error('x'); }, planToJob: () => null } }));
   assert.equal(broken.job.kind, 'search');
   assert.ok(broken.notes.some((n) => n.code === 'plan-error'));
+  // Plan を作れない (null) → 段階 2
+  assert.equal(F.buildJob(ctxOf({ build, target, recommend: { buildPlan: () => null } })).job.kind, 'search');
+});
+
+test('結果の見せ方: 守りのチェック・多頭の回数の差・守りの火力の差', () => {
+  const view = F.defenseView(
+    { ok: true, rows: [{ key: 'a', label: '環境適応 Lv2', status: 'ok', on: true, text: '環境適応 Lv2' }, { key: 'b', label: '耳栓 Lv2', status: 'missing', on: false, text: 'なし' }] },
+    { ok: false, rows: [{ key: 'a', label: '環境適応 Lv2', status: 'missing', on: true, text: 'なし' }] },
+  );
+  assert.equal(view.ok, false, '2 本目の装備で足りなければ満たしていない');
+  assert.deepEqual(view.items.map((x) => [x.key, x.status]), [['a', 'missing']], 'オフの行は出さない・悪い方を出す');
+  assert.equal(F.defenseText(F.defenseView({ ok: true, rows: [{ key: 'a', label: '火属性やられを防ぐ', status: 'ok', on: true, text: '火耐性の合計 22' }] })), '✓火耐性の合計 22');
+  assert.equal(F.defenseView(null), null);
+  assert.match(F.costOfDefenseText({ kind: 'damage', main: 900, free: 950 }), /火力 −5\.3%/);
+  assert.match(F.costOfDefenseText({ kind: 'combos', main: 110, free: 100 }), /約 10(\.0)?% 増えます/);
+  assert.equal(F.costOfDefenseText({ kind: 'damage', main: 950, free: 950 }), null, '差が無ければ出さない');
+  const rows = F.resultRows(F.normalizeResult({
+    status: 'done', results: [{ rank: 1, value: 50, build: emptyBuild(), score: { kind: 'combos', value: 140.2, better: 'lower' },
+      combosTotal: 142, baseline: { value: 150, combos: 151 }, perSubject: [{ key: 'a', name: 'A', value: 300, combos: 50, weapon: 1 }] }],
+  }), { idx, currentBuild: emptyBuild(), currentSkills: [] });
+  assert.equal(rows[0].scoreKind, 'combos');
+  assert.equal(rows[0].diffPct, null);
+  assert.equal(rows[0].diffCombos, -9);
+  assert.equal(F.valueText(rows[0].value, 'combos'), '約 141 回');
+  assert.equal(F.rowValueText(rows[0]), '約 142 回', '多頭は相手ごとに切り上げた回数の合計 (相手タブと同じ数え方)');
 });
 
 // ---------------------------------------------------------------- 必須スキルの行
 
-test('必須スキル: 行と、足す一覧 (シリーズ/グループは準備中で選べない)', () => {
+test('必須スキル: 行と、足す一覧 (シリーズ/グループも選べる。段の Lv と要る部位の数を添える)', () => {
   const rows = F.requiredRows([{ skillId: skillId('耐震'), level: 2 }, { skillId: 99999, level: 1 }], idx);
   assert.equal(rows[0].name, '耐震');
   assert.equal(rows[0].maxLevel, idx.skills.get(skillId('耐震')).maxLevel);
   assert.equal(rows[1].missing, true);
-  const items = F.requiredPickerItems(raw.skills.skills, [{ skillId: skillId('耐震'), level: 2 }]);
+  const items = F.requiredPickerItems(raw.skills.skills, [{ skillId: skillId('耐震'), level: 2 }], raw.bonuses);
   assert.equal(items.length, raw.skills.skills.length);
-  assert.ok(items.filter((i) => i.disabled).every((i) => /準備中/.test(i.group)));
-  assert.equal(items.filter((i) => i.disabled).length, raw.skills.skills.filter((s) => s.kind === 'set' || s.kind === 'group').length);
+  assert.ok(items.every((i) => !i.disabled), 'シリーズ/グループも選べる (探索が対応した。docs/SEARCH_DESIGN.md 11 章)');
+  assert.match(items.find((i) => i.value === skillId('黒蝕竜の力')).sub, /Lv1 = 2 部位・Lv2 = 4 部位/);
+  assert.match(items.find((i) => i.value === skillId('ヌシの魂')).sub, /Lv1 = 3 部位/);
+  assert.equal(items.find((i) => i.value === skillId('ヌシの魂')).group, 'グループスキル');
   assert.match(items.find((i) => i.value === skillId('耐震')).sub, /いま Lv2/);
   assert.equal(items[0].group, '防具スキル');
 });
@@ -615,14 +684,18 @@ test('コントローラ: 前の探索の知らせは無視・保存した結果
   eng.dispose();
 });
 
-test('画面のスレッドで回す探索 (createModelEngine): 本体が「準備中」ならエラー、作り物の本体なら同じ形で返す', async () => {
+test('画面のスレッドで回す探索 (createModelEngine): 本物の search.js / recommend.js で回る。作り物の本体でも同じ形で返す', async () => {
   const f = jobFor();
-  // 本物の search.js (いまは置き場で「準備中」の例外)
+  // 本物の search.js (段階 2 の入力。軽くするためビームを狭く・仕事量の予算で)
   const real = [];
-  const e1 = C.createModelEngine((m) => real.push(m), { getData: () => C.searchData(core) });
-  await e1.handle({ type: 'start', id: 'a', job: f.job });
-  assert.equal(real.at(-1).type, 'error');
-  assert.match(real.at(-1).message, /準備中/);
+  const e1 = C.createModelEngine((m) => real.push(m), { getData: () => C.searchData(core), sliceMs: 50 });
+  const light = { ...f.job, input: { ...f.job.input, beam: [10, 30], budget: { work: 500 } } };
+  await e1.handle({ type: 'start', id: 'a', job: light });
+  for (let i = 0; i < 600 && !real.some((m) => m.type === 'done' || m.type === 'error'); i++) await new Promise((r) => setTimeout(r, 10));
+  const last = real.at(-1);
+  assert.equal(last.type, 'done', JSON.stringify(last).slice(0, 300));
+  assert.ok(last.result.results.length > 0);
+  assert.ok(real.some((m) => m.type === 'ready'));
   e1.dispose();
 
   // createSearch と同じ形の作り物 (step を 3 回で終わり。2 回目で途中の結果)
@@ -645,7 +718,7 @@ test('画面のスレッドで回す探索 (createModelEngine): 本体が「準�
   await new Promise((r) => setTimeout(r, 30));
   assert.deepEqual(msgs.map((m) => m.type).filter((t) => t !== 'progress'), ['ready', 'partial', 'done']);
   assert.equal(msgs.at(-1).id, 'b');
-  // plan の Job は recommend.js の createPlanRunner が無ければエラー
+  // plan の Job は recommend.js の createPlanRunner が無ければエラー (差し替えた作り物の recommend に無い)
   await e2.handle({ type: 'start', id: 'c', job: { kind: 'plan', runs: [], K: 10 } });
   assert.match(msgs.at(-1).message, /準備中/);
   e2.dispose();

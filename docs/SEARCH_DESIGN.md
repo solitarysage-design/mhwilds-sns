@@ -9,6 +9,8 @@
   「search.js と search/」節。
 - **実装 (2026-10-21・9 章の 2b)**: B3 の 2 段のふるい・シリーズ/グループの必須の部位の割り当て・damage.js の因子分解の合計・
   歴戦王の γ の印・上界の前提が崩れる入力の警告・Worker の plan は 11 章。段階 3 のつなぎ目 (`docs/RECOMMEND_DESIGN.md` 5.4・5.5 節) は 3.7 節。
+- **まとめ (2026-10-21・`docs/RECOMMEND_DESIGN.md` 7 章の 3f)**: 本物の Worker と相手に合わせたおすすめ (`createPlanRunner`) をつないだ。
+  ほかの重い処理が無い状態で測った値 (B1〜B5・S1〜S3・WebKit) と、予算の既定・iPhone の見込みは 5.3 節。
 
 ---
 
@@ -71,7 +73,7 @@ B1 = Game8 の構成の武器 (破滅のキリエヴェルド 属性激化・火
 
 **計算し直し (試作のコードを使わない照合)**: B&B と整数計画の B1 の上位 3 件を装備一式 (防具・護石・珠の位置) に書き出し、
 リポの `computeBuild` + `comboExpected` + `equip_logic.autoSharpness` だけで計算し直した。相対差は最大 1.5e-14、`errors` は 0 件。
-(照合のスクリプトは `<scratchpad>/solver-review/verify_builds.mjs`。`<scratchpad>` は 7 章の場所)
+(照合のスクリプトは試作と一緒にリポの外で使ったもので、持ち込んでいない。7 章)
 
 **評価器の速さ (同じ入力)**: B1 の関係スキル 38 個からランダムに作った 300 組を、3 方式の評価器と `comboExpected` で計算した。
 
@@ -450,7 +452,8 @@ Worker のメッセージ (5.5 節の追加。3.5 節の表に足すもの):
 
 - plan は `recommend.createPlanRunner(job, data, {createSearch, optimizeWeaponSide})` で回す。`data` は Worker が読んだ core のデータ
   (生データ 10 個 + `index`)。Worker は相手のデータ (monsters.json など) を読まない (肉質・体力・重み・γ の印は Job に入っている)。
-- recommend.js の本物とつなぐのは 3f。5.3 節の形の作り物で、メッセージの順 (progress の run → partial → done)・extend・cancel・
+- recommend.js の本物とは 3f でつないだ (2026-10-21。`tests/search_worker.test.mjs` が S1z の Job を Worker で回す)。それより前に、
+  5.3 節の形の作り物で、メッセージの順 (progress の run → partial → done)・extend・cancel・
   作れないときの error を確かめた (`tests/search_worker_plan.test.mjs`)。
 
 ---
@@ -481,7 +484,8 @@ Worker のメッセージ (5.5 節の追加。3.5 節の表に足すもの):
    「歴戦王の素材が要る」の印を付け、`armorExclude` で外せるようにする (本人が狩れていない歴戦王の防具を勧めないため)。
    → (済 2026-10-21 2b) `gammaIndexOf(targetData)` (search.js) が印の表を作る (γ 防具 25 個・狩猟証γ の護石 10 個)。`input.gamma` に
    渡すと結果に印が付く。外すときは `armorExclude` と `charms.fixedExclude`。ヌシの魂の防具は全部 γ なので、全部外してヌシの魂を
-   必須にすると `infeasible` (理由に「使わない防具」)。recommend.js の `gammaIndex` と同じ形 (3f でどちらかにまとめる)。
+   必須にすると `infeasible` (理由に「使わない防具」)。recommend.js の `gammaIndex` と同じ形。
+   → (3f) 表を作るのは hunt.js の `gammaIndex` の 1 か所にした (search.js の `gammaIndexOf` はそれを返す)。
 5. **珠の所持数**: いまは「全部持っている」前提 (依頼どおり)。入力の形 (`decorations.owned`) だけ先に決めておく。個数の上限を
    入れるときは、葉の珠詰めに個数の上限を足し、珠で埋める見方の優越 (2.2 節の 3) を切る (整数計画の試作が同じ扱い)。
 6. **上界の前提が崩れる入力**: 鈍器使い + 匠 (斬れ味が上がると鈍器使いの倍率が消える)、同時に起きない条件の発動率の合計が 100% 超え。
@@ -504,6 +508,8 @@ Worker のメッセージ (5.5 節の追加。3.5 節の表に足すもの):
 | iPhone 実機 (本人に 1 回だけ頼む) | B1 | `done` ≤ 10 秒・`partial` ≤ 3 秒 |
 | 値 (fast・仕事量の予算) | B1 / B2 / B3 / B5 | 上位 1 件が基準より 0.3% 以内。上位 10 件の各順位が基準より 2% 以内 |
 | メモリ (Node のヒープの増え) | B1 / B2 / B5 / B3 | 200MB / 300MB 以下 (試作は B1 138MB・B3 323MB。覚えの上限を付けて下げる) |
+| Node (相手に合わせて探す。`docs/RECOMMEND_DESIGN.md` 6.4 節) | S1 / S2 | `done` ≤ 3 秒 (1 体) / ≤ 6 秒 (多頭) |
+| WebKit (同上) | S1 / S2 | 測って iPhone の見込みを出す (5.3 節) |
 
 基準 (いま分かっている最良。証明は無い):
 
@@ -526,6 +532,82 @@ Worker のメッセージ (5.5 節の追加。3.5 節の表に足すもの):
 - WebKit: `tools/bench_search_webkit.py` (Playwright の WebKit で `app/search_worker.js` を動かす。整数計画の試作の
   `web/serve_run.py` と `web/worker.mjs` を流用)。
 - iPhone 実機: 設定タブ (か探索の画面の「くわしく」) に、最後の探索の段階ごとの時刻を出しておき、本人に B1 の条件で 1 回見てもらう。
+- 相手に合わせて探す (S1〜S3): `node --expose-gc tools/bench_search.mjs --plans [--ms 2500]` (`tests/search_cases.mjs` の `makePlanCases` が
+  画面と同じ `buildPlan` → `planToJob` で Job を作り、Worker と同じ `createPlanRunner(job, data, {createSearch, optimizeWeaponSide})` で回す。
+  `--ms` は Job 全体の時間の予算)。WebKit は `tools/bench_search_webkit.py --cases S1,S2` (Job を Worker に送る)。
+
+### 5.3 測った値 (2026-10-21・まとめ 3f)
+
+**条件**: 2026-10-21 の 23:16〜23:21、この PC (論理 22 コア)。ほかの担当の作業は終わっていて、動いていたのはこのリポと関係の無い
+待ち受けだけ (node 3 個・python 1 個。測る前の CPU は全コア平均 6%)。ベンチの間の CPU は全コア平均 14〜22% (ベンチ自身の
+node・GC を含む)。Node v24.13.1・1 スレッド・毎回新しいプロセス・3 回の中央値。WebKit は Playwright の WebKit (Windows 版) の
+Worker・3 回の中央値 (メモリは測れない)。
+
+**Node・探索 1 回** (時間の予算 2.5 秒。値の列は仕事量の予算 60,000 でも同じ):
+
+| ケース | partial | done | 1 位 | 基準との差 (1 位 / 順位ごとの最大) | ヒープの増え (最大 / 残る) | 目標 (5.1 節) |
+|---|---|---|---|---|---|---|
+| B1 | 618ms | 2,601ms | 920.641 | 0.018% / 0.97% | 167MB / 35MB | 達成 |
+| B2 | 686ms | 2,562ms | 864.036 | 0.23% / 0.82% | 129MB / 34MB | 達成 |
+| B5 | 849ms | 2,732ms | 927.686 | 0% / 1.15% | 155MB / 24MB | 達成 |
+| B3 (2 段) | 1,907ms | 2,985ms | 1102.952 | 0% / 0.06% | 174MB / 65MB | 達成 |
+| B4 | 最初の 1 件 23ms | 27ms | — | — | 4MB | 達成 |
+| B4x | — | 8ms (infeasible) | — | — | 2MB | 達成 |
+| B1z / B5z / B3z (仮置き 0%) | 105 / 107 / 399ms | 313 / 341 / 846ms (B&B を最後まで) | 563.901 / 563.299 / 693.985 | — | 10 / 12 / 50MB | — |
+
+- 2b (11.3 節) と同じ値・ほぼ同じ時間。基準 (`tests/fixtures/search_ref.json`) は、`skill_effects.json` に `rules.resistSkills` (火力には
+  使わない) が入ってハッシュが変わったので作り直した (`--make-ref`。23:22〜23:29)。1 位はどれも同じ、上位 10 件は B1・B5 が前と同じで、
+  B2 と B3 は 2 位などに前より良い組が入った (B2 の 2 位 860.320・B3 の 2 位 1101.900)。基準との差の列は新しい基準で計算した値。
+
+**Node・相手に合わせて探す** (S1〜S3。Job 全体の予算 = 計算した時間。予算 2.5 秒と画面の既定 6 秒):
+
+| ケース | Job の中身 | 予算 2.5 秒: partial / done | 予算 6 秒: partial / done | 1 位 | ヒープの増え (6 秒・最大 / 残る) |
+|---|---|---|---|---|---|
+| S1 (ヌ・エグドラの歴戦王・いまの武器・仮置き 50%) | 探索 2 回 (属性やられ) + 火力の差 | 568 / 2,531ms | 542 / 4,570ms | 1493.905 | 178MB / 83MB |
+| S1z (同・仮置き 0%) | 同上 | 92 / 1,254ms (最後まで) | 90 / 1,208ms (最後まで) | 948.591 | 27MB / 5MB |
+| S2 (『英雄の証』・おすすめの属性 23 本・武器 2 本・50%) | 探索 2 回 + 武器 2 本の合わせ (5 組) + 火力の差 | 1,279 / 4,353ms | 1,196 / 5,938ms | 全部倒すまで 136.2 回 (T) | 203MB / 104MB |
+| S2z (同・0%) | 同上 | 266 / 1,606ms (最後まで) | 269 / 1,678ms (最後まで) | 203.4 回 | 73MB / 18MB |
+| S3 (『閃電猛りて、その粋やよし！』・15 本・武器 1 本・50%) | 探索 2 回 + 火力の差 | 1,453 / 4,172ms | 1,471 / 4,990ms | 41.0 回 | 170MB / 74MB |
+| S3z (同・0%) | 同上 | 174 / 833ms (最後まで) | 174 / 812ms (最後まで) | 64.8 回 | 45MB / 10MB |
+
+- `docs/RECOMMEND_DESIGN.md` 6.4 節の目標 (S1 で Node 3 秒・S2 で 6 秒) は予算 2.5 秒で達成 (S1 2.5 秒・S2 4.4 秒)。画面の既定 6 秒でも
+  S1 4.6 秒・S2 5.9 秒。仮置き 0% (探すタブの既定) では 3 つとも予算より前に最後まで探し終える (0.8〜1.7 秒)。
+- 予算で切れない段の時間 (S2・6 秒): 火力の差の回 (途中の結果まで) 869ms・武器 2 本の合わせ 471ms (5 組 × 2 本。1 組 約 47ms)・
+  まとめ 194ms。S2z は合わせ 115ms。
+- 守りのスキルの火力の差: S1 火力 −4.4%、S2 回数の差 −6.5% (守りなしの T ÷ 守りありの T − 1)、S3 −1.0%。仮置き 0% では 3 つとも 0。
+- 武器 2 本の案: S2 は 1 本で通すより 0.2 回 (仮置き 0% では 1.3 回) 少ない。上位 5 件が全部 2 本の案。
+- 全部の結果が守り (S1・S2 は環境適応 Lv2 と属性やられ、S3 は雷属性やられ) を満たす。
+
+**WebKit** (`tools/bench_search_webkit.py --ms 6000`。画面の既定の予算 6 秒):
+
+| ケース | データを読むまで | partial | done | 1 位 |
+|---|---|---|---|---|
+| B1 | 48ms | 1,158ms | 6,168ms | 920.641 |
+| B3 (2 段) | 48ms | 2,355ms | 6,687ms | 1102.952 |
+| S1 | 50ms | 669ms | 5,030ms | 1493.905 |
+| S1z | 53ms | 182ms | 1,458ms (最後まで) | 948.591 |
+| S2 | 49ms | 1,430ms | 6,437ms | 136.2 回 |
+| S2z | 51ms | 315ms | 2,050ms (最後まで) | 203.4 回 |
+
+**予算の既定と iPhone の見込み** (実機は未計測。WebKit の Windows 版より 2〜3 倍遅いと見る。8 章):
+
+- 予算は「計算した時間の合計」(`budget.activeMs`) で数える (画面の `budgetOf`。iPhone で裏に回っていた時間を数えない)。予算で切れるのは
+  B&B の続き (dfs) だけで、その前の段 (下ごしらえ・候補を絞る・仕上げ 1) と、相手に合わせるときの合わせ・火力の差の回 (途中の結果まで) は
+  端末の速さに比例して延びる。
+- 相手に合わせる Job に火力の差の回か武器 2 本の合わせがあるときは、探索の回に予算の 6 割だけを使う (`recommend.js` の `RUN_SHARE`。
+  残りは予算で切れない段の分)。武器 2 本の合わせは計算し直しを省き (`check: false`)、下ごしらえを回ごとに使い回すようにした
+  (S2・予算 2.5 秒の 1 回ずつで 1,002ms → 412ms。上の表の 3 回の中央値では 560ms (予算 2.5 秒) / 471ms (6 秒))。
+- 見込み (WebKit の値 × 2〜3。予算で切れる分はそのまま):
+  - 探すタブの既定 (仮置きの発動率 0%・予算 6 秒): B1z・B3z・S1z・S2z・S3z は予算より前に終わる (WebKit 0.4〜2.1 秒) ので、
+    iPhone で 1〜6 秒。途中の結果は 0.3〜1 秒。**10 秒に収まる見込み**。
+  - 「火力タブの値で探す」(仮置き 50% のまま): B1 は 6.5〜7 秒・B3 は 7〜9 秒・S1 は 5.5〜7 秒の見込み (予算 6 秒 + 予算で切れない段)。
+    **S2 (多頭・武器 2 本) は 8〜13 秒で、10 秒をこえることがある見込み** (探索の回の dfs の前の段が 1 回 1.8〜3.6 秒で予算の 1.8 秒
+    (6 秒 × 0.6 ÷ 2 回) をこえることがあり、火力の差の回 2〜3.5 秒・合わせ 1〜1.5 秒・まとめ 0.5 秒が足される)。途中の結果は 3〜4.5 秒で先に出る。
+- 画面の出し方: 途中の結果 (1 回目の仕上げ 1 のあと) を先に出し、終わって上位が変わったら「もっと良い組が見つかりました」と差し替える。
+  「この条件で探す」の下の時間の目安は、片手剣すべてから探すときと、仮置きを火力タブの値のまま相手に合わせて探すときに
+  「もっとかかることがあります」と出す (`search_form.js` の `startHintText`)。予算の既定は 6 秒のまま (3 秒を選べば S2 も 10 秒に近づく見込み)。
+- iPhone 実機で本人に 1 回見てもらう: B1 (partial ≤ 3 秒・done ≤ 10 秒) と、相手タブの「この相手で装備を探す」(S1 の条件)。
+  探すタブの結果の「くわしく」に、この端末で探した時間 (最近 5 回・段階ごと) が出る (`search-timing`)。
 
 ---
 
@@ -579,31 +661,31 @@ Worker のメッセージ (5.5 節の追加。3.5 節の表に足すもの):
 
 ---
 
-## 7. 試作から持ち込むもの
+## 7. 試作から持ち込んだもの (2026-10-21 済み)
 
-`<scratchpad>` = 試作を置いた作業用の一時フォルダ (リポの外。消える前に持ち込む)。
-試作はリポを絶対パスと `node:fs` / `node:url` で読んでいるので、相対パスの import に直し、データは引数で受け取る形にする。
+3 方式の試作はリポの外で作った。採用した B&B の試作を中心に、次の表の「持ち込んだ先」へ移した (試作のファイルはもう使わない)。
+試作はリポを絶対パスと `node:fs` / `node:url` で読んでいたので、相対パスの import に直し、データは引数で受け取る形にした。
 
-| 試作のファイル | 持ち込み先 | 直すこと |
+| 試作 (方式・中身) | 持ち込んだ先 | 直したこと |
 |---|---|---|
-| `<scratchpad>/solver-bnb/lib/evaluator.mjs` | `app/model/search/evaluator.js` | import を `../damage.js` に |
-| `<scratchpad>/solver-bnb/lib/problem.mjs` | `app/model/search/problem.js` | `loadData` (node:fs) はテスト側へ。`equip_logic` の関数は `../weapon.js` から (4 章の 1)。武器の支配除去を足す |
-| `<scratchpad>/solver-bnb/lib/solver.mjs` | `app/model/search/solver.js` | 段階の順番を 2.5 節に。シリーズ/グループの必須 (2.8 節)。覚えの上限 |
-| `<scratchpad>/solver-bnb/lib/verify.mjs` | `app/model/search/realize.js` | `alternatives`・`freeSlots`・計算し直しを結果に入れる |
-| `<scratchpad>/solver-bnb/worker_sketch.js` | `app/search_worker.js` | 3.5 節のメッセージ・データの fetch |
-| `<scratchpad>/solver-bnb/lib/bench_cases.mjs` | `tests/search_cases.mjs` | B1〜B5 の定義 (B2 = 耐震3・風圧耐性3・回避性能2) |
-| `<scratchpad>/solver-bnb/bench.mjs` | `tools/bench_search.mjs` | 5.2 節の項目・基準との差 |
-| `<scratchpad>/solver-bnb/test_eval.mjs` + `<scratchpad>/solver-target/check_fasteval.mjs` | `tests/search_eval.test.mjs` | 6.1 節 |
-| `<scratchpad>/solver-bnb/brute.mjs` + `<scratchpad>/solver-target/brute.mjs` | `tests/search_small.test.mjs` | 6.2 節の独立の総当たり (目標列挙の brute は実現判定を使わない別の道で解いている) |
-| `<scratchpad>/solver-ilp/src/core/problem.mjs` の武器の支配 (`wDom`) | `app/model/search/problem.js` | B3 |
-| `<scratchpad>/solver-ilp/src/t_monotone.mjs` | `tests/search_api.test.mjs` | 6.4 節 |
-| `<scratchpad>/solver-ilp/web/` (`index.html` / `worker.mjs` / `serve_run.py`) | `tools/bench_search_webkit.py` | 5.2 節 |
-| `<scratchpad>/solver-target/oracle.mjs` (部位の割り当て) | 参考 | 2.8 節のシリーズ/グループの必須 |
-| `<scratchpad>/solver-target/solver3.mjs` の `countBuilds` | 後で (2c) | 泣シミュ型の件数 |
-| `<scratchpad>/solver-ilp/results/ref_*.json`・`<scratchpad>/solver-bnb/ref_B*.txt` | `tests/fixtures/search_ref.json` の材料 | 基準値 (5.1 節) |
-| `<scratchpad>/solver-review/verify_builds.mjs`・`eval_speed.mjs` | 参考 | この比較で使った照合・速さの測り方 |
+| B&B の評価器 | `app/model/search/evaluator.js` | import を `../damage.js` に。速くする 2 つ (10.1 節) |
+| B&B の下ごしらえ | `app/model/search/problem.js` | データの読み込み (`node:fs`) はテスト側 (`tests/search_cases.mjs` の `loadRepoData`) へ。`equip_logic` の関数は `../weapon.js` から (4 章の 1)。武器の支配除去を足した |
+| B&B の探索 | `app/model/search/solver.js` | 段階の順番を 2.5 節に。シリーズ/グループの必須 (2.8 節)。覚えの上限 |
+| B&B の照合 | `app/model/search/realize.js` | `alternatives`・`freeSlots`・計算し直しを結果に入れた |
+| B&B の Worker の下書き | `app/search_worker.js` | 3.5 節のメッセージ・データの fetch・plan の Job (3.7 節) |
+| B&B のベンチの条件 | `tests/search_cases.mjs` | B1〜B5 の定義 (B2 = 耐震3・風圧耐性3・回避性能2)。S1〜S3 (`makePlanCases`。5.3 節) は 3f で足した |
+| B&B のベンチ | `tools/bench_search.mjs` | 5.2 節の項目・基準との差。`--plans` (S1〜S3) は 3f で足した |
+| B&B と目標列挙の評価器の照合 | `tests/search_eval.test.mjs` | 6.1 節 |
+| B&B と目標列挙の総当たり | `tests/search_small.test.mjs` | 6.2 節の独立の総当たり (目標列挙の総当たりは実現判定を使わない別の道で解いている) |
+| 整数計画の武器の支配 (`wDom`) | `app/model/search/problem.js` | B3 |
+| 整数計画の単調性の確かめ | `tests/search_api.test.mjs` | 6.4 節 |
+| 整数計画の WebKit のページ | `tools/bench_search_webkit.py` | 5.2 節。S1〜S3 も測れるようにした (3f) |
+| 目標列挙の部位の割り当て | 参考にして書き直した (`solver.js` の `setGroupFeasible` / `sgAssign`) | 2.8 節のシリーズ/グループの必須 (11.1 節) |
+| 目標列挙の件数の数え上げ | 持ち込んでいない (2c) | 泣シミュ型の件数 |
+| 3 方式の基準値 | `tests/fixtures/search_ref.json` の材料 | 基準値 (5.1 節) |
+| 比べたときの照合・速さの測り方 | 持ち込んでいない (参考) | 1 章の照合 |
 
-持ち込まないもの: HiGHS (npm `highs`) と整数計画の本体、目標列挙の探索本体 (`solver3.mjs` の best-first と発見的探索)、
+持ち込まないもの: HiGHS (npm `highs`) と整数計画の本体、目標列挙の探索本体 (best-first と発見的探索)、
 3 つの評価器のうち B&B 以外の 2 つ (速さが 4〜50 倍違う。どれも値は同じ)。
 
 ---
@@ -644,7 +726,7 @@ Worker のメッセージ (5.5 節の追加。3.5 節の表に足すもの):
 
 ## 10. 実装の記録 (2026-10-21・2a-2〜2a-4)
 
-試作 (`<scratchpad>/solver-bnb` ほか) を 7 章の表どおりに持ち込んだ。数字は 2026-10-21 の 21〜22 時に、この PC で測った
+B&B の試作ほかを 7 章の表のとおりに持ち込んだ。数字は 2026-10-21 の 21〜22 時に、この PC で測った
 (ほかの担当の node / python が同時に動いていて、ベンチの間の CPU は全コア平均で 11〜21% が使われていた。時間は参考値)。
 
 ### 10.1 実装で決めたこと・設計と違えたこと
@@ -744,7 +826,7 @@ partial は `partial` のメッセージが届いた時刻で、計算し直し�
 - ビームの見落とし (B1 0.018%・B2 0.23%)。2.11 節の改善の候補は未検証。
 - 2b: B3 の 2 段 (いまは要らない速さ)・damage.js の `MAX_PATTERNS` の因子分解・歴戦王の防具の印。→ 済 (11 章)。
 - 2c: 泣シミュ型の件数・防御力の並び・珠の所持数の上限。
-- `optimizeWeaponSide` を使う `createPlanRunner` (`docs/RECOMMEND_DESIGN.md` 3c) とつなぐのは 3f。
+- `optimizeWeaponSide` を使う `createPlanRunner` (`docs/RECOMMEND_DESIGN.md` 3c) とつなぐのは 3f。→ 済み (5.3 節)。
   (2b で Worker の plan のメッセージは作り物の `createPlanRunner` で確かめた。11 章)
 
 ---
@@ -836,5 +918,6 @@ Worker の変異 (回が変わっても progress を送らない) は、はじ�
 - 2 段のふるいで外した武器に、ふるいの 50 組に無い防具の組でだけ勝つものがあると取りこぼす (外した武器は「続けて探す」で回る)。
   基準と比べて悪くなった所は無かった。
 - γ の印の表は search.js (`gammaIndexOf`)・recommend.js (`gammaIndex`)・探すタブ (`gammaInfo`) の 3 か所で作っている (形は同じ)。3f で 1 つにまとめる。
+  → 済み (hunt.js の `gammaIndex` / `archTemperedRewards`)。
 - 因子分解の合計のときは技ごとの内訳を出さない (設計どおり)。内訳も同じ畳み込みで出せるが、出すかは画面の担当と決める (未確定)。
 - 複数のシリーズ/グループから出る必須スキルは、前のゆるい判定のまま (いまのデータには無い)。

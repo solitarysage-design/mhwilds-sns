@@ -12,14 +12,17 @@ sw.js                   Service Worker (オフライン・更新検知)
 app/
   vendor/               preact / preact-hooks / htm を同梱 (CDN に依存しない)
   model/                計算の純粋関数 (DOM に触らない。node --test でテストする。Worker からも読むので import は相対パスだけ)
-    damage.js           ダメージ期待値
+    damage.js           ダメージ期待値 (条件のパターンが多すぎるときの因子分解の合計も)
     build.js            装備一式 → スキル合計 (シリーズ/グループ発動を含む)
     charms.js           護石の検証・泣シミュ形式の書き出し/読み込み
     weapon.js           武器の解決・斬れ味の自動 (段階 2 の前提で equip_logic.js から移した)
-    hunt.js             相手の体力・討伐までの回数・個体の肉質・クエストの選び方 (段階 3)
-    recommend.js        相手に合わせたおすすめ・多頭の重み・守りのチェック (段階 3)
-    search.js, search/  装備探索 (段階 2。evaluator / problem / solver / realize)
-  search_worker.js      装備探索の Web Worker (段階 2)
+    hunt.js             相手の体力・討伐までの回数・個体の肉質・クエストの選び方・歴戦王の γ の表 (段階 3)
+    recommend.js        相手に合わせたおすすめ (Plan → Job)・多頭の重みと T での並べ直し・武器 2 本・守りのチェック・
+                        探索を順に回す createPlanRunner (段階 3。探索の本体は引数で受ける)
+    search.js           装備探索の入口 (createSearch・optimizeWeaponSide・gammaIndexOf。段階 2)
+    search/             装備探索の中身: evaluator.js (速い評価器) / problem.js (下ごしらえ) / solver.js (ビーム・分枝限定) /
+                        realize.js (結果 → 装備一式・計算し直し)
+  search_worker.js      装備探索の Web Worker (job.kind 'search' = createSearch、'plan' = recommend.createPlanRunner)
   ui/                   画面 (Preact + htm)
   store.js              IndexedDB (キーは必ず "mhwilds-sns:" 接頭辞。同じ github.io オリジンに他のサイトがある)
   data.js               data/*.json の読み込み
@@ -422,10 +425,10 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
 ## 段階
 
 1. データ + 計算モデル + 装備からスキル表示 + 火力比較 + 護石一覧 (済み)
-2. 所持護石を使った装備探索 (←いまここ。設計は `docs/SEARCH_DESIGN.md`)
-3. モンスター別・多頭クエストの推奨 (←いまここ。設計は `docs/RECOMMEND_DESIGN.md`)
+2. 所持護石を使った装備探索 (済み 2026-10-21。設計は `docs/SEARCH_DESIGN.md`。iPhone 実機の時間は未計測)
+3. モンスター別・多頭クエストの推奨 (済み 2026-10-21。設計は `docs/RECOMMEND_DESIGN.md`。iPhone 実機の時間は未計測)
 
-### 段階 2・3 の置き場 (2026-10-21 土台を入れた)
+### 段階 2・3 の置き場 (2026-10-21 土台を入れ、同じ日に本物の Worker でつないだ)
 
 - 画面: 6 つ目のタブ「探す」(並び: 装備・火力・相手・探す・護石・設定)。状態は `state.search` と `state.target` の
   個体・クエスト・人数の項目 (`docs/UI_API.md`)。見た目は `app/ui/styles_search.css` / `styles_target.css`。
@@ -436,3 +439,9 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
 - データに足したもの: `skill_effects.json` の `rules.resistSkills` (済み 2026-10-21。上の skill_effects.json の節。`docs/RECOMMEND_DESIGN.md` 5.8 節)。
 - 段階 3 の流れ: 相手タブ・探すタブ → `recommend.buildPlan` (画面のスレッド。1ms 前後) → `planToJob` → Worker で
   `createPlanRunner(job, data, {createSearch, optimizeWeaponSide})` (属性やられがオンなら探索 2 回 + 守りの火力の差の 1 回) → 結果。
+  モンスターを選んでいないとき・「相手に合わせたおすすめを使う」がオフのときは、探すタブが段階 2 の入力 1 つ (`job.kind 'search'`) で探す
+  (`app/ui/tabs/search_form.js` の `buildJob`)。
+- 歴戦王の γ 防具・狩猟証γ の護石の表は `hunt.js` の `gammaIndex` / `archTemperedRewards` の 1 か所で作る (探索の `gammaIndexOf`・
+  おすすめの `gammaIndex` / `gammaExclusions`・探すタブの `gammaInfo` はどれもこれを使う)。
+- 時間の予算は「計算した時間の合計」(`budget.activeMs`) で数える (iPhone で裏に回っていた時間を数えない)。測った値と既定の予算の決め方は
+  `docs/SEARCH_DESIGN.md` 5 章。

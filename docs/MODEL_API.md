@@ -283,6 +283,8 @@ const hz = hitzoneFor(monster, 'head', 'arch-tempered', { useUncertain: state.ta
 | `attackView(quest, subjectIndex, td)` | 攻撃の強さ `{calm, angry, paramGroup, compareTo: {questId, name, stars, calm, angry} \| null, ratio: {calm, angry} \| null, confidence: 'low'}`。attackRate が無い (通常の個体) なら null |
 | `woundVitalOf(monster, group)` | 傷の付きにくさ `{normal, tear, temperedScar, confidence: 'low'}` (`legendaryParams[group].woundVital`)。群が null・欄が無ければ null |
 | `clampPlayers(n)` / `monsterById` / `questById` / `monstersOf` / `questsOf` | 人数を 1〜4 に / データの取り出し |
+| `archTemperedRewards(td)` | 歴戦王の報酬 (`individuals[].rewards`) の一覧 `[{monsterId, monster, name, armorIds, armorSets, charmFixedIds, certificate, groupSkills: [{skillId, name}]}]`。`td` は target データ・monsters.json 丸ごと・モンスターの配列のどれでもよい (2026-10-21 3f) |
+| `gammaIndex(td)` | γ の印の表 `{armor: {[armorId]: {monsterId, name}}, charmsFixed: {...}, monsters: archTemperedRewards の結果}`。探索の入力 `gamma` にそのまま渡せる。search.js の `gammaIndexOf`・recommend.js の `gammaIndex` / `gammaExclusions`・探すタブの `gammaInfo` はどれもこれを使う (表を作る所を 1 つにした。3f) |
 
 `hitzoneFor` の返り値 `{hitzone, wound, baseWound, overrideWound, woundSource, changed, sameAsBase, confidence, mark, note, dataNote}`:
 
@@ -328,7 +330,7 @@ const hz = hitzoneFor(monster, 'head', 'arch-tempered', { useUncertain: state.ta
 import { buildPlan, planToJob, createPlanRunner, rerankMulti, defenseCheck, resistTotals, jobKey,
          collectThreats, requirementsFrom, elementPlan, elementView, partsTargets, multiWeights, subjectHealths,
          gammaExclusions, gammaIndex, searchUptimes, evaluateBuild, defenseSkillChoices, stableHash,
-         PRESETS, PRESET_LABEL, DEFAULT_PRESET, ELEMENT_LABEL, DEFENSE_SKILL_NAMES, TWO_WEAPON_TOP,
+         PRESETS, PRESET_LABEL, DEFAULT_PRESET, ELEMENT_LABEL, DEFENSE_SKILL_NAMES, TWO_WEAPON_TOP, RUN_SHARE,
          DEFAULT_HITZONE, DEFAULT_HITZONE_TEXT } from './app/model/recommend.js';
 
 // 画面のスレッド (相手タブの「この相手のおすすめ」と探すタブ)。探索はしない (歴戦王・多頭で 1ms 前後)
@@ -414,15 +416,21 @@ const r = runner.result();   // r.results[] に score / perSubject / weapons / b
 - Job = `{kind: 'plan', runs: [{key, label, input}], costRun, merge: {mode: 'single'|'multi'|'twoWeapons', subjects, weights, alternatives, groups}, K, subjects: [{key, name, health, healthAssumed, healthBasis}], requirements, gamma, baseline, players, blocked, warnings, tryKey}`。
   - `runs[].input` は `createSearch` の入力 (`docs/SEARCH_DESIGN.md` 3.2 節)。`targets[]` は相手 × 部位の行で `group` = 相手の key、
     `weight` = 相手の重み × 部位の割合 (足して 1)。`required` = 自分で足した必須 + オンの要件 (同じスキルは Lv の大きい方)。
-    `charms.fixedExclude` (狩猟証γ の護石)・`armorExclude` (使わない防具 + γ 防具)・`current` (いまの装備。既定 `plan.inputs.currentBuild`。「いまより +x%」用)・`budget` (既定 `{ms: budgetMs / 回数}`。`opts.budget` を渡すとそのまま)。
+    `charms.fixedExclude` (狩猟証γ の護石)・`armorExclude` (使わない防具 + γ 防具)・`current` (いまの装備。既定 `plan.inputs.currentBuild`。「いまより +x%」用)・
+    `gamma` (γ の印の表 = `gammaIndex`。探索が同じ値の γ でない防具・護石を代表にする)・
+    `budget` (既定 `{activeMs: budgetMs × 割合 / 回数}`。割合は `costRun` か武器 2 本の合わせがあれば `RUN_SHARE` = 0.6 (残りは予算で切れない
+    合わせと火力の差の分)、無ければ 1。`opts.budget` を渡すとそのまま各回に)。
   - 属性やられがオン → `runs` は `blight-skill` (属性やられ耐性 Lv3) と `blight-resist` (各属性の耐性スキル Lv3) の 2 つ。オフなら `main` の 1 つ。
   - `costRun` = 守りの要件を外した探索 (`stopAfter: 'partial'`・自分で足した必須は残す)。守りの要件がオンのときだけ。
   - `tryKey` を渡すと「試す」用 (その行をオンにして全部 `stopAfter: 'partial'`・`costRun` なし・武器 2 本なし)。
   - 属性やられの行はあるが、防ぎ方 (`bySkill` / `byResist`) が行ごとにそろわない (データの欠け) ときは、必須にせず `main` の 1 回にして警告 `blight-not-required`。
   - `blocked` (相手のデータの読み込み中・装備固定) のときは `runs: []`。
-- `createPlanRunner(job, data, {createSearch, optimizeWeaponSide, now})`: `step(ms)` / `progress()` / `result()` / `cancel()` / `extend({ms})`。
+- `createPlanRunner(job, data, {createSearch, optimizeWeaponSide, now})`: `step(ms)` / `progress()` / `result()` / `cancel()` / `extend({ms} | {activeMs})`。
+  `data` は Worker の data (生データ + `index`)。索引には入力の `extraWeapons`・`charms.extra` (端末の所持アーティア・護石) を足して使う
+  (守りのチェック・いまの装備の値・相手ごとの値の計算し直し)。`extend` は `activeMs` (計算した時間) か `ms` (始めてからの時間) を回の数で分ける。
   `runs` を順に回し (`progress().run = {index, count, label, key}`、`phase` は探索の段か `'merge'` / `'twoWeapons'` / `'cost'` / `'done'`)、
-  合わせる → 武器 2 本 (上位 `TWO_WEAPON_TOP` = 5 件の防具の組に、その回の候補の武器から 2 本目と 1 本目を `optimizeWeaponSide` で選び直す) → `costRun`。
+  合わせる → 武器 2 本 (上位 `TWO_WEAPON_TOP` = 5 件の防具の組に、その回の候補の武器から 2 本目と 1 本目を `optimizeWeaponSide` で選び直す。
+  計算し直しは省き (`check: false`)、同じ回の入力の物を使い回して下ごしらえを 1 回にする) → `costRun`。
   `partialReady` は 1 回目の探索の途中の結果 (仕上げ 1) が出たとき。`extend` は終わった回 (満たせなかった回を除く) を延長してもう一度合わせる。
   武器 2 本の案では `extend` が「2 本目の武器で倒す相手だけ」を見た回 (`two-focus:<相手の key>`。重み = いまの最良の組での H_i / D_i²・部位の割合はそのまま) を 1 つ足し、
   その回の上位も 2 本の合わせにかける (`docs/RECOMMEND_DESIGN.md` 3.3 節の 4。前の組も残るので、良くなったときだけ上位が入れ替わる)。
@@ -442,7 +450,7 @@ const r = runner.result();   // r.results[] に score / perSubject / weapons / b
 - `resistTotals(build, index, effects)` → `{fire, water, thunder, ice, dragon}` = 防具 5 部位の `resist` の和 + 耐性スキル (`rules.resistSkills`)。
   限界突破で耐性は変わらないものとして計算する (分からない)。
 - `gammaExclusions(targetData, archTemperedHunted)` → `{armor, charmsFixed, labels: [{monsterId, name, hunted, armorSets, armorIds, charmFixedIds, certificate, groupSkills}], notes}`。
-  `gammaIndex(targetData)` → `{armor: {id: {monsterId, name}}, charmsFixed: {...}}`。
+  `gammaIndex(targetData)` → `{armor: {id: {monsterId, name}}, charmsFixed: {...}, monsters}` (hunt.js の `gammaIndex` をそのまま出している。下の hunt.js の追記)。
 - `jobKey(job, {dataVersion})` = Job の入力 (予算を除く) の 16 桁のハッシュ。
 
 ## search.js と search/ (段階 2。担当: solver)
@@ -525,7 +533,8 @@ search.extend({ ms: 6000 });       // 続けて探す (B&B の続き + 仕上げ
 import { gammaIndexOf } from './app/model/search.js';
 const gamma = gammaIndexOf(targetData);  // data.js の target データ / monsters.json 丸ごと / monsters の配列
 // gamma = {armor: {[armorId]: {monsterId, name}}, charmsFixed: {[charmId]: {monsterId, name}},
-//          monsters: [{monsterId, name: 'アルシュベルド（歴戦王）', certificate, armorIds, charmFixedIds, groupSkills}]}
+//          monsters: [{monsterId, monster, name: 'アルシュベルド（歴戦王）', armorIds, armorSets, charmFixedIds, certificate, groupSkills}]}
+// (表を作るのは hunt.js の gammaIndex。gammaIndexOf はそれをそのまま返す。3f でまとめた)
 // 倒していない歴戦王の分を外す: input.armorExclude に monsters[i].armorIds、input.charms.fixedExclude に monsters[i].charmFixedIds
 ```
 
@@ -559,12 +568,15 @@ Worker のメッセージ (`app/search_worker.js`。`docs/SEARCH_DESIGN.md` 3.5 
 
 | 向き | type | 中身 |
 |---|---|---|
-| 画面 → Worker | `start` | `{id, job}` (`job = {kind: 'search', input}` か `{kind: 'plan', runs, merge, K}`)。`{id, input}` だけでもよい (= search) |
+| 画面 → Worker | `start` | `{id, job}` (`job = {kind: 'search', input}` か planToJob の Job `{kind: 'plan', runs, costRun, merge, K, subjects, requirements, gamma, baseline, ...}`)。`{id, input}` だけでもよい (= search) |
 | 画面 → Worker | `cancel` / `extend` | `{id}` / `{id, budget}` |
 | Worker → 画面 | `ready` | 作られたらすぐ data/*.json を読み、索引を作り終えたら 1 回 (以後の探索で使い回す) |
 | Worker → 画面 | `progress` | `{id, phase, elapsedMs, best: [値...], run?}` (段階か plan の回 `run.index` が変わったときと 0.5 秒ごと) |
 | Worker → 画面 | `partial` / `done` | `{id, result}`。同じ区切りで終わったら partial は送らず done だけ。cancel の後も done (status `cancelled`)。続ける所の無い extend には今の結果で done をもう一度 |
-| Worker → 画面 | `error` | `{id, message}` (データを読めない・入力の誤り・plan がまだ無い) |
+| Worker → 画面 | `error` | `{id, message}` (データを読めない・入力の誤り・知らない探し方) |
+
+- `job.kind: 'plan'` は本物の `recommend.createPlanRunner(job, data, {createSearch, optimizeWeaponSide})` で回す (2026-10-21 3f でつないだ。
+  `tests/search_worker.test.mjs` が S1z の Job を Worker で回して確かめる)。
 
 - 80ms ごとに `setTimeout(0)` で手を離して cancel を受ける。新しい `start` が来たら前の探索は捨てる (前の id のメッセージはもう来ない)。
 - `job.kind === 'plan'` は `recommend.createPlanRunner(job, data, {createSearch, optimizeWeaponSide})` を呼ぶ (recommend.js に無ければ

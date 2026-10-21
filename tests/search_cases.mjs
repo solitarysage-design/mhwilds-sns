@@ -9,12 +9,20 @@
 // B4 = 泣シミュ型 (攻撃3・見切り3・超会心3・弱点特効5・挑戦者5・渾身3 を満たす構成)。B4x = 満たせない必須 (攻撃5・見切り5・弱点特効5・超会心5)
 // B5 = B1 の相手を 頭 6 割・左翼 4 割
 // B1z・B3z・B5z = 仮置きの発動率を 0% にしたもの (探すタブの既定の条件)
+//
+// S1〜S3 = 相手に合わせて探す (recommend.js の buildPlan → planToJob の Job。docs/RECOMMEND_DESIGN.md 6.4 節。makePlanCases):
+// S1 = ヌ・エグドラの歴戦王・『黒き揺り篭の吾子』・B1 の武器 (いまの武器)・バランス (環境適応 Lv2 + 火属性やられ → 探索 2 回 + 火力の差)
+// S2 = 『英雄の証』(歴戦王 4 体)・おすすめの属性の武器・武器 2 本
+// S3 = 『閃電猛りて、その粋やよし！』(ラギアクルスとレ・ダウの歴戦の個体)・武器 1 本
+// 発動率は B1 と同じ (仮置き 50% のまま)。S1z・S2z・S3z は仮置きを 0% にしたもの (探すタブの既定)
+import { indexEquipData } from '../app/model/build.js';
 
 /** 読むデータのファイル (data.js の core と同じ名前 + 相手のデータ) */
 export const CASE_DATA_FILES = {
   skills: 'skills.json', armor: 'armor.json', weapons: 'weapons_sns.json', decorations: 'decorations.json',
   bonuses: 'bonuses.json', charmsFixed: 'charms_fixed.json', charms: 'charms.json', myWeapons: 'my_weapons.json',
   skillEffects: 'skill_effects.json', motions: 'motions_sns.json', combos: 'combos_sns.json', monsters: 'monsters.json',
+  quests: 'quests.json', threats: 'monster_threats.json',
 };
 
 /** 基準値 (tests/fixtures/search_ref.json) のハッシュに入れるファイル (docs/SEARCH_DESIGN.md 5.2 節) */
@@ -100,6 +108,69 @@ export function makeCases(raw) {
 
 /** createSearch に渡す data (data.js の core と同じ形: 生データ + skillEffects / motions。索引は createSearch が作る) */
 export function searchDataOf(raw) {
-  const { monsters, combos, ...core } = raw;
+  const { monsters, combos, quests, threats, ...core } = raw;
   return core;
+}
+
+/** 相手に合わせて探すケース (S1〜S3) の決まり。target は state.target、search は state.search の差分 */
+const PLAN_CASES = {
+  S1: { monster: 'ヌ・エグドラ', individual: 'arch-tempered', quest: '黒き揺り篭の吾子', search: { weaponMode: 'current', twoWeapons: 'auto' } },
+  S2: { quest: '英雄の証', search: { weaponMode: 'auto', twoWeapons: 'auto' } },
+  S3: { quest: '閃電猛りて、その粋やよし！', search: { weaponMode: 'auto', twoWeapons: 'off' } },
+};
+
+/**
+ * S1〜S3 (と仮置き 0% の S1z〜S3z) の Plan と Job を作る (画面と同じ buildPlan → planToJob)。
+ * いまの装備 = B1 の武器 (手入力の巨戟アーティア) だけ。限界突破は全部位 (B1 と同じ)。
+ * @param raw loadRepoData() の結果 (quests・threats も入ったもの)
+ * @param opts {budgetMs (Job 全体の時間の予算。回の数で分ける), budget ({work} などをそのまま各回に), K}
+ * recommend.js は呼ばれたときに読む (tests/search_worker_plan.test.mjs が recommend.js を作り物に差し替えるため、先に読まない)。
+ * @returns {Promise<{jobs: {S1, S1z, ...}, plans, data (createPlanRunner に渡す data。索引にアーティアも入れる), index, artian}>}
+ */
+export async function makePlanCases(raw, { budgetMs = 2500, budget = null, K = 10 } = {}) {
+  const { buildPlan, planToJob } = await import('../app/model/recommend.js');
+  const { artian } = makeCases(raw);
+  const index = indexEquipData({
+    skills: raw.skills, decorations: raw.decorations, bonuses: raw.bonuses, armor: raw.armor, weapons: raw.weapons,
+    myWeapons: [...listOf(raw.myWeapons, 'weapons'), artian], charms: raw.charms, charmsFixed: raw.charmsFixed,
+  });
+  const td = { monsters: raw.monsters, quests: raw.quests, threats: raw.threats };
+  const quests = listOf(raw.quests, 'quests');
+  const monsters = listOf(raw.monsters, 'monsters');
+  const parts = ['head', 'chest', 'arms', 'waist', 'legs'];
+  const build = {
+    weapon: artian.id, armor: Object.fromEntries(parts.map((p) => [p, null])), charm: null, decorations: {},
+    limitBreak: Object.fromEntries(parts.map((p) => [p, true])),
+  };
+  const jobs = {};
+  const plans = {};
+  for (const [name, c] of Object.entries(PLAN_CASES)) {
+    const q = quests.find((x) => x.name === c.quest);
+    if (!q) throw new Error(`quests.json に『${c.quest}』が無い`);
+    const first = q.mission && q.mission.targets ? q.mission.targets.find((t) => t.monsterId != null) : null;
+    const m = c.monster ? monsters.find((x) => x.name === c.monster) : monsters.find((x) => x.id === first.monsterId);
+    const target = {
+      mode: 'monster', monsterId: m.id, partKey: null, isWound: false, questId: q.id,
+      individual: c.individual !== undefined ? c.individual : (first ? first.variant ?? null : null), questTargetIndex: 0, players: 1,
+      useUncertainWound: false,
+    };
+    for (const [suffix, placeholders] of [['', 'keep'], ['z', 'zero']]) {
+      const search = {
+        useTarget: true, preset: 'balance', toggles: {}, levels: {}, required: [], partsPolicy: 'asSelected',
+        charms: { owned: true, local: true, fixed: true }, limitBreak: 'all', archTemperedHunted: {}, armorExclude: [],
+        placeholders, budgetSec: budgetMs / 1000, K, ...c.search,
+      };
+      const plan = buildPlan({
+        target, tabTarget: {}, search, targetData: td,
+        core: { index, skillEffects: raw.skillEffects, motions: raw.motions, combos: raw.combos },
+        current: { build, combo: null, uptimes: {}, sharpness: null, extraWeapons: [artian] },
+      });
+      const job = planToJob(plan, {
+        K, budgetMs, ...(budget ? { budget } : {}), placeholders, userRequired: [], extraCharms: [], extraWeapons: [artian], current: build,
+      });
+      plans[name + suffix] = plan;
+      jobs[name + suffix] = job;
+    }
+  }
+  return { jobs, plans, data: { ...searchDataOf(raw), index }, index, artian };
 }

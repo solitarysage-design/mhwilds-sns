@@ -8,6 +8,7 @@ import { prepare } from './search/problem.js';
 import { BnbSolver } from './search/solver.js';
 import { makeEvaluator } from './search/evaluator.js';
 import { realizeEntry, checkBuild, summarize, placeDecos } from './search/realize.js';
+import { gammaIndex } from './hunt.js';
 
 /** 探索の段階 (progress().phase)。prepare → beam1 → beam2 → polish1 (途中の結果) → dfs → polish2 → done */
 export const PHASES = Object.freeze(['prepare', 'beam1', 'beam2', 'polish1', 'dfs', 'polish2', 'done']);
@@ -569,34 +570,14 @@ export function optimizeWeaponSide(input, fixed, data, o = {}) {
 
 /**
  * monsters.json の individuals[].rewards (歴戦王だけにある) から、作るのに歴戦王の素材 (狩猟証γ) が要る防具・固定護石の表を作る。
- * armor / charmsFixed の形は recommend.js の gammaIndex と同じ。createSearch の input.gamma に渡すと、結果に印
- * (results[].gamma = [{part, armorId | charmId, monsterId, name}]) が付き、同じ類に γ でない防具・護石があればそちらを代表にする。
+ * 表を作るのは hunt.js の gammaIndex (recommend.js の gammaIndex・探すタブの gammaInfo も同じものを使う)。createSearch の input.gamma に
+ * 渡すと、結果に印 (results[].gamma = [{part, armorId | charmId, monsterId, name}]) が付き、同じ類に γ でない防具・護石があればそちらを代表にする。
  * 外すとき (倒していない歴戦王) は、monsters[].armorIds を input.armorExclude に、charmFixedIds を input.charms.fixedExclude に入れる。
  * @param targetData data.js の target データ ({monsters: monsters.json 丸ごと}) / monsters.json 丸ごと / monsters の配列
  * @returns {{armor: {[armorId]: {monsterId, name}}, charmsFixed: {[charmId]: {monsterId, name}},
- *            monsters: [{monsterId, name, certificate, armorIds, charmFixedIds, groupSkills: [{skillId, name}]}]}}
+ *            monsters: [{monsterId, monster, name, armorIds, armorSets, charmFixedIds, certificate, groupSkills: [{skillId, name}]}]}}
  *   name は個体の名前 (例「アルシュベルド（歴戦王）」)
  */
 export function gammaIndexOf(targetData) {
-  const td = targetData && targetData.monsters !== undefined ? targetData.monsters : targetData;
-  const list = Array.isArray(td) ? td : listOf(td, 'monsters');
-  const armor = {};
-  const charmsFixed = {};
-  const monsters = [];
-  for (const m of list) {
-    for (const ind of (m && m.individuals) || []) {
-      const r = ind && ind.rewards;
-      if (!isObj(r)) continue;
-      const name = ind.name || m.name;
-      const armorIds = (r.armorSets || []).flatMap((x) => x.armorIds || []);
-      const charmFixedIds = [...(r.charmFixedIds || [])];
-      for (const id of armorIds) armor[id] = { monsterId: m.id, name };
-      for (const id of charmFixedIds) charmsFixed[id] = { monsterId: m.id, name };
-      monsters.push({
-        monsterId: m.id, name, certificate: r.certificate ? r.certificate.name : null, armorIds, charmFixedIds,
-        groupSkills: (r.groupSkills || []).map((g) => ({ skillId: g.skillId, name: g.name })),
-      });
-    }
-  }
-  return { armor, charmsFixed, monsters };
+  return gammaIndex(targetData);
 }

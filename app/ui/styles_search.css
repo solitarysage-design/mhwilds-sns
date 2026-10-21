@@ -104,6 +104,8 @@
 .sr-change { font-size: 14px; overflow-wrap: anywhere; }
 .sr-skills { font-size: 13px; color: var(--text-sub); overflow-wrap: anywhere; }
 .sr-marks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.sr-defense { font-size: 13px; color: var(--ok); overflow-wrap: anywhere; }
+.sr-defense.is-short { color: var(--danger); }
 
 /* ---------------------------------------------------------------- 1 件の詳しく (シート) */
 

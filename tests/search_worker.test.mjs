@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { loadRepoData, makeCases } from './search_cases.mjs';
+import { loadRepoData, makeCases, makePlanCases } from './search_cases.mjs';
 
 const raw = await loadRepoData();
 const { cases } = makeCases(raw);
@@ -77,11 +77,36 @@ test('新しい start が来たら前の探索は捨てる (前の id の done �
   assert.ok(!msgs.some((m) => m.id === 'old' && (m.type === 'done' || m.type === 'partial')));
 });
 
-test('入力の誤り・まだ無い探し方 (plan) は error', async () => {
+test('入力の誤り・知らない探し方は error', async () => {
   send({ type: 'start', id: 'e1', input: { ...cases.B1, weapons: [] } });
   const e1 = await waitFor((m) => m.type === 'error' && m.id === 'e1');
   assert.match(e1.message, /武器/);
-  send({ type: 'start', id: 'e2', job: { kind: 'plan', runs: [], merge: { mode: 'single' }, K: 10 } });
+  send({ type: 'start', id: 'e2', job: { kind: 'other' } });
   const e2 = await waitFor((m) => m.type === 'error' && m.id === 'e2');
-  assert.match(e2.message, /準備中/);
+  assert.match(e2.message, /知らない探し方/);
+});
+
+test('plan (相手に合わせて探す): 本物の recommend.createPlanRunner で回り、回ごとの progress → partial → done', async () => {
+  // S1z = ヌ・エグドラの歴戦王 (環境適応 Lv2 + 火属性やられ → 探索 2 回 + 守りの火力の差)。ビームを狭くして軽く。
+  // 予算は計算した時間 (回ごとに 300ms。step が何回かに分かれて、回ごとの progress が出る)
+  const { jobs } = await makePlanCases(raw, { budget: { activeMs: 300 } });
+  const job = structuredClone(jobs.S1z);
+  for (const r of [...job.runs, job.costRun]) r.input.beam = [10, 30];
+  send({ type: 'start', id: 'p1', job });
+  const done = await waitFor((m) => m.type === 'done' && m.id === 'p1', 60000);
+  const mine = msgs.filter((m) => m.id === 'p1');
+  const runs = [...new Set(mine.filter((m) => m.type === 'progress' && m.run).map((m) => m.run.key))];
+  assert.deepEqual(runs.slice(0, 2), ['blight-skill', 'blight-resist'], '回ごとに progress の run が変わる');
+  assert.ok(mine.findIndex((m) => m.type === 'partial') < mine.findIndex((m) => m.type === 'done'));
+  const r = done.result;
+  assert.ok(['done', 'stopped'].includes(r.status), r.status);
+  assert.ok(r.results.length > 0);
+  for (const x of r.results) {
+    assert.equal(x.score.kind, 'damage');
+    assert.ok(x.defense && x.defense.ok, '守り (環境適応 Lv2・火属性やられ) を満たす');
+    assert.ok(['blight-skill', 'blight-resist'].includes(x.run));
+  }
+  assert.ok(r.costOfDefense, '守りのスキルの火力の差');
+  // Worker は索引 (data.index) と skillEffects を渡すので、守りのチェックと「いまより」の基準が出る
+  assert.ok(r.results[0].baseline && r.results[0].baseline.value > 0);
 });

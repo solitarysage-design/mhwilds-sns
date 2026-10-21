@@ -450,15 +450,16 @@ target.js に足した個体の傷口の印は `app/ui/styles_target.css` (class
 ## 探すタブ (段階 2・3。担当: ui-search)
 
 持っている護石で火力の高い装備を探し、相手に合わせたおすすめ (守りのスキル・武器の属性) も使う画面 (`docs/RECOMMEND_DESIGN.md` 4.3〜4.6 節)。
-(実装 2026-10-21) 画面は、探索の本体 (`app/search_worker.js`・`app/model/search.js`) と `recommend.js` の `buildPlan` が置き場の
-状態で書いた (置き場のままなら「この条件で探す」は「装備を探す機能は準備中です」のエラーになる)。流れは作り物の Worker (下) で
-確かめてある。本物の Worker とつないで確かめるのは 3f (`docs/RECOMMEND_DESIGN.md` 7 章)。
+(実装 2026-10-21) 画面は探索の本体 (`app/search_worker.js`・`app/model/search.js`) と `recommend.js` ができる前に書き、
+同じ日の 3f (`docs/RECOMMEND_DESIGN.md` 7 章) で本物の Worker・本物の `buildPlan` / `planToJob` / `createPlanRunner` とつないだ。
+画面の流れ (やめる・失敗など) は作り物の Worker (下) で、本物との通しは本物の Worker でスモークテストが確かめる。
 
 ```
 state (build / target / search / uptimes …)
   │  search_form.js の buildJob (純粋関数。画面のスレッドで数 ms)
   ▼
-Job = {kind: 'search', input (createSearch の入力), K}  /  {kind: 'plan', runs, merge, K} (recommend.js の planToJob があるとき)
+Job = {kind: 'plan', runs, costRun, merge, subjects, requirements, gamma, ...} (recommend.js の planToJob。モンスターを選んで「相手に合わせる」とき)
+    / {kind: 'search', input (createSearch の入力), K} (相手なし・手入力の肉質・「相手に合わせる」がオフ・Plan を作れないとき)
   │  search_client.js のコントローラ (モジュールに 1 つ。タブを移っても・描き直しても続く)
   ▼
 Worker (app/search_worker.js)  /  Worker が無ければ画面のスレッドで 16ms ずつ
@@ -478,17 +479,18 @@ search_results.js (一覧・詳しくのシート)  →「装備に入れる」=
 
 | 関数 | 中身 |
 |---|---|
-| `buildJob(ctx)` | `ctx = {state: {build, target, search, uptimes, sharpness, tabs}, core, idx (useEquipIndex), targetData, combo (resolveCombo の結果), localCharms, localWeapons, recommend (recommend.js の名前空間), budgetTest}` → `{ok, loading, blockers, notes, job, inputKey, summary, targets, weapon, placeholders, exclusions, gamma, plan, planError}`。`blockers` があれば探せない (`no-weapon` = いまの武器で探すのに武器が無い・`fixed-equipment` = 装備固定のクエスト・`no-combo`)。`recommend.buildPlan` が null (いまの置き場) か `useTarget: false` なら段階 2 の `search` の Job、Plan があれば `planToJob` の `plan` の Job (各 run の入力に端末の護石・所持武器・予算・いまの装備を足す) |
+| `buildJob(ctx)` | `ctx = {state: {build, target, search, uptimes, sharpness, tabs}, core, idx (useEquipIndex), targetData, combo (resolveCombo の結果), localCharms, localWeapons, recommend (recommend.js の名前空間), budgetTest}` → `{ok, loading, blockers, notes, job, inputKey, summary, targets, weapon, weaponText, weaponMode, placeholders, exclusions, gamma, plan, planError}`。`blockers` があれば探せない (`no-weapon` = 段階 2 でいまの武器で探すのに武器が無い・`fixed-equipment` = 装備固定のクエスト・`no-combo`)。モンスターを選んでいて `useTarget` なら `recommend.buildPlan` → `planToJob` の Job をそのまま使う (端末の護石・所持武器・いまの装備・予算を `planToJob` に渡す。武器が無くても Plan が武器を選ぶので止めない)。それ以外・Plan を作れない (null・例外) ときは段階 2 の `search` の Job (入力に γ の表 `gamma` も入れる)。`weaponText` / `weaponMode` は実際に使う武器の決め方 (Plan があれば `plan.element`) |
 | `searchTargets({target, tabTarget, targetData, policy})` | 狙う部位 (`asSelected` = 相手タブの部位・割合 / `weak1` / `main3`)。個体の傷口は hunt.js の `hitzoneFor` で置き換える。部位を選んでいなければ弱点 1 か所 (`fallback: 'no-part'`)、相手が無ければ既定の肉質 |
 | `weaponChoice({mode, build, idx, weapons, myWeapons, monster, kind})` | 武器の範囲 (`docs/RECOMMEND_DESIGN.md` 2.3 節の 1 体の行)。おまかせ: 武器が無い → 片手剣すべて、おすすめがはっきりで属性が違う → おすすめの属性 (1 位と差 2 以内の属性の片手剣 + 所持武器 + いまの武器)、ほかはいまの武器 |
 | `placeholderConditions(effects, uptimes)` / `searchUptimes(effects, uptimes, policy)` | 仮置きの発動率の条件の一覧 (本人が火力タブで入れたものは `fromInput`) / 探すときの発動率 (`zero` = 仮のまま条件を 0%。段階のある条件は `{}`) |
-| `gammaInfo(targetData)` / `huntedExclusions(gamma, hunted)` / `gammaMarksOf(build, gamma)` | 歴戦王の素材が要る γ 防具・狩猟証γ の護石 (monsters.json の `individuals[].rewards`) / 倒していない歴戦王の分を外す (`armorExclude`・`charms.fixedExclude`) / 結果の印 |
-| `limitBreakFor(mode, build)` / `budgetOf(budgetSec, test)` | 限界突破 (`build` / `all` / `none`) / 予算 `{ms, activeMs}` (テストの差し替えがあればそれ) |
+| `gammaInfo(targetData)` / `huntedExclusions(gamma, hunted)` / `gammaMarksOf(build, gamma)` | 歴戦王の素材が要る γ 防具・狩猟証γ の護石 (表は hunt.js の `archTemperedRewards` / `gammaIndex`。`index` に探索の入力用の表) / 倒していない歴戦王の分を外す (`armorExclude`・`charms.fixedExclude`) / 結果の印 |
+| `limitBreakFor(mode, build)` / `budgetOf(budgetSec, test)` | 限界突破 (`build` / `all` / `none`) / 予算 `{activeMs}` (計算した時間。テストの差し替えがあればそれ) |
 | `inputKeyOf(job, dataVersion)` / `dataVersionOf(core)` | 条件の短いハッシュ (予算といまの装備は入れない。「装備に入れる」で「条件が変わりました」にならないように) / データの版 (各ファイルの generatedAt + 持っている護石・武器の id) |
 | `isResultBuild(result, build)` | いまの装備が結果の組 (2 本目の武器の組も) と同じか。同じなら、武器の範囲・限界突破 (いまの装備から決まる) は `summary.startBuild` (探し始めた時の装備。search-last にも入る) で作り直した条件で比べる (結果を入れただけで「条件が変わりました」にしない) |
-| `requiredRows` / `requiredPickerItems` | 自分で足す必須スキルの行・「スキルを足す」の一覧 (シリーズ/グループは「準備中」で選べない。`docs/SEARCH_DESIGN.md` 2.8 節) |
-| `normalizeResult` / `resultRows` / `buildDiff` / `changeText` / `skillDiff` / `freeSlotsText` / `buildLines` / `baselineValue` | 結果をそろえる (壊れた値を捨てる) / 一覧の行 (いまとの差 %・変わる部位・スキルの差・空きスロット・γ・2 本目の武器) / いまの装備の値 (探した時の入力で計算。火力タブの `summarizePower` と同じ値) |
-| `progressView` / `PHASE_TEXT` | 計算中の段階の文 (「候補を絞っています」など。「ビーム」などの言葉は出さない) と進み具合の帯 |
+| `requiredRows` / `requiredPickerItems(skills, required, bonuses)` / `bonusLevelsText` | 自分で足す必須スキルの行・「スキルを足す」の一覧。シリーズ/グループも選べる (Lv は段。「Lv1 = 2 部位・Lv2 = 4 部位」を添える。探索が 2b で対応したので 3f で選べるようにした。`docs/SEARCH_DESIGN.md` 2.8 節) |
+| `normalizeResult` / `resultRows` / `buildDiff` / `changeText` / `skillDiff` / `freeSlotsText` / `buildLines` / `baselineValue` | 結果をそろえる (壊れた値を捨てる) / 一覧の行 (いまとの差 % か多頭の回数の差 `diffCombos`・変わる部位・スキルの差・空きスロット・γ・2 本目の武器・守り `defense`) / いまの装備の値 (探した時の入力で計算。火力タブの `summarizePower` と同じ値) |
+| `defenseView(defense, defense2)` / `defenseText(view)` / `costOfDefenseText(cost)` | 守りのチェック (`recommend.defenseCheck`。武器 2 本は悪い方) → 行の「守り ✓環境適応 Lv2・✓火耐性の合計 22」 / 「守りのスキルのために火力 −x.x% (目安)」(多頭は回数の増え) |
+| `progressView` / `PHASE_TEXT` | 計算中の段階の文 (「候補を絞っています」など。「ビーム」などの言葉は出さない。相手に合わせるときの `merge` / `twoWeapons` / `cost` も) と進み具合の帯・「1 / 2 回目: …」 |
 
 ### search_client.js (Worker の出し入れ)
 
@@ -508,8 +510,9 @@ getSearchController().getSnapshot();            // 部品の外 (テストなど
 `inline` (画面のスレッドで回した)・`phases [{name, atMs}]`・`partialMs` / `doneMs` (計算した時間。裏に回っていた時間は数えない)・
 `inputKey` / `summary`・`restored {savedAt, appVersion}` (保存から戻した結果)。
 
-- 予算は `{ms, activeMs}` で渡す (`activeMs` = 計算した時間だけで数える。`docs/RECOMMEND_DESIGN.md` 5.4 節。探索の本体が `activeMs` を
-  知らなければ `ms` を使う)。
+- 予算は `{activeMs}` で渡す (計算した時間だけで数える。iPhone で裏に回っていた間に予算を使い切らない。`docs/RECOMMEND_DESIGN.md` 5.4 節)。
+  相手に合わせる Job は `planToJob` が回の数で分ける (`docs/MODEL_API.md` の recommend.js 節)。予算の既定 (6 秒) と iPhone の見込みは
+  `docs/SEARCH_DESIGN.md` 5 章。
 - Worker が無い・作れない・一度も返事をしないまま落ちた (読み込めなかった) ときは、画面のスレッドで回す (`createModelEngine`:
   model の `createSearch` / recommend.js の `createPlanRunner` を 16ms ずつ回し、Worker と同じメッセージを返す)。
 - 返事が 20 秒来ない (画面が見えている間だけ数える) と「止まってしまいました」のエラーにして Worker を作り直す。
@@ -528,21 +531,24 @@ getSearchController().getSnapshot();            // 部品の外 (テストなど
   `step=ms` (段階の間隔)・`fail=start` (error を返す)・`fail=crash` (落ちる)・`result=infeasible|empty`・`warn=1` (警告を付ける)。
 - 切り替え: ページの init script で `window.__mhwSearchWorker = { url: './tests/fixtures/fake_search_worker.js?step=120' }`
   (ページからの相対・同じオリジンの url だけ使う)。Worker が無い端末のまねでは、同じ url を module として読み `createEngine` で回す。
-  `window.__mhwSearchBudget = { work: 3000 }` で予算を仕事量にできる (探索の本体ができたら、結果を時間で変えないため)。
-- アプリはこのファイルを読まない (`PRECACHE` にも入れない)。スモークテストは `tests/smoke_ui.py` の「探すタブ (担当: ui-search)」節。
+  `window.__mhwSearchBudget = { work: 3000 }` で予算を仕事量にできる (本物の Worker でも使う。結果を時間で変えないため)。
+- アプリはこのファイルを読まない (`PRECACHE` にも入れない)。`window.__mhwSearchWorker` を置かなければ本物の `app/search_worker.js` を使う。
+  スモークテストは `tests/smoke_ui.py` の `run_search` (作り物で画面の流れ 1〜5、本物の Worker で通し 6・7)。
 
 ### 画面の目印 (スモークテストが使う)
 
 `[data-search-root]`・カード `[data-sr="target|weapon|defense|required|equip-options|placeholders|budget|start"]`・
 結果 `[data-sr="results"][data-sr-status][data-sr-partial]`・計算中 `[data-sr="running"]` と `[data-sr-phase]`・
 一覧の行 `button.sr-result[data-sr-rank][data-sr-value]`・ボタン `[data-sr-action="start|cancel|extend|undo|add-required|lv-up|lv-down|remove-required|remove-missing|apply|apply2"]`・
-知らせ `[data-sr-note="partial|improved|cancelled|stopped|stale|restored|inline|zeroed|warnings|infeasible|error|applied|empty"]`・
-シート `[data-sr-sheet="result|hunted|exclude"]`・探せない理由 `[data-sr-blocker]`。
+知らせ `[data-sr-note="partial|improved|cancelled|stopped|stale|restored|inline|zeroed|warnings|infeasible|error|applied|empty|cost|two-gain"]`・
+シート `[data-sr-sheet="result|hunted|exclude"]`・探せない理由 `[data-sr-blocker]`・守りのスキルの行 `[data-sr-req="<要件の key>"][data-sr-req-on="1|0"]`・
+武器 2 本の案 `[data-sr-two-weapons="on|off"]`・行の守り `[data-sr-row-defense="ok|short"]`・行の 2 本目 `[data-sr-row-second]`・
+詳しくの相手ごと `[data-sr-per-subject]`。
 
 ### まだ無いもの
 
-- 守りのスキルの行・武器 2 本の切り替え・相手ごとの値は、`recommend.js` の `buildPlan` が Plan を返すようになったら出る
-  (いまは「準備中」の文)。「参考」の行の「試す」(付けると火力 −x.x%) と「守りのスキルのために火力 −x%」はまだ作っていない。
+- 「参考」の行の「試す」(付けると火力 −x.x%。`planToJob` の `tryKey` はある) と、軽減の Lv を選ぶ欄 (`setSearchLevel`) はまだ画面に無い。
+  「守りのスキルのために火力 −x%」は結果のカードに出す (3f)。「守りのスキルを足す」(体力・回復系の一覧) も画面に無い (自分で決める必須スキルで足す)。
 - 結果から直接「マイセットに保存」(いまは「装備に入れる」のあと装備タブで保存する)。
 - 設定タブの「くわしく」に search-timing を出すこと (いまは探すタブの結果の「くわしく」に最近 5 回を出している)。
 
@@ -627,7 +633,9 @@ PYTHONIOENCODING=utf-8 python tests/smoke_ui.py --browser chromium --only equip,
   画面に出たスキル一覧と期待値は `tests/calc_from_state.mjs` (計算モデル `app/model/` だけで同じ状態を計算する node のスクリプト) の結果と比べる。
   データ (防具・装飾品の名前) が変わったら smoke_ui.py の `WALK_*` を直す。
 - 探すタブの流れ (探す・途中の結果・やめる・続けて探す・装備に入れる・保存して開き直す・Worker の失敗・Worker が無い端末) は、
-  作り物の Worker を使う `run_search` (「探すタブ (担当: ui-search)」節。main() から 1 行で呼ぶ) が新しい context で確かめる。
+  作り物の Worker を使う `run_search` (main() から 1 行で呼ぶ) が新しい context で確かめる。同じ `run_search` の 6・7 は本物の Worker で、
+  相手タブの歴戦王アルシュベルド →「この相手で装備を探す」→ 途中の結果 → 終わり → 装備に入れる → 火力タブの期待値 = 結果、と
+  多頭『英雄の証』で武器 2 本の案 (倒していない歴戦王の γ を外す) を通しで確かめる (予算は仕事量)。
 - 確認を足すときは `@tab_check('equip')` を付けた関数 `(page, ctx)` を足す。問題は `ctx.fail('説明')`、画像は `ctx.shot('名前')`。
   タブに依らない流れは `@scenario_check`。タブの中の目印は `[data-tab-panel="equip"]` (タブの中身は `[data-tab-ready="1"]` の下)。
   読み込み中は `.loading` を出しておけば、テストは消えるまで待つ。

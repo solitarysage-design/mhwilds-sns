@@ -29,6 +29,20 @@ function diffClass(pct) {
   return pct > 0 ? 'sr-diff is-up' : 'sr-diff is-down';
 }
 
+/** 多頭: いまの装備との回数の差 (少ないほど良い) */
+function combosDiffText(n) {
+  if (n == null) return '';
+  if (n === 0) return 'いまと同じ回数';
+  return `いまより ${Math.abs(n)} 回${n < 0 ? '少ない' : '多い'}`;
+}
+
+/** 行の「いまとの差」(1 体 = 火力の %、多頭 = 回数) */
+function RowDiff({ row }) {
+  if (row.diffPct != null) return html`<span class=${diffClass(row.diffPct)}>${diffText(row.diffPct)}</span>`;
+  if (row.diffCombos != null) return html`<span class=${diffClass(-row.diffCombos)}>${combosDiffText(row.diffCombos)}</span>`;
+  return null;
+}
+
 // ---------------------------------------------------------------- 計算中
 
 /** 「探しています」: 段階の文・進み具合の帯・経過の秒・いまの最良・「やめる」 */
@@ -65,12 +79,14 @@ function ResultRow({ row, onOpen }) {
         data-sr-rank=${row.rank} data-sr-value=${row.value != null ? String(row.value) : ''}>
         <span class="sr-result-head">
           <span class="sr-rank">${row.rank}</span>
-          <span class="sr-value">${F.valueText(row.value, row.scoreKind)}</span>
-          ${row.diffPct != null && html`<span class=${diffClass(row.diffPct)}>${diffText(row.diffPct)}</span>`}
+          <span class="sr-value">${F.rowValueText(row)}</span>
+          <${RowDiff} row=${row} />
         </span>
         <span class="sr-change">${row.changeText}</span>
         ${row.skillsText && html`<span class="sr-skills">${row.skillsText}</span>`}
-        ${row.second && html`<span class="sr-skills">2 本目: ${row.second.weaponName}</span>`}
+        ${row.second && html`<span class="sr-skills" data-sr-row-second>2 本目: ${row.second.weaponName}</span>`}
+        ${row.defense && F.defenseText(row.defense) && html`
+          <span class=${row.defense.ok ? 'sr-defense' : 'sr-defense is-short'} data-sr-row-defense=${row.defense.ok ? 'ok' : 'short'}>守り ${F.defenseText(row.defense)}</span>`}
         ${(row.gamma.length > 0 || row.errors.length > 0) && html`
           <span class="sr-marks">
             ${row.gamma.length > 0 && html`<${Badge} kind="info">γ: 歴戦王の素材</${Badge}>`}
@@ -105,6 +121,8 @@ function ResultNotes({ snap, stale, zeroed }) {
     ${snap.inline && !snap.busy && html`<p class="hint" data-sr-note="inline">この端末では別の処理 (Worker) を使えないので、画面の処理で探しました。</p>`}
     ${zeroed > 0 && r && r.results.length > 0 && html`
       <p class="hint" data-sr-note="zeroed">火力タブの値と違うのは、仮の発動率の条件 (${zeroed} 個) を 0% にして探したためです。</p>`}
+    ${r && F.costOfDefenseText(r.costOfDefense) && html`<p class="hint" data-sr-note="cost">${F.costOfDefenseText(r.costOfDefense)}</p>`}
+    ${r && r.twoWeaponsGain && r.twoWeaponsGain.text && html`<p class="hint" data-sr-note="two-gain">${r.twoWeaponsGain.text} (2 本の案と比べて)</p>`}
     ${r && r.warnings.length > 0 && html`
       <${Note} id="warnings">
         <${Notice} kind="warn" title="探したときの注意">
@@ -226,7 +244,7 @@ export function ResultSheet({ open, row, idx, onClose, onApply }) {
   const [showAlt, setShowAlt] = useState(false);
   if (!row) return null;
   const lines = F.buildLines(row.raw.build, idx);
-  const title = `${row.rank} 位  ${F.valueText(row.value, row.scoreKind)}`;
+  const title = `${row.rank} 位  ${F.rowValueText(row)}`;
   return html`
     <${BottomSheet} open=${open} title=${title} onClose=${() => { setShowAlt(false); onClose(); }} tall
       footer=${html`
@@ -236,7 +254,7 @@ export function ResultSheet({ open, row, idx, onClose, onApply }) {
         </div>`}>
       <div class="sr-sheet" data-sr-sheet="result" data-sr-rank=${row.rank}>
         <p class="sr-sheet-lead">
-          ${row.diffPct != null && html`<span class=${diffClass(row.diffPct)}>${diffText(row.diffPct)}</span>`}
+          <${RowDiff} row=${row} />
           <${Badge} kind="info">近似</${Badge}>
         </p>
         <p class="hint">${row.changeText}</p>
@@ -268,10 +286,15 @@ export function ResultSheet({ open, row, idx, onClose, onApply }) {
         <p class="card-subhead">スキル (いまと比べて)</p>
         <${SkillDiffList} list=${row.skillDiff} />
         ${row.freeSlots && html`<p class="hint">空きスロット: ${F.freeSlotsText(row.freeSlots)}</p>`}
-        ${row.perSubject.length > 0 && html`
+        ${row.defense && html`
+          <p class="card-subhead">守り</p>
+          <ul class="sr-list" data-sr-sheet-defense>
+            ${row.defense.items.map((x) => html`<li key=${x.key}>${{ ok: '✓', mitigated: '△ 軽くなる', missing: '✗ 足りない' }[x.status] || ''} ${x.label}${x.text && x.text !== x.label ? ` (${x.text})` : ''}</li>`)}
+          </ul>`}
+        ${row.perSubject.length > 1 && html`
           <p class="card-subhead">相手ごと</p>
-          <ul class="sr-list">
-            ${row.perSubject.map((p, i) => html`<li key=${i}>${p.label || p.key}: ${formatNumber(p.value, 1)}${p.combos != null ? `・約 ${formatNumber(p.combos, 0)} 回` : ''}${p.weapon === 2 ? ' (2 本目)' : ''}</li>`)}
+          <ul class="sr-list" data-sr-per-subject>
+            ${row.perSubject.map((p, i) => html`<li key=${i}>${p.name || p.label || p.key}: ${p.value != null ? formatNumber(p.value, 1) : '—'}${p.combos != null ? `・約 ${formatNumber(p.combos, 0)} 回` : ''}${row.second ? (p.weapon === 2 ? '・2 本目の武器' : '・1 本目の武器') : ''}</li>`)}
           </ul>`}
         ${row.errors.length > 0 && html`
           <${Notice} kind="error" title="この装備に入らない装飾品があります">

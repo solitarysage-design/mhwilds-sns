@@ -2,13 +2,13 @@
 // docs/RECOMMEND_DESIGN.md 4.3〜4.6 節・5.1 節: state → (おすすめの Plan) → Job、必須の行、結果の見せ方 (いまとの差・変わる部位)。
 // 探索の入力の形は docs/SEARCH_DESIGN.md 3.2 節、Worker に渡す Job は docs/RECOMMEND_DESIGN.md 5.5 節。
 //
-// 相手に合わせたおすすめ (recommend.js の buildPlan / planToJob) が null を返す間 (いまは置き場だけ) は、段階 2 の形
-// (createSearch の入力 1 つ = job.kind 'search') で探す。そのときの武器の範囲・狙う部位・倒していない歴戦王の γ 防具の除外は、
-// ここで state から直接作る (recommend.js ができたら、相手に合わせるときはそちらの Plan を使う)。
+// モンスターを選んでいて「相手に合わせたおすすめを使う」がオンなら、recommend.js の buildPlan → planToJob の Job (kind 'plan') で探す。
+// それ以外 (相手なし・手入力の肉質・おすすめを使わない・Plan を作れない) は段階 2 の形 (createSearch の入力 1 つ = kind 'search') で、
+// 武器の範囲・狙う部位・倒していない歴戦王の γ 防具の除外をここで state から作る。
 import { computeBuild, ARMOR_PARTS, DECO_TARGETS } from '../../model/build.js';
 import { resolveWeaponRef, damageWeapon, autoSharpness, sharpnessResolver } from '../../model/weapon.js';
 import {
-  individualOf, elementRecommendationOf, hitzoneFor, monsterById, monstersOf, questById,
+  individualOf, elementRecommendationOf, hitzoneFor, monsterById, questById, archTemperedRewards, gammaIndex,
 } from '../../model/hunt.js';
 import { mixTotal } from './power_calc.js';
 import {
@@ -50,9 +50,13 @@ export const K_CHOICES = Object.freeze([5, 10, 20]);
 export const PHASE_TEXT = Object.freeze({
   prepare: '準備しています', beam1: '候補を絞っています', beam2: '候補を絞っています', polish1: '仕上げています',
   dfs: 'もっと良い組を探しています', polish2: '仕上げています', done: 'まとめています',
+  // 相手に合わせて探すとき (recommend.js の createPlanRunner の段階)
+  merge: 'まとめています', twoWeapons: '武器 2 本の組み合わせを合わせています', cost: '守りのスキルの火力の差を測っています',
 });
 /** 進み具合の帯の目安: 段階が始まった時点の割合 (dfs の間は予算に対する経過で伸ばす) */
-const PHASE_AT = Object.freeze({ prepare: 0, beam1: 0.08, beam2: 0.25, polish1: 0.45, dfs: 0.55, polish2: 0.9, done: 1 });
+const PHASE_AT = Object.freeze({
+  prepare: 0, beam1: 0.08, beam2: 0.25, polish1: 0.45, dfs: 0.55, polish2: 0.9, done: 1, merge: 0.9, twoWeapons: 0.92, cost: 0.95,
+});
 
 // ---------------------------------------------------------------- 仮置きの発動率
 
@@ -119,31 +123,23 @@ export function limitBreakFor(mode, build) {
 }
 
 /**
- * 歴戦王の素材が要る防具・護石 (monsters.json の individuals[].rewards)。
- * @returns {{armor: Map<id, entry>, charms: Map<id, entry>, monsters: entry[]}}
- *   entry = {monsterId, name (「レ・ダウ（歴戦王）」), monsterName, armorIds, charmFixedIds, setNames, groupSkills}
+ * 歴戦王の素材が要る防具・護石 (monsters.json の individuals[].rewards)。表は hunt.js の archTemperedRewards / gammaIndex
+ * (探索・おすすめと同じもの)。
+ * @returns {{armor: Map<id, entry>, charms: Map<id, entry>, monsters: entry[], index: gammaIndex の結果 (探索の入力 gamma に渡す)}}
+ *   entry = {monsterId, name (「レ・ダウ（歴戦王）」), monsterName, armorIds, charmFixedIds, setNames, groupSkills (名前)}
  */
 export function gammaInfo(targetData) {
   const armor = new Map();
   const charms = new Map();
-  const monsters = [];
-  for (const m of monstersOf(targetData)) {
-    for (const ind of (m && m.individuals) || []) {
-      if (!ind || ind.kind !== 'arch-tempered' || !isObj(ind.rewards)) continue;
-      const sets = Array.isArray(ind.rewards.armorSets) ? ind.rewards.armorSets : [];
-      const entry = {
-        monsterId: m.id, name: ind.name || m.name, monsterName: m.name,
-        armorIds: sets.flatMap((s) => (Array.isArray(s.armorIds) ? s.armorIds : [])),
-        charmFixedIds: Array.isArray(ind.rewards.charmFixedIds) ? [...ind.rewards.charmFixedIds] : [],
-        setNames: sets.map((s) => s.name).filter(Boolean),
-        groupSkills: (ind.rewards.groupSkills || []).map((g) => g && g.name).filter(Boolean),
-      };
-      monsters.push(entry);
-      for (const id of entry.armorIds) armor.set(id, entry);
-      for (const id of entry.charmFixedIds) charms.set(id, entry);
-    }
+  const monsters = archTemperedRewards(targetData).map((r) => ({
+    monsterId: r.monsterId, name: r.name, monsterName: r.monster, armorIds: r.armorIds, charmFixedIds: r.charmFixedIds,
+    setNames: r.armorSets, groupSkills: r.groupSkills.map((g) => g.name).filter(Boolean),
+  }));
+  for (const e of monsters) {
+    for (const id of e.armorIds) armor.set(id, e);
+    for (const id of e.charmFixedIds) charms.set(id, e);
   }
-  return { armor, charms, monsters };
+  return { armor, charms, monsters, index: gammaIndex(targetData) };
 }
 
 /**
@@ -328,10 +324,15 @@ export function weaponChoice({ mode = 'auto', build, idx, weapons = [], myWeapon
 
 /** state.search.budgetSec → 探索の予算。test = window.__mhwSearchBudget (テストだけ。{work: n} で仕事量の予算) */
 export function budgetOf(budgetSec, test = null) {
-  if (isObj(test) && (num(test.work) != null || num(test.ms) != null)) return { ...test };
-  const ms = Math.max(1, Number(budgetSec) || 6) * 1000;
-  // activeMs = 計算した時間だけで数える予算 (iPhone で裏に回っていた時間を数えない。docs/RECOMMEND_DESIGN.md 5.4 節)
-  return { ms, activeMs: ms };
+  if (isObj(test) && (num(test.work) != null || num(test.ms) != null || num(test.activeMs) != null)) return { ...test };
+  // activeMs = 計算した時間だけで数える予算 (iPhone で裏に回っていた時間を数えない。docs/RECOMMEND_DESIGN.md 5.4 節)。
+  // 始めてからの時間 (ms) は入れない (裏に回っている間に予算を使い切らないように)
+  return { activeMs: Math.max(1, Number(budgetSec) || 6) * 1000 };
+}
+
+/** budgetOf の結果 → 予算の ms (時間の予算でなければ null) */
+function budgetMsOf(budget) {
+  return num(budget && budget.activeMs) ?? num(budget && budget.ms);
 }
 
 /** 必須スキルを入力の形に (知らないスキル・Lv 0 は外す) */
@@ -395,12 +396,16 @@ export function inputKeyOf(job, dataVersion = '') {
 
 /**
  * state などから、探す条件 (Job) を作る。
+ * モンスターを選んでいて「相手に合わせたおすすめを使う」がオンなら、recommend.js の buildPlan → planToJob の Job (kind 'plan'。
+ * docs/RECOMMEND_DESIGN.md 5.3 節。守りのスキル・武器の属性・多頭の重み・武器 2 本・γ の除外が入る)。
+ * それ以外は段階 2 の入力 1 つ (kind 'search')。
  * @param ctx {state: {build, target, search, combo, uptimes, sharpness, tabs}, core (data.js の core データ),
  *             idx (useEquipIndex の idx。端末の武器・護石も入った索引), targetData (data.js の target データ | null),
  *             combo (resolveCombo の結果), localCharms, localWeapons, recommend (recommend.js の名前空間 | null),
  *             budgetTest (window.__mhwSearchBudget | null)}
  * @returns {{ok, loading, blockers: [{code, message}], notes: [{code, message}], job, inputKey, summary,
- *            targets (searchTargets の結果), weapon (weaponChoice の結果), placeholders, exclusions, gamma, plan, planError}}
+ *            targets (searchTargets の結果), weapon (weaponChoice の結果), weaponText, weaponMode, placeholders, exclusions, gamma,
+ *            plan, planError}}
  */
 export function buildJob(ctx) {
   const { state, core, idx, targetData = null, combo, localCharms = [], localWeapons = [], recommend = null, budgetTest = null } = ctx;
@@ -414,14 +419,16 @@ export function buildJob(ctx) {
     target: state.target, tabTarget: state.tabs && state.tabs.target, targetData, policy: s.partsPolicy,
   });
   if (targets.loading) {
-    return { ok: false, loading: true, blockers, notes, job: null, inputKey: null, summary: null, targets, weapon: null, placeholders, exclusions, gamma, plan: null, planError: null };
+    return {
+      ok: false, loading: true, blockers, notes, job: null, inputKey: null, summary: null, targets, weapon: null, weaponText: '',
+      weaponMode: null, placeholders, exclusions, gamma, plan: null, planError: null,
+    };
   }
   const weapon = weaponChoice({
     mode: s.weaponMode, build: state.build, idx, weapons: core.lists.weapons,
     myWeapons: [...(core.lists.myWeapons || []), ...(localWeapons || [])],
     monster: targets.monster, kind: targets.kind, useUncertain: state.target.useUncertainWound === true,
   });
-  if (weapon.blocker) blockers.push(weapon.blocker);
   if (!combo) blockers.push({ code: 'no-combo', message: '代表コンボのデータがありません。再読み込みしてください。' });
   const quest = state.target.questId != null && targetData ? questById(targetData, state.target.questId) : null;
   if (quest && quest.fixedEquipment === true) {
@@ -435,14 +442,6 @@ export function buildJob(ctx) {
   const K = Math.max(1, Math.min(50, Number(s.K) || 10));
   const budget = budgetOf(s.budgetSec, budgetTest);
   const extraCharms = s.charms.local ? (localCharms || []) : [];
-  const base = {
-    charms: {
-      owned: s.charms.owned !== false, extra: extraCharms, fixed: s.charms.fixed !== false, fixedExclude: exclusions.charmsFixed,
-    },
-    extraWeapons: localWeapons || [],
-    decorations: { owned: null },
-    budget, current: state.build, mode: 'fast',
-  };
   const input = {
     weapons: weapon.weapons,
     targets: targets.targets.map((x) => ({ weight: x.weight, label: x.label, partKey: x.partKey, target: x.target })),
@@ -450,13 +449,20 @@ export function buildJob(ctx) {
     monsterStatus: monsterStatusOf(state.target, targetData) || [],
     buffs: {}, sharpness: state.sharpness || null,
     required: requiredInput(s.required, idx),
-    ...base,
+    charms: {
+      owned: s.charms.owned !== false, extra: extraCharms, fixed: s.charms.fixed !== false, fixedExclude: exclusions.charmsFixed,
+    },
+    extraWeapons: localWeapons || [],
+    decorations: { owned: null },
+    budget, current: state.build, mode: 'fast',
     limitBreak: limitBreakFor(s.limitBreak, state.build),
     armorExclude: [...new Set([...(s.armorExclude || []), ...exclusions.armor])],
     objective: 'damage', K,
+    // γ の印の表 (結果に「歴戦王の素材が要る」の印が付き、同じ値の γ でない防具・護石が代表になる)
+    ...(targetData ? { gamma: gamma.index } : {}),
   };
 
-  // 相手に合わせたおすすめ (recommend.js)。buildPlan が null の間 (置き場) は段階 2 の入力 1 つで探す
+  // 相手に合わせたおすすめ (recommend.js)。Plan を作れないとき (相手なし・壊れた入力) は段階 2 の入力 1 つで探す
   let plan = null;
   let planError = null;
   let job = { kind: 'search', input, K };
@@ -465,37 +471,44 @@ export function buildJob(ctx) {
       plan = recommend.buildPlan({
         target: state.target, tabTarget: state.tabs && state.tabs.target, search: s, targetData,
         core: { index: idx, skillEffects: core.skillEffects, motions: core.motions, combos: core.combos },
-        current: { build: state.build, combo, uptimes: state.uptimes, sharpness: state.sharpness },
+        current: { build: state.build, combo, uptimes: state.uptimes, sharpness: state.sharpness, extraWeapons: localWeapons || [] },
       }) || null;
-      if (plan && typeof recommend.planToJob === 'function') {
+      if (plan && typeof recommend.planToJob === 'function' && !plan.blocked) {
+        const ms = budgetMsOf(budget);
         const pj = recommend.planToJob(plan, {
-          K, budgetMs: budget.ms ?? s.budgetSec * 1000, placeholders: s.placeholders, userRequired: s.required,
+          K, budgetMs: ms ?? s.budgetSec * 1000, ...(ms == null ? { budget } : {}), placeholders: s.placeholders,
+          userRequired: s.required, extraCharms, extraWeapons: localWeapons || [], current: state.build,
         });
-        if (pj && Array.isArray(pj.runs) && pj.runs.length) {
-          job = {
-            kind: 'plan', K: pj.K ?? K, merge: pj.merge,
-            runs: pj.runs.map((r) => ({ ...r, input: { ...base, ...(r.input || {}), budget, current: state.build } })),
-          };
-        } else plan = null;
-      } else plan = null;
+        if (pj && !pj.blocked && Array.isArray(pj.runs) && pj.runs.length) job = pj;
+        else if (!pj || !pj.blocked || pj.blocked.code !== 'fixed-equipment') plan = null;
+      }
     } catch (e) {
       planError = e;
       plan = null;
       notes.push({ code: 'plan-error', message: '相手に合わせたおすすめを作れなかったので、相手の肉質だけで探します。' });
     }
   }
+  // 武器の範囲 (Plan で探すときは Plan が決める。武器が無くてもほかの武器から探す)
+  const usePlan = job.kind === 'plan';
+  if (!usePlan && weapon.blocker) blockers.push(weapon.blocker);
+  const weaponMode = usePlan ? plan.element.mode : weapon.mode;
+  const nWeapons = usePlan && Array.isArray(plan.element.weapons) ? plan.element.weapons.length : null;
+  const weaponText = usePlan
+    ? `${plan.element.text}${nWeapons != null && weaponMode === 'element' ? ` (${nWeapons} 本)` : ''}。`
+    : weapon.text;
 
   // startBuild = 探し始めた時の装備 (結果の組を「装備に入れた」あとに、条件が変わったかをこの装備で比べ直す。isResultBuild)
   const summary = {
-    label: targets.label, weaponText: weapon.mode === 'all' ? '片手剣すべて' : weapon.mode === 'element'
-      ? `おすすめの属性 (${weapon.weapons.length} 本)` : (weapon.current ? weaponName(weapon.current) : ''),
-    weaponMode: weapon.mode, placeholders: s.placeholders, zeroed, K, budgetSec: s.budgetSec,
+    label: targets.label, weaponText: weaponMode === 'all' ? '片手剣すべて' : weaponMode === 'element'
+      ? `おすすめの属性 (${usePlan ? nWeapons : weapon.weapons.length} 本)` : (weapon.current ? weaponName(weapon.current) : ''),
+    weaponMode, placeholders: s.placeholders, zeroed, K, budgetSec: s.budgetSec,
     required: input.required.length, kind: job.kind, preset: s.preset, startBuild: state.build || null,
+    multi: usePlan && plan.mode === 'multi',
   };
   const inputKey = blockers.length ? null : inputKeyOf(job, dataVersionOf(core));
   return {
     ok: blockers.length === 0, loading: false, blockers, notes, job: blockers.length ? null : job, inputKey, summary,
-    targets, weapon, placeholders, exclusions, gamma, plan, planError,
+    targets, weapon, weaponText, weaponMode, placeholders, exclusions, gamma, plan, planError,
   };
 }
 
@@ -507,38 +520,53 @@ export function maxLevelOf(skill) {
   return Number(skill.maxLevel) || (Array.isArray(skill.levels) ? skill.levels.length : 0) || 1;
 }
 
-/** シリーズ/グループスキルはまだ必須にできない (探索が対応するまで。docs/SEARCH_DESIGN.md 2.8 節) */
-export const PENDING_REQUIRED_KINDS = Object.freeze(['set', 'group']);
+/**
+ * シリーズ/グループスキルの段 (Lv → 要る部位の数) の文 (bonuses.json から。無ければ '')。
+ * 探索はシリーズ/グループの必須も扱う (部位の取り合いまで見る。docs/SEARCH_DESIGN.md 2.8 節・11 章)。
+ */
+export function bonusLevelsText(skill, bonuses) {
+  if (!skill || !isObj(bonuses)) return '';
+  if (skill.kind === 'set') {
+    const b = (bonuses.setBonuses || []).find((x) => x && x.skillId === skill.id);
+    return b && Array.isArray(b.ranks) ? b.ranks.map((r) => `Lv${r.level} = ${r.pieces} 部位`).join('・') : '';
+  }
+  if (skill.kind === 'group') {
+    const b = (bonuses.groupBonuses || []).find((x) => x && x.skillId === skill.id);
+    return b ? `Lv${b.level} = ${b.pieces} 部位` : '';
+  }
+  return '';
+}
 
 /**
  * 自分で足した必須スキルの行。
- * @returns {{skillId, name, level, maxLevel, kind, pending, missing}[]}  missing = スキルのデータに無い (外して探す)
+ * @returns {{skillId, name, level, maxLevel, kind, missing}[]}  missing = スキルのデータに無い (外して探す)
  */
 export function requiredRows(required, idx) {
   return (Array.isArray(required) ? required : []).map((r) => {
     const sk = idx && idx.skills ? idx.skills.get(r.skillId) : null;
     return {
       skillId: r.skillId, name: sk ? sk.name : `不明なスキル (${r.skillId})`, level: r.level,
-      maxLevel: maxLevelOf(sk), kind: sk ? sk.kind : null,
-      pending: !!sk && PENDING_REQUIRED_KINDS.includes(sk.kind), missing: !sk,
+      maxLevel: maxLevelOf(sk), kind: sk ? sk.kind : null, missing: !sk,
     };
   });
 }
 
-const KIND_GROUP = { armor: '防具スキル', weapon: '武器スキル', set: 'シリーズスキル (準備中)', group: 'グループスキル (準備中)' };
+const KIND_GROUP = { armor: '防具スキル', weapon: '武器スキル', set: 'シリーズスキル', group: 'グループスキル' };
 const KIND_ORDER = { armor: 0, weapon: 1, set: 2, group: 3 };
 
-/** 「スキルを足す」の一覧 (Picker の items)。種類で見出し。シリーズ/グループは「準備中」で選べない */
-export function requiredPickerItems(skills, required = []) {
+/**
+ * 「スキルを足す」の一覧 (Picker の items)。種類で見出し。シリーズ/グループは段の Lv と要る部位の数を添える。
+ * @param bonuses bonuses.json (無ければ段の文を出さない)
+ */
+export function requiredPickerItems(skills, required = [], bonuses = null) {
   const have = new Map((required || []).map((r) => [r.skillId, r.level]));
   return (skills || []).filter((s) => isObj(s) && s.id != null)
     .slice().sort((a, b) => (KIND_ORDER[a.kind] ?? 9) - (KIND_ORDER[b.kind] ?? 9) || String(a.name).localeCompare(String(b.name), 'ja'))
     .map((s) => {
-      const pending = PENDING_REQUIRED_KINDS.includes(s.kind);
+      const ranks = bonusLevelsText(s, bonuses);
       return {
         value: s.id, label: s.name, group: KIND_GROUP[s.kind] || 'そのほか',
-        sub: pending ? 'まだ必須にできません (準備中)' : `最大 Lv${maxLevelOf(s)}${have.has(s.id) ? `・いま Lv${have.get(s.id)} で足しています` : ''}`,
-        disabled: pending,
+        sub: `最大 Lv${maxLevelOf(s)}${ranks ? ` (${ranks})` : ''}${have.has(s.id) ? `・いま Lv${have.get(s.id)} で足しています` : ''}`,
       };
     });
 }
@@ -716,6 +744,10 @@ export function resultRows(result, ctx) {
     const scoreKind = isObj(r.score) && r.score.kind === 'combos' ? 'combos' : 'damage';
     const base = isObj(r.baseline) && num(r.baseline.value) != null ? r.baseline.value : baseline;
     const diffPct = scoreKind === 'damage' && base > 0 && value != null ? (value / base - 1) * 100 : null;
+    // 多頭 (全部倒すまでの回数): いまの装備の回数との差 (相手ごとに切り上げた回数の合計どうし)
+    const baseCombos = scoreKind === 'combos' && isObj(r.baseline) ? num(r.baseline.combos) : null;
+    const combosTotal = num(r.combosTotal);
+    const diffCombos = baseCombos != null && combosTotal != null ? combosTotal - baseCombos : null;
     let br = null;
     try {
       br = computeBuild(r.build, idx);
@@ -728,7 +760,7 @@ export function resultRows(result, ctx) {
     const second = Array.isArray(r.builds) && isObj(r.builds[1]) ? r.builds[1] : null;
     const w2 = second && second.weapon != null ? resolveWeaponRef(second.weapon, idx) : null;
     return {
-      rank: Number(r.rank) || i + 1, index: i, value, scoreKind, diffPct, diff, changeText: changeText(diff),
+      rank: Number(r.rank) || i + 1, index: i, value, scoreKind, diffPct, diffCombos, combosTotal, diff, changeText: changeText(diff),
       skills, skillsText: mainSkillsText(skills), skillDiff: skillDiff(currentSkills, skills),
       freeSlots: isObj(r.freeSlots) ? r.freeSlots : (br ? freeSlotsOf(br) : null),
       weaponName: w ? weaponName(w) : '武器なし',
@@ -738,9 +770,48 @@ export function resultRows(result, ctx) {
       check: isObj(r.check) ? r.check : null, exact: r.exact !== false,
       alternatives: isObj(r.alternatives) ? r.alternatives : {},
       perSubject: Array.isArray(r.perSubject) ? r.perSubject : [],
+      defense: defenseView(r.defense, r.defense2),
       raw: r,
     };
   });
+}
+
+/**
+ * 守りのチェック (recommend.js の defenseCheck の結果) → 行の短い文。武器 2 本なら 2 本目の装備でも満たすかを見る。
+ * @returns {{ok, items: [{key, label, status: 'ok'|'mitigated'|'missing', text}]} | null}
+ */
+export function defenseView(defense, defense2 = null) {
+  if (!isObj(defense) || !Array.isArray(defense.rows)) return null;
+  const rows2 = isObj(defense2) && Array.isArray(defense2.rows) ? new Map(defense2.rows.map((x) => [x.key, x])) : null;
+  const rank = { ok: 0, mitigated: 1, missing: 2 };
+  const items = defense.rows.filter((x) => isObj(x) && x.on !== false).map((x) => {
+    const y = rows2 ? rows2.get(x.key) : null;
+    const status = y && (rank[y.status] ?? 2) > (rank[x.status] ?? 2) ? y.status : x.status;
+    return { key: x.key, label: x.label || '', status, text: x.text || '', user: !!x.user };
+  });
+  if (!items.length) return null;
+  return { ok: defense.ok !== false && (!isObj(defense2) || defense2.ok !== false), items };
+}
+
+/** 守りのチェックの行を「✓環境適応 Lv2・✓火耐性の合計 22」に */
+export function defenseText(view) {
+  if (!view) return '';
+  const mark = { ok: '✓', mitigated: '△', missing: '✗' };
+  return view.items.filter((x) => !x.user).map((x) => `${mark[x.status] || ''}${x.text && x.status === 'ok' ? x.text : x.label}`).join('・');
+}
+
+/**
+ * 守りのスキルの火力の差 (createPlanRunner の result().costOfDefense) → 文。差が無ければ null。
+ * kind 'damage' = 1 コンボの期待値 (守りなしの方が高い)、'combos' = 全部倒すまでの回数 (守りありの方が多い)。
+ */
+export function costOfDefenseText(cost) {
+  if (!isObj(cost) || num(cost.main) == null || num(cost.free) == null || !(cost.main > 0) || !(cost.free > 0)) return null;
+  if (cost.kind === 'combos') {
+    const pct = (cost.main / cost.free - 1) * 100;
+    return pct >= 0.05 ? `守りのスキルのために、全部倒すまでの回数が 約 ${formatNumber(pct, 1)}% 増えます (目安)` : null;
+  }
+  const pct = (1 - cost.main / cost.free) * 100;
+  return pct >= 0.05 ? `守りのスキルのために火力 −${formatNumber(pct, 1)}% (目安)` : null;
 }
 
 /** 結果の 1 件の装備の行 (詳しくのシート用) */
@@ -799,6 +870,30 @@ export function bestOfProgress(best) {
 export function valueText(v, scoreKind = 'damage') {
   if (v == null) return '—';
   return scoreKind === 'combos' ? `約 ${formatNumber(Math.ceil(v), 0)} 回` : formatNumber(v, 1);
+}
+
+/**
+ * 結果の行の値の文。多頭 (回数) は相手ごとに切り上げた回数の合計 (combosTotal。相手タブの「全部倒すまで」と同じ数え方。
+ * いまとの差 diffCombos も同じ数え方) を出し、無ければ T の切り上げ。
+ */
+export function rowValueText(row) {
+  if (!row) return '—';
+  if (row.scoreKind === 'combos' && row.combosTotal != null) return valueText(row.combosTotal, 'combos');
+  return valueText(row.value, row.scoreKind);
+}
+
+/**
+ * 「この条件で探す」の下の時間の目安。予算 (計算した時間) は守るが、予算で切れない段 (候補を絞る・仕上げる・武器 2 本の合わせ・
+ * 守りの火力の差) は端末の速さで延びる。仮置きの発動率を火力タブの値のまま (keep) にすると、条件つきのスキルが増えて
+ * その段が重くなり、相手に合わせて探す Job や片手剣すべてでは iPhone で 10 秒をこえる見込み (docs/SEARCH_DESIGN.md 5.3 節)。
+ */
+export function startHintText(form, search) {
+  const sec = Number(search && search.budgetSec) || 6;
+  const job = form && form.job;
+  const heavy = !!job && ((form.weaponMode === 'all') || (job.kind === 'plan' && search.placeholders === 'keep'));
+  if (!heavy) return `${sec} 秒くらい (途中で見つかった組を先に出します)`;
+  const why = form.weaponMode === 'all' ? '片手剣すべてから探す' : '仮の発動率を火力タブの値のまま、相手に合わせて探す';
+  return `${sec} 秒くらい。${why}ので、もっとかかることがあります (途中で見つかった組を先に出します)`;
 }
 
 /** 探すのにかかった時間の記録 (store.js の appendSearchTiming に渡す形) */
