@@ -125,7 +125,13 @@ const r = validateCharm(charm, talismanRules, skills, { charmsFixed });
   (入れた発動率は使わない)。`monsterStatus` を渡さない (分からない) ときは決めつけない。
   そのときの `conditions[]` の要素は `inactive: true`・`inactiveReason` (画面に出せる日本語)・`placeholder: false`。
   判定は `conditionSourceMissing(def, skillIdSet, monsterStatus)`。
-- 関係の無い条件どうしは独立と仮定する。組み合わせ (パターン) が `MAX_PATTERNS` (16384) を超えたら例外。
+- 関係の無い条件どうしは独立と仮定する。組み合わせ (パターン) が `MAX_PATTERNS` (16384) を超えたら、`comboExpected` は全部を並べずに
+  **因子分解の合計**を返す (2026-10-21・`docs/SEARCH_DESIGN.md` 4 章の 2): 同時に起きない条件 (`exclusiveWith`) でつながる塊ごとに
+  パターンを数え上げ (`factorPatterns`)、攻撃・属性の乗算と加算は期待値で、会心率など線形でない値は同じものをまとめて畳み込む
+  (攻撃・属性の上限に当たりうるときはその値もまとめない)。独立の仮定は同じなので値は全パターンの加重平均と同じ (相対 1e-9 未満。
+  足し順と、重みが 1e-12 以下のパターンの扱いだけ違う)。このときの結果は `factored: true`・`steps` は空 (技ごとの内訳は出さない)・
+  警告 `many-patterns` (`count` = パターンの数)。火力タブは合計と警告を出し、「技ごとの内訳」には出していない旨を出す。
+  まとめても状態が 2^18 を超えるときだけ例外 (「条件の組み合わせが多すぎる」)。`MAX_PATTERNS` 以下のときは今までと同じ道 (同じ値)。
 - スキルの効果: `levels[]` の値は `activeStates` の段で出る主効果。`levels[].byState` に段ごとの効果があればその段ではそちら
   (連撃の 1〜4 ヒット段、黒蝕竜の力の感染中)。それ以外の段では効果なし。
 - `conditionGroup` の無い条件つきスキル (古いデータ・テスト用) は、そのスキルだけのグループ `skill:<skillId>` になる
@@ -159,7 +165,7 @@ const input = { weapon, sharpness: 'white', skills: build.skills, effects, motio
 
 const r = comboExpected(input);
 // r.total / r.physical / r.element / r.extra … コンボ 1 回の期待ダメージ (extra は灼熱化などの追加分)
-// r.steps[] … 技ごとの内訳 {move, name, isWound, total, physical, element, extra}
+// r.steps[] … 技ごとの内訳 {move, name, isWound, total, physical, element, extra}。パターンが MAX_PATTERNS を超えたときは空 (r.factored)
 // r.conditions[] … このスキル構成で効く条件グループ (画面の発動率の入力欄に使う)
 //     {id, label, type, states: [{id, label}], offState, uptime, probs, defaultUptime, fromInput,
 //      placeholder (使った値が仮置きなら true), uptimeBasis, exclusiveWith, skills: [{skillId, name}], note,
@@ -183,7 +189,8 @@ const c = skillContribution(input);
 | `resolveSkills(skills, effects)` | スキルを `active` / `unsupported` / `unknown` / `lowConfidence` に分ける |
 | `resolveConditions(active, effects, uptimes, {skillIds, monsterStatus}?)` | 使う条件グループと発動率 `{active, groups, warnings}` (4 番目は条件のもとの確かめ) |
 | `conditionSourceMissing(def, skillIdSet, monsterStatus)` | 条件のもと (`sources`) が装備にも相手にも無いか |
-| `enumeratePatterns(groups)` | 条件の段の組み合わせと重み `{patterns: [{weight, states: {グループ id: 段 id}}], warnings}` (同時に起きない条件は本人の値を先に保つ) |
+| `enumeratePatterns(groups)` | 条件の段の組み合わせと重み `{patterns: [{weight, states: {グループ id: 段 id}}], warnings}` (同時に起きない条件は本人の値を先に保つ)。`MAX_PATTERNS` を超えたら例外 |
+| `factorPatterns(groups)` | 同時に起きない条件の塊ごとのパターン `{blocks: [{groups, patterns}], count, warnings}`。`count` は enumeratePatterns が並べる数 (塊の数の積。上限を超えていてもよい)、`warnings` は enumeratePatterns と同じもの・同じ並び |
 | `conditionGroupDefs(effects)` | `rules.conditionGroups` を id → 定義 の Map に (exclusiveWith は両側にそろえる) |
 | `aggregateModifiers(effectList, elementType, buffs)` → `computeStats(weapon, mods, rules)` | 1 パターン分の攻撃力・会心率・属性値 |
 | `isWoundOnlyHit(hit)` | 傷口でだけ出るヒットか |
@@ -193,7 +200,10 @@ const c = skillContribution(input);
 
 警告のコード: `bad-uptime` (発動率が読めない → 既定値) / `unknown-state` (知らない段) / `uptime-over-100` (段の合計が 100% 超え →
 縮める) / `exclusive-conflict` (同時に起きない条件の合計が 100% 超え) / `unknown-condition-group` / `no-wound` /
-`wound-only-hits-skipped`。
+`wound-only-hits-skipped` / `many-patterns` (パターンが `MAX_PATTERNS` を超えたので因子分解の合計で出した。技ごとの内訳なし)。
+
+`comboExpected` の入力にはテスト用に `maxPatterns` (全パターンを並べる数の上限。0 で必ず因子分解の道) がある
+(`tests/damage_factored.test.mjs` が両方の道を同じ入力で比べる)。
 
 ### 式
 
@@ -320,11 +330,11 @@ const hz = hitzoneFor(monster, 'head', 'arch-tempered', { useUncertain: state.ta
 
 | ファイル | 中身 |
 |---|---|
-| `search.js` | 入口: `createSearch(input, data)`・`optimizeWeaponSide(input, fixed, data, {score, N})` (武器の側だけを選び直す)・`PHASES`・`DEFAULT_BUDGET_MS` (6000)・`MISMATCH_REL` (1e-9) |
+| `search.js` | 入口: `createSearch(input, data)`・`optimizeWeaponSide(input, fixed, data, {score, N})` (武器の側だけを選び直す)・`gammaIndexOf(targetData)` (歴戦王の素材の印)・`PHASES`・`DEFAULT_BUDGET_MS` (6000)・`MISMATCH_REL` (1e-9)・`PREMISE_WARNINGS` |
 | `search/evaluator.js` | `makeEvaluator(o)` 速い評価器 (Lv の並び → 期待値)。damage.js の式を写している (直したら両方。`tests/search_eval.test.mjs`) |
 | `search/problem.js` | `prepare(data, o)` 下ごしらえ・`gainTable`・`concaveSlopes` (増え方の表) |
-| `search/solver.js` | `BnbSolver` ビーム・B&B・葉の珠詰め・仕上げ・`MEMO_LIMITS` (覚えの上限) |
-| `search/realize.js` | `realizeEntry` (結果 → 装備一式)・`checkBuild` (computeBuild + comboExpected で計算し直す)・`summarize` |
+| `search/solver.js` | `BnbSolver` ビーム・B&B・葉の珠詰め・仕上げ・武器も探すときの 2 段のふるい・シリーズ/グループの必須の部位の割り当て・`MEMO_LIMITS` (覚えの上限) |
+| `search/realize.js` | `realizeEntry` (結果 → 装備一式。γ を避けて類の代表を選べる)・`checkBuild` (computeBuild + comboExpected で計算し直す)・`summarize`・`placeDecos` |
 
 ```js
 import { createSearch, PHASES } from './app/model/search.js';
@@ -346,6 +356,7 @@ const search = createSearch({
   mode: 'fast',                    // 'fast' | 'exact' (保証のある上界。小さい問題のテスト用)
   stopAfter: undefined,            // 'partial' = 仕上げ 1 (途中の結果) で止める
   current: state.build,            // 渡すと result().baseline = {value} (同じ式で計算した今の装備の値)
+  gamma: gammaIndexOf(targetData), // 渡すと results[].gamma に「歴戦王の素材が要る」の印 (下)。同じ類に γ でないものがあればそちらを出す
 }, data);                          // data = data.js の core のデータ (index・skillEffects・motions を読む) か {index, effects, motions}
 
 while (!search.step(80)) {         // 80ms ぶん進める。終わったら (中止・失敗を含む) true
@@ -361,22 +372,42 @@ search.extend({ ms: 6000 });       // 続けて探す (B&B の続き + 仕上げ
 | 項目 | 中身 |
 |---|---|
 | `status` | `'partial'` (途中。partialReady より前は results が空のこともある・stopAfter で止めた) / `'done'` (B&B を最後まで回した) / `'stopped'` (予算で打ち切り。ふつうはこれ) / `'cancelled'` / `'infeasible'` (必須を満たす構成が無いと分かった) / `'error'` (計算中の例外。warnings に code `error`) |
-| `results[]` | `{rank, value, exact, weapon, build, alternatives, skills, freeSlots, check, perGroup?}`。`build` は state.build と同じ形 (computeBuild にそのまま渡せる。限界突破は実際に使った部位だけ true)。`alternatives` = 同じ類のほかの防具・護石 (`{head: [id...], ..., charm: [ref...]}`。入れ替えても値も珠の位置も同じ)。`check = {value, relDiff, errors, warnings}` は computeBuild + comboExpected の値 |
+| `results[]` | `{rank, value, exact, weapon, build, alternatives, skills, freeSlots, check, perGroup?, gamma?}`。`build` は state.build と同じ形 (computeBuild にそのまま渡せる。限界突破は実際に使った部位だけ true)。`alternatives` = 同じ類のほかの防具・護石 (`{head: [id...], ..., charm: [ref...]}`。入れ替えても値も珠の位置も同じ)。`check = {value, relDiff, factored, errors, warnings}` は computeBuild + comboExpected の値 (`factored` = パターンが多いので因子分解の合計で出した)。`gamma` (input.gamma を渡したとき) = `[{part, armorId \| charmId, monsterId, name}]` 歴戦王の素材が要る防具・護石 |
 | `infeasible` | `{missing: [{skillId, name, level, reason}]}` か null。必須を 1 つずつ外して判定し直した「同時には届かない」最小の組 |
 | `warnings[]` | `{code, message}`。下の表 |
 | `baseline` | `{value}` か null (`current` を渡したとき) |
 | `quality` | `'exact'` (mode exact で最後まで) / `'heuristic'` |
-| `stats` | `{prepareMs, elapsedMs, activeMs, phases: [{name, endMs, best}], classes: {head: 42, ...}, charms, relevantSkills, weapons: {before, after}, nodes, leaves, boundCalls, memoClears, firstSolutionMs}` |
+| `stats` | `{prepareMs, elapsedMs, activeMs, phases: [{name, endMs, best}], classes: {head: 42, ...}, charms, relevantSkills, weapons: {before, after}, nodes, leaves, boundCalls, memoClears, firstSolutionMs, sieve}`。`sieve` = 武器も探すときの 2 段のふるい `{combos, measured, weapons: [dfs を回した武器の参照]}` か null。`phases` には dfs の頭のふるいが `sieve` として入る (progress().phase は dfs のまま) |
 
 警告のコード: `placeholder-uptimes` (仮置きの発動率で探した。`groups` に条件の id) / `exclusive-over-100` / `blunt-handicraft` /
-`budget-stopped` / `evaluator-mismatch` (`count`。comboExpected の値で並べ直した) / `over-max-patterns` (`count`。comboExpected が
-MAX_PATTERNS で計算できない候補を外して繰り上げた) / `unknown-skill` / `unknown-weapon` / `required-over-max` / `unknown-sharpness` /
-`realize-failed` / `check-failed` (comboExpected が MAX_PATTERNS 以外の例外になった候補を外した) / `error`。
-`message` はそのまま画面に出せる日本語。
+`non-monotone` (`skillIds`。Lv を上げると火力が下がるスキルがある) / `budget-stopped` / `evaluator-mismatch` (`count`。comboExpected の
+値で並べ直した) / `weapons-sieved` (`kept`・`rest`。武器も探すとき、見込みの高い武器に絞って dfs を回した。続けて探すと残りも回す) /
+`unknown-skill` / `unknown-weapon` / `required-over-max` / `unknown-sharpness` / `realize-failed` / `check-failed` (comboExpected が例外に
+なった候補を外した) / `error`。`message` はそのまま画面に出せる日本語。
+- `exclusive-over-100`・`blunt-handicraft`・`non-monotone` は上界の前提が崩れる入力 (`PREMISE_WARNINGS`。`docs/SEARCH_DESIGN.md` 4 章の 6)。
+  fast はそのまま動く (近似) が、mode `exact` で最後まで回っても `quality` は `'heuristic'` になる。
+- (2026-10-21 2b) `over-max-patterns` (comboExpected が MAX_PATTERNS で計算できない候補を外して繰り上げた) は無くした。comboExpected が
+  因子分解の合計を返すようになったため (damage.js の節)。
 
 - 入力の誤りで続けられないもの (武器が無い・相手が無い・コンボが無い・データが無い) は `createSearch` が例外を投げる。ほかは warnings。
 - 計算し直し (`check`) は result() のたびに上位 K 件ぶん comboExpected を呼ぶ (同じ構成は覚える)。仮置きの発動率のままだと 1 件 20〜30ms (Node)。
-- テスト用の入力: `beam: [幅, ...]` (ビームの幅) / `dominance: false` (優越の除去をしない。総当たりと同じ数え方になる)。
+- テスト用の入力: `beam: [幅, ...]` (ビームの幅) / `dominance: false` (優越の除去をしない。総当たりと同じ数え方になる) /
+  `sieve: false` (武器も探すときの 2 段のふるいをしない) か `{top, weapons}` (測り直す防具・護石の組の数 既定 50・dfs を回す武器の数 既定 3)。
+- 必須のシリーズ/グループスキルは、残りの部位を「どのボーナスに数えるか」割り当てて判定する (部位の取り合い・ゴグα/β の 2 つのシリーズも
+  見る。満たせない組は最初の上界で分かる。`docs/SEARCH_DESIGN.md` 2.8 節・11 章)。
+
+歴戦王の素材 (γ 防具・狩猟証γ の護石。`docs/SEARCH_DESIGN.md` 4 章の 4):
+
+```js
+import { gammaIndexOf } from './app/model/search.js';
+const gamma = gammaIndexOf(targetData);  // data.js の target データ / monsters.json 丸ごと / monsters の配列
+// gamma = {armor: {[armorId]: {monsterId, name}}, charmsFixed: {[charmId]: {monsterId, name}},
+//          monsters: [{monsterId, name: 'アルシュベルド（歴戦王）', certificate, armorIds, charmFixedIds, groupSkills}]}
+// 倒していない歴戦王の分を外す: input.armorExclude に monsters[i].armorIds、input.charms.fixedExclude に monsters[i].charmFixedIds
+```
+
+- `armor` / `charmsFixed` の形は recommend.js の `gammaIndex` と同じ (印の `name` は個体の名前)。いまのデータでは γ 防具 25 個・護石 10 個で、
+  ヌシの魂 (グループ) の防具は全部 γ (全部外すとヌシの魂は武器の 1 部位だけ。必須にしていれば `infeasible` の理由に「使わない防具」と出る)。
 
 武器の側だけを選び直す (`docs/RECOMMEND_DESIGN.md` 3.3 節・5.4 節。武器 2 本の案で、1 回目の防具の組に 2 本目を合わせる):
 
@@ -387,7 +418,7 @@ const list = optimizeWeaponSide(input, fixed, data, { score: (perGroup, value) =
 // input = createSearch の入力 (weapons = 候補の武器、targets[].group、required など。防具・護石の項目は使わない)
 // fixed = {armor: {head, ...}, charm, limitBreak, decorations: {head, ..., charmArmor, charmWeapon}} (decorations.weapon は無視)
 // → [{weapon, decorations: {weapon: [珠の id | null]}, build, perGroup, value, score,
-//     check: {value, perGroup, relDiff, overMaxPatterns, errors} | null}]   score の大きい順。武器 1 本につき一番良い珠の組 1 件
+//     check: {value, perGroup, relDiff, factored, error, errors} | null}]   score の大きい順。武器 1 本につき一番良い珠の組 1 件
 //   {check: false} で計算し直しを省く (check: null)
 ```
 
@@ -395,7 +426,8 @@ const list = optimizeWeaponSide(input, fixed, data, { score: (perGroup, value) =
 - 候補の武器は支配除去 (`problem.js`) をしてから測る (`input.dominance: false` で外せる)。刈り込みは「武器の珠で届く Lv の箱の上」の
   score なので、**score は各 group の値について単調** (値が上がって下がらない) であること。既定の score は全体の加重平均 `value`。
 - 同じ `input` の物で何度も呼ぶと下ごしらえ (評価器・武器の珠の組) を使い回す (WeakMap)。片手剣 95 本が候補で、最初の 1 回は
-  0.2〜1 秒、2 回目から防具の組 1 つあたり 約 10ms (仮置きの発動率 0%) / 約 60ms (仮置き 50% のまま) (Node)。
+  0.2〜1 秒、2 回目から防具の組 1 つあたり 約 10ms (仮置きの発動率 0%) / 約 50ms (仮置き 50% のまま) (Node。目標の 0.1 秒以内。
+  `node --expose-gc tools/bench_search.mjs --weapon-side` で測る。値は `docs/SEARCH_DESIGN.md` 11 章)。
   返す前の計算し直し (`check`) は 1 件 50〜100ms (仮置き 50% のまま) かかるので、途中で何度も呼ぶときは `{check: false}` で省き、
   最後に出す物だけ確かめる (省くと `check: null`)。`build` は computeBuild にそのまま渡せる。
 - 総当たり (候補の武器 × 武器の珠の全組) との一致は `tests/search_weapon_side.test.mjs`。
@@ -407,10 +439,12 @@ Worker のメッセージ (`app/search_worker.js`。`docs/SEARCH_DESIGN.md` 3.5 
 | 画面 → Worker | `start` | `{id, job}` (`job = {kind: 'search', input}` か `{kind: 'plan', runs, merge, K}`)。`{id, input}` だけでもよい (= search) |
 | 画面 → Worker | `cancel` / `extend` | `{id}` / `{id, budget}` |
 | Worker → 画面 | `ready` | 作られたらすぐ data/*.json を読み、索引を作り終えたら 1 回 (以後の探索で使い回す) |
-| Worker → 画面 | `progress` | `{id, phase, elapsedMs, best: [値...], run?}` (段階が変わったときと 0.5 秒ごと) |
+| Worker → 画面 | `progress` | `{id, phase, elapsedMs, best: [値...], run?}` (段階か plan の回 `run.index` が変わったときと 0.5 秒ごと) |
 | Worker → 画面 | `partial` / `done` | `{id, result}`。同じ区切りで終わったら partial は送らず done だけ。cancel の後も done (status `cancelled`)。続ける所の無い extend には今の結果で done をもう一度 |
 | Worker → 画面 | `error` | `{id, message}` (データを読めない・入力の誤り・plan がまだ無い) |
 
 - 80ms ごとに `setTimeout(0)` で手を離して cancel を受ける。新しい `start` が来たら前の探索は捨てる (前の id のメッセージはもう来ない)。
-- `job.kind === 'plan'` は `recommend.createPlanRunner(job, data, {createSearch, optimizeWeaponSide})` を呼ぶ (まだ無いので「準備中」の error)。
-  `data` は Worker が読んだ core のデータ (生データ + `index`)。
+- `job.kind === 'plan'` は `recommend.createPlanRunner(job, data, {createSearch, optimizeWeaponSide})` を呼ぶ (recommend.js に無ければ
+  「準備中」の error)。`data` は Worker が読んだ core のデータ (生データ + `index`)。runner の `progress().run` はそのまま progress に載せ、
+  `partialReady` で partial を 1 回送る。5.3 節の形の作り物で確かめたテストは `tests/search_worker_plan.test.mjs` (recommend.js を
+  `module.registerHooks` で差し替える)。

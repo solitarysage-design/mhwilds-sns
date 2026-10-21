@@ -29,21 +29,28 @@ export function placeDecos(slots, list) {
  * ソルバの結果の 1 件 (e = {wi, charm, parts, ws, deco}) を装備一式にする。ソルバの状態には触らない
  * (探索の途中で呼んでもよい)。
  * @param P prepare() の結果、S ソルバ (類の並び partCls / charmCls / partOrder を読むだけ)
+ * @param avoid {armor: Set<防具 id>, charms: Set<護石の参照>} (省略可) 同じ類にほかがあれば代表にしないもの
+ *   (歴戦王の素材が要る γ 防具・狩猟証γ の護石。同じ値になる γ でない防具があればそちらを出す)
  * @returns {{build, alternatives}}  build は computeBuild にそのまま渡せる (state.build と同じ形)
  */
-export function realizeEntry(P, S, e) {
+export function realizeEntry(P, S, e, avoid = null) {
   const idx = P.idx;
   const wp = P.weapons[e.wi];
+  /** 類の代表 (avoid に無いものを先に) と、残り (alternatives。元の並び) */
+  const pick = (members, set) => {
+    const k = set && set.size ? members.findIndex((m) => !set.has(m)) : 0;
+    const i = k < 0 ? 0 : k;
+    return [members[i], members.filter((_, j) => j !== i)];
+  };
   const charmCls = S.charmCls[e.charm];
-  const charmRef = charmCls.members[0];
+  const [charmRef, charmAlt] = pick(charmCls.members, avoid && avoid.charms);
   const armor = {};
   const alternatives = {};
   S.partOrder.forEach((part, i) => {
     const cls = S.partCls[i][e.parts[i]];
-    armor[part] = cls.members[0];
-    alternatives[part] = cls.members.slice(1);
+    [armor[part], alternatives[part]] = pick(cls.members, avoid && avoid.armor);
   });
-  alternatives.charm = charmCls.members.slice(1);
+  alternatives.charm = charmAlt;
   const charm = charmRef == null ? null : (typeof charmRef === 'number' ? idx.charmsFixed.get(charmRef) : idx.charms.get(charmRef));
   const isFixed = !charm || (!('armorSlots' in charm) && !('weaponSlots' in charm));
 
@@ -92,14 +99,15 @@ export function realizeEntry(P, S, e) {
  * 装備一式を computeBuild + comboExpected で計算し直す (部位の割合で加重平均)。
  * @param ctx {idx, effects, motions, combo, targets: [{weight, group?, target}], uptimes, monsterStatus, buffs,
  *             sharpness: null (自動) | 色}
- * @returns {{value, perTarget: number[], perGroup, r (computeBuild の結果), sharpness, overMaxPatterns: bool, error}}
- *   value は相手・コンボが無ければ null。条件の組み合わせが MAX_PATTERNS を超えると overMaxPatterns: true (value は null)
+ * @returns {{value, perTarget: number[], perGroup, r (computeBuild の結果), sharpness, factored: bool, error}}
+ *   value は相手・コンボが無ければ null。factored = 条件の組み合わせが MAX_PATTERNS を超えたので、comboExpected が因子分解の
+ *   合計で出した (値は同じ。技ごとの内訳が無いだけ)。comboExpected が例外なら error に文 (value は null)
  */
 export function checkBuild(build, ctx) {
   const r = computeBuild(build, ctx.idx);
   const w = resolveWeaponRef(build.weapon, ctx.idx) || (typeof build.weapon === 'object' ? build.weapon : null);
   const sharpness = ctx.sharpness || (w ? autoSharpness(w, ctx.idx, r.skillLevels).color : null) || 'white';
-  const out = { value: null, perTarget: [], perGroup: null, r, sharpness, overMaxPatterns: false, error: null };
+  const out = { value: null, perTarget: [], perGroup: null, r, sharpness, factored: false, error: null };
   if (!ctx.targets || !ctx.targets.length || !ctx.combo) return out;
   const skills = r.skills.filter((s) => s.level > 0).map((s) => ({ skillId: s.skillId, level: s.level }));
   try {
@@ -108,14 +116,14 @@ export function checkBuild(build, ctx) {
       const x = comboExpected({
         weapon: damageWeapon(w), sharpness, skills, uptimes: ctx.uptimes || {}, effects: ctx.effects,
         motions: ctx.motions, combo: ctx.combo, target: t.target, monsterStatus: ctx.monsterStatus, buffs: ctx.buffs,
-      }).total;
-      out.perTarget.push(x);
-      v += t.weight * x;
+      });
+      if (x.factored) out.factored = true;
+      out.perTarget.push(x.total);
+      v += t.weight * x.total;
     }
     out.value = v;
   } catch (e) {
-    if (/条件の組み合わせが多すぎる/.test(String(e && e.message))) out.overMaxPatterns = true;
-    else out.error = String((e && e.message) || e);
+    out.error = String((e && e.message) || e);
     return out;
   }
   // 相手のまとまり (多頭の相手ごと) の値 = そのまとまりの行だけの加重平均

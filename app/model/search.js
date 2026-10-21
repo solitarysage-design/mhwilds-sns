@@ -18,6 +18,9 @@ export const DEFAULT_BUDGET_MS = 6000;
 /** 計算し直しで、速い評価器の値とずれたとみなす相対差 */
 export const MISMATCH_REL = 1e-9;
 
+/** 上界の前提が崩れる入力の警告 (docs/SEARCH_DESIGN.md 4 章の 6)。これがあると mode 'exact' でも quality は 'heuristic' */
+export const PREMISE_WARNINGS = Object.freeze(['exclusive-over-100', 'blunt-handicraft', 'non-monotone']);
+
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 const isObj = (x) => x != null && typeof x === 'object' && !Array.isArray(x);
 const listOf = (x, key) => (x == null ? [] : Array.isArray(x) ? x : Array.isArray(x[key]) ? x[key] : []);
@@ -122,10 +125,36 @@ function normalizeInput(input, core, warnings) {
     armorExclude: listOf(inp.armorExclude).map(Number),
     stopAfter: inp.stopAfter === 'partial' ? 'partial' : null,
     current: isObj(inp.current) ? inp.current : null,
-    // テスト用: ビームの幅 / 優越の除去をしない (総当たりと同じ数え方にする)
+    gamma: gammaOf(inp.gamma),
+    // テスト用: ビームの幅 / 優越の除去をしない (総当たりと同じ数え方にする) / 武器も探すときの 2 段のふるい (false でしない)
     beam: Array.isArray(inp.beam) ? inp.beam : undefined,
     dominance: inp.dominance !== false,
+    sieve: inp.sieve === false ? false : (isObj(inp.sieve) ? inp.sieve : undefined),
   };
+}
+
+/** input.gamma (gammaIndexOf の結果) → {armor: Map<id, {monsterId, name}>, charms: Map<id, {...}>} か null */
+function gammaOf(g) {
+  if (!isObj(g)) return null;
+  const toMap = (o) => new Map(Object.entries(isObj(o) ? o : {}).filter(([, v]) => isObj(v)).map(([k, v]) => [Number(k), v]));
+  const armor = toMap(g.armor);
+  const charms = toMap(g.charmsFixed);
+  return armor.size || charms.size ? { armor, charms } : null;
+}
+
+/** 装備の γ 防具・狩猟証γ の護石 → [{part, armorId | charmId, monsterId, name}] (recommend.js の印と同じ形) */
+function gammaMarks(build, gamma) {
+  if (!gamma || !build) return [];
+  const out = [];
+  for (const part of ARMOR_PARTS) {
+    const id = build.armor ? build.armor[part] : null;
+    const g = id != null ? gamma.armor.get(Number(id)) : null;
+    if (g) out.push({ part, armorId: id, monsterId: g.monsterId, name: g.name });
+  }
+  const c = build.charm;
+  const gc = typeof c === 'number' ? gamma.charms.get(c) : null;
+  if (gc) out.push({ part: 'charm', charmId: c, monsterId: gc.monsterId, name: gc.name });
+  return out;
 }
 
 /** 発動率の注意: 仮置きの値で探した条件・同時に起きない条件の合計が 100% 超え */
@@ -190,7 +219,7 @@ export function createSearch(input, data) {
     for (const w of P.warnings) warnings.push(w);
     if (n.objective === 'damage') uptimeWarnings(P, n, core, warnings);
     S = new BnbSolver(P, {
-      mode: n.mode, objective: n.objective, K: n.K, budget: n.budget, stopAfter: n.stopAfter, beam: n.beam,
+      mode: n.mode, objective: n.objective, K: n.K, budget: n.budget, stopAfter: n.stopAfter, beam: n.beam, sieve: n.sieve,
     });
   }
 
@@ -199,7 +228,7 @@ export function createSearch(input, data) {
     const key = `${S.keyOf(e)}|${e.ws ? e.ws.decos.join(',') : ''}|${e.deco ? e.deco.join(',') : ''}`;
     let x = checkCache.get(key);
     if (!x) {
-      const { build, alternatives } = realizeEntry(P, S, e);
+      const { build, alternatives } = realizeEntry(P, S, e, n.gamma ? { armor: n.gamma.armor, charms: n.gamma.charms } : null);
       const c = checkBuild(build, ctx);
       x = { build, alternatives, c, ...summarize(c.r) };
       if (checkCache.size > 300) checkCache.clear();
@@ -236,7 +265,18 @@ export function createSearch(input, data) {
       const kind = n.idx.skills.get(q.skillId)?.kind;
       const r = P.rOf.get(q.skillId);
       if (kind === 'weapon') return '武器・護石・武器スロットの珠を合わせても届きません';
-      if (kind === 'set' || kind === 'group') return 'この防具の組み合わせ (部位の数) では届きません';
+      if (kind === 'set' || kind === 'group') {
+        // 使わない防具 (倒していない歴戦王の γ 防具など) にそのシリーズ/グループの防具があれば、そう書く
+        const bonusOf = (a) => (kind === 'set'
+          ? [...(a.setBonusIds || []), a.setBonusId].filter((x) => x != null).map((id) => n.idx.setBonuses.get(id))
+          : [n.idx.groupBonuses.get(a.groupBonusId)]).filter(Boolean);
+        const excluded = n.armorExclude.some((id) => {
+          const a = n.idx.armor.get(id);
+          return a && bonusOf(a).some((b) => b.skillId === q.skillId);
+        });
+        return excluded ? 'この防具の組み合わせ (部位の数) では届きません。使わない防具 (倒していない歴戦王の γ 防具など) を外したためです'
+          : 'この防具の組み合わせ (部位の数) では届きません';
+      }
       return P.armorDeco[r] ? '防具・護石・珠を合わせても届きません' : 'この防具スキルの珠が無く、防具と護石だけでは届きません';
     };
     // 必須を 1 つずつ外して判定し直し、外しても満たせないままなら外す → 残ったものが「同時には届かない」最小の組
@@ -258,7 +298,6 @@ export function createSearch(input, data) {
     const out = [];
     const extraWarnings = [];
     if (!S || failed) return { results: out, extraWarnings };
-    let overMax = 0;
     let mismatch = 0;
     const list = S.list;
     for (const e of list) {
@@ -271,7 +310,6 @@ export function createSearch(input, data) {
         continue;
       }
       const c = x.c;
-      if (c.overMaxPatterns) { overMax++; continue; }
       if (c.error) {
         extraWarnings.push({ code: 'check-failed', message: `火力タブの計算で確かめられなかった候補を外しました (${c.error})` });
         continue;
@@ -285,9 +323,10 @@ export function createSearch(input, data) {
       const item = {
         rank: 0, value: n.objective === 'damage' ? value : null, exact: !!e.exact, weapon: x.build.weapon, build: x.build,
         alternatives: x.alternatives, skills: x.skills, freeSlots: x.freeSlots,
-        check: { value: c.value, relDiff, errors: c.r.errors, warnings: c.r.warnings },
+        check: { value: c.value, relDiff, factored: c.factored, errors: c.r.errors, warnings: c.r.warnings },
       };
       if (c.perGroup) item.perGroup = c.perGroup;
+      if (n.gamma) item.gamma = gammaMarks(x.build, n.gamma);
       out.push(item);
     }
     if (n.objective === 'none') {
@@ -302,10 +341,6 @@ export function createSearch(input, data) {
     if (mismatch) {
       extraWarnings.push({ code: 'evaluator-mismatch', count: mismatch,
         message: `探索の中の計算と火力タブの計算が ${mismatch} 件で食い違ったので、火力タブの計算で並べ直しました` });
-    }
-    if (overMax) {
-      extraWarnings.push({ code: 'over-max-patterns', count: overMax,
-        message: `条件の組み合わせが多すぎて火力タブで計算できない候補を ${overMax} 件外しました (発動率を 0% か 100% にすると減ります)` });
     }
     return { results: out, extraWarnings };
   }
@@ -339,6 +374,12 @@ export function createSearch(input, data) {
       if (status === 'stopped') {
         ws.push({ code: 'budget-stopped', message: '時間で打ち切りました。もっと良い組み合わせが残っていることがあります (「続けて探す」で続きを探せます)' });
       }
+      // 武器も探すときの 2 段のふるい (docs/SEARCH_DESIGN.md 2.7 節): 外した武器が残っていれば知らせる
+      if (S && S.stats.sieve && S.sieveRest && S.sieveRest.length) {
+        ws.push({ code: 'weapons-sieved', kept: S.stats.sieve.weapons.length, rest: S.sieveRest.length,
+          message: `武器は ${P.weapons.length} 本のうち、見込みの高い ${S.stats.sieve.weapons.length} 本に絞ってくわしく探しました`
+            + ' (「続けて探す」でほかの武器もくわしく探します)' });
+      }
       if (failed) ws.push({ code: 'error', message: `探索の途中でエラーが起きました: ${failed}` });
       let baseline = null;
       if (n.current && n.objective === 'damage') {
@@ -349,7 +390,8 @@ export function createSearch(input, data) {
       }
       return {
         status, results, infeasible: infeasibleInfo(), warnings: ws, baseline,
-        quality: S && n.mode === 'exact' && S.done && !S.cut ? 'exact' : 'heuristic',
+        quality: S && n.mode === 'exact' && S.done && !S.cut && !warnings.some((w) => PREMISE_WARNINGS.includes(w.code))
+          ? 'exact' : 'heuristic',
         stats: S ? {
           prepareMs, elapsedMs: now() - t0, activeMs: S.activeMs + (prepareMs || 0),
           phases: S.stats.phases.map((p) => ({ ...p, endMs: p.endMs + (prepareMs || 0) })),
@@ -357,6 +399,8 @@ export function createSearch(input, data) {
           charms: P.charms.length, relevantSkills: P.R, weapons: { before: P.weaponsBefore, after: P.weapons.length },
           nodes: S.stats.nodes, leaves: S.stats.leaves, boundCalls: S.stats.boundCalls, memoClears: S.stats.memoClears,
           firstSolutionMs: S.stats.firstSolutionMs,
+          // 2 段のふるい: 測り直した防具・護石の組の数・測った武器の数・dfs を回した武器 (参照)
+          sieve: S.stats.sieve ? { ...S.stats.sieve, weapons: S.stats.sieve.weapons.map((wi) => P.weapons[wi].ref) } : null,
         } : { prepareMs, elapsedMs: now() - t0 },
       };
     },
@@ -439,7 +483,7 @@ function weaponSidePrep(input, data) {
  *   check (既定 true。false なら computeBuild + comboExpected での計算し直しを省く。仮置きの発動率のままだと 1 件 50〜100ms かかる
  *   ので、途中で何度も呼ぶときは false にして、最後に出す物だけ確かめる)}
  * @returns [{weapon, decorations: {weapon: [珠の id | null]}, build, perGroup, value, score, check: {value, perGroup, relDiff,
- *   overMaxPatterns, errors} | null}] score の大きい順。武器 1 本につき一番良い珠の組 1 件。perGroup は group の無い入力では null
+ *   factored, error, errors} | null}] score の大きい順。武器 1 本につき一番良い珠の組 1 件。perGroup は group の無い入力では null
  */
 export function optimizeWeaponSide(input, fixed, data, o = {}) {
   const prep = weaponSidePrep(input, data);
@@ -515,8 +559,44 @@ export function optimizeWeaponSide(input, fixed, data, o = {}) {
     if (o.check !== false) {
       const chk = checkBuild(build, ctx);
       const relDiff = chk.value == null ? null : Math.abs(chk.value - b.value) / Math.max(1, Math.abs(chk.value));
-      out.check = { value: chk.value, perGroup: chk.perGroup, relDiff, overMaxPatterns: chk.overMaxPatterns, errors: chk.r.errors };
+      out.check = { value: chk.value, perGroup: chk.perGroup, relDiff, factored: chk.factored, error: chk.error, errors: chk.r.errors };
     }
     return out;
   });
+}
+
+// ---------------------------------------------------------------- 歴戦王の素材 (γ 防具・狩猟証γ の護石。docs/SEARCH_DESIGN.md 4 章の 4)
+
+/**
+ * monsters.json の individuals[].rewards (歴戦王だけにある) から、作るのに歴戦王の素材 (狩猟証γ) が要る防具・固定護石の表を作る。
+ * armor / charmsFixed の形は recommend.js の gammaIndex と同じ。createSearch の input.gamma に渡すと、結果に印
+ * (results[].gamma = [{part, armorId | charmId, monsterId, name}]) が付き、同じ類に γ でない防具・護石があればそちらを代表にする。
+ * 外すとき (倒していない歴戦王) は、monsters[].armorIds を input.armorExclude に、charmFixedIds を input.charms.fixedExclude に入れる。
+ * @param targetData data.js の target データ ({monsters: monsters.json 丸ごと}) / monsters.json 丸ごと / monsters の配列
+ * @returns {{armor: {[armorId]: {monsterId, name}}, charmsFixed: {[charmId]: {monsterId, name}},
+ *            monsters: [{monsterId, name, certificate, armorIds, charmFixedIds, groupSkills: [{skillId, name}]}]}}
+ *   name は個体の名前 (例「アルシュベルド（歴戦王）」)
+ */
+export function gammaIndexOf(targetData) {
+  const td = targetData && targetData.monsters !== undefined ? targetData.monsters : targetData;
+  const list = Array.isArray(td) ? td : listOf(td, 'monsters');
+  const armor = {};
+  const charmsFixed = {};
+  const monsters = [];
+  for (const m of list) {
+    for (const ind of (m && m.individuals) || []) {
+      const r = ind && ind.rewards;
+      if (!isObj(r)) continue;
+      const name = ind.name || m.name;
+      const armorIds = (r.armorSets || []).flatMap((x) => x.armorIds || []);
+      const charmFixedIds = [...(r.charmFixedIds || [])];
+      for (const id of armorIds) armor[id] = { monsterId: m.id, name };
+      for (const id of charmFixedIds) charmsFixed[id] = { monsterId: m.id, name };
+      monsters.push({
+        monsterId: m.id, name, certificate: r.certificate ? r.certificate.name : null, armorIds, charmFixedIds,
+        groupSkills: (r.groupSkills || []).map((g) => ({ skillId: g.skillId, name: g.name })),
+      });
+    }
+  }
+  return { armor, charmsFixed, monsters };
 }

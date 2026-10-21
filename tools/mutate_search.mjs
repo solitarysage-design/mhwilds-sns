@@ -13,7 +13,8 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const TESTS = ['tests/search_eval.test.mjs', 'tests/search_small.test.mjs', 'tests/search_required.test.mjs', 'tests/search_api.test.mjs',
-  'tests/search_weapon_side.test.mjs'];
+  'tests/search_weapon_side.test.mjs', 'tests/search_setgroup.test.mjs', 'tests/search_gamma.test.mjs', 'tests/damage_factored.test.mjs',
+  'tests/search_worker_plan.test.mjs'];
 
 /** 変異: file の find (1 か所だけ) を replace に。why = 見つけるはずのテスト */
 const MUTANTS = [
@@ -57,9 +58,29 @@ const MUTANTS = [
     replace: "const wSlots = (wp.w.slots || []).map((x, i) => ({ t: 'head', i, size: Number(x) || 0 }));", why: '6.2' },
   { name: '探索: 防具用の珠の DFS で必須の分を試さない', file: 'app/model/search/solver.js',
     find: 'for (let n = hiN; n >= minN; n--) {', replace: 'for (let n = hiN; n > minN; n--) {', why: '6.2/6.3' },
-  { name: '探索: シリーズの必須の判定で残りの部位を数えない', file: 'app/model/search/solver.js',
-    find: 'for (let pi = from; pi < 5; pi++) if (this.partHasSet[pi][s]) avail++;\n        const n = this.setCnt[s] + avail;',
-    replace: 'for (let pi = from; pi < 5; pi++) if (this.partHasSet[pi][s]) avail += 0;\n        const n = this.setCnt[s] + avail;', why: '6.3' },
+  // シリーズ/グループの必須 (部位の割り当て。2.8 節)。複数のシリーズ/グループから出る必須のゆるい判定は、いまのデータでは通らない
+  { name: '探索: シリーズ/グループの必須で残りの部位を 1 つ少なく数える', file: 'app/model/search/solver.js',
+    find: 'if (need[b] > this.sgAvail[from][b]) return false;', replace: 'if (need[b] > this.sgAvail[from][b] - 1) return false;', why: '6.3' },
+  { name: '探索: 1 部位を 2 つのシリーズに数えない (ゴグβ)', file: 'app/model/search/solver.js',
+    find: 'return ms.filter((m) => !ms.some((o) => o !== m && (o & m) === m));', replace: 'return ms.map((m) => m & -m);', why: '6.3' },
+  { name: '探索: 部位の割り当てをしない (取り合いを見ない)', file: 'app/model/search/solver.js',
+    find: 'ok = this.sgAssign(from, need);', replace: 'ok = true;', why: '6.3' },
+  // 2 段のふるい (2.7 節)・γ の印 (4 章の 4)・Worker の plan
+  { name: 'ふるい: 選んだ武器で dfs を回さない (外した武器で回す)', file: 'app/model/search/solver.js',
+    find: 'this.weaponQueue = this.weaponQueue.filter((w) => keep.has(w.wi));', replace: 'this.weaponQueue = this.weaponQueue.filter((w) => !keep.has(w.wi));',
+    why: 'api' },
+  { name: 'γ: 同じ類に γ でない防具があっても代表を選び直さない', file: 'app/model/search/realize.js',
+    find: 'const k = set && set.size ? members.findIndex((m) => !set.has(m)) : 0;', replace: 'const k = 0;', why: 'gamma' },
+  { name: 'Worker: plan の回が変わっても progress を送らない', file: 'app/search_worker.js',
+    find: 'runIndex !== lastRun ||', replace: '', why: 'worker_plan' },
+  // damage.js の因子分解の合計 (4 章の 2)
+  { name: 'damage: 因子分解で攻撃の加算の期待値に確率を掛けない', file: 'app/model/damage.js',
+    find: 'e.sAa += s.w * (d.sAa + s.part.aa * d.P);', replace: 'e.sAa += s.w * (d.sAa + s.part.aa);', why: 'factored' },
+  { name: 'damage: 因子分解で心眼の同じ値は後を取る', file: 'app/model/damage.js',
+    find: '(b[0] > a[0] || (b[0] === a[0] && b[1] < a[1]) ? b : a)); // [値, pos, しきい値]',
+    replace: '(b[0] > a[0] || (b[0] === a[0] && b[1] > a[1]) ? b : a)); // [値, pos, しきい値]', why: 'factored' },
+  { name: 'damage: 因子分解で上限に当たっても状態をまとめる', file: 'app/model/damage.js',
+    find: 'if (!atkLinear) k += `|${p.am}|${p.aa}`;', replace: '', why: 'factored' },
   { name: '探索: 武器スキルの必須を武器用の珠で確かめない', file: 'app/model/search/solver.js',
     find: "for (const r of this.reqR) if (P.kind[r] === 'weapon' && Math.min(P.maxLv[r], L0[r] + w.vec[r]) < P.reqLv[r]) ok = false;",
     replace: '', why: '6.3' },

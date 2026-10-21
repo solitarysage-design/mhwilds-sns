@@ -652,6 +652,10 @@ const runner = createPlanRunner(job, data, { createSearch, optimizeWeaponSide })
   護石の武器用スロットの珠は `fixed` のまま (2 本で共有する扱い)。同じ `input` の物で呼ぶと下ごしらえを使い回し、2 回目からは
   防具の組 1 つあたり約 10ms (仮置きの発動率 0%) / 約 60ms (50% のまま) (Node・片手剣 95 本が候補)。最初の 1 回は 0.2〜1 秒。
   返す前の計算し直しは 1 件 50〜100ms (仮置き 50% のまま) なので、途中の合わせでは `{check: false}` で省ける。
+- (実装 2026-10-21・2b) 探索の入力に `gamma` (search.js の `gammaIndexOf(targetData)`。recommend.js の `gammaIndex` と同じ形) を渡すと、
+  結果に γ の印 (`results[].gamma`。2.7 節の「歴戦王〇〇の素材が要ります」と同じ形) が付き、同じ値の γ でない防具・護石があれば
+  そちらを代表にする。シリーズ/グループスキル (ヌシの魂など) の必須も使える (部位の取り合いまで見る)。
+  `optimizeWeaponSide` の防具の組 1 つあたりは Node で 8.5ms (仮置き 0%) / 48ms (50% のまま・計算し直しなし) (`docs/SEARCH_DESIGN.md` 11.3 節)。
 
 ### 5.5 Worker のメッセージ (SEARCH_DESIGN.md 3.5 節への追加)
 
@@ -663,6 +667,8 @@ const runner = createPlanRunner(job, data, { createSearch, optimizeWeaponSide })
 
 - Worker は core データだけを読む (相手のデータは読まない)。肉質・体力・重みは Job に数値で入っている。
 - 同時に 1 つだけ。新しい `start` が来たら前の job を捨てる (今の決まりのまま)。
+- (実装 2026-10-21・2b) progress は段階が変わったときに加えて、回 (`run.index`) が変わったときにも送る。5.3 節の形の作り物の
+  `createPlanRunner` でメッセージを確かめた (`tests/search_worker_plan.test.mjs`。本物とつなぐのは 3f)。
 
 ### 5.6 state.js に足すもの (足すだけなので `STATE_SCHEMA` は 1 のまま)
 

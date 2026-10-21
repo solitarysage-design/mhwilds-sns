@@ -30,7 +30,9 @@ export class BnbSolver {
    *   beam: [幅, ...] (fast。既定 [60, 200]), margin (fast の刈り込みの余裕。既定 0.01),
    *   budget: {ms, activeMs, work} (dfs を打ち切る。ms = 始めてからの時間、activeMs = 計算した時間の合計、
    *            work = dfs の中で上界を求めた回数。どれも無ければ最後まで), minDfsMs (dfs を最低これだけ回す。既定 300),
-   *   stopAfter: 'partial' (polish1 で止める), partOrder, maxSolutions (none で集める数。既定 K), eps (exact で刈る許し)
+   *   stopAfter: 'partial' (polish1 で止める), partOrder, maxSolutions (none で集める数。既定 K), eps (exact で刈る許し),
+   *   sieve: 武器も探すときの 2 段のふるい (docs/SEARCH_DESIGN.md 2.7 節)。{top: 測り直す防具・護石の組の数 (既定 50),
+   *          weapons: dfs を回す武器の数 (既定 3)} か false (ふるわない。全部の武器で dfs)
    * }
    */
   constructor(P, o = {}) {
@@ -90,7 +92,34 @@ export class BnbSolver {
       r, sets: P.sets.map((s, i) => (s.r === r ? i : -1)).filter((i) => i >= 0),
       groups: P.groups.map((g, i) => (g.r === r ? i : -1)).filter((i) => i >= 0),
     }));
+    // 1 つのシリーズ/グループだけから出る必須 (いまのデータは全部これ) は、「どの部位をどのボーナスに数えるか」の割り当てで
+    // まとめて判定する (目標列挙の試作 oracle.mjs の考え方。1 部位で 2 つのボーナスに数える防具 (ゴグα/β) もある)。
+    // sgMasks[部位] = その部位の類が同時に数えられるボーナスの組 (ビット) のうち極大のもの、sgAvail[部位] = その部位から後で
+    // ボーナス b を持てる部位の数
+    this.sgBits = this.reqSG.filter((q) => q.sets.length + q.groups.length === 1)
+      .map((q) => ({ r: q.r, set: q.sets.length ? q.sets[0] : -1, group: q.groups.length ? q.groups[0] : -1 }));
+    const nb = this.sgBits.length;
+    this.sgMasks = this.partCls.map((cls) => {
+      const ms = [...new Set(cls.map((c) => {
+        let m = 0;
+        this.sgBits.forEach((q, b) => { if ((q.set >= 0 && c.sIdx.includes(q.set)) || (q.group >= 0 && c.gIdx === q.group)) m |= 1 << b; });
+        return m;
+      }))];
+      return ms.filter((m) => !ms.some((o) => o !== m && (o & m) === m));
+    });
+    this.sgAvail = [];
+    for (let pi = 0; pi <= 5; pi++) {
+      const a = new Int8Array(nb);
+      for (let pj = pi; pj < 5; pj++) for (let b = 0; b < nb; b++) if (this.sgMasks[pj].some((m) => m & (1 << b))) a[b]++;
+      this.sgAvail.push(a);
+    }
+    this.sgNeed = new Int8Array(nb);
+    this.sgMemo = new Map();
     this.leafExact = this.mode === 'exact';
+    // 武器も探すときの 2 段のふるい (fast だけ)。ビームの葉 (防具・護石の組) を覚えておき、dfs の前に残った武器で測り直す
+    const sv = o.sieve === false ? null : { top: 50, weapons: 3, ...(o.sieve || {}) };
+    this.sieveOpt = this.mode === 'fast' && !this.none && sv && P.weapons.length > sv.weapons ? sv : null;
+    this.beamLeaves = new Map();
     this.memoSize = 0;
     this.wws = P.weapons.map(() => ({ gt: null, memoA: new Map(), memoE: new Map(), leafCache: new Map() }));
   }
@@ -205,13 +234,48 @@ export class BnbSolver {
 
   // ---------------------------------------------------------------- 上界
   /**
-   * シリーズ/グループスキルの必須を、残りの部位で満たせるか (docs/SEARCH_DESIGN.md 2.8 節)。
-   * シリーズごとに「いまの部位数 + 残りの部位のうちそのシリーズを持つ類がある部位の数」で届く段を見る (部位の取り合いは見ない
-   * ゆるい判定なので、満たせる枝を捨てることは無い)。
+   * シリーズ/グループスキルの必須を、残りの部位 (partOrder[from..4]) で満たせるか (docs/SEARCH_DESIGN.md 2.8 節)。
+   * 1 つのシリーズ/グループから出る必須は、要る部位の数を出してから、残りの部位をどのボーナスに数えるかを割り当てて判定する
+   * (部位の取り合いも見る。満たせるなら必ず true なので、満たせる枝を捨てることは無い)。
+   * 複数のシリーズ/グループから出る必須 (いまのデータには無い) は、ボーナスごとに「いまの部位数 + 残りの部位のうちそれを持つ類が
+   * ある部位の数」で届く段を見るゆるい判定。
    */
   setGroupFeasible(from) {
     const P = this.P;
+    const nb = this.sgBits.length;
+    if (nb) {
+      const need = this.sgNeed;
+      let key = from;
+      let any = false;
+      for (let b = 0; b < nb; b++) {
+        const q = this.sgBits[b];
+        // 防具・護石に付いている分 (ふつうは無い) を引いた、ボーナスで出す Lv
+        const lvNeed = P.reqLv[q.r] - this.raw[q.r];
+        let pieces = 0;
+        if (lvNeed > 0) {
+          pieces = Infinity;
+          if (q.set >= 0) { for (const rk of P.sets[q.set].ranks) if (rk.level >= lvNeed && rk.pieces < pieces) pieces = rk.pieces; }
+          else if (P.groups[q.group].level >= lvNeed) pieces = P.groups[q.group].pieces;
+          if (pieces === Infinity) return false;
+        }
+        const have = q.set >= 0 ? this.setCnt[q.set] : this.grpCnt[q.group];
+        need[b] = pieces > have ? pieces - have : 0;
+        if (need[b] > this.sgAvail[from][b]) return false;
+        if (need[b] > 0) any = true;
+        key = key * 8 + need[b];
+      }
+      if (any) {
+        let ok = this.sgMemo.get(key);
+        if (ok === undefined) {
+          ok = this.sgAssign(from, need);
+          if (this.sgMemo.size >= 20000) this.sgMemo.clear();
+          this.sgMemo.set(key, ok);
+        }
+        if (!ok) return false;
+      }
+    }
     for (const q of this.reqSG) {
+      if (q.sets.length + q.groups.length === 1) continue;
       let lv = 0;
       for (const s of q.sets) {
         let avail = 0;
@@ -231,6 +295,29 @@ export class BnbSolver {
       if (Math.min(lv, P.maxLv[q.r]) < P.reqLv[q.r]) return false;
     }
     return true;
+  }
+
+  /**
+   * 部位の割り当て: 部位 pi から後の部位に、その部位の類が持つボーナスの組 (sgMasks) を 1 つずつ選んで、
+   * 足りない部位の数 need (ボーナスごと) を全部埋められるか。need は書き換えて戻す。
+   */
+  sgAssign(pi, need) {
+    const nb = need.length;
+    let done = true;
+    for (let b = 0; b < nb; b++) {
+      if (need[b] <= 0) continue;
+      done = false;
+      if (need[b] > this.sgAvail[pi][b]) return false;
+    }
+    if (done) return true;
+    if (pi >= 5) return false;
+    for (const m of this.sgMasks[pi]) {
+      for (let b = 0; b < nb; b++) if (m & (1 << b)) need[b]--;
+      const ok = this.sgAssign(pi + 1, need);
+      for (let b = 0; b < nb; b++) if (m & (1 << b)) need[b]++;
+      if (ok) return true;
+    }
+    return false;
   }
 
   /** 必須スキルのうち珠で埋める分 [r, Lv, ...] と武器スキルの不足。満たせないなら null */
@@ -760,7 +847,14 @@ export class BnbSolver {
    * dfs が最後まで回っている・終わっていない・泣シミュ型・厳密モードなら何もしない (false)。budget は今から数える。
    */
   extend(budget) {
-    if (!this.done || this.dfsFinished || this.none || this.infeasible || this.mode !== 'fast') return false;
+    if (!this.done || this.none || this.infeasible || this.mode !== 'fast') return false;
+    // 2 段のふるいで外した武器は、選んだ武器の dfs を回り終えてから回す
+    const queueDone = this.weaponQueue && !this.stack && this.wq >= this.weaponQueue.length;
+    if ((this.dfsFinished || queueDone) && this.sieveRest && this.sieveRest.length) {
+      this.weaponQueue.push(...this.sieveRest);
+      this.sieveRest = [];
+      this.dfsFinished = false;
+    } else if (this.dfsFinished) return false;
     if (this.weaponQueue && !this.stack && this.wq >= this.weaponQueue.length) { this.dfsFinished = true; return false; }
     this.done = false;
     this.cut = false;
@@ -808,7 +902,15 @@ export class BnbSolver {
       this.load(st);
       this.stats.leaves++;
       const sol = this.decoOpt(false, NEG);
-      if (sol) this.record(sol);
+      if (sol) {
+        this.record(sol);
+        // 2 段のふるい用: 防具・護石の組ごとの一番良い値 (どの武器でも)
+        if (this.sieveOpt) {
+          const k = `${st.charm}|${st.parts.join(',')}`;
+          const old = this.beamLeaves.get(k);
+          if (!old || old.value < sol.value) this.beamLeaves.set(k, { charm: st.charm, parts: st.parts.slice(), value: sol.value });
+        }
+      }
     }
     this.beam = null;
     return true;
@@ -827,6 +929,63 @@ export class BnbSolver {
       .sort((a, b) => b.ub - a.ub);
     this.wq = 0;
     this.stack = null;
+    this.sieveRest = [];
+    // 2 段のふるい: ビームの上位の防具・護石の組を残った武器で測り直して、dfs を回す武器を絞る (sieveStep)
+    if (this.sieveOpt) {
+      const combos = new Map();
+      for (const e of this.list) combos.set(`${e.charm}|${e.parts.join(',')}`, { charm: e.charm, parts: e.parts, value: e.value });
+      for (const [k, x] of [...this.beamLeaves].sort((a, b) => b[1].value - a[1].value)) {
+        if (combos.size >= this.sieveOpt.top) break;
+        if (!combos.has(k)) combos.set(k, x);
+      }
+      this.beamLeaves = new Map();
+      if (combos.size) {
+        this.sieve = { cands: this.weaponQueue.filter((w) => w.ub > NEG), i: 0, combos: [...combos.values()], best: [], measured: 0 };
+      }
+    }
+  }
+
+  /**
+   * 2 段のふるい (docs/SEARCH_DESIGN.md 2.7 節): ビームの上位の防具・護石の組 (sieveOpt.top 件) を、残った武器ごとに近似の葉
+   * (珠の詰め方) で測り直し、一番良い値の大きい武器 sieveOpt.weapons 本だけで dfs を回す。いまの 1 位の武器は必ず残す。
+   * 測った組は上位にも入れる (ビームが別の武器で見た組を、この武器で使える)。根の上界が 3 本目の値以下の武器は測らない。
+   * 残りの武器は「続けて探す」(extend) で回す。区切りの時刻 end を過ぎたら false (続きは次の step)。
+   */
+  sieveStep(end) {
+    const sv = this.sieve;
+    const nW = this.sieveOpt.weapons;
+    while (sv.i < sv.cands.length) {
+      if (now() > end) return false;
+      const w = sv.cands[sv.i++];
+      const third = sv.best.length >= nW ? sv.best[nW - 1].score : NEG;
+      if (w.ub <= third) continue;
+      let score = NEG;
+      for (const c of sv.combos) {
+        this.load({ wi: w.wi, charm: c.charm, parts: c.parts });
+        this.stats.leaves++;
+        const sol = this.decoOpt(false, Math.max(score, third));
+        if (sol) {
+          this.record(sol);
+          if (sol.value > score) score = sol.value;
+        }
+      }
+      sv.measured++;
+      if (score > NEG) {
+        let k = sv.best.length;
+        while (k > 0 && sv.best[k - 1].score < score) k--;
+        sv.best.splice(k, 0, { wi: w.wi, score });
+        if (sv.best.length > nW) sv.best.pop();
+      }
+    }
+    // dfs を回す武器 = 上位 nW 本 + いまの 1 位の武器 (根の上界の大きい順のまま)
+    const keep = new Set(sv.best.map((x) => x.wi));
+    if (this.list.length) keep.add(this.list[0].wi);
+    this.sieveRest = this.weaponQueue.filter((w) => !keep.has(w.wi));
+    this.weaponQueue = this.weaponQueue.filter((w) => keep.has(w.wi));
+    this.stats.sieve = { combos: sv.combos.length, measured: sv.measured, weapons: this.weaponQueue.map((w) => w.wi) };
+    this.stats.phases.push({ name: 'sieve', endMs: now() - this.t0, best: this.list[0]?.value ?? null });
+    this.sieve = null;
+    return true;
   }
   beginWeapon(wi) {
     this.setWeapon(wi);
@@ -850,6 +1009,10 @@ export class BnbSolver {
   }
   dfsStep(end, stepStart) {
     let iter = 0;
+    if (this.sieve) {
+      if (!this.sieveStep(end)) return false;
+      if (this.overBudget(stepStart)) { this.cut = true; return true; }
+    }
     if (this.needRestore) { this.restoreStack(); this.needRestore = false; }
     while (true) {
       if ((++iter & 15) === 0) {

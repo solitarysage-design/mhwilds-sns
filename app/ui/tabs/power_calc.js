@@ -15,7 +15,7 @@
 
 import {
   comboExpected, normalizeSkills, conditionGroupDefs, conditionSourceMissing,
-  resolveSkills, resolveConditions, enumeratePatterns,
+  resolveSkills, resolveConditions, factorPatterns,
 } from '../../model/damage.js';
 
 /** スキルの組に合わせた input (perSkills があれば斬れ味などを決め直す) */
@@ -224,7 +224,8 @@ export function exclusiveConflict(input, skills) {
   const cond = resolveConditions(res.active, src, input.uptimes,
     { skillIds: list.map((s) => s.skillId), monsterStatus: input.monsterStatus });
   if (!cond.groups.some((g) => g.exclusiveWith.length)) return null;
-  const w = enumeratePatterns(cond.groups).warnings.find((x) => x.code === 'exclusive-conflict');
+  // 同時に起きない条件の塊ごとに数え上げる (全体を並べると条件が多いとき MAX_PATTERNS を超えるため。警告は同じ)
+  const w = factorPatterns(cond.groups).warnings.find((x) => x.code === 'exclusive-conflict');
   return w ? w.message : null;
 }
 

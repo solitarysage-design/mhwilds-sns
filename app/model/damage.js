@@ -392,11 +392,21 @@ function keepRank(g) {
  * @returns {{patterns: Array<{weight:number, states:Object}>, warnings: Array}}  states は {グループ id: 段 id}
  */
 export function enumeratePatterns(groups) {
+  const { partials, warnings } = enumerateRaw(groups);
+  return { patterns: partials.filter((p) => p.weight > EPS), warnings };
+}
+
+/** 全体の処理の順 (enumeratePatterns と同じ: 本人が入れた条件 → 根拠のある既定値 → 仮置き、同じ扱いどうしはデータの並び) */
+function processingOrder(groups) {
+  return groups.map((g, i) => ({ g, i })).sort((a, b) => keepRank(a.g) - keepRank(b.g) || a.i - b.i).map((x) => x.g);
+}
+
+/** enumeratePatterns の中身。重みがごみ (EPS 以下) のパターンも残したまま返す (数は「全部並べたら」の数) */
+function enumerateRaw(groups) {
   const warnings = [];
   let partials = [{ weight: 1, states: {} }];
   const done = [];
-  const ordered = groups.map((g, i) => ({ g, i }))
-    .sort((a, b) => keepRank(a.g) - keepRank(b.g) || a.i - b.i).map((x) => x.g);
+  const ordered = processingOrder(groups);
   for (const g of ordered) {
     const nonOff = nonOffStates(g);
     const excl = g.exclusiveWith || [];
@@ -445,7 +455,47 @@ export function enumeratePatterns(groups) {
     partials = next;
     done.push(g);
   }
-  return { patterns: partials.filter((p) => p.weight > EPS), warnings };
+  return { partials, warnings };
+}
+
+/**
+ * 条件グループを、同時に起きない条件 (exclusiveWith) でつながる塊に分け、塊ごとにパターンを数え上げる (全体は並べない)。
+ * enumeratePatterns は同時に起きない相手の状態だけで条件つき確率を決めるので、塊どうしは独立で、
+ * 全体のパターン = 塊のパターンの積 (重みも積)。独立の仮定は enumeratePatterns と同じなので、分布も同じ。
+ * @param {Array} groups resolveConditions(...).groups
+ * @returns {{blocks: Array<{groups: Array, patterns: Array<{weight, states}>}>, count: number, warnings: Array}}
+ *   count = enumeratePatterns(groups) が並べるパターンの数 (塊の数の積。MAX_PATTERNS を超えていてもよい)。
+ *   warnings は enumeratePatterns(groups) と同じもの・同じ並び。
+ */
+export function factorPatterns(groups) {
+  const ids = groups.map((g) => g.id);
+  const comp = ids.map((_, i) => i);
+  const find = (i) => (comp[i] === i ? i : (comp[i] = find(comp[i])));
+  groups.forEach((g, i) => {
+    for (const o of g.exclusiveWith || []) {
+      const j = ids.indexOf(o);
+      if (j >= 0) comp[find(i)] = find(j);
+    }
+  });
+  const byRoot = new Map();
+  groups.forEach((g, i) => {
+    const r = find(i);
+    if (!byRoot.has(r)) byRoot.set(r, []);
+    byRoot.get(r).push(g);
+  });
+  const blocks = [];
+  let count = 1;
+  const warnings = [];
+  for (const bg of byRoot.values()) {
+    const raw = enumerateRaw(bg);
+    count *= raw.partials.length;
+    blocks.push({ groups: bg, patterns: raw.partials.filter((p) => p.weight > EPS) });
+    warnings.push(...raw.warnings);
+  }
+  // 警告は全体を並べたときと同じ順に (塊の中の順は全体の順と同じ)
+  const pos = new Map(processingOrder(groups).map((g, i) => [g.id, i]));
+  warnings.sort((a, b) => (pos.get(a.groupId) ?? 0) - (pos.get(b.groupId) ?? 0));
+  return { blocks, count, warnings };
 }
 
 /** そのパターンで効いている効果の一覧。段ごとの効果 (byState) があればそれ、主効果の段なら levels[] の値。 */
@@ -655,6 +705,174 @@ function publicGroup(g) {
   return { ...g, states: g.states.map((s) => ({ ...s })) };
 }
 
+// ------------------------------------------------------------------ 因子分解の合計 (パターンが MAX_PATTERNS を超えるとき)
+//
+// 全パターンを並べる代わりに、同時に起きない条件の塊 (factorPatterns) ごとの分布を畳み込む。塊どうしは独立
+// (enumeratePatterns と同じ仮定) なので、全パターンの加重平均と同じ値になる (足し順と、重みがごみ (EPS 以下) の
+// パターンの扱いだけ違う。相対 1e-9 未満)。
+// 畳み込むときは、期待値に線形に効く値 (攻撃の乗算の積・加算の和、属性の乗算の積・加算の和) を「期待値」で持ち、
+// 線形に効かない値 (会心率・会心倍率・弱点特効・心眼・飛燕・鈍器使い・追加ダメージ) が同じ状態をまとめる。
+// 攻撃・属性の上限 (×4.0 / +400 など) に当たりうるときは、その値も状態に入れる (まとめない) ので、上限があっても同じ値になる。
+
+/** 畳み込みでまとめた状態の数の上限 (超えたら例外。MAX_PATTERNS より大きくてよい) */
+const FACTOR_MAX_STATES = 1 << 18;
+
+/**
+ * 効果を足し合わせる入れ物 (aggregateModifiers と同じ決まりを、並びの位置 pos つきで、順番に関係なく足せる形にしたもの)。
+ * 掛け算・足し算・最大は並びに関係ない。並びで決まるもの: 弱点特効の肉質のしきい値 (wp。後が勝つ)、
+ * 心眼 (hp。大きい値・同じなら先)、鈍器使い (ls。1 以上の大きい値・同じなら後)。
+ */
+function emptyPart(buffs = {}) {
+  return {
+    am: buffs.attackMul ?? 1, aa: buffs.attackAdd ?? 0, af: buffs.affinityAdd ?? 0,
+    em: buffs.elementMul ?? 1, ea: buffs.elementAdd ?? 0, wpa: 0, wa: 0, jm: 1, cm: null, cem: null,
+    wp: null, hp: null, ls: null, extra: [],
+  };
+}
+
+const laterWins = (a, b) => (!a ? b : !b ? a : (b[0] > a[0] ? b : a));                 // [pos, 値]
+const hardWins = (a, b) => (!a ? b : !b ? a : (b[0] > a[0] || (b[0] === a[0] && b[1] < a[1]) ? b : a)); // [値, pos, しきい値]
+const lowWins = (a, b) => (!a ? b : !b ? a : (b[0] > a[0] || (b[0] === a[0] && b[1] > a[1]) ? b : a));  // [値, pos, 色]
+const maxOrNull = (a, b) => (a == null && b == null ? null : Math.max(a ?? 0, b ?? 0));
+
+/** 1 つの効果 (レベルの値か段ごとの値) を入れ物に足す (aggregateModifiers の 1 回分) */
+function addEffectToPart(part, raw, pos, weaponElementType) {
+  const fx = { ...EMPTY_FIELDS, ...raw };
+  part.am *= fx.attackMul ?? 1;
+  part.aa += fx.attackAdd ?? 0;
+  part.af += fx.affinityAdd ?? 0;
+  if (fx.critMul != null) part.cm = Math.max(part.cm ?? 0, fx.critMul);
+  if (elementMatches(fx, weaponElementType)) {
+    part.em *= fx.elementMul ?? 1;
+    part.ea += fx.elementAdd ?? 0;
+  }
+  part.wpa += fx.weakPointAffinity ?? 0;
+  part.wa += fx.woundAffinity ?? 0;
+  if (fx.weakPointMinHitzone != null) part.wp = laterWins(part.wp, [pos, fx.weakPointMinHitzone]);
+  if (fx.critElementMul != null) part.cem = Math.max(part.cem ?? 0, fx.critElementMul);
+  // 心眼: 1 より大きいものだけが勝ちうる (aggregateModifiers は 1 から始めて「より大きい」ときだけ替える)
+  if (fx.hardPartMul != null && fx.hardPartMul > 1) part.hp = hardWins(part.hp, [fx.hardPartMul, pos, fx.hardPartMaxHitzone ?? null]);
+  if (fx.jumpMul != null) part.jm *= fx.jumpMul;
+  // 鈍器使い: 1 以上のものだけが勝ちうる (1 から始めて「以上」のとき替える)
+  if (fx.lowSharpnessMul != null && fx.lowSharpnessMul >= 1) {
+    part.ls = lowWins(part.ls, [fx.lowSharpnessMul, pos, fx.lowSharpnessMaxColor ?? 'yellow']);
+  }
+  if (fx.extraDamage) part.extra.push([pos, fx.extraDamage]);
+}
+
+/** 入れ物どうしを足す (順番に関係ない) */
+function mergeParts(a, b) {
+  return {
+    am: a.am * b.am, aa: a.aa + b.aa, af: a.af + b.af, em: a.em * b.em, ea: a.ea + b.ea,
+    wpa: a.wpa + b.wpa, wa: a.wa + b.wa, jm: a.jm * b.jm, cm: maxOrNull(a.cm, b.cm), cem: maxOrNull(a.cem, b.cem),
+    wp: laterWins(a.wp, b.wp), hp: hardWins(a.hp, b.hp), ls: lowWins(a.ls, b.ls),
+    extra: b.extra.length ? (a.extra.length ? [...a.extra, ...b.extra] : b.extra) : a.extra,
+  };
+}
+
+/** 入れ物 → aggregateModifiers と同じ形の補正値 (攻撃・属性の乗算と加算は lin の値を使う) */
+function modsOfPart(p, lin) {
+  return {
+    attackMul: lin.am, attackAdd: lin.aa, affinityAdd: p.af, critMul: p.cm,
+    elementMul: lin.em, elementAdd: lin.ea, weakPointAffinity: p.wpa, woundAffinity: p.wa,
+    weakPointMinHitzone: p.wp ? p.wp[1] : null, critElementMul: p.cem,
+    hardPartMul: p.hp ? p.hp[0] : 1, hardPartMaxHitzone: p.hp ? p.hp[2] : null, jumpMul: p.jm,
+    lowSharpnessMul: p.ls ? p.ls[0] : 1, lowSharpnessMaxColor: p.ls ? p.ls[2] : null,
+    extraDamage: [...p.extra].sort((x, y) => x[0] - y[0]).map((x) => x[1]),
+  };
+}
+
+/**
+ * パターンを全部並べずに、コンボ 1 回の期待値の合計を出す (comboExpected の因子分解の道)。
+ * @param fp factorPatterns の結果、active resolveConditions(...).active、plan planSteps の結果
+ * @returns {{total, physical, element, extra}}
+ */
+function factoredTotals(fp, active, weapon, buffs, rules, plan, sharpness) {
+  const elemType = weapon.element ? weapon.element.type : null;
+  const elemBase = weapon.element ? Number(weapon.element.value) || 0 : 0;
+  // 条件なしの効果 (位置は active の並び)
+  const base = emptyPart(buffs);
+  active.forEach((a, pos) => { if (!a.conditional) addEffectToPart(base, a.lv, pos, elemType); });
+  // 塊のパターンごとの効果 (効果の決め方は effectsFor と同じ)
+  const blocks = fp.blocks.map((b) => {
+    const ids = new Set(b.groups.map((g) => g.id));
+    const cond = [];
+    active.forEach((a, pos) => { if (a.conditional && ids.has(a.conditionGroup)) cond.push({ a, pos }); });
+    return b.patterns.map((p) => {
+      const part = emptyPart();
+      for (const { a, pos } of cond) {
+        const s = p.states[a.conditionGroup];
+        const byState = a.lv.byState && a.lv.byState[s];
+        if (byState) addEffectToPart(part, byState, pos, elemType);
+        else if (a.activeStates.includes(s)) addEffectToPart(part, a.lv, pos, elemType);
+      }
+      return { w: p.weight, part };
+    });
+  });
+  // 攻撃・属性の上限に当たりうるか (乗算は全部正なら、積の最大 = 塊ごとの最大の積)
+  let positive = base.am > 0 && base.em > 0;
+  let maxAm = base.am, maxAa = base.aa, maxEm = base.em, maxEa = base.ea, minEm = base.em, minEa = base.ea;
+  for (const bl of blocks) {
+    let hAm = -Infinity, hAa = -Infinity, hEm = -Infinity, hEa = -Infinity, lEm = Infinity, lEa = Infinity;
+    for (const { part: q } of bl) {
+      if (!(q.am > 0) || !(q.em > 0)) positive = false;
+      hAm = Math.max(hAm, q.am); hAa = Math.max(hAa, q.aa); hEm = Math.max(hEm, q.em); hEa = Math.max(hEa, q.ea);
+      lEm = Math.min(lEm, q.em); lEa = Math.min(lEa, q.ea);
+    }
+    if (!bl.length) continue;
+    maxAm *= hAm; maxAa += hAa; maxEm *= hEm; maxEa += hEa; minEm *= lEm; minEa += lEa;
+  }
+  const atkLinear = positive && maxAm <= (rules.physicalRateLimit ?? Infinity) && maxAa <= (rules.physicalAddLimit ?? Infinity);
+  const elemOn = ELEMENTAL_TYPES.includes(elemType) && !!elemBase;
+  // 属性は 0 以下になると計算に入らない (hitDamage の stats.element > 0) ので、いつも正のときだけ線形に扱う
+  const elemLinear = !elemOn || (positive && maxEm <= (rules.elementRateLimit ?? Infinity)
+    && maxEa <= (rules.elementAddLimit ?? Infinity) && elemBase * minEm + minEa > 0);
+  const keyOf = (p) => {
+    let k = `${p.af}|${p.wpa}|${p.wa}|${p.jm}|${p.cm}|${p.cem}|${p.wp ? p.wp.join(':') : ''}|${p.hp ? p.hp.join(':') : ''}`
+      + `|${p.ls ? p.ls.join(':') : ''}`;
+    if (p.extra.length) k += `|${[...p.extra].sort((x, y) => x[0] - y[0]).map((x) => `${x[0]}:${JSON.stringify(x[1])}`).join(',')}`;
+    if (!atkLinear) k += `|${p.am}|${p.aa}`;
+    if (elemOn && !elemLinear) k += `|${p.em}|${p.ea}`;
+    return k;
+  };
+  // 畳み込み: 状態ごとに 確率 P と E[乗算の積 × 1{状態}]・E[加算の和 × 1{状態}] を持つ
+  let dist = new Map([[keyOf(base), { part: base, P: 1, sAm: base.am, sAa: base.aa, sEm: base.em, sEa: base.ea }]]);
+  for (const bl of blocks) {
+    const next = new Map();
+    for (const d of dist.values()) {
+      for (const s of bl) {
+        const part = mergeParts(d.part, s.part);
+        const k = keyOf(part);
+        let e = next.get(k);
+        if (!e) {
+          if (next.size >= FACTOR_MAX_STATES) throw new Error(`条件の組み合わせが多すぎる (まとめても ${next.size} 通りを超える)`);
+          next.set(k, (e = { part, P: 0, sAm: 0, sAa: 0, sEm: 0, sEa: 0 }));
+        }
+        e.P += s.w * d.P;
+        e.sAm += s.w * s.part.am * d.sAm;
+        e.sAa += s.w * (d.sAa + s.part.aa * d.P);
+        e.sEm += s.w * s.part.em * d.sEm;
+        e.sEa += s.w * (d.sEa + s.part.ea * d.P);
+      }
+    }
+    dist = next;
+  }
+  let total = 0; let physical = 0; let element = 0; let extra = 0;
+  for (const e of dist.values()) {
+    if (!(e.P > 0)) continue;
+    // 状態の中の期待値 (上限に当たらない・属性がいつも正なので、攻撃力・属性値の期待値をそのまま使える)
+    const mods = modsOfPart(e.part, { am: e.sAm / e.P, aa: e.sAa / e.P, em: e.sEm / e.P, ea: e.sEa / e.P });
+    const stats = computeStats(weapon, mods, rules);
+    for (const st of plan) {
+      for (const hit of st.hits) {
+        const d = hitDamage(hit, stats, { hitzone: st.hitzone, isWound: st.isWound, sharpness, rules });
+        total += e.P * d.total; physical += e.P * d.physical; element += e.P * d.element; extra += e.P * d.extra;
+      }
+    }
+  }
+  return { total, physical, element, extra };
+}
+
 /**
  * 代表コンボ 1 回の期待ダメージ。
  * @param {object} input
@@ -670,7 +888,10 @@ function publicGroup(g) {
  *   monsterStatus: 相手が使う状態異常のキーの配列 (['frenzy'] など)。省略 = 分からない。
  *              条件のもと (sources) が装備にも相手にも無い条件 (狂竜症) は 0% にする。分からないときは決めつけない
  *   rules:     既定は effects.rules → DEFAULT_RULES
- * @returns {{total, physical, element, extra, patterns, steps, conditions, warnings, unsupported, unknown, lowConfidence}}
+ *   maxPatterns: (テスト用) 全パターンを並べる数の上限。既定 MAX_PATTERNS。0 にすると必ず因子分解の道で計算する
+ * @returns {{total, physical, element, extra, patterns, factored, steps, conditions, warnings, unsupported, unknown, lowConfidence}}
+ *   条件の組み合わせ (パターン) が MAX_PATTERNS を超えるときは、同時に起きない条件の塊ごとに畳み込んで合計だけを出す
+ *   (factored: true。値は全パターンの加重平均と同じ。steps は空で、警告 many-patterns)。patterns はパターンの数。
  */
 export function comboExpected(input) {
   const effectsRules = (input.effects && input.effects.rules) || {};
@@ -680,14 +901,32 @@ export function comboExpected(input) {
   const cond = resolveConditions(resolved.active, groupSrc, input.uptimes, {
     skillIds: normalizeSkills(input.skills).map((s) => s.skillId), monsterStatus: input.monsterStatus,
   });
-  const enumerated = enumeratePatterns(cond.groups);
-  const warnings = [...cond.warnings, ...enumerated.warnings];
+  const fp = factorPatterns(cond.groups);
+  const limit = Math.min(MAX_PATTERNS, input.maxPatterns ?? MAX_PATTERNS);
+  const factored = fp.count > limit;
+  const enumerated = factored ? null : enumeratePatterns(cond.groups);
+  const warnings = [...cond.warnings, ...(factored ? fp.warnings : enumerated.warnings)];
   const moves = movesMap(input.motions);
   const target = input.target || {};
   const plan = planSteps(comboSteps(input.combo), moves, target, warnings);
   const weapon = input.weapon || { attack: 0, affinity: 0, element: null };
   const elemType = weapon.element ? weapon.element.type : null;
   const sharpness = input.sharpness || 'white';
+  const common = {
+    conditions: cond.groups.map(publicGroup), warnings,
+    unsupported: resolved.unsupported, unknown: resolved.unknown, lowConfidence: resolved.lowConfidence,
+  };
+
+  if (factored) {
+    // パターンが多すぎて並べられない: 条件の塊ごとに畳み込んで合計だけ出す (技ごとの内訳は出さない)
+    const t = factoredTotals(fp, cond.active, weapon, input.buffs || {}, rules, plan, sharpness);
+    warnings.push({
+      code: 'many-patterns', count: fp.count,
+      message: `条件つきスキルの組み合わせが多い (${fp.count.toLocaleString('en-US')} 通り) ので、条件ごとにまとめて計算しました。`
+        + '期待値は同じですが、技ごとの内訳は出していません (発動率を 0% か 100% にすると内訳も出ます)',
+    });
+    return { ...t, patterns: fp.count, factored: true, steps: [], ...common };
+  }
 
   const stepTotals = plan.map((st) => ({ move: st.move, name: st.name, isWound: st.isWound,
     total: 0, physical: 0, element: 0, extra: 0 }));
@@ -709,12 +948,9 @@ export function comboExpected(input) {
   return {
     total, physical, element, extra,
     patterns: enumerated.patterns.length,
+    factored: false,
     steps: stepTotals,
-    conditions: cond.groups.map(publicGroup),
-    warnings,
-    unsupported: resolved.unsupported,
-    unknown: resolved.unknown,
-    lowConfidence: resolved.lowConfidence,
+    ...common,
   };
 }
 

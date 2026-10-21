@@ -8,6 +8,7 @@ import { computeBuild, indexEquipData, ARMOR_PARTS } from '../app/model/build.js
 import { comboExpected } from '../app/model/damage.js';
 import { resolveWeaponRef, damageWeapon, autoSharpness, handicraftSkillId } from '../app/model/weapon.js';
 import { loadRepoData, makeCases, searchDataOf } from './search_cases.mjs';
+import * as smallHelpers from './search_brute.mjs';
 
 const raw = await loadRepoData();
 const { cases, artian, skillId, targetOf } = makeCases(raw);
@@ -239,4 +240,81 @@ test('入力の注意: 知らない必須は外して続ける・仮置きの発
   // 武器・相手が無いと例外
   assert.throws(() => createSearch({ ...cases.B1, weapons: [] }, data), /武器/);
   assert.throws(() => createSearch({ ...cases.B1, targets: [] }, data), /相手/);
+});
+
+test('budget.activeMs: 計算した時間だけで数える (step の間に止まっていた時間は数えない。画面が裏に回ったとき)', () => {
+  // 時計を作り物にして、step と step の間に 10 秒ずつ「裏に回っていた」時間を足す (探索は performance.now を呼ぶたびに読む)
+  const realNow = performance.now.bind(performance);
+  let away = 0;
+  performance.now = () => realNow() + away;
+  try {
+    const budget = 800;
+    const s = createSearch({ ...cases.B1, beam: [5, 10], budget: { activeMs: budget } }, data);
+    while (!s.step(30)) away += 10000;
+    const r = s.result();
+    assert.equal(r.status, 'stopped');
+    assert.ok(r.stats.phases.some((p) => p.name === 'dfs'));
+    // 予算まで計算した (裏に回っていた時間では切れていない)。経過時間には裏の時間が入る
+    assert.ok(r.stats.activeMs >= budget && r.stats.activeMs <= budget * 3, `計算した時間 ${r.stats.activeMs}`);
+    assert.ok(r.stats.elapsedMs >= r.stats.activeMs + 10000);
+    // 始めてからの時間 (ms) の予算だと、裏に回っていた時間で切れる (計算した時間はずっと少ない)
+    const s2 = createSearch({ ...cases.B1, beam: [5, 10], budget: { ms: budget } }, data);
+    while (!s2.step(30)) away += 10000;
+    const r2 = s2.result();
+    assert.equal(r2.status, 'stopped');
+    assert.ok(r2.stats.activeMs < r.stats.activeMs - 200, `ms ${r2.stats.activeMs} / activeMs ${r.stats.activeMs}`);
+  } finally {
+    performance.now = realNow;
+  }
+});
+
+test('上界の前提が崩れる入力: 同時に起きない条件の合計が 100% 超え・Lv で下がるスキル・鈍器使いと匠に警告。exact でも quality は heuristic', () => {
+  const { r } = run({ ...cases.B1, ...LIGHT, budget: { work: 0 }, K: 3, uptimes: { hpFull: 0.7, redHp: 0.6 } });
+  assert.ok(r.warnings.some((w) => w.code === 'exclusive-over-100'));
+  const nm = r.warnings.find((w) => w.code === 'non-monotone');
+  assert.ok(nm && nm.skillIds.includes(skillId('フルチャージ')), JSON.stringify(nm));
+  // 斬れ味の低い武器 (匠を入れないと緑に届かない) で、鈍器使いが関係するとき
+  const low = raw.weapons.weapons.find((w) => w.sharpness && w.sharpness.base[3] === 0 && w.sharpness.handicraftMax[3] > 0);
+  assert.ok(low, '斬れ味の低い片手剣がある');
+  const { r: b } = run({ ...B1, ...LIGHT, budget: { work: 0 }, K: 3, weapons: [low.id], extraWeapons: [] });
+  assert.ok(b.warnings.some((w) => w.code === 'blunt-handicraft'), JSON.stringify(b.warnings.map((w) => w.code)));
+  const { r: b2 } = run({ ...B1, ...LIGHT, budget: { work: 0 }, K: 3, weapons: [low.id], extraWeapons: [], sharpness: 'yellow' });
+  assert.ok(!b2.warnings.some((w) => w.code === 'blunt-handicraft'), '斬れ味を固定すれば匠は関係しない');
+  // 小さい問題: Lv を上げると下がるスキル (逆襲の攻撃をマイナスにした作り物) は、exact で最後まで回っても heuristic
+  const effects = structuredClone(data.skillEffects);
+  const e = effects.effects[String(skillId('逆襲'))];
+  for (const l of e.levels) { l.attackAdd = -(l.attackAdd || 5); l.attackMul = 1; }
+  const { makeSmallProblem } = smallHelpers;
+  const { data: d, input } = makeSmallProblem(raw, artian, { seed: 1, perPart: 2, charms: 2, targets: [{ weight: 1, target: targetOf('アルシュベルド', 'head') }] });
+  const s = createSearch({ ...input, mode: 'exact' }, { ...d, skillEffects: effects });
+  while (!s.step(1e9));
+  const x = s.result();
+  assert.equal(x.status, 'done');
+  assert.ok(x.warnings.some((w) => w.code === 'non-monotone'));
+  assert.equal(x.quality, 'heuristic');
+  const s2 = createSearch({ ...input, mode: 'exact' }, d);
+  while (!s2.step(1e9));
+  assert.equal(s2.result().quality, 'exact');
+});
+
+test('武器も探す (B3z) の 2 段のふるい: dfs を回す武器を 3 本以下に絞り、全部の武器で回したときと同じ上位。extend で残りの武器も回る', () => {
+  const B3 = { ...cases.B3z, beam: [10, 30], budget: { work: 1e9 } };
+  const { s, r } = run(B3);
+  assert.equal(r.status, 'done');
+  assert.ok(r.stats.sieve && r.stats.sieve.weapons.length <= 3 && r.stats.sieve.weapons.length >= 1, JSON.stringify(r.stats.sieve));
+  assert.ok(r.stats.phases.some((p) => p.name === 'sieve'));
+  const ws = r.warnings.find((w) => w.code === 'weapons-sieved');
+  assert.ok(ws && ws.kept === r.stats.sieve.weapons.length && ws.rest > 0, JSON.stringify(ws));
+  const { r: all } = run({ ...B3, sieve: false });
+  assert.equal(all.stats.sieve, null);
+  assert.deepEqual(r.results.map((x) => x.value.toFixed(9)), all.results.map((x) => x.value.toFixed(9)));
+  // 続けて探す: ふるいで外した武器も dfs で回る (上位は下がらない)
+  const nodes = r.stats.nodes;
+  assert.equal(s.extend({ work: 1e9 }), true);
+  while (!s.step(1e9));
+  const r2 = s.result();
+  assert.ok(r2.stats.nodes > nodes);
+  assert.ok(r2.results[0].value >= r.results[0].value - 1e-9);
+  assert.ok(!r2.warnings.some((w) => w.code === 'weapons-sieved'));
+  assert.equal(s.extend({ work: 1e9 }), false, '全部回ったら続ける所は無い');
 });

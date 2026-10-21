@@ -3,6 +3,7 @@
 //   node --expose-gc tools/bench_search.mjs [--cases B1,B2,B3,B4,B4x,B5] [--runs 3] [--mode time|work|both]
 //                                           [--ms 2500] [--work 60000] [--out 結果.jsonl]
 //   node --expose-gc tools/bench_search.mjs --make-ref [--cases B1,B2,B3,B5] [--ref-ms 120000]
+//   node --expose-gc tools/bench_search.mjs --weapon-side [--runs 3]   (武器の側だけを選び直す optimizeWeaponSide。WS / WSz)
 //
 // - ケースごとに毎回新しいプロセス (同じ node) で走らせる (前のケースの覚えやキャッシュを持ち越さない)。
 // - 時間 (--mode time): 予算は時間 (--ms。画面と同じ「始めてからの時間」)。partial / done の時刻・段階ごとの時刻。
@@ -50,6 +51,7 @@ function args() {
     else if (k === '--make-ref') o.makeRef = true;
     else if (k === '--ref-ms') o.refMs = Number(v());
     else if (k === '--child') o.child = JSON.parse(v());
+    else if (k === '--weapon-side') o.weaponSide = true;
   }
   return o;
 }
@@ -85,8 +87,51 @@ function otherNodes() {
   } catch (e) { return null; }
 }
 
+// ---------------------------------------------------------------- 子プロセス: optimizeWeaponSide (武器 2 本の案の合わせ)
+// docs/RECOMMEND_DESIGN.md 3.3 節・5.4 節: 1 回目の探索の上位 5 件の防具の組それぞれに、片手剣 95 本 + 所持アーティアから
+// 武器と武器の珠を選び直す (相手 2 体・T を小さくする採点)。目標は防具の組 1 つあたり 0.1 秒以内 (Node)。
+async function childWeaponSide(spec) {
+  const { createSearch, optimizeWeaponSide } = await import(new URL('app/model/search.js', ROOT).href);
+  const { loadRepoData, makeCases, searchDataOf } = await import(new URL('tests/search_cases.mjs', ROOT).href);
+  const raw = await loadRepoData();
+  const { cases, artian, targetOf } = makeCases(raw);
+  const data = searchDataOf(raw);
+  const base = spec.case === 'WSz' ? cases.B1z : cases.B1;
+  const targets = [
+    { weight: 0.5, group: 'a', target: targetOf('アルシュベルド', 'head') },
+    { weight: 0.5, group: 'b', target: targetOf('ゴア・マガラ', 'head') },
+  ];
+  const s = createSearch({ ...base, targets, beam: [20, 60], budget: { work: 3000 } }, data);
+  while (!s.step(1e9));
+  const builds = s.result().results.slice(0, 5).map((x) => x.build);
+  const H = { a: 30000, b: 20000 };
+  const score = (pg) => -(H.a / pg.a + H.b / pg.b);
+  const input = { ...base, targets, weapons: 'sns-all', extraWeapons: [artian] };
+  const fixedOf = (b) => ({ armor: b.armor, charm: b.charm, limitBreak: b.limitBreak, decorations: b.decorations });
+  const t0 = performance.now();
+  optimizeWeaponSide(input, fixedOf(builds[0]), data, { score, N: 1, check: false });
+  const firstMs = performance.now() - t0;
+  const perSet = builds.map((b) => {
+    const t = performance.now();
+    const list = optimizeWeaponSide(input, fixedOf(b), data, { score, N: 1, check: false });
+    return { ms: performance.now() - t, weapon: list[0] ? list[0].weapon : null };
+  });
+  const perSetChecked = builds.map((b) => {
+    const t = performance.now();
+    optimizeWeaponSide(input, fixedOf(b), data, { score, N: 1 });
+    return performance.now() - t;
+  });
+  const out = {
+    case: spec.case, sets: builds.length, firstMs, perSetMs: perSet.map((x) => x.ms), perSetCheckedMs: perSetChecked,
+    weapons: perSet.map((x) => x.weapon),
+  };
+  process.stdout.write(`${JSON.stringify(out)}
+`);
+}
+
 // ---------------------------------------------------------------- 子プロセス: 1 ケースを 1 回
 async function child(spec) {
+  if (spec.case === 'WS' || spec.case === 'WSz') { await childWeaponSide(spec); return; }
   const { createSearch } = await import(new URL('app/model/search.js', ROOT).href);
   const { loadRepoData, makeCases, searchDataOf } = await import(new URL('tests/search_cases.mjs', ROOT).href);
   const raw = await loadRepoData();
@@ -117,6 +162,7 @@ async function child(spec) {
     top: r.results.map((x) => x.value), heapPeakMB: (peak - heap0) / 1e6, heapRetainedMB: retained / 1e6,
     relevantSkills: r.stats.relevantSkills, classes: r.stats.classes, charms: r.stats.charms, weapons: r.stats.weapons,
     nodes: r.stats.nodes, leaves: r.stats.leaves, boundCalls: r.stats.boundCalls, memoClears: r.stats.memoClears,
+    sieve: r.stats.sieve || null,
     firstSolutionMs: r.stats.firstSolutionMs != null ? r.stats.firstSolutionMs + (r.stats.prepareMs || 0) : null,
     maxRelDiff: Math.max(0, ...r.results.map((x) => x.check.relDiff)), errors: r.results.reduce((t, x) => t + x.check.errors.length, 0),
     warnings: r.warnings.map((w) => w.code), infeasible: r.infeasible ? r.infeasible.missing.map((m) => `${m.name}${m.level}`) : null,
@@ -182,6 +228,26 @@ async function main() {
     return;
   }
 
+  if (o.weaponSide) {
+    console.log(JSON.stringify({ env: { node: process.version, cpus: os.cpus().length, otherNodesBefore: otherNodes() }, runs: o.runs }));
+    for (const name of o.cases || ['WSz', 'WS']) {
+      const meter = cpuMeter();
+      const runs = [];
+      for (let i = 0; i < o.runs; i++) runs.push(runChild({ case: name }));
+      const per = runs.map((x) => med(x.perSetMs));
+      const perChk = runs.map((x) => med(x.perSetCheckedMs));
+      const line = {
+        case: name, firstMs: Math.round(med(runs.map((x) => x.firstMs))), perSetMedianMs: r3(med(per)),
+        perSetMaxMs: r3(Math.max(...runs.flatMap((x) => x.perSetMs))), perSetCheckedMedianMs: r3(med(perChk)),
+        perSetCheckedMaxMs: r3(Math.max(...runs.flatMap((x) => x.perSetCheckedMs))), weapons: runs[0].weapons,
+        target: { perSetMs: 100 }, meets: { perSet: Math.max(...runs.flatMap((x) => x.perSetMs)) <= 100 },
+        cpuBusyDuring: r3(meter()), otherNodes: otherNodes(),
+      };
+      console.log(JSON.stringify(line));
+    }
+    return;
+  }
+
   const names = o.cases || ['B1', 'B2', 'B3', 'B4', 'B4x', 'B5'];
   const modes = o.mode === 'both' ? ['time', 'work'] : [o.mode];
   const env = { node: process.version, cpus: os.cpus().length, otherNodesBefore: otherNodes(), refStale: !!stale };
@@ -206,7 +272,7 @@ async function main() {
         prepareMs: Math.round(med(runs.map((x) => x.prepareMs))), heapPeakMB: r3(med(runs.map((x) => x.heapPeakMB))),
         heapRetainedMB: r3(med(runs.map((x) => x.heapRetainedMB))), sameAcrossRuns: same,
         top: r0.top.map(r3), phases: r0.phases, relevantSkills: r0.relevantSkills, classes: r0.classes, charms: r0.charms,
-        weapons: r0.weapons, nodes: r0.nodes, leaves: r0.leaves, boundCalls: r0.boundCalls, memoClears: r0.memoClears,
+        weapons: r0.weapons, sieve: r0.sieve, nodes: r0.nodes, leaves: r0.leaves, boundCalls: r0.boundCalls, memoClears: r0.memoClears,
         maxRelDiff: r0.maxRelDiff, errors: r0.errors, warnings: r0.warnings,
         firstSolutionMs: r0.firstSolutionMs != null ? r3(med(runs.map((x) => x.firstSolutionMs))) : null,
         infeasible: r0.infeasible, cpuBusyDuring: load == null ? null : r3(load), otherNodes: otherNodes(),

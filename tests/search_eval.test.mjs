@@ -56,17 +56,21 @@ const buffSets = [
   { attackMul: 1.1, elementAdd: 395 },
 ];
 
-/** 部位の割合で加重平均した comboExpected。MAX_PATTERNS を超えると例外 */
-function reference(c, list) {
+/** 部位の割合で加重平均した comboExpected (factored = MAX_PATTERNS を超えて因子分解の合計で出したか) */
+function referenceInfo(c, list) {
   let v = 0;
+  let factored = false;
   for (const t of c.targets) {
-    v += t.weight * comboExpected({
+    const r = comboExpected({
       weapon: c.weapon, sharpness: c.sharpOf(list), skills: list, effects, motions, combo: c.combo, target: t.target,
       uptimes: c.uptimes, monsterStatus: c.monsterStatus, buffs: c.buffs,
-    }).total;
+    });
+    v += t.weight * r.total;
+    if (r.factored) factored = true;
   }
-  return v;
+  return { v, factored };
 }
+const reference = (c, list) => referenceInfo(c, list).v;
 
 function randomCase(i) {
   const ref = weaponRefs[i % weaponRefs.length];
@@ -128,16 +132,9 @@ test('評価器 = comboExpected (ランダムなスキルの組 1,000 件以上�
       const lv = t < 7 ? randomLevels(12) : heavyLevels();
       const list = toList(lv);
       const got = ev.evaluate(lv);
-      let want;
-      try {
-        want = reference(c, list);
-      } catch (e) {
-        // MAX_PATTERNS を超える組は comboExpected が例外 (docs/SEARCH_DESIGN.md 4 章の 2)。評価器は値を出す
-        assert.match(String(e.message), /条件の組み合わせが多すぎる/);
-        assert.ok(Number.isFinite(got) && got >= 0, `評価器は値を出す: ${got}`);
-        overMax++;
-        continue;
-      }
+      // MAX_PATTERNS を超える組は、comboExpected が因子分解の合計で出す (docs/SEARCH_DESIGN.md 4 章の 2)。それとも比べる
+      const { v: want, factored } = referenceInfo(c, list);
+      if (factored) overMax++;
       const rel = Math.abs(got - want) / Math.max(1, Math.abs(want));
       worst = Math.max(worst, rel);
       assert.ok(rel <= 1e-9, `ずれ ${rel} (${got} / ${want}) 武器 ${c.ref} コンボ ${c.combo.id} ${JSON.stringify(list)}`
@@ -151,7 +148,7 @@ test('評価器 = comboExpected (ランダムなスキルの組 1,000 件以上�
   assert.equal(seen.targets.size, targetSets.length, '相手の組を全部通る');
   assert.ok(slow > 0, '遅い道 (上限に当たる組) も通る');
   assert.ok(worst < 1e-9);
-  console.log(`  比べた ${compared} 件・最大の相対差 ${worst.toExponential(2)}・例外 (MAX_PATTERNS 超え) ${overMax} 件・遅い道 ${slow} 回`);
+  console.log(`  比べた ${compared} 件・最大の相対差 ${worst.toExponential(2)}・うち MAX_PATTERNS 超え (因子分解の合計) ${overMax} 件・遅い道 ${slow} 回`);
 });
 
 test('速い道と遅い道 (全パターン) が同じ値', () => {
@@ -168,7 +165,7 @@ test('速い道と遅い道 (全パターン) が同じ値', () => {
   }
 });
 
-test('MAX_PATTERNS を超える組: comboExpected は例外、評価器は因子の積で計算する', () => {
+test('MAX_PATTERNS を超える組: comboExpected は因子分解の合計 (例外にしない)、評価器と同じ値', () => {
   // 条件つきスキルを 15 グループぶん積む (2^15 > MAX_PATTERNS)
   const condIds = ids.filter((id) => effects.effects[String(id)]?.conditional);
   const groups = new Map();
@@ -187,11 +184,21 @@ test('MAX_PATTERNS を超える組: comboExpected は例外、評価器は因子
   // 既定が 0% / 100% の条件は段が 1 つになるので、全部 50% にする
   const c = { ...randomCase(7), uptimes: Object.fromEntries(binary.map(([g]) => [g, 0.5])), monsterStatus: ['frenzy'], buffs: {} };
   const list = toList(lv);
-  assert.throws(() => reference(c, list), /条件の組み合わせが多すぎる/);
+  // comboExpected は塊ごとに畳み込んだ合計を返す (技ごとの内訳は出さない・警告 many-patterns)
+  const one = comboExpected({
+    weapon: c.weapon, sharpness: c.sharpOf(list), skills: list, effects, motions, combo: c.combo, target: c.targets[0].target,
+    uptimes: c.uptimes, monsterStatus: c.monsterStatus, buffs: c.buffs,
+  });
+  assert.equal(one.factored, true);
+  assert.equal(one.steps.length, 0);
+  assert.ok(one.patterns > MAX_PATTERNS);
+  assert.ok(one.warnings.some((w) => w.code === 'many-patterns'));
+  const ref = reference(c, list);
   const v = evaluatorOf(c).evaluate(lv);
   const vs = evaluatorOf(c, { forceSlow: true }).evaluate(lv);
   assert.ok(Number.isFinite(v) && v > 0);
   assert.ok(Math.abs(v - vs) <= 1e-9 * v, `速い道 ${v} / 遅い道 ${vs}`);
+  assert.ok(Math.abs(v - ref) <= 1e-9 * v, `評価器 ${v} / comboExpected ${ref}`);
   assert.ok(MAX_PATTERNS < 2 ** binary.length);
 });
 

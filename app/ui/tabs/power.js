@@ -204,7 +204,7 @@ function SettingsCard({ data, comboRef, combo, sharpSel, autoColor, weaponName, 
           ${showSteps ? '技ごとの内訳を閉じる' : '技ごとの内訳を見る'}
         </${Button}>
       </div>
-      ${showSteps && html`
+      ${showSteps && r.steps.length > 0 && html`
         <ul class="pw-steps" data-power-steps>
           ${r.steps.map((s) => html`
             <li>
@@ -212,6 +212,8 @@ function SettingsCard({ data, comboRef, combo, sharpSel, autoColor, weaponName, 
               <span class="pw-num">${formatNumber(s.total, 0)}</span>
             </li>`)}
         </ul>`}
+      ${showSteps && r.steps.length === 0 && html`
+        <p class="hint" data-power-steps-none>条件つきスキルの組み合わせが多いので、技ごとの内訳は出していません (合計は計算しています)。</p>`}
     </${Card}>`;
 }
 

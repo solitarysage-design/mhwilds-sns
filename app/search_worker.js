@@ -7,7 +7,8 @@
 //                 (job の代わりに input だけでもよい = kind 'search')
 //                {type: 'cancel', id} / {type: 'extend', id, budget}
 // Worker → 画面: {type: 'ready'} (データを読み終えた) / {type: 'progress', id, phase, elapsedMs, best: [値...], run?}
-//                (段階が変わったときと 0.5 秒ごと) / {type: 'partial', id, result} (仕上げ 1 の後) / {type: 'done', id, result} /
+//                (段階か plan の回 (run.index) が変わったときと 0.5 秒ごと) / {type: 'partial', id, result} (仕上げ 1 の後) /
+//                {type: 'done', id, result} /
 //                {type: 'error', id, message}
 // 中止: Worker は計算中にメッセージを受け取れないので、STEP_MS ごとに setTimeout(0) で手を離して cancel を受ける。
 // 同時に走らせるのは 1 つだけ。新しい start が来たら前の探索は捨てる (結果も送らない)。
@@ -82,6 +83,7 @@ async function runLoop(j) {
   j.running = true;
   let lastPost = -Infinity;
   let lastPhase = null;
+  let lastRun = null;
   try {
     while (true) {
       if (j.superseded) return;
@@ -90,8 +92,11 @@ async function runLoop(j) {
       if (j.superseded) return;
       const p = j.runner.progress();
       const t = now();
-      if (!fin && (p.phase !== lastPhase || t - lastPost >= PROGRESS_MS)) {
+      // 段階か、plan の回 (run.index) が変わったときと、0.5 秒ごと
+      const runIndex = p.run ? p.run.index : null;
+      if (!fin && (p.phase !== lastPhase || runIndex !== lastRun || t - lastPost >= PROGRESS_MS)) {
         lastPhase = p.phase;
+        lastRun = runIndex;
         lastPost = t;
         post({ type: 'progress', id: j.id, phase: p.phase, elapsedMs: p.elapsedMs, best: (p.best || []).map((b) => b.value),
           ...(p.run ? { run: p.run } : {}) });

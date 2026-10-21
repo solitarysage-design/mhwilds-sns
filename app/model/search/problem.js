@@ -96,6 +96,8 @@ export function prepare(data, o) {
     ...[0, 1, 2, 3, 4, 5].map((lv) => (wp.sharpFn ? wp.sharpFn(lv) : wp.fixedSharp))].join('|');
   const relevant = new Set(required.map((r) => r.skillId));
   const relCache = new Map();
+  // Lv を上げて火力が下がるスキル (上界・優越の除去の前提が崩れる。docs/SEARCH_DESIGN.md 4 章の 6)
+  const nonMonotone = new Set();
   if (!none) {
     for (const wp of weapons) {
       const sig = sigOf(wp);
@@ -110,7 +112,11 @@ export function prepare(data, o) {
         cand.forEach((id, r) => {
           const t = top.slice(); t[r] = 0;
           const z = zero.slice(); z[r] = maxOf(id);
-          if (ev.evaluate(t) < fTop * (1 - 1e-12) || ev.evaluate(z) > f0 * (1 + 1e-12)) rel.add(id);
+          const vt = ev.evaluate(t);
+          const vz = ev.evaluate(z);
+          if (vt < fTop * (1 - 1e-12) || vz > f0 * (1 + 1e-12)) rel.add(id);
+          // 外すと上がる・入れると下がる
+          if (vt > fTop * (1 + 1e-9) || vz < f0 * (1 - 1e-9)) nonMonotone.add(id);
         });
         relCache.set(sig, rel);
       }
@@ -134,10 +140,15 @@ export function prepare(data, o) {
   const maxLv = new Int8Array(ids.map(maxOf));
   const reqLv = new Int8Array(R);
   for (const q of required) reqLv[rOf.get(q.skillId)] = Math.max(reqLv[rOf.get(q.skillId)], Math.min(q.level, maxLv[rOf.get(q.skillId)]));
-  // 上界の前提が崩れる入力 (docs/SEARCH_DESIGN.md 4 章の 6)
+  // 上界の前提が崩れる入力 (docs/SEARCH_DESIGN.md 4 章の 6)。fast は近似なのでそのまま動くが、exact の保証は無くなる
   const blunt = [...skillById.values()].find((s) => s.name === '鈍器使い');
   if (blunt && rOf.has(blunt.id) && hid != null && rOf.has(hid) && !fixedSharp) {
     warn('blunt-handicraft', '鈍器使いと匠が両方効く条件なので、探した結果の順位は目安です (斬れ味が上がると鈍器使いの効果が消えるため)');
+  }
+  if (nonMonotone.size) {
+    const names = [...nonMonotone].map((id) => skillById.get(id)?.name ?? String(id));
+    warn('non-monotone', `${names.join('・')} は Lv を上げると火力が下がることがある条件なので、探した結果の順位は目安です`
+      + ' (同時に起きない条件の発動率や、マイナスの効果のため)', { skillIds: [...nonMonotone] });
   }
 
   // ---- 装飾品: 防具用は 1 スキル 1 Lv (スキルごとに一番小さいスロット)。武器用は 2 スキルのものもある
