@@ -1,4 +1,100 @@
 /* 相手タブの段階 3 のカード (app/ui/tabs/target_hunt.js) の見た目。担当: ui-target (3d)。class は th-* にする
    (target.js が head に足す tg-* とぶつけない)。
    決まりは styles.css と同じ: 色は :root の変数だけ (ダーク表示は変数が変わる)・タップできるものは 44px 以上・
-   マウスを重ねたときの見た目は @media (hover: hover) の中に書く・vh を使うなら dvh も書く。index.html が styles.css の後に読む。 */
+   マウスを重ねたときの見た目は @media (hover: hover) の中に書く・vh を使うなら dvh も書く。index.html が styles.css の後に読む。
+   target.js の個体の傷口の印 (th-changed・th-mark-line) もここに置く。 */
+
+/* カードの中の小見出し・説明の最初の行 (上の余白を詰める) */
+.th-subhead-first { margin-top: 0; }
+.th-hint-first { margin-top: 0; }
+
+/* 個体・人数の欄 (中の .field は先頭なので上の余白が無くなる。囲いの方で空ける) */
+.th-field { margin-top: 12px; }
+.th-field:first-child { margin-top: 0; }
+
+/* モンスターのカードの「クエストの名前から選ぶ」(PickerField の行と左右をそろえる) */
+.card-body > .row.th-entry { padding-left: 0; padding-right: 0; border-top: 1px solid var(--border); }
+
+/* クエストの印 (終了中・装備固定・2 頭 など)。狭いときは縦に積む */
+.th-qbadges { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 2px; max-width: 132px; }
+.th-qbadges .badge { white-space: normal; text-align: right; }
+
+/* 体力と強さ: 見出しと値の 2 列 (値は右寄せ。2 行目以降は小さい文字) */
+.th-stats { margin: 0; }
+.th-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.th-stat:last-child { border-bottom: 0; }
+.th-stat dt { flex: none; max-width: 40%; font-size: 14px; color: var(--text-sub); }
+.th-stat dd { margin: 0; min-width: 0; text-align: right; }
+.th-num { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.th-num-small { font-size: 16px; }
+.th-sub { display: block; font-size: 13px; color: var(--text-sub); font-variant-numeric: tabular-nums; }
+.th-sub-first { display: inline; }
+.th-stat-action { display: block; margin-top: 6px; }
+
+/* くわしく・歴戦王のカードの箇条書き */
+.th-list { margin: 4px 0 0; padding-left: 1.2em; font-size: 14px; }
+.th-list li + li { margin-top: 4px; }
+.th-list-plain { list-style: none; padding-left: 0; }
+.th-list-plain li { padding: 6px 0; border-bottom: 1px solid var(--border); }
+.th-list-plain li:last-child { border-bottom: 0; }
+.th-list-sub { font-size: 13px; color: var(--text-sub); }
+.th-hz-text { display: block; font-weight: 600; }
+
+/* このクエストの相手 (多頭): 1 体 1 行。タップでその相手を下のカードに出す */
+.th-subjects { margin: 0 -16px; border-top: 1px solid var(--border); }
+.th-subject {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: var(--tap);
+  padding: 8px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font-size: 16px;
+}
+.th-subject:active { background: var(--surface-2); }
+.th-subject.is-selected { background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+.th-subject-name { min-width: 0; font-weight: 600; }
+.th-subject-nums {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 13px;
+  color: var(--text-sub);
+  font-variant-numeric: tabular-nums;
+}
+.th-total { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding-top: 10px; }
+.th-total-label { font-size: 14px; color: var(--text-sub); }
+
+/* この相手のおすすめ: 要件の行 (左に名前と理由、右に「いま」) */
+.th-reqs { list-style: none; margin: 0; padding: 0; }
+.th-req {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.th-req:last-child { border-bottom: 0; }
+.th-req-main { min-width: 0; }
+.th-req-label { font-weight: 600; }
+.th-req-why { display: block; font-size: 13px; color: var(--text-sub); }
+.th-req-now { flex: none; max-width: 45%; font-size: 13px; color: var(--text-sub); text-align: right; }
+
+/* 個体 (歴戦王など) の傷口の置き換えで変わった数字と、その印の行 (target.js の部位の一覧・肉質の表) */
+.th-changed { font-weight: 700; text-decoration: underline dotted; text-underline-offset: 3px; }
+.th-mark-line .badge { margin-right: 6px; }
