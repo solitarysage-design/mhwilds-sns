@@ -17,6 +17,7 @@
 //   fail=crash     ready を返したあと、例外で落ちる (Worker の error イベント)
 //   result=infeasible  必須を満たせない (status: 'infeasible')
 //   result=empty   候補が 0 件
+//   complete=1     終わりの結果を「B&B を最後まで回り終えた」(extendable: false。画面は「続けて探す」を出さない) にする
 //   warn=1         結果に警告 (evaluator-mismatch) を 1 つ付ける
 // import は相対パスだけ (Worker に import map が効かない)。
 import { computeBuild, indexEquipData, ARMOR_PARTS } from '../../app/model/build.js';
@@ -43,7 +44,7 @@ export function configFromUrl(href) {
   const step = Number(q.get('step'));
   return {
     step: Number.isFinite(step) && step >= 0 ? Math.min(step, 10000) : 120,
-    fail: q.get('fail') || '', result: q.get('result') || 'ok', warn: q.get('warn') === '1',
+    fail: q.get('fail') || '', result: q.get('result') || 'ok', warn: q.get('warn') === '1', complete: q.get('complete') === '1',
   };
 }
 
@@ -180,6 +181,7 @@ export function createEngine(post, opts = {}) {
       warnings: config.warn ? [{ code: 'evaluator-mismatch', message: '(作り物) 計算し直した値と少し違う組がありました。並びは計算し直した値にしています。' }] : [],
       stats: { elapsedMs: now() - c.t0, phases: c.phases.slice(), fake: true, extended: c.extended },
       quality: 'heuristic', baseline: c.baseline != null ? { value: c.baseline } : null,
+      ...(config.complete && status === 'done' ? { extendable: false } : {}),
     };
   };
   const progress = (c, phase) => {

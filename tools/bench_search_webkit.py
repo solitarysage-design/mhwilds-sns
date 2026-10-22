@@ -9,7 +9,8 @@ Playwright の WebKit (iPhone の Safari と同じエンジン。Windows 版) �
 
 - リポを 127.0.0.1 の空いているポートで配信し、ベンチのページ (/__bench__/index.html) は このスクリプトの中の HTML を返す。
 - ページは data/*.json を読んで tests/search_cases.mjs の makeCases で B1〜B5 の入力を作り、Worker に start を送る。
-  S1〜S3 (相手に合わせて探す。docs/RECOMMEND_DESIGN.md 6.4 節) は makePlanCases の Job (kind 'plan') を送る (--ms は Job 全体の予算)。
+  S1〜S7 (相手に合わせて探す。docs/RECOMMEND_DESIGN.md 6.4 節。S4〜S7 は画面の既定) は makePlanCases の Job (kind 'plan') を送る
+  (--ms は Job 全体の予算)。
 - 1 回ごとに新しいページ (新しい Worker) にする。メモリは WebKit では測れない (performance.memory が無い)。
 - 予算の数え方 (--budget-kind) の既定は activeMs (計算した時間。画面の search_form.js の budgetOf と同じ)。
   ms (始めてからの時間) は前の測り方 (2026-10-21 の表)。activeMs は下ごしらえ・途中の結果の計算し直し・最後のまとめを数えないので、

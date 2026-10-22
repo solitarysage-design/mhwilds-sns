@@ -6,7 +6,7 @@
 //   node --expose-gc tools/bench_search.mjs --weapon-side [--runs 3]   (武器の側だけを選び直す optimizeWeaponSide。WS / WSz)
 //   node --expose-gc tools/bench_search.mjs --plans [--cases S1,S1z,S2,S2z,S3,S3z] [--runs 3] [--ms 2500]
 //       (相手に合わせて探す。recommend.js の createPlanRunner で Job を回す。docs/RECOMMEND_DESIGN.md 6.4 節の S1〜S3。
-//        --ms は Job 全体の時間の予算 (計算した時間。回の数で分ける))
+//        --ms は Job 全体の時間の予算 (計算した時間。回の数で分ける)。画面の既定の S4〜S7 (S4z〜S7z) は --cases で選ぶ)
 //
 // - ケースごとに毎回新しいプロセス (同じ node) で走らせる (前のケースの覚えやキャッシュを持ち越さない)。
 // - 時間 (--mode time): 予算は時間 (--ms)。数え方 (--budget-kind) の既定は activeMs (計算した時間。画面の budgetOf と同じ)。

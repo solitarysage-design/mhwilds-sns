@@ -1940,6 +1940,7 @@ export function createPlanRunner(job, data, deps = {}) {
       status, results: m.results, infeasible: m.infeasible && m.infeasible.length ? m.infeasible : null,
       warnings, stats: statsOf(), quality: 'heuristic', merge: job ? job.merge : null,
       costOfDefense: m.costOfDefense || null, singleWeapon: m.singleWeapon || null, twoWeaponsGain: m.twoWeaponsGain || null,
+      extendable: canExtend(),
     };
   }
 
@@ -1952,15 +1953,24 @@ export function createPlanRunner(job, data, deps = {}) {
     }
   }
 
+  /** 「続けて探す」で延長できる探索の回 (満たせなかった回と、B&B を最後まで回り終えた回を除く) */
+  const extendableRuns = () => st.runs.filter((r) => r.search && r.status !== 'infeasible' && typeof r.search.extend === 'function'
+    && r.search.extendable !== false);
+  /** 「続けて探す」で続ける所があるか (延長できる回か、武器 2 本の 2 本目の相手に合わせた回がある)。result().extendable */
+  function canExtend() {
+    if (!finished() || st.cancelled || st.error || !job || job.blocked) return false;
+    return extendableRuns().length > 0 || !!focusRun();
+  }
+
   /**
-   * 「続けて探す」: 終わった回 (満たせなかった回を除く) の探索を延長して、もう一度合わせる。
+   * 「続けて探す」: 終わった回 (満たせなかった回と、最後まで回り終えた回を除く) の探索を延長して、もう一度合わせる。
    * 武器 2 本の案では、2 本目の武器で倒す相手に合わせた回を 1 つ足す (3.3 節の 4。良くなれば上位が入れ替わる)。
+   * 予算は延長する回 (と足す回) で分ける。
    */
   function extend({ ms, activeMs } = {}) {
-    if (!finished() || st.cancelled || st.error || !job || job.blocked) return false;
-    const runs = st.runs.filter((r) => r.search && r.status !== 'infeasible' && typeof r.search.extend === 'function');
+    if (!canExtend()) return false;
+    const runs = extendableRuns();
     const focus = focusRun();
-    if (!runs.length && !focus) return false;
     // activeMs (計算した時間の合計) で受けたらそれで、ms (始めてからの時間) ならそれで、回の数で分ける
     const active = activeMs != null && Number(activeMs) > 0;
     const total = Number(active ? activeMs : ms) || 6000;

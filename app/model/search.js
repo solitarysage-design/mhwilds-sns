@@ -127,10 +127,12 @@ function normalizeInput(input, core, warnings) {
     stopAfter: inp.stopAfter === 'partial' ? 'partial' : null,
     current: isObj(inp.current) ? inp.current : null,
     gamma: gammaOf(inp.gamma),
-    // テスト用: ビームの幅 / 優越の除去をしない (総当たりと同じ数え方にする) / 武器も探すときの 2 段のふるい (false でしない)
+    // テスト用: ビームの幅 / 優越の除去をしない (総当たりと同じ数え方にする) / 武器も探すときの 2 段のふるい (false でしない) /
+    // 締めた上界 (false で前の上界。比べる用)
     beam: Array.isArray(inp.beam) ? inp.beam : undefined,
     dominance: inp.dominance !== false,
     sieve: inp.sieve === false ? false : (isObj(inp.sieve) ? inp.sieve : undefined),
+    tight: inp.tight === false ? false : (isObj(inp.tight) ? inp.tight : undefined),
   };
 }
 
@@ -189,7 +191,7 @@ function uptimeWarnings(P, n, core, warnings) {
  * @param input 3.2 節の入力 (weapons・targets・combo・uptimes・monsterStatus・buffs・sharpness・required・charms・extraWeapons・
  *   limitBreak・decorations・armorExclude・objective・K・budget・mode・stopAfter・current)
  * @param data data.js の core のデータ (生データ + index + skillEffects + motions) か {index, effects, motions}
- * @returns {{step(ms): boolean, progress(), result(), cancel(), extend(budget): boolean}}
+ * @returns {{step(ms): boolean, progress(), result(), cancel(), extend(budget): boolean, extendable: boolean}}
  */
 export function createSearch(input, data) {
   const core = coreOf(data);
@@ -220,7 +222,7 @@ export function createSearch(input, data) {
     for (const w of P.warnings) warnings.push(w);
     if (n.objective === 'damage') uptimeWarnings(P, n, core, warnings);
     S = new BnbSolver(P, {
-      mode: n.mode, objective: n.objective, K: n.K, budget: n.budget, stopAfter: n.stopAfter, beam: n.beam, sieve: n.sieve,
+      mode: n.mode, objective: n.objective, K: n.K, budget: n.budget, stopAfter: n.stopAfter, beam: n.beam, sieve: n.sieve, tight: n.tight,
     });
   }
 
@@ -394,6 +396,8 @@ export function createSearch(input, data) {
       }
       return {
         status, results, infeasible: infeasibleInfo(), warnings: ws, baseline,
+        // 「続けて探す」で続ける所があるか (B&B を最後まで回り終えて、2 段のふるいで外した武器も無ければ false)
+        extendable: api.extendable,
         quality: S && n.mode === 'exact' && S.done && !S.cut && !warnings.some((w) => PREMISE_WARNINGS.includes(w.code))
           ? 'exact' : 'heuristic',
         stats: S ? {
@@ -415,6 +419,8 @@ export function createSearch(input, data) {
       if (cancelled || failed || !S) return false;
       return S.extend(isObj(budget) ? budget : { ms: DEFAULT_BUDGET_MS });
     },
+    /** 「続けて探す」で続ける所があるか (extend が true を返すか。状態は変えない) */
+    get extendable() { return !!(!cancelled && !failed && S && S.canExtend()); },
     /** 終わったか */
     get done() { return !!(cancelled || failed || (S && S.done)); },
   };

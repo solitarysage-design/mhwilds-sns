@@ -49,6 +49,7 @@ test('step を小さく刻んでも一度に回しても、仕事量の予算な
   const b = run({ ...B1, ...LIGHT }, 3);
   assert.ok(b.steps > a.steps * 5, `刻んだ回数 ${b.steps}`);
   assert.equal(a.r.status, 'stopped');
+  assert.equal(a.r.extendable, true, '予算で打ち切った結果は続ける所がある');
   assert.equal(sig(a.r), sig(b.r));
   assert.equal(a.r.results.length, 10);
 });
@@ -88,8 +89,9 @@ test('cancel の後の step で止まり、status: cancelled と、それまで�
 
 test('返した build は computeBuild にそのまま渡せて、計算し直しが合う。alternatives に入れ替えても値が同じ', () => {
   const B5 = cases.B5z;
-  // 同じ類のほかの防具 (alternatives) は上位 10 件にはあまり出ないので、30 件で見る
-  const { r } = run({ ...B5, ...LIGHT, K: 30 });
+  // 同じ類のほかの防具 (alternatives) は上位 10 件にはあまり出ないので、100 件で見る (締めた上界では、上位 30 件が
+  // 同じ値の組 (類が 1 つだけのもの) で埋まることがある)
+  const { r } = run({ ...B5, ...LIGHT, K: 100 });
   let swapped = 0;
   for (const x of r.results) {
     assert.ok(x.check.relDiff <= 1e-9);
@@ -299,7 +301,8 @@ test('上界の前提が崩れる入力: 同時に起きない条件の合計が
 
 test('武器も探す (B3z0) の 2 段のふるい: dfs を回す武器を 3 本以下に絞り、全部の武器で回したときと同じ上位。extend で残りの武器も回る', () => {
   // B&B を最後まで回して比べるので、条件つきスキルの条件を全部 0% にした B3z0 (2026-10-21 までの B3z と同じ条件)。
-  // 探すタブの既定の B3z (本人の前提で挑戦者・連撃・渾身が効く) は、B&B が数十秒で終わらない
+  // 探すタブの既定の B3z も締めた上界 (docs/SEARCH_DESIGN.md 2.4 節) で最後まで終わる (tests/search_bound.test.mjs) が、ここでは
+  // ふるいあり・なし・extend の 3 回を回すので、B3z ではこのテストだけで 5〜10 秒かかる (B3z0 は 1 秒ほど)
   const B3 = { ...cases.B3z0, beam: [10, 30], budget: { work: 1e9 } };
   const { s, r } = run(B3);
   assert.equal(r.status, 'done');
@@ -307,9 +310,14 @@ test('武器も探す (B3z0) の 2 段のふるい: dfs を回す武器を 3 本
   assert.ok(r.stats.phases.some((p) => p.name === 'sieve'));
   const ws = r.warnings.find((w) => w.code === 'weapons-sieved');
   assert.ok(ws && ws.kept === r.stats.sieve.weapons.length && ws.rest > 0, JSON.stringify(ws));
-  const { r: all } = run({ ...B3, sieve: false });
+  const { s: sAll, r: all } = run({ ...B3, sieve: false });
   assert.equal(all.stats.sieve, null);
   assert.deepEqual(r.results.map((x) => x.value.toFixed(9)), all.results.map((x) => x.value.toFixed(9)));
+  // 続ける所があるか (extendable): ふるいで外した武器が残っていれば true、全部の武器で最後まで回り終えたら false (画面は「続けて探す」を
+  // 出さない)。extend の返り値と同じ
+  assert.equal(r.extendable, true);
+  assert.equal(all.extendable, false);
+  assert.equal(sAll.extend({ work: 1e9 }), false);
   // 続けて探す: ふるいで外した武器も dfs で回る (上位は下がらない)
   const nodes = r.stats.nodes;
   assert.equal(s.extend({ work: 1e9 }), true);
@@ -318,5 +326,6 @@ test('武器も探す (B3z0) の 2 段のふるい: dfs を回す武器を 3 本
   assert.ok(r2.stats.nodes > nodes);
   assert.ok(r2.results[0].value >= r.results[0].value - 1e-9);
   assert.ok(!r2.warnings.some((w) => w.code === 'weapons-sieved'));
+  assert.equal(r2.extendable, false);
   assert.equal(s.extend({ work: 1e9 }), false, '全部回ったら続ける所は無い');
 });

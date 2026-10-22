@@ -141,6 +141,140 @@ function pareto(list) {
 }
 
 /**
+ * 乱数で作る小さい問題 (締めた上界の確かめ用。tests/search_bound.test.mjs)。残すスキル (防具 1〜4・武器 1〜4)・シリーズ 0〜2・
+ * グループ 0〜1 を乱数で選び (兇爪竜の力と連撃も入れやすくする)、火力に効かない必須 (耐性など)・火力スキルやシリーズ/グループの必須・
+ * 限界突破 (全部 / なし / 部位ごと)・部位ごとに 2〜3 個の防具・作り物の所持護石と生産護石・武器用の珠・相手 (1〜2 部位)・
+ * 発動率 (0 / 50% / 100% / 乱数) も乱数で決める。
+ * @param raw loadRepoData() の結果 (monsters・combos も入ったもの)
+ * @param artian 手入力の巨戟アーティア (makeCases の artian)
+ * @param targetOf makeCases の targetOf
+ * @returns {{data, input, info}}  data・input は makeSmallProblem と同じ形。info = 残したスキル・必須の名前 (落ちたときの手がかり)
+ */
+export function makeRandomProblem(raw, artian, targetOf, seed) {
+  const rnd = makeRng(seed * 7 + 11);
+  for (let i = 0; i < 5; i++) rnd();
+  const pick = (a) => a[Math.floor(rnd() * a.length)];
+  const sample = (a, n) => { const b = a.slice(); const o = []; while (o.length < n && b.length) o.push(b.splice(Math.floor(rnd() * b.length), 1)[0]); return o; };
+  const skills = raw.skills.skills;
+  const sById = new Map(skills.map((s) => [s.id, s]));
+  const eff = raw.skillEffects.effects;
+  const hasEff = (s) => eff[s.id] && eff[s.id].supported !== false;
+  const decosAll = raw.decorations.decorations;
+  const armorDecoOf = (id) => decosAll.filter((d) => d.kind === 'armor' && d.skills.length === 1 && d.skills[0].skillId === id);
+  const ARMOR_EFF = skills.filter((s) => s.kind === 'armor' && hasEff(s)).map((s) => s.id);
+  const WEAPON_EFF = skills.filter((s) => s.kind === 'weapon' && hasEff(s)).map((s) => s.id);
+  const FLAT = skills.filter((s) => s.kind === 'armor' && !hasEff(s) && armorDecoOf(s.id).length).map((s) => s.id);
+  const SETS = raw.bonuses.setBonuses;
+  const GROUPS = raw.bonuses.groupBonuses;
+  const RENGEKI = skills.find((s) => s.name === '連撃').id;
+  const KYOSO = SETS.find((b) => b.name === '兇爪竜の力');
+  const keepArmor = new Set(sample(ARMOR_EFF, 1 + Math.floor(rnd() * 4)));
+  const keepWeapon = new Set(sample(WEAPON_EFF, 1 + Math.floor(rnd() * 4)));
+  const keepSets = new Set(sample(SETS, Math.floor(rnd() * 3)).map((b) => b.id));
+  const keepGroups = new Set(sample(GROUPS, Math.floor(rnd() * 2)).map((b) => b.id));
+  if (rnd() < 0.45) { keepSets.add(KYOSO.id); keepArmor.add(RENGEKI); }
+  if (rnd() < 0.3) keepArmor.add(RENGEKI);
+  const required = [];
+  // 火力に効かない必須 (耐性など)
+  if (rnd() < 0.35) {
+    for (const id of sample(FLAT, 1 + Math.floor(rnd() * 3))) {
+      keepArmor.add(id);
+      required.push({ skillId: id, level: 1 + Math.floor(rnd() * Math.min(2, sById.get(id).maxLevel)) });
+    }
+  }
+  if (rnd() < 0.5) {
+    const pool = [...keepArmor, ...keepWeapon].filter((id) => !required.some((q) => q.skillId === id));
+    for (const id of sample(pool, 1 + Math.floor(rnd() * 2))) required.push({ skillId: id, level: 1 + Math.floor(rnd() * Math.min(3, sById.get(id).maxLevel)) });
+  }
+  if (rnd() < 0.2 && keepSets.size) {
+    const bid = pick([...keepSets]);
+    required.push({ skillId: SETS.find((x) => x.id === bid).skillId, level: 1 });
+  }
+  if (rnd() < 0.1 && keepGroups.size) {
+    const gid = pick([...keepGroups]); const b = GROUPS.find((x) => x.id === gid);
+    required.push({ skillId: b.skillId, level: b.level ?? 1 });
+  }
+  const strip = (a) => {
+    const sets = [...new Set([...(a.setBonusIds || []), a.setBonusId].filter((x) => x != null && keepSets.has(x)))];
+    return { ...a, skills: (a.skills || []).filter((s) => keepArmor.has(s.skillId)), setBonusIds: sets, setBonusId: sets[0] ?? null,
+      groupBonusId: keepGroups.has(a.groupBonusId) ? a.groupBonusId : null };
+  };
+  const limitBreak = rnd() < 0.5 ? true : rnd() < 0.5 ? false : Object.fromEntries(ARMOR_PARTS.map((p) => [p, rnd() < 0.5]));
+  const lbOf = (p) => (limitBreak && typeof limitBreak === 'object' ? !!limitBreak[p] : !!limitBreak);
+  const armor = [];
+  for (const part of ARMOR_PARTS) {
+    const all = raw.armor.armor.filter((a) => a.part === part);
+    const interesting = all.filter((a) => (a.skills || []).some((s) => keepArmor.has(s.skillId))
+      || [...(a.setBonusIds || []), a.setBonusId].some((x) => keepSets.has(x)) || keepGroups.has(a.groupBonusId));
+    const n = 2 + (rnd() < 0.4 ? 1 : 0);
+    // 同じ部位で「残したスキル・スロット・シリーズ/グループ」が同じ防具は選ばない (makeSmallProblem と同じ)
+    const seen = new Set();
+    const picked = [];
+    let tries = 0;
+    while (picked.length < n && tries++ < 60) {
+      const a = strip(pick(rnd() < 0.8 && interesting.length ? interesting : all));
+      const sl = lbOf(part) && Array.isArray(a.slotsLimitBreak) ? a.slotsLimitBreak : a.slots;
+      const key = JSON.stringify([a.skills.map((s) => [s.skillId, s.level]).sort(), [...sl].sort(), [...a.setBonusIds].sort(), a.groupBonusId]);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      picked.push(a);
+    }
+    armor.push(...picked);
+  }
+  // 護石: 作り物の所持護石 (防具・武器スキル・スロット・武器用スロット) + 生産護石
+  const owned = [];
+  const nOwned = Math.floor(rnd() * 3);
+  const keepAll = [...keepArmor, ...keepWeapon];
+  for (let i = 0; i < nOwned; i++) {
+    const sk = sample(keepAll, 1 + Math.floor(rnd() * 2)).map((id) => ({ skillId: id, name: sById.get(id).name, level: 1 + Math.floor(rnd() * Math.min(2, sById.get(id).maxLevel)) }));
+    owned.push({ id: `cz${i}`, name: '秘歴の護石', rarity: 7, skills: sk, armorSlots: pick([[0, 0, 0], [1, 0, 0], [2, 1, 0], [3, 0, 0], [1, 1, 0], [2, 0, 0]]),
+      weaponSlots: pick([[0], [1], [2], [3]]) });
+  }
+  const fixedPool = raw.charmsFixed.charms.filter((c) => (c.skills || []).length && c.skills.some((s) => keepAll.includes(s.skillId)))
+    .map((c) => ({ ...c, skills: c.skills.filter((s) => keepAll.includes(s.skillId)) }));
+  const fixed = [];
+  const seenC = new Set();
+  const nFixed = Math.max(owned.length ? 0 : 1, Math.floor(rnd() * 3));
+  let tries = 0;
+  while (fixed.length < nFixed && fixedPool.length && tries++ < 40) {
+    const c = pick(fixedPool);
+    const key = JSON.stringify(c.skills.map((s) => [s.skillId, s.level]).sort());
+    if (seenC.has(key)) continue;
+    seenC.add(key);
+    fixed.push(c);
+  }
+  if (!owned.length && !fixed.length) owned.push({ id: 'cz9', name: '秘歴の護石', rarity: 7, skills: [], armorSlots: [1, 0, 0], weaponSlots: [0] });
+  const armorDecos = decosAll.filter((d) => d.kind === 'armor' && d.skills.length === 1 && keepArmor.has(d.skills[0].skillId));
+  const wPick = sample(decosAll.filter((d) => d.kind === 'weapon' && d.skills.every((s) => keepWeapon.has(s.skillId))), 1 + Math.floor(rnd() * 4));
+  const data = { ...raw, armor: { armor }, decorations: { decorations: [...armorDecos, ...wPick] },
+    charms: { schema: 1, charms: owned }, charmsFixed: { charms: fixed } };
+  delete data.monsters; delete data.combos;
+  const weapon = rnd() < 0.6 ? 'w-test' : pick(raw.weapons.weapons).id;
+  const m = pick(raw.monsters.monsters);
+  const targets = rnd() < 0.5 ? [{ weight: 1, target: targetOf('アルシュベルド', 'head') }]
+    : rnd() < 0.5 ? [{ weight: 0.6, target: targetOf('アルシュベルド', 'head') }, { weight: 0.4, target: targetOf('アルシュベルド', 'left-wing') }]
+      : sample(m.parts, 2).map((p, i, ps) => ({ weight: ps.length === 1 ? 1 : (i ? 0.3 : 0.7), target: { hitzone: p.hitzone, wound: p.wound || null, isWound: rnd() < 0.2 } }));
+  // 発動率: 0 / 50% / 100% / 乱数。同時に起きない条件は合計 100% 以下
+  const up = {};
+  const val = () => pick([0, 0.5, 1, 1, rnd()]);
+  for (const g of raw.skillEffects.rules.conditionGroups) {
+    if (g.type === 'categorical') {
+      const st = g.states.map((s) => s.id).filter((x) => x !== g.offState);
+      const a = val(); const b = Math.min(1 - a, val());
+      up[g.id] = rnd() < 0.2 ? {} : { [st[0]]: a, [st[1]]: b };
+    } else up[g.id] = val();
+  }
+  if (up.hpFull + up.redHp > 1) up.redHp = 1 - up.hpFull;
+  if (up.hpFull + up.hpLow > 1) up.hpLow = 1 - up.hpFull;
+  const input = {
+    weapons: [weapon], extraWeapons: [artian], targets, combo: pick(raw.combos.combos), uptimes: up, monsterStatus: [], buffs: {}, sharpness: null,
+    required, charms: { owned: true, fixed: true }, limitBreak, decorations: { owned: null }, armorExclude: [], objective: 'damage', K: 10,
+  };
+  return { data, input, info: { armor: [...keepArmor].map((id) => sById.get(id).name), weapon: [...keepWeapon].map((id) => sById.get(id).name),
+    required: required.map((q) => sById.get(q.skillId).name + q.level) } };
+}
+
+/**
  * スロットに珠を入れる全部の入れ方 (大きいスロットから 1 つずつ。同じ大きさのスロットは順を問わない)。
  * @returns 珠ごとの個数の並びのうちパレートなもの
  */

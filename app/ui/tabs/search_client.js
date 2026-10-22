@@ -445,7 +445,8 @@ export function createSearchController({
     set({
       status, busy: false, result, partial: false, extending: false,
       improved: !!before && topChanged(before, result),
-      canExtend: (status === 'done' || status === 'stopped') && result.results.length > 0 && !!transport,
+      // 続ける所が無い (B&B を最後まで回り終えた) 結果には「続けて探す」を出さない (extendable。無い結果は前と同じに出す)
+      canExtend: (status === 'done' || status === 'stopped') && result.results.length > 0 && !!transport && result.extendable !== false,
       doneMs: snap.doneMs ?? el, phase: 'done',
       phases: snap.extending ? snap.phases : [...snap.phases, { name: 'done', atMs: el }],
     });

@@ -703,6 +703,8 @@ function scriptedSearch(make, log, clock = null) {
       },
       cancel() { me.cancelled = true; },
       extend(b) { me.extended += 1; me.lastExtend = b; me.phase = PHASES.indexOf('dfs'); me.status = null; },
+      // 続ける所があるか (make の extendable: false で「B&B を最後まで回り終えた」回にする)
+      get extendable() { return out().extendable; },
     };
   };
 }
@@ -752,6 +754,33 @@ test('createPlanRunner: 回の順・途中の結果・段の進み方・終わ�
   assert.ok(Math.abs(r.costOfDefense.pct - (810 / 900 - 1) * 100) < 1e-9);
   assert.equal(r.stats.runs.length, 3);
   assert.equal(runner.progress().phase, 'done');
+});
+
+test('createPlanRunner: 続ける所が無い回 (B&B を最後まで回り終えた) は延長せず、予算は続ける回で分ける。どの回にも無ければ extendable: false', () => {
+  const job = R.planToJob(planOf(NU_UDRA, AT), { K: 5 });
+  const row = (input) => [{ rank: 1, value: input.required.some((r) => r.skillId === BLIGHT_RES) ? 800 : 810, build: simpleBuild(FIRE_SNS, 648), weapon: FIRE_SNS }];
+  // どの回も最後まで回り終えた: 画面は「続けて探す」を出さない (extendable: false)・extend は false
+  const log = [];
+  const r1 = R.createPlanRunner(job, data, { createSearch: scriptedSearch((input) => ({ results: row(input), extendable: false }), log) });
+  while (!r1.step(5));
+  assert.equal(r1.result().status, 'done');
+  assert.equal(r1.result().extendable, false);
+  assert.equal(r1.extend({ ms: 1000 }), false);
+  assert.ok(log.every((x) => x.extended === 0));
+  // 属性やられの耐性の回だけ続ける所がある: その回だけ延長し、予算は全部その回に
+  const log2 = [];
+  const r2 = R.createPlanRunner(job, data, {
+    createSearch: scriptedSearch((input) => ({ results: row(input), extendable: input.required.some((r) => r.skillId === RESIST_ID.fire) }), log2),
+  });
+  while (!r2.step(5));
+  assert.equal(r2.result().extendable, true);
+  assert.equal(r2.extend({ ms: 1000 }), true);
+  while (!r2.step(5));
+  const ext = log2.filter((x) => x.extended);
+  assert.equal(ext.length, 1);
+  assert.ok(ext[0].input.required.some((r) => r.skillId === RESIST_ID.fire));
+  assert.deepEqual(ext[0].lastExtend, { ms: 1000 });
+  assert.equal(r2.result().status, 'done');
 });
 
 test('createPlanRunner: 中止 (それまでの上位を返す)・続けて探す (extend)・エラー・満たせない', () => {

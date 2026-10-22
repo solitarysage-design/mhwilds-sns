@@ -9,14 +9,20 @@
 // B4 = 泣シミュ型 (攻撃3・見切り3・超会心3・弱点特効5・挑戦者5・渾身3 を満たす構成)。B4x = 満たせない必須 (攻撃5・見切り5・弱点特効5・超会心5)
 // B5 = B1 の相手を 頭 6 割・左翼 4 割
 // B1z・B3z・B5z = 仮置きの発動率を 0% にしたもの (探すタブの既定の条件)。2026-10-22 から怒り・連撃・スタミナ満タンは仮置きでなく
-//   本人の前提 (100%) なので、挑戦者・連撃・渾身が関係スキルに入り、B&B は予算の中で最後まで終わらない
-// B3z0 = B3z からさらに本人の前提の 3 条件も 0% にしたもの (2026-10-21 までの B3z と同じ条件。B&B を最後まで回すテスト用)
+//   本人の前提 (100%) なので、挑戦者・連撃・渾身が関係スキルに入る (前の上界では B&B が予算の中で終わらなかった。締めた上界で
+//   Node 0.7〜1.2 秒で最後まで終わる。docs/SEARCH_DESIGN.md 2.4 節)
+// B3z0 = B3z からさらに本人の前提の 3 条件も 0% にしたもの (2026-10-21 までの B3z と同じ条件。B&B を 3 回最後まで回す 2 段のふるいのテスト用)
 //
 // S1〜S3 = 相手に合わせて探す (recommend.js の buildPlan → planToJob の Job。docs/RECOMMEND_DESIGN.md 6.4 節。makePlanCases):
 // S1 = ヌ・エグドラの歴戦王・『黒き揺り篭の吾子』・B1 の武器 (いまの武器)・バランス (環境適応 Lv2 + 火属性やられ → 探索 2 回 + 火力の差)
 // S2 = 『英雄の証』(歴戦王 4 体)・おすすめの属性の武器・武器 2 本
 // S3 = 『閃電猛りて、その粋やよし！』(ラギアクルスとレ・ダウの歴戦の個体)・武器 1 本
 // 発動率は B1 と同じ (仮置き 50% のまま)。S1z・S2z・S3z は仮置きを 0% にしたもの (探すタブの既定)
+// S4〜S7 = 画面の既定のまま相手タブから探す (state.js の defaultSearch: 武器 auto・武器 2 本 auto・限界突破は装備のまま)。いまの装備は
+//   smoke と同じ火のレア 8 の武器だけ (限界突破なし)。S1〜S3 は武器・限界突破を決めているので、画面の既定とは探す武器の数が違う
+//   (2026-10-22 の点検。docs/SEARCH_DESIGN.md 5.3 節の追記):
+// S4 = ヌ・エグドラの歴戦王 (クエストなし。武器は水属性 11 本から 2 本に絞る)・S5 = アルシュベルドの歴戦王 (いまの武器)・
+// S6 = 『英雄の証』(武器 2 本)・S7 = 『閃電猛りて、その粋やよし！』(武器 2 本)。S4z〜S7z が画面の既定 (仮置き 0%)
 import { indexEquipData } from '../app/model/build.js';
 
 /** 読むデータのファイル (data.js の core と同じ名前 + 相手のデータ) */
@@ -107,7 +113,7 @@ export function makeCases(raw) {
   cases.B1z = { ...cases.B1, uptimes: zeroPlaceholders };
   cases.B3z = { ...cases.B3, uptimes: zeroPlaceholders };
   cases.B5z = { ...cases.B5, uptimes: zeroPlaceholders };
-  // B3z0 = 本人の前提も 0% (2026-10-21 までの B3z と同じ。B&B が 1 秒ほどで最後まで終わる。最後まで回すテスト用)
+  // B3z0 = 本人の前提も 0% (2026-10-21 までの B3z と同じ。B&B が 1 秒ほどで最後まで終わる。2 段のふるいのテスト用)
   cases.B3z0 = { ...cases.B3, uptimes: zeroAssumed };
   return { cases, artian, skillId, targetOf, zeroPlaceholders, zeroAssumed };
 }
@@ -118,16 +124,24 @@ export function searchDataOf(raw) {
   return core;
 }
 
-/** 相手に合わせて探すケース (S1〜S3) の決まり。target は state.target、search は state.search の差分 */
+/**
+ * 相手に合わせて探すケース (S1〜S7) の決まり。target は state.target、search は state.search の差分 (S1〜S3 は限界突破を全部にする)。
+ * ui = 画面の既定 (いまの装備は火のレア 8 の武器・限界突破なし)
+ */
+const UI_SEARCH = { weaponMode: 'auto', twoWeapons: 'auto', limitBreak: 'build' };
 const PLAN_CASES = {
   S1: { monster: 'ヌ・エグドラ', individual: 'arch-tempered', quest: '黒き揺り篭の吾子', search: { weaponMode: 'current', twoWeapons: 'auto' } },
   S2: { quest: '英雄の証', search: { weaponMode: 'auto', twoWeapons: 'auto' } },
   S3: { quest: '閃電猛りて、その粋やよし！', search: { weaponMode: 'auto', twoWeapons: 'off' } },
+  S4: { monster: 'ヌ・エグドラ', individual: 'arch-tempered', search: UI_SEARCH, ui: true },
+  S5: { monster: 'アルシュベルド', individual: 'arch-tempered', search: UI_SEARCH, ui: true },
+  S6: { quest: '英雄の証', search: UI_SEARCH, ui: true },
+  S7: { quest: '閃電猛りて、その粋やよし！', search: UI_SEARCH, ui: true },
 };
 
 /**
- * S1〜S3 (と仮置き 0% の S1z〜S3z) の Plan と Job を作る (画面と同じ buildPlan → planToJob)。
- * いまの装備 = B1 の武器 (手入力の巨戟アーティア) だけ。限界突破は全部位 (B1 と同じ)。
+ * S1〜S7 (と仮置き 0% の S1z〜S7z) の Plan と Job を作る (画面と同じ buildPlan → planToJob)。
+ * いまの装備 = S1〜S3 は B1 の武器 (手入力の巨戟アーティア) だけで限界突破は全部位 (B1 と同じ)、S4〜S7 は火のレア 8 の武器だけ。
  * @param raw loadRepoData() の結果 (quests・threats も入ったもの)
  * @param opts {budgetMs (Job 全体の時間の予算。回の数で分ける), budget ({work} などをそのまま各回に), K}
  * recommend.js は呼ばれたときに読む (tests/search_worker_plan.test.mjs が recommend.js を作り物に差し替えるため、先に読まない)。
@@ -148,15 +162,18 @@ export async function makePlanCases(raw, { budgetMs = 2500, budget = null, K = 1
     weapon: artian.id, armor: Object.fromEntries(parts.map((p) => [p, null])), charm: null, decorations: {},
     limitBreak: Object.fromEntries(parts.map((p) => [p, true])),
   };
+  const fire8 = listOf(raw.weapons, 'weapons').find((w) => w.element && w.element.type === 'fire' && w.rarity === 8);
+  const uiBuild = { ...build, weapon: fire8.id, limitBreak: Object.fromEntries(parts.map((p) => [p, false])) };
   const jobs = {};
   const plans = {};
   for (const [name, c] of Object.entries(PLAN_CASES)) {
-    const q = quests.find((x) => x.name === c.quest);
-    if (!q) throw new Error(`quests.json に『${c.quest}』が無い`);
-    const first = q.mission && q.mission.targets ? q.mission.targets.find((t) => t.monsterId != null) : null;
+    const q = c.quest ? quests.find((x) => x.name === c.quest) : null;
+    if (c.quest && !q) throw new Error(`quests.json に『${c.quest}』が無い`);
+    const first = q && q.mission && q.mission.targets ? q.mission.targets.find((t) => t.monsterId != null) : null;
     const m = c.monster ? monsters.find((x) => x.name === c.monster) : monsters.find((x) => x.id === first.monsterId);
+    const cur = c.ui ? uiBuild : build;
     const target = {
-      mode: 'monster', monsterId: m.id, partKey: null, isWound: false, questId: q.id,
+      mode: 'monster', monsterId: m.id, partKey: null, isWound: false, questId: q ? q.id : null,
       individual: c.individual !== undefined ? c.individual : (first ? first.variant ?? null : null), questTargetIndex: 0, players: 1,
       useUncertainWound: false,
     };
@@ -169,10 +186,10 @@ export async function makePlanCases(raw, { budgetMs = 2500, budget = null, K = 1
       const plan = buildPlan({
         target, tabTarget: {}, search, targetData: td,
         core: { index, skillEffects: raw.skillEffects, motions: raw.motions, combos: raw.combos },
-        current: { build, combo: null, uptimes: {}, sharpness: null, extraWeapons: [artian] },
+        current: { build: cur, combo: null, uptimes: {}, sharpness: null, extraWeapons: [artian] },
       });
       const job = planToJob(plan, {
-        K, budgetMs, ...(budget ? { budget } : {}), placeholders, userRequired: [], extraCharms: [], extraWeapons: [artian], current: build,
+        K, budgetMs, ...(budget ? { budget } : {}), placeholders, userRequired: [], extraCharms: [], extraWeapons: [artian], current: cur,
       });
       plans[name + suffix] = plan;
       jobs[name + suffix] = job;

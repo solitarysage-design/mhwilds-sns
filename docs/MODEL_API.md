@@ -445,11 +445,13 @@ const base = planBaseline(job, state.build, { index, skillEffects, motions });  
   `bestKind` は `'damage'` か `'combos'` (多頭の T))、
   合わせる → 武器 2 本 (上位 `TWO_WEAPON_TOP` = 5 件の防具の組に、その回の候補の武器から 2 本目と 1 本目を `optimizeWeaponSide` で選び直す。
   計算し直しは省き (`check: false`)、同じ回の入力の物を使い回して下ごしらえを 1 回にする) → `costRun`。
-  `partialReady` は 1 回目の探索の途中の結果 (仕上げ 1) が出たとき。`extend` は終わった回 (満たせなかった回を除く) を延長してもう一度合わせる。
+  `partialReady` は 1 回目の探索の途中の結果 (仕上げ 1) が出たとき。`extend` は終わった回 (満たせなかった回と、B&B を最後まで回り終えた回
+  (`search.extendable` が false) を除く) を延長してもう一度合わせる。予算は延長する回 (と下の足す回) の数で分ける。
   武器 2 本の案では `extend` が「2 本目の武器で倒す相手だけ」を見た回 (`two-focus:<相手の key>`。重み = いまの最良の組での H_i / D_i²・部位の割合はそのまま) を 1 つ足し、
   その回の上位も 2 本の合わせにかける (`docs/RECOMMEND_DESIGN.md` 3.3 節の 4。前の組も残るので、良くなったときだけ上位が入れ替わる)。
   回が全部終わったあと (合わせ・`costRun`・延長の途中も) の `result()` は合わせた結果 (延長中は前の結果のまま)。合わせの途中でやめたら、それまでに合わせた分で出す。
-  - `result()` = `{status: 'partial'|'done'|'stopped'|'cancelled'|'infeasible'|'error'|'blocked', results, infeasible, warnings, stats: {elapsedMs, mergeMs, twoWeaponsMs, extended, runs: [{key, label, status, ms, stats}]}, quality: 'heuristic', merge, costOfDefense, singleWeapon, twoWeaponsGain}`。
+  - `result()` = `{status: 'partial'|'done'|'stopped'|'cancelled'|'infeasible'|'error'|'blocked', results, infeasible, warnings, stats: {elapsedMs, mergeMs, twoWeaponsMs, extended, runs: [{key, label, status, ms, stats}]}, quality: 'heuristic', merge, costOfDefense, singleWeapon, twoWeaponsGain, extendable}`。
+    `extendable` = 「続けて探す」で続ける所があるか (延長できる回か、2 本目の相手に合わせた回を足せる。`extend` が true を返すか。2026-10-22)。
   - `results[]` = 探索の結果に `score: {kind: 'damage'|'combos', value, better}`・`perSubject: [{key, name, value, combos, weapon: 1|2}]`・`combosTotal`・
     `perGroup` (無ければ計算し直す)・`weapons`・`builds` (武器 2 本なら 2 つ。防具・護石は共通)・`defense` (`defenseCheck`。2 本目は `defense2`)・
     `gamma: [{part, monsterId, name}]`・`baseline` (`baselineView` の形 `{kind, value, T, combos, perGroup}`)・`vsBaselinePct`・`run` を足したもの。守りを満たす組を先に、その中で score の順
@@ -520,6 +522,7 @@ while (!search.step(80)) {         // 80ms ぶん進める。終わったら (�
 const r = search.result();         // 途中で呼んでもよい
 search.cancel();                   // 次の step で止まる
 search.extend({ ms: 6000 });       // 続けて探す (B&B の続き + 仕上げ 2)。続ける所が無ければ false。予算は今から数える
+search.extendable;                 // 続ける所があるか (extend が true を返すか。状態は変えない。result().extendable と同じ)
 ```
 
 `result()` の形 (`docs/SEARCH_DESIGN.md` 3.4 節):
@@ -532,6 +535,7 @@ search.extend({ ms: 6000 });       // 続けて探す (B&B の続き + 仕上げ
 | `warnings[]` | `{code, message}`。下の表 |
 | `baseline` | `{value}` か null (`current` を渡したとき) |
 | `quality` | `'exact'` (mode exact で最後まで) / `'heuristic'` |
+| `extendable` | 「続けて探す」で続ける所があるか (B&B を最後まで回り終えて、2 段のふるいで外した武器も残っていなければ false。mode exact は false)。画面はこれが false なら「続けて探す」を出さない (2026-10-22) |
 | `stats` | `{prepareMs, elapsedMs, activeMs, phases: [{name, endMs, best}], classes: {head: 42, ...}, charms, relevantSkills, weapons: {before, after}, nodes, leaves, boundCalls, memoClears, firstSolutionMs, sieve}`。`sieve` = 武器も探すときの 2 段のふるい `{combos, measured, weapons: [dfs を回した武器の参照]}` か null。`phases` には dfs の頭のふるいが `sieve` として入る (progress().phase は dfs のまま) |
 
 警告のコード: `placeholder-uptimes` (仮置きの発動率で探した。`groups` に条件の id) / `exclusive-over-100` / `blunt-handicraft` /
@@ -548,7 +552,8 @@ search.extend({ ms: 6000 });       // 続けて探す (B&B の続き + 仕上げ
 - 入力の誤りで続けられないもの (武器が無い・相手が無い・コンボが無い・データが無い) は `createSearch` が例外を投げる。ほかは warnings。
 - 計算し直し (`check`) は result() のたびに上位 K 件ぶん comboExpected を呼ぶ (同じ構成は覚える)。仮置きの発動率のままだと 1 件 20〜30ms (Node)。
 - テスト用の入力: `beam: [幅, ...]` (ビームの幅) / `dominance: false` (優越の除去をしない。総当たりと同じ数え方になる) /
-  `sieve: false` (武器も探すときの 2 段のふるいをしない) か `{top, weapons}` (測り直す防具・護石の組の数 既定 50・dfs を回す武器の数 既定 3)。
+  `sieve: false` (武器も探すときの 2 段のふるいをしない) か `{top, weapons}` (測り直す防具・護石の組の数 既定 50・dfs を回す武器の数 既定 3) /
+  `tight: false` (締めた上界を使わない。前の上界と比べる用。`docs/SEARCH_DESIGN.md` 2.4 節) か `solver.js` の `TIGHT` の一部を差し替えるもの。
 - 必須のシリーズ/グループスキルは、残りの部位を「どのボーナスに数えるか」割り当てて判定する (部位の取り合い・ゴグα/β の 2 つのシリーズも
   見る。満たせない組は最初の上界で分かる。`docs/SEARCH_DESIGN.md` 2.8 節・11 章)。
 

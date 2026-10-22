@@ -37,6 +37,7 @@ const PROBLEMS = [
   // 連撃・渾身・兇爪竜の力 (連撃が要る) も残す。1 位は挑戦者・連撃・渾身・兇爪竜の力が入った組
   { seed: 22, perPart: 2, charms: 3, targets: MIX, include: { head: [349], waist: [673] }, keepArmor: ['連撃', '渾身'],
     keepSets: ['兇爪竜の力'], uptimes: zeroPlaceholders, note: '探すタブの既定の発動率', topSkills: ['挑戦者', '連撃', '渾身', '兇爪竜の力'] },
+  // 同じ発動率で必須つきの 2 問 (種 23・25) は tests/search_bound.test.mjs で、同じ総当たりを使って上位 10 件の一致も見る
 ];
 
 const outcomes = [];

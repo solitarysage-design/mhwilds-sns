@@ -3,6 +3,8 @@
 // 木: 武器 (武器も探すときだけ) → 護石 → 防具 5 部位 (partOrder の順) → 葉: 装飾品を詰める (武器用の珠の組 × 防具用の珠)。
 // 上界 = いまの Lv での正確な期待値 f(L0) + 「残りの部位・護石・珠で足せる Lv」の増え方の和 (ナップサック。防具用の珠は
 //        入れ子のスロットなので貪欲で最適)。増え方の表は problem.js の gainTable。
+//        dfs (と exact) では締めた上界 (docs/SEARCH_DESIGN.md 2.4 節「締めた上界」): スキルに足す順を決めて測った表 (boundTable)・
+//        同じスキルの段を源ごとに重ねて数えないラグランジュ緩和・子を測る前のふるい (部位を 1 つ決めた上界。screenClasses)。
 //
 // mode 'fast' (画面で使う。2.5 節の順):
 //   beam1 (幅 60。表は「武器の Lv と、シリーズ/グループ以外を最大の半分」の所で測る) → beam2 (幅 200。表はいまの最良の所で測り直す)
@@ -19,8 +21,15 @@ import { gainTable, concaveSlopes } from './problem.js';
 const NEG = -Infinity;
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
-/** 覚え (メモリ) の上限: 葉の珠詰めの覚えの合計件数・武器側の増え方の覚え・葉の表の数 (武器ごと) */
-export const MEMO_LIMITS = Object.freeze({ leafMemo: 60000, weaponGain: 20000, leafTables: 64 });
+/** 覚え (メモリ) の上限: 葉の珠詰めの覚えの合計件数・武器側の増え方の覚え・葉の表の数 (武器ごと)・締めた上界の表の行の数 (全部の武器の合計) */
+export const MEMO_LIMITS = Object.freeze({ leafMemo: 60000, weaponGain: 20000, leafTables: 64, boundRows: 30000 });
+
+/**
+ * 締めた上界の決まり (docs/SEARCH_DESIGN.md 2.4 節): zeroDepth = λ = 0 の回を測る深さ (決めた部位の数がこれ以下)、
+ * uniDepth / uniEvals = 全部の防具スキルで同じ λ を黄金分割で探す深さと測る回数、chainArmor = 防具スキルどうしにも足す順を
+ * 付ける数の上限 (これより多いと行が増えすぎるので順にしない)、screen = 子を測る前のふるい
+ */
+export const TIGHT = Object.freeze({ zeroDepth: 2, uniDepth: 2, uniEvals: 5, chainArmor: 8, screen: true });
 
 export class BnbSolver {
   /**
@@ -32,7 +41,8 @@ export class BnbSolver {
    *            work = dfs の中で上界を求めた回数。どれも無ければ最後まで), minDfsMs (dfs を最低これだけ回す。既定 300),
    *   stopAfter: 'partial' (polish1 で止める), partOrder, maxSolutions (none で集める数。既定 K), eps (exact で刈る許し),
    *   sieve: 武器も探すときの 2 段のふるい (docs/SEARCH_DESIGN.md 2.7 節)。{top: 測り直す防具・護石の組の数 (既定 50),
-   *          weapons: dfs を回す武器の数 (既定 3)} か false (ふるわない。全部の武器で dfs)
+   *          weapons: dfs を回す武器の数 (既定 3)} か false (ふるわない。全部の武器で dfs),
+   *   tight: false (締めた上界を使わない。比べる・テスト用) か TIGHT の一部を差し替えるもの
    * }
    */
   constructor(P, o = {}) {
@@ -79,6 +89,29 @@ export class BnbSolver {
       if (P.reqLv[r] > 0) this.reqR.push(r);
     }
     this.armorSz = Int8Array.from(this.armorR.map((r) => P.armorDeco[r].slot));
+    // 締めた上界 (docs/SEARCH_DESIGN.md 2.4 節): ラグランジュ緩和の対象 = 防具スキル (護石・部位・防具の珠から来る)
+    this.tightOpt = { ...TIGHT, ...(o.tight && typeof o.tight === 'object' ? o.tight : {}) };
+    this.tight = o.tight !== false;
+    this.lagOn = new Uint8Array(R);
+    this.lagR = [];
+    this.sgR = [];
+    for (let r = 0; r < R; r++) {
+      if (P.kind[r] === 'armor') { this.lagOn[r] = 1; this.lagR.push(r); }
+      if (P.kind[r] === 'set' || P.kind[r] === 'group') this.sgR.push(r);
+    }
+    this.lagLam = new Float64Array(R);
+    this.lagCap = new Int8Array(R);
+    // 必須の防具スキルの数 (screenClasses の覚えの鍵の桁)
+    this.reqArmorN = this.reqR.filter((r) => P.kind[r] === 'armor').length;
+    // 上界の表のスキルの順 (boundTable): 防具スキル (とほか) → シリーズ/グループ → 武器スキル (並びの後ろから)
+    const rest = [];
+    for (let r = 0; r < R; r++) if (!this.lagOn[r] && !this.sgR.includes(r) && !this.weaponR.includes(r)) rest.push(r);
+    this.chainGroups = [[...rest, ...this.lagR], this.sgR, [...this.weaponR].reverse()];
+    this.boundRowsN = 0;
+    this.stats.lagEvals = 0;
+    this.stats.boundRows = 0;
+    this.stats.boundRowClears = 0;
+    this.stats.kidsScreened = 0;
     this.partMaxLv = this.partCls.map((cls) => { const m = new Int8Array(R); for (const c of cls) for (let r = 0; r < R; r++) if (c.lv[r] > m[r]) m[r] = c.lv[r]; return m; });
     this.partMaxSlots = this.partCls.map((cls) => [0, 1, 2].map((i) => Math.max(0, ...cls.map((c) => c.slots[i]))));
     this.charmMaxLv = new Int8Array(R);
@@ -341,8 +374,11 @@ export class BnbSolver {
     return { forced, wNeed };
   }
 
-  /** いまの状態 (護石を選んだか charmDone、残りの部位 = partOrder[from..4]) の上界。満たせないなら -Infinity */
-  bound(charmDone, from) {
+  /**
+   * いまの状態 (護石を選んだか charmDone、残りの部位 = partOrder[from..4]) の上界。満たせないなら -Infinity。
+   * rec: 部位 rec (partOrder の番号) の類ごとに「その部位だけ類を決めた上界」を kidUbOf(rec) に入れる (子を測る前のふるい。dfsStep)
+   */
+  bound(charmDone, from, rec = -1) {
     const P = this.P;
     this.stats.boundCalls++;
     const L = this.levels();
@@ -365,90 +401,359 @@ export class BnbSolver {
       need = this.requiredNeeds(L, charmDone, from, false);
       return need && wOk(need) && this.forcedFeasible(need.forced, budget) ? Infinity : NEG;
     }
-    let g = wOk(need) ? this.decoGreedy(L, budget, need.forced) : NEG;
-    if (g === NEG && pessimistic && this.reqR.length) {
-      need = this.requiredNeeds(L, charmDone, from, false);
-      if (!need || !wOk(need)) return NEG;
-      g = this.decoGreedy(L, budget, need.forced);
-    }
-    if (g === NEG) return NEG;
-    const f0 = this.wp.ev.evaluate(L);
-    let gain = 0;
-    if (!charmDone) {
-      let best = 0;
-      for (const c of this.charmCls) {
-        let v = 0;
-        for (let i = 0; i < c.sk.length; i += 2) v += this.hatSum(c.sk[i], L[c.sk[i]], c.sk[i + 1]);
-        if (v > best) best = v;
+    // 締めた上界 (docs/SEARCH_DESIGN.md 2.4 節): ビームの並べ替えは前と同じ上界 (途中の結果を変えない)
+    const tight = this.tight && !pessimistic;
+    // 火力に効かない必須スキル (耐性など) の珠の数を、珠の大きさごとにまとめて見た分 (jointForced)
+    const extra = tight && this.reqR.length ? this.jointForced(L, charmDone, from, need.forced) : null;
+    // 必須を珠で埋めきれない枝は、表を引く前に捨てる (下の decoGreedy と同じ判定)
+    if (tight && (!wOk(need) || !this.forcedFeasible(need.forced, budget, extra))) return NEG;
+    const gtSave = this.gt;
+    if (tight) this.gt = this.boundTable(L);
+    // いまの Lv からの累積和 (スキルごと。締めた上界のときだけ)
+    const cp = tight ? this._cp || (this._cp = new Array(P.R)) : null;
+    if (cp) for (let r = 0; r < P.R; r++) cp[r] = this.gt.pre[r][L[r] > P.maxLv[r] ? P.maxLv[r] : L[r]];
+    try {
+      let g = wOk(need) ? this.decoGreedy(L, budget, need.forced, null, null, extra) : NEG;
+      if (g === NEG && pessimistic && this.reqR.length) {
+        need = this.requiredNeeds(L, charmDone, from, false);
+        if (!need || !wOk(need)) return NEG;
+        g = this.decoGreedy(L, budget, need.forced);
       }
-      gain += best;
-    }
-    gain += this.weaponGain(charmDone ? this.wSlot : this.charmMaxW, L);
-    const setCredit = this.setCredits(L, from);
-    const grpCredit = this.groupCredits(L, from);
-    for (let pi = from; pi < 5; pi++) {
-      let best = 0;
-      for (const c of this.partCls[pi]) {
-        let v = 0;
-        for (let i = 0; i < c.sk.length; i += 2) v += this.hatSum(c.sk[i], L[c.sk[i]], c.sk[i + 1]);
-        for (const s of c.sIdx) v += setCredit[s];
-        if (c.gIdx >= 0) v += grpCredit[c.gIdx];
-        if (v > best) best = v;
+      if (g === NEG) return NEG;
+      const f0 = this.wp.ev.evaluate(L);
+      const wg = this.weaponGain(charmDone ? this.wSlot : this.charmMaxW, L);
+      const setCredit = this.setCredits(L, from);
+      const grpCredit = this.groupCredits(L, from);
+      let ub = f0 + wg + g + this.sourceGain(L, charmDone, from, setCredit, grpCredit, null, rec, cp);
+      const kid = rec >= 0 ? this.kidUbOf(rec) : null;
+      // ふるいの類ごとの見直し (screenClasses) に使う: 素の上界と、一番小さかった λ の回の値・部位 rec の最大・類ごとの値・珠の分・λ
+      const sv = kid && tight ? (this._sv || (this._sv = [{}, {}])) : null;
+      const keep = (o, U, gg, t) => { o.U = U; o.best = this.recBest; o.v = (o.v && o.v.length >= this.recV.length ? o.v : new Float64Array(this.recV.length)); o.v.set(this.recV); o.g = gg; o.t = t; };
+      if (kid) {
+        for (let k = 0; k < kid.length; k++) kid[k] = ub - this.recBest + this.recV[k];
+        if (sv) { keep(sv[0], ub, g, Infinity); sv[1].U = Infinity; }
       }
-      gain += best;
-    }
-    return f0 + gain + g;
+      if (!tight) return ub;
+      // ラグランジュ緩和: 防具スキル r の上積みの合計 X_r を、源 (護石・部位・防具の珠) ごとの x に分けて数えると、
+      // H_r(Σx) ≤ H*_r(λ) + Σ min(λx, H_r(x))  (H*_r(λ) = max_x H_r(x) - λx。どの λ ≥ 0 でも成り立つ) なので、
+      // 源ごとに独立に最大にしても、急な最初の段を源の数だけ重ねて数えない。λ を何通りか試して一番小さい値を使う
+      // しきい値 (これ以下と分かれば締めるのをやめる)
+      const thr = this.threshold();
+      const lam = this.lagLam;
+      const cap = this.lagCap;
+      let anyCap = false;
+      for (const r of this.lagR) {
+        // 残りの源で足せる Lv の合計の上限 (上限までの空きでも切る)
+        let u = charmDone ? 0 : this.charmMaxLv[r];
+        for (let pi = from; pi < 5; pi++) u += this.partMaxLv[pi][r];
+        if (P.armorDeco[r]) for (let z = P.armorDeco[r].slot; z <= 3; z++) u += budget[z];
+        const len = cp[r].length - 1;
+        cap[r] = u < len ? u : len;
+        if (cap[r] > 0) anyCap = true;
+      }
+      if (anyCap) {
+        const base = f0 + wg;
+        const pass = (t) => {
+          for (const r of this.lagR) lam[r] = cap[r] > 0 ? t : Infinity;
+          this.stats.lagEvals++;
+          const v = this.lagEval(base, L, charmDone, from, budget, need.forced, setCredit, grpCredit, rec, cp, extra);
+          if (v < ub) ub = v;
+          if (kid) {
+            for (let k = 0; k < kid.length; k++) { const x = v - this.recBest + this.recV[k]; if (x < kid[k]) kid[k] = x; }
+            if (sv && v < sv[1].U) keep(sv[1], v, this.lastDeco, t);
+          }
+          return v;
+        };
+        // λ = 0: スキルごとに上限 (足せる分) まで 1 回だけ数える
+        if (!this.prune(ub, thr) && from <= this.tightOpt.zeroDepth) pass(0);
+        // 浅い所 (残りの部位が多い) は、全部の防具スキルで同じ λ = t (珠のスロット 1 つの値段のようなもの) を黄金分割で探す
+        const to = this.tightOpt;
+        const n = from <= to.uniDepth ? to.uniEvals : 0;
+        if (n >= 2 && !this.prune(ub, thr)) {
+          let tmax = 0;
+          for (const r of this.lagR) if (cap[r] > 0) { const h = this.gt.hat[r][L[r] > P.maxLv[r] ? P.maxLv[r] : L[r]]; if (h[0] > tmax) tmax = h[0]; }
+          const gr = 0.6180339887498949;
+          let a = 0, b = tmax;
+          let x1 = b - gr * (b - a), x2 = a + gr * (b - a);
+          let f1 = pass(x1), f2 = pass(x2);
+          for (let k = 2; k < n && !this.prune(ub, thr); k++) {
+            if (f1 <= f2) { b = x2; x2 = x1; f2 = f1; x1 = b - gr * (b - a); f1 = pass(x1); }
+            else { a = x1; x1 = x2; f1 = f2; x2 = a + gr * (b - a); f2 = pass(x2); }
+          }
+        }
+      }
+      if (sv && !this.prune(ub, thr)) this.screenClasses(kid, L, charmDone, from, rec, sv, cp, thr, need.forced, extra);
+      return ub;
+    } finally { this.gt = gtSave; }
   }
 
-  forcedFeasible(forced, budget) {
-    const c = [0, 0, 0, 0];
+  /**
+   * 子を測る前のふるいの見直し: 部位 rec の類ごとに、その類の Lv とスロットで「必須を珠で埋める分」と珠の詰め方を測り直す
+   * (bound の珠の分は、部位 rec のスロットと必須のスキルを類の最大で見ている)。必須を満たせない類は -Infinity。
+   * 見直す回は、素の上界と一番小さかった λ の回 (sv)。どちらも、珠の分だけを類ごとの値に差し替えた上界になる
+   */
+  screenClasses(kid, L, charmDone, from, rec, sv, cp, thr, forced0, extra0) {
+    const P = this.P;
+    const cls = this.partCls[rec];
+    const base = [0, this.slot[1], this.slot[2], this.slot[3]];
+    for (let pi = from; pi < 5; pi++) if (pi !== rec) for (const x of this.partMaxSlots[pi]) if (x > 0) base[x]++;
+    if (!charmDone) for (const x of this.charmMaxSlots) if (x > 0) base[x]++;
+    const mx = [0, 0, 0, 0];
+    for (const x of this.partMaxSlots[rec]) if (x > 0) mx[x]++;
+    const budget = [0, 0, 0, 0];
+    const forced = this._forcedK || (this._forcedK = []);
+    const lam = this.lagLam;
+    // 珠の分は (類のスロットの数, 必須の珠) だけで決まるので、この呼び出しの中で覚える。鍵は 1 つの数 (スロット 9 ビット + 必須の防具
+    // スキル 1 つにつき 3 ビット + 耐性の珠の下限 18 ビット) なので、53 ビットに入らないとき (必須の防具スキルが 9 個以上) は覚えない
+    const memo = this.reqArmorN <= 8 ? this._scrMemo || (this._scrMemo = new Map()) : null;
+    if (memo) memo.clear();
+    // 耐性の珠の下限 (jointForced) の、部位 rec 以外が埋める分 (類によらないので、この呼び出しの中で覚える)
+    const jc = this._jointCov || (this._jointCov = [0, 0, 0, 0]);
+    jc.fill(-1);
+    if (sv[1].U < Infinity) for (const r of this.lagR) lam[r] = this.lagCap[r] > 0 ? sv[1].t : Infinity;
+    for (let k = 0; k < cls.length; k++) {
+      if (kid[k] === NEG || this.prune(kid[k], thr)) continue;
+      const cl = cls[k];
+      forced.length = 0;
+      let ok = true;
+      let key = (cl.slotCount[1] * 8 + cl.slotCount[2]) * 8 + cl.slotCount[3];
+      for (const r of this.reqR) {
+        if (P.kind[r] !== 'armor') continue;
+        let opt = L[r] + cl.lv[r];
+        for (let pi = from; pi < 5; pi++) if (pi !== rec) opt += this.partMaxLv[pi][r];
+        if (!charmDone) opt += this.charmMaxLv[r];
+        const need = P.reqLv[r] - opt;
+        key = key * 8 + (need > 0 ? need : 0);
+        if (need <= 0) continue;
+        if (!P.armorDeco[r]) { ok = false; break; }
+        forced.push(r, need);
+      }
+      if (!ok) { kid[k] = NEG; continue; }
+      const extra = this.jointForced(L, charmDone, from, forced, rec, cl, jc);
+      if (extra) key = ((key * 64 + extra[1]) * 64 + extra[2]) * 64 + extra[3];
+      let m = memo ? memo.get(key) : undefined;
+      if (m === undefined) {
+        for (let z = 1; z <= 3; z++) budget[z] = base[z] + cl.slotCount[z];
+        if (!this.forcedFeasible(forced, budget, extra)) m = null;
+        else if (!extra && !extra0 && cl.slotCount[1] === mx[1] && cl.slotCount[2] === mx[2] && cl.slotCount[3] === mx[3]
+          && forced.length === forced0.length && forced.every((x, i) => x === forced0[i])) m = false;
+        else {
+          m = [this.decoGreedy(L, budget, forced, null, null, extra), sv[1].U < Infinity ? this.decoGreedy(L, budget, forced, lam, cp, extra) : 0];
+        }
+        if (memo) memo.set(key, m);
+      }
+      if (m === null) { kid[k] = NEG; continue; }
+      if (m === false) continue;
+      let x = sv[0].U - sv[0].best + sv[0].v[k] - sv[0].g + m[0];
+      if (sv[1].U < Infinity) { const y = sv[1].U - sv[1].best + sv[1].v[k] - sv[1].g + m[1]; if (y < x) x = y; }
+      if (x < kid[k]) kid[k] = x;
+    }
+  }
+
+  /**
+   * 火力に効かない必須スキル (耐性など。増え方が 0 なので珠の値は 0) の珠の数の下限を、珠の大きさごとにまとめて見る。
+   * requiredNeeds はスキルごとに「残りの部位それぞれの一番多い類」を足すので、1 つの部位が別々の類で何種類もの耐性を持つ形を数える。
+   * ここでは部位ごとに「1 つの類で、その大きさの耐性をまとめて何 Lv 埋められるか」の最大を足して、足りない分を珠で埋めるとする。
+   * 返り値: スキルごとの forced の和に上乗せする、どのスキルとも決めない珠の数 [0, 大きさ 1, 2, 3] か null。
+   * rec / cl: 部位 rec の類を cl に決めたとき (screenClasses)。jc: 部位 rec 以外が埋める分の覚え (大きさごと。-1 = まだ。screenClasses の
+   * 1 回の呼び出しの中で類によらない)
+   */
+  jointForced(L, charmDone, from, forced, rec = -1, cl = null, jc = null) {
+    const P = this.P;
+    const G = this.ws.chainG || (this.ws.chainG = this.chainGroupsOf());
+    if (!G.reqBySize) {
+      const fl = new Uint8Array(P.R);
+      for (const r of G.flat) fl[r] = 1;
+      G.reqBySize = [1, 2, 3].map((z) => this.reqR.filter((r) => fl[r] && P.kind[r] === 'armor' && P.armorDeco[r] && P.armorDeco[r].slot === z))
+        .map((list) => (list.length >= 2 ? list : null));
+    }
+    let out = null;
+    for (let z = 1; z <= 3; z++) {
+      const S = G.reqBySize[z - 1];
+      if (!S) continue;
+      let need = 0;
+      for (const r of S) { const d = P.reqLv[r] - L[r]; if (d > 0) need += d; }
+      if (!need) continue;
+      const cover = (c) => {
+        let v = 0;
+        for (const r of S) { const d = P.reqLv[r] - L[r]; if (d > 0) v += c.lv[r] < d ? c.lv[r] : d; }
+        return v;
+      };
+      let cov = jc ? jc[z] : -1;
+      if (cov < 0) {
+        cov = 0;
+        if (!charmDone) for (const c of this.charmCls) { const v = cover(c); if (v > cov) cov = v; }
+        for (let pi = from; pi < 5; pi++) {
+          if (pi === rec) continue;
+          let best = 0;
+          for (const c of this.partCls[pi]) { const v = cover(c); if (v > best) best = v; }
+          cov += best;
+        }
+        if (jc) jc[z] = cov;
+      }
+      if (rec >= from && rec < 5) cov += cover(cl);
+      let per = 0;
+      for (let i = 0; i < forced.length; i += 2) if (S.includes(forced[i])) per += forced[i + 1];
+      const e = need - cov - per;
+      if (e > 0) { if (!out) out = [0, 0, 0, 0]; out[z] = e; }
+    }
+    return out;
+  }
+
+  /** 部位 pi の類ごとの「その部位だけ類を決めた上界」の入れ物 */
+  kidUbOf(pi) {
+    const a = this._kidUb || (this._kidUb = []);
+    return a[pi] || (a[pi] = new Float64Array(this.partCls[pi].length));
+  }
+
+  /**
+   * 護石と残りの部位で足せる分: 源ごとに類の値 (スキルの増え方 + シリーズ/グループの見込み) の最大の和。
+   * lam があれば、ラグランジュ緩和の対象の防具スキルは min(λx, H(x)) で数える。
+   * 部位 rec は類ごとの値を this.recV に、その最大を this.recBest に入れる。cp = スキルごとのいまの Lv からの累積和 (締めた上界のとき)
+   */
+  sourceGain(L, charmDone, from, setCredit, grpCredit, lam, rec, cp) {
+    let gain = 0;
+    // 締めた上界のときは、火力に効かないスキルを除いた類のスキルの並び (boundTable)
+    const csk = cp ? this.ws.csk : null;
+    if (!charmDone) {
+      let best = 0;
+      for (let k = 0; k < this.charmCls.length; k++) {
+        const v = this.classGain(csk ? csk.charm[k] : this.charmCls[k].sk, L, lam, cp);
+        if (v > best) best = v;
+      }
+      gain += best;
+    }
+    for (let pi = from; pi < 5; pi++) {
+      const cls = this.partCls[pi];
+      let rv = null;
+      if (pi === rec) rv = this.recV && this.recV.length >= cls.length ? this.recV : (this.recV = new Float64Array(cls.length + 64));
+      let best = 0;
+      for (let k = 0; k < cls.length; k++) {
+        const c = cls[k];
+        let v = this.classGain(csk ? csk.parts[pi][k] : c.sk, L, lam, cp);
+        for (const s of c.sIdx) v += setCredit[s];
+        if (c.gIdx >= 0) v += grpCredit[c.gIdx];
+        if (rv) rv[k] = v;
+        if (v > best) best = v;
+      }
+      if (rv) this.recBest = best;
+      gain += best;
+    }
+    return gain;
+  }
+  /** 類のスキル sk = [r, Lv, ...] の増え方 (lam があれば、ラグランジュ緩和の対象の防具スキルは min(λx, H(x))) */
+  classGain(sk, L, lam, cp) {
+    let v = 0;
+    if (!cp) {
+      for (let i = 0; i < sk.length; i += 2) v += this.hatSum(sk[i], L[sk[i]], sk[i + 1]);
+      return v;
+    }
+    for (let i = 0; i < sk.length; i += 2) {
+      const r = sk[i];
+      const pre = cp[r];
+      const x = sk[i + 1] < pre.length ? sk[i + 1] : pre.length - 1;
+      const lr = lam ? lam[r] : Infinity;
+      if (lr !== Infinity && this.lagOn[r]) { const t = lr * x; v += t < pre[x] ? t : pre[x]; } else v += pre[x];
+    }
+    return v;
+  }
+  /** λ を決めたときの上界: base (f0 + 武器の珠) + Σ H*_r(λ_r) (足せる分で切る) + 源ごとの Σ min(λx, H(x)) の最大 */
+  lagEval(base, L, charmDone, from, budget, forced, setCredit, grpCredit, rec, cp, extra) {
+    const P = this.P;
+    const lam = this.lagLam;
+    let v = base;
+    for (const r of this.lagR) {
+      const lr = lam[r];
+      if (lr === Infinity) continue;
+      const h = this.gt.hat[r][L[r] > P.maxLv[r] ? P.maxLv[r] : L[r]];
+      const m = this.lagCap[r];
+      for (let j = 0; j < m; j++) if (h[j] > lr) v += h[j] - lr;
+    }
+    v += this.sourceGain(L, charmDone, from, setCredit, grpCredit, lam, rec, cp);
+    this.lastDeco = this.decoGreedy(L, budget, forced, lam, cp, extra);
+    return v + this.lastDeco;
+  }
+
+  forcedFeasible(forced, budget, extra = null) {
+    const c = extra ? extra.slice() : [0, 0, 0, 0];
     for (let i = 0; i < forced.length; i += 2) c[this.P.armorDeco[forced[i]].slot] += forced[i + 1];
     return c[3] <= budget[3] && c[3] + c[2] <= budget[3] + budget[2] && c[1] + c[2] + c[3] <= budget[1] + budget[2] + budget[3];
   }
 
-  /** 防具用の珠の増え方の上界 (貪欲)。forced = [r, 必要 Lv, ...] は先に入れる。入らなければ -Infinity */
-  decoGreedy(L, budget, forced) {
+  /**
+   * 防具用の珠の増え方の上界 (貪欲)。forced = [r, 必要 Lv, ...] は先に入れる。入らなければ -Infinity。
+   * lam があれば、ラグランジュ緩和の対象のスキルは min(λx, H(x)) (x = そのスキルの珠の数) の傾きで数える
+   */
+  decoGreedy(L, budget, forced, lam = null, cp = null, extra = null) {
     const P = this.P;
-    const c = [0, 0, 0, 0];
+    let c1 = 0, c2 = 0, c3 = 0;
+    if (extra) { c1 = extra[1]; c2 = extra[2]; c3 = extra[3]; }
     let v = 0;
     const used = this._used || (this._used = new Int8Array(P.R));
-    used.fill(0);
     for (let i = 0; i < forced.length; i += 2) {
       const r = forced[i]; const n = forced[i + 1];
-      c[P.armorDeco[r].slot] += n; used[r] = n;
-      v += this.hatSum(r, L[r], n);
+      const sz = P.armorDeco[r].slot;
+      if (sz === 3) c3 += n; else if (sz === 2) c2 += n; else c1 += n;
+      used[r] = n;
+      if (lam && this.lagOn[r] && lam[r] !== Infinity) {
+        const pre = cp[r];
+        const x = n < pre.length - 1 ? n : pre.length - 1;
+        v += Math.min(lam[r] * x, pre[x]);
+      } else v += this.hatSum(r, L[r], n);
     }
     const B3 = budget[3], B23 = budget[3] + budget[2], B123 = budget[1] + budget[2] + budget[3];
-    if (!(c[3] <= B3 && c[3] + c[2] <= B23 && c[1] + c[2] + c[3] <= B123)) return NEG;
+    if (!(c3 <= B3 && c3 + c2 <= B23 && c1 + c2 + c3 <= B123)) { for (let i = 0; i < forced.length; i += 2) used[forced[i]] = 0; return NEG; }
     // 値の大きい順に入れる貪欲。スキルごとの増え方 (凹の上包みの傾き) は大きい順に並んでいるので、並べ替えずに
     // スキルの先頭どうしを比べて取る (入れ子のスロットへの割り当ては matroid なので、同じ値の取り方の順で合計は変わらない)。
-    // 入らなかった大きさの珠は、後の珠も入らない (空きは減るだけ) ので、その大きさごと閉じる
+    // 入らなかった大きさの珠は、後の珠も入らない (空きは減るだけ) ので、その大きさごと閉じる。増え方が 0 のスキルは見ない
     const nA = this.armorR.length;
     const heads = this._heads || (this._heads = new Array(nA));
+    const hl = this._hl || (this._hl = new Int8Array(nA));
     const pos = this._pos || (this._pos = new Int8Array(nA));
+    const act = this._act || (this._act = new Int16Array(nA));
+    const pb = this._phiBuf || (this._phiBuf = Array.from({ length: nA }, () => new Float64Array(16)));
+    let nAct = 0;
     for (let k = 0; k < nA; k++) {
       const r = this.armorR[k];
-      const base = L[r] + used[r];
-      heads[k] = this.gt.hat[r][base > P.maxLv[r] ? P.maxLv[r] : base];
-      pos[k] = 0;
+      let h, n;
+      if (lam && this.lagOn[r] && lam[r] !== Infinity) {
+        // min(λx, H(x)) の傾き (凹なので大きい順)。x は forced の分の続きから
+        const pre = cp[r];
+        const len = pre.length - 1;
+        if (!(pre[len] > 0)) continue;
+        const lr = lam[r];
+        h = pb[k];
+        n = 0;
+        const u = used[r] < len ? used[r] : len;
+        let prev = Math.min(lr * u, pre[u]);
+        for (let x = u + 1; x <= len; x++) { const cur = Math.min(lr * x, pre[x]); h[n++] = cur - prev; prev = cur; }
+      } else {
+        const base = L[r] + used[r];
+        h = this.gt.hat[r][base > P.maxLv[r] ? P.maxLv[r] : base];
+        n = h.length;
+      }
+      if (n > 0 && h[0] > 0) { heads[k] = h; hl[k] = n; pos[k] = 0; act[nAct++] = k; }
     }
-    let free = B123 - c[1] - c[2] - c[3];
+    for (let i = 0; i < forced.length; i += 2) used[forced[i]] = 0;
+    let free = B123 - c1 - c2 - c3;
     let open3 = true, open2 = true;
     while (free > 0) {
       let bk = -1, bv = 0;
-      for (let k = 0; k < nA; k++) {
-        const h = heads[k];
+      for (let a = 0; a < nAct; a++) {
+        const k = act[a];
         const j = pos[k];
-        if (j >= h.length || !(h[j] > bv)) continue;
+        if (j >= hl[k]) continue;
+        const x = heads[k][j];
+        if (!(x > bv)) continue;
         const sz = this.armorSz[k];
         if ((sz === 3 && !open3) || (sz === 2 && !open2)) continue;
-        bk = k; bv = h[j];
+        bk = k; bv = x;
       }
       if (bk < 0) break;
       const sz = this.armorSz[bk];
-      if (sz === 3) { if (c[3] + 1 > B3 || c[3] + c[2] + 1 > B23) { open3 = false; continue; } c[3]++; }
-      else if (sz === 2) { if (c[3] + c[2] + 1 > B23) { open2 = false; open3 = false; continue; } c[2]++; }
-      else c[1]++;
+      if (sz === 3) { if (c3 + 1 > B3 || c3 + c2 + 1 > B23) { open3 = false; continue; } c3++; }
+      else if (sz === 2) { if (c3 + c2 + 1 > B23) { open2 = false; open3 = false; continue; } c2++; }
+      else c1++;
       v += bv; pos[bk]++; free--;
     }
     return v;
@@ -715,10 +1020,150 @@ export class BnbSolver {
     const P = this.P;
     if (this.none) return;
     P.weapons.forEach((wp, i) => {
+      const ctx = this.mode === 'exact' ? null : ctxOf(wp, i);
       this.wws[i].gt = this.mode === 'exact'
         ? (this.wws[i].gtValid || (this.wws[i].gtValid = gainTable(P, wp, 'valid')))
-        : gainTable(P, wp, 'local', ctxOf(wp, i));
+        : gainTable(P, wp, 'local', ctx);
+      this.wws[i].ctx = ctx;
+      this.wws[i].bt = null;
+      this.wws[i].chainG = null;
+      this.wws[i].csk = null;
     });
+  }
+  /**
+   * 上界の表 (docs/SEARCH_DESIGN.md 2.4 節「締めた上界」)。スキルに足す順 (chainGroups) を決めて、
+   * f(L + X) - f(L) = Σ_k [k 番目のスキルを足した分] と分けると、k 番目のスキルの増え方は「前のスキルは上の所 (足した後の Lv 以上)、
+   * 後のスキルはいまの Lv」の所で測ればよい (補い合う形なら、その所の増え方は本当の増え方より小さくない)。
+   * 全部のスキルを上の所で測る setTables の表は、会心率 (防具スキル・見切り) と超会心のように補い合う組を両方とも上の値で数えるが、
+   * この表ではどちらか一方だけになる。上の所は exact なら全部最大 (保証のある表と同じ評価器)、fast ならいまの最良の所 (ctx)。
+   * 順は 防具スキル → シリーズ/グループ → 武器スキル (武器スキルは並びの後ろから)。兇爪竜の力のように別のスキル (連撃) が
+   * 前提の効果は、前提のスキルの行に入らず、シリーズの行に入る。
+   * 行は「後のスキルの Lv」ごとに覚え、武器ごとに 1 つの表 (ws.bt) を、変わった組 (防具・シリーズ/グループ・武器) の行だけ差し替える。
+   */
+  boundTable(L) {
+    const P = this.P;
+    // 覚えの上限: 超えていたら、引く前に全部の武器の行を忘れる (この呼び出しで作る行は、上限をこえても最後まで使う)
+    if (this.boundRowsN > MEMO_LIMITS.boundRows) this.clearBoundRows();
+    const ws = this.ws;
+    const G = ws.chainG || (ws.chainG = this.chainGroupsOf());
+    if (!ws.csk) {
+      const fl = new Uint8Array(P.R);
+      for (const r of G.flat) fl[r] = 1;
+      const cut = (sk) => { const a = []; for (let i = 0; i < sk.length; i += 2) if (!fl[sk[i]]) a.push(sk[i], sk[i + 1]); return a; };
+      ws.csk = { charm: this.charmCls.map((c) => cut(c.sk)), parts: this.partCls.map((cls) => cls.map((c) => cut(c.sk))) };
+    }
+    let bt = ws.bt;
+    if (!bt) {
+      bt = ws.bt = { hat: ws.gt.hat.slice(), pre: new Array(P.R).fill(null), wg: new Map(), code: [null, null, null], id: [0, 0], rows: [new Map(), new Map(), new Map()], ids: [new Map(), new Map()] };
+      // 火力に効かないスキル (必須だけのもの) は先頭に置いて、全部を上の所で測る (後のスキルの行は Lv で引かない)
+      for (const r of G.flat) { const row = this.chainRow(r, L, -1, 0); bt.hat[r] = row.h; bt.pre[r] = row.p; }
+    }
+    // 組ごとの Lv の並びの符号 (1 スキル 3 ビット。入らなければ文字列)
+    const codeOf = (list) => {
+      if (list.length * 3 > 51) return list.map((r) => (L[r] > P.maxLv[r] ? P.maxLv[r] : L[r])).join(',');
+      let x = 0;
+      for (const r of list) x = x * 8 + (L[r] > P.maxLv[r] ? P.maxLv[r] : L[r]);
+      return x;
+    };
+    let dirty = false;
+    for (let g = 2; g >= 0; g--) {
+      // 防具スキルどうしを順にしないとき (G.blockA) は、防具スキルの行は後の組だけで決まる (防具スキルの Lv では引かない) ので、
+      // 後の組が変わっていなければ引き直さない
+      if (g === 0 && G.blockA && !dirty && bt.code[0] !== null) continue;
+      const code = codeOf(G[g]);
+      if (!dirty && code === bt.code[g]) continue;
+      dirty = true;
+      bt.code[g] = code;
+      // この組の行: 後の組は番号 (id) で、同じ組の後のスキルは Lv で引く
+      const outer = g === 2 ? 0 : g === 1 ? bt.id[1] : bt.id[0] * 65536 + bt.id[1];
+      let m = bt.rows[g].get(outer);
+      if (!m) bt.rows[g].set(outer, (m = new Map()));
+      const list = G[g];
+      // 防具スキルが多いときは、防具スキルどうしは順にしない (行の数が増えすぎるので。ほかの防具スキルは上の所で測る)
+      const block = g === 0 && G.blockA;
+      let suffix = 0;
+      for (let i = list.length - 1; i >= 0; i--) {
+        const r = list[i];
+        const key = block ? i : typeof code === 'number' ? suffix * 64 + i : `${list.slice(i + 1).map((x) => L[x]).join(',')}|${i}`;
+        let row = m.get(key);
+        if (!row) {
+          row = this.chainRow(r, L, g, i);
+          m.set(key, row);
+          this.boundRowsN++;
+        }
+        bt.hat[r] = row.h;
+        bt.pre[r] = row.p;
+        if (typeof code === 'number') suffix = suffix * 8 + (L[r] > P.maxLv[r] ? P.maxLv[r] : L[r]);
+      }
+      // 後の組から見たこの組の番号
+      if (g > 0) {
+        const idm = bt.ids[g - 1];
+        let id = idm.get(code);
+        if (id === undefined) idm.set(code, (id = idm.size));
+        bt.id[g === 2 ? 1 : 0] = id;
+      }
+    }
+    return bt;
+  }
+  /** 表の行を忘れる (全部の武器の分。覚えの上限) */
+  clearBoundRows() {
+    for (const ws of this.wws) ws.bt = null;
+    this.boundRowsN = 0;
+    this.stats.boundRowClears++;
+  }
+  /**
+   * 上界の表のスキルの順 (いまの武器): 組 [防具スキル (とほか), シリーズ/グループ, 武器スキル (並びの後ろから)] と、
+   * その前に置く「火力に効かないスキル」(flat。上限を外した評価器で、全部最大から 0 にしても、何も無い所に入れても値が変わらない。
+   * 必須だけで入っている耐性スキルなど。下ごしらえの「関係するスキル」と同じ見方)
+   */
+  chainGroupsOf() {
+    const P = this.P;
+    const ev = this.wp.evU || this.wp.ev;
+    const top = Int8Array.from(P.maxLv);
+    const zero = new Int8Array(P.R);
+    const fTop = ev.evaluate(top);
+    const f0 = ev.evaluate(zero);
+    const flat = [];
+    for (let r = 0; r < P.R; r++) {
+      const t = top.slice(); t[r] = 0;
+      const z = zero.slice(); z[r] = P.maxLv[r];
+      if (Math.abs(ev.evaluate(t) - fTop) <= Math.abs(fTop) * 1e-12 && Math.abs(ev.evaluate(z) - f0) <= Math.abs(f0) * 1e-12) flat.push(r);
+    }
+    const isFlat = new Uint8Array(P.R);
+    for (const r of flat) isFlat[r] = 1;
+    const G = this.chainGroups.map((list) => list.filter((r) => !isFlat[r]));
+    G.flat = flat;
+    G.blockA = G[0].length > this.tightOpt.chainArmor;
+    return G;
+  }
+  /**
+   * 足す順の i 番目 (組 g の中) のスキル r の行: 前のスキルは上の所、後のスキルはいまの Lv で測った増え方の凹の上包み (と累積和)。
+   * g = -1 は全部を上の所で測る
+   */
+  chainRow(r, L, g, i) {
+    const P = this.P;
+    const exact = this.mode === 'exact';
+    const c = exact ? Int8Array.from(P.maxLv) : Int8Array.from(this.ws.ctx);
+    const G = this.ws.chainG;
+    for (let gg = g; gg >= 0 && gg < 3; gg++) {
+      if (gg === 0 && G.blockA) continue;
+      const list = G[gg];
+      for (let j = gg === g ? i + 1 : 0; j < list.length; j++) { const x = list[j]; c[x] = L[x] > P.maxLv[x] ? P.maxLv[x] : L[x]; }
+    }
+    const ev = exact ? (P.touchesAffinity[r] ? this.wp.evU : this.wp.evA) : this.wp.ev;
+    const f = new Float64Array(P.maxLv[r] + 1);
+    for (let j = 0; j <= P.maxLv[r]; j++) { c[r] = j; f[j] = ev.evaluate(c); }
+    const d = new Float64Array(P.maxLv[r]);
+    for (let j = 0; j < P.maxLv[r]; j++) d[j] = Math.max(0, f[j + 1] - f[j]);
+    const h = []; const p = [];
+    for (let base = 0; base <= P.maxLv[r]; base++) {
+      const s = concaveSlopes(d, base);
+      const a = new Float64Array(s.length + 1);
+      for (let k = 0; k < s.length; k++) a[k + 1] = a[k] + s[k];
+      h.push(s); p.push(a);
+    }
+    this.stats.boundRows++;
+    return { h, p };
   }
   /** 仮の所: 武器の Lv と、シリーズ/グループ以外を最大の半分 */
   halfContext(wp) {
@@ -773,8 +1218,12 @@ export class BnbSolver {
       this.phaseQueue.push({ name: 'dfs' });
       this.setTables(() => null);
     }
-    // 最初の上界で -∞ (どの武器でも必須を満たせない) なら、すぐ「無い」
-    const roots = this.P.weapons.map((wp, wi) => { this.setWeapon(wi); return this.bound(false, 0); });
+    // 最初の上界で -∞ (どの武器でも必須を満たせない) なら、すぐ「無い」。満たせるかだけを見るので、前の上界で測る
+    // (締めた上界は武器ごとに表の行を作るので、武器が多いと途中の結果が遅れる)
+    const tight = this.tight;
+    this.tight = false;
+    let roots;
+    try { roots = this.P.weapons.map((wp, wi) => { this.setWeapon(wi); return this.bound(false, 0); }); } finally { this.tight = tight; }
     if (roots.every((ub) => ub === NEG)) {
       this.infeasible = true;
       this.dfsFinished = true;
@@ -846,6 +1295,16 @@ export class BnbSolver {
    * 「続けて探す」: dfs の続き (まだ始めていなければ始める) と polish2 をもう一度。
    * dfs が最後まで回っている・終わっていない・泣シミュ型・厳密モードなら何もしない (false)。budget は今から数える。
    */
+  /**
+   * 「続けて探す」で続ける所があるか (extend が true を返すか。状態は変えない)。dfs を最後まで回り終えて、2 段のふるいで外した武器も
+   * 残っていなければ false (画面は「続けて探す」を出さない)
+   */
+  canExtend() {
+    if (!this.done || this.none || this.infeasible || this.mode !== 'fast') return false;
+    const queueDone = !!this.weaponQueue && !this.stack && this.wq >= this.weaponQueue.length;
+    if ((this.dfsFinished || queueDone) && this.sieveRest && this.sieveRest.length) return true;
+    return !this.dfsFinished && !queueDone;
+  }
   extend(budget) {
     if (!this.done || this.none || this.infeasible || this.mode !== 'fast') return false;
     // 2 段のふるいで外した武器は、選んだ武器の dfs を回り終えてから回す
@@ -990,12 +1449,13 @@ export class BnbSolver {
   beginWeapon(wi) {
     this.setWeapon(wi);
     const kids = [];
+    const rec = this.tight && !this.none && this.tightOpt.screen ? 0 : -1;
     for (let ci = 0; ci < this.charmCls.length; ci++) {
       this.applyAt(0, ci);
-      const ub = this.bound(true, 0);
+      const ub = this.bound(true, 0, rec);
       this.applyAt(0, ci, -1);
       this.stats.nodes++;
-      if (ub > NEG && !(!this.none && this.prune(ub))) kids.push({ idx: ci, ub });
+      if (ub > NEG && !(!this.none && this.prune(ub))) kids.push({ idx: ci, ub, screen: rec >= 0 ? this.kidUbOf(rec).slice() : null });
     }
     if (!this.none) kids.sort((a, b) => b.ub - a.ub);
     this.stack = [{ d: 0, kids, i: 0, applied: -1 }];
@@ -1049,12 +1509,23 @@ export class BnbSolver {
       const pi = fr.d;
       const kids = [];
       const cls = this.partCls[pi];
+      // 子を測る前のふるい: いまの節の上界を「部位 pi だけ類を決めた」形で類ごとに出し、それで刈れる子は測らない
+      // (どの λ の上界も、部位 pi をその類に決めた枝の上界になる)
+      // (この節の上界を測ったときに覚えておいたもの。無ければ測り直す)
+      const screenOn = this.tight && !this.none && this.tightOpt.screen;
+      let screen = screenOn ? kid.screen : null;
+      if (screenOn && !screen) {
+        const ub0 = this.bound(true, pi, pi);
+        screen = ub0 === NEG || this.prune(ub0) ? 'all' : this.kidUbOf(pi).slice();
+      }
+      const rec = screenOn && pi + 1 < 5 ? pi + 1 : -1;
       for (let k = 0; k < cls.length; k++) {
+        if (screen && (screen === 'all' || this.prune(screen[k]))) { this.stats.nodes++; this.stats.kidsScreened++; continue; }
         this.applyPiece(cls[k], +1);
-        const ub = this.bound(true, pi + 1);
+        const ub = this.bound(true, pi + 1, rec);
         this.applyPiece(cls[k], -1);
         this.stats.nodes++;
-        if (ub > NEG && !(!this.none && this.prune(ub))) kids.push({ idx: k, ub });
+        if (ub > NEG && !(!this.none && this.prune(ub))) kids.push({ idx: k, ub, screen: rec >= 0 ? this.kidUbOf(rec).slice() : null });
       }
       if (!this.none) kids.sort((a, b) => b.ub - a.ub);
       st.push({ d: fr.d + 1, kids, i: 0, applied: -1 });

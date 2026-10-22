@@ -782,6 +782,17 @@ test('コントローラ: 途中の結果 → 終わり (1 位が良くなる) �
   ctrl.dispose();
 });
 
+test('コントローラ: 続ける所が無い結果 (B&B を最後まで回り終えた。extendable: false) には「続けて探す」を出さない', async () => {
+  const f = jobFor();
+  const ctrl = C.createSearchController({ makeTransport: fakeTransport({ step: 2, complete: true }) });
+  ctrl.start(f.job, { inputKey: f.inputKey });
+  const done = await waitFor(ctrl, (s) => s.status === 'done');
+  assert.equal(done.result.extendable, false);
+  assert.equal(done.canExtend, false);
+  assert.equal(ctrl.extend({ ms: 10 }), false);
+  ctrl.dispose();
+});
+
 test('コントローラ: やめる (途中の結果を残す)・もう一度・エラーとやり直し・満たせない', async () => {
   const f = jobFor();
   const ctrl = C.createSearchController({ makeTransport: fakeTransport({ step: 30 }) });

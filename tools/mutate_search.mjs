@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const TESTS = ['tests/search_eval.test.mjs', 'tests/search_small.test.mjs', 'tests/search_required.test.mjs', 'tests/search_api.test.mjs',
   'tests/search_weapon_side.test.mjs', 'tests/search_setgroup.test.mjs', 'tests/search_gamma.test.mjs', 'tests/damage_factored.test.mjs',
-  'tests/search_worker_plan.test.mjs'];
+  'tests/search_worker_plan.test.mjs', 'tests/search_bound.test.mjs', 'tests/search_bound_random.test.mjs', 'tests/search_bound_done.test.mjs'];
 
 /** 変異: file の find (1 か所だけ) を replace に。why = 見つけるはずのテスト */
 const MUTANTS = [
@@ -43,7 +43,7 @@ const MUTANTS = [
     find: "    const budget = [0, this.slot[1], this.slot[2], this.slot[3]];\n    const key = `${L0.join(',')}",
     replace: "    const budget = [0, this.slot[1], this.slot[2], Math.max(0, this.slot[3] - 1)];\n    const key = `${L0.join(',')}", why: '6.2' },
   { name: '探索: 防具用の珠の上界で、大きさ 3 の珠を入らないとみなす (上界が低すぎる)', file: 'app/model/search/solver.js',
-    find: 'if (sz === 3) { if (c[3] + 1 > B3 || c[3] + c[2] + 1 > B23) { open3 = false; continue; } c[3]++; }',
+    find: 'if (sz === 3) { if (c3 + 1 > B3 || c3 + c2 + 1 > B23) { open3 = false; continue; } c3++; }',
     replace: 'if (sz === 3) { open3 = false; continue; }', why: '6.2' },
   { name: '探索: 限界突破を無視する', file: 'app/model/search/problem.js',
     find: 'const slots = sortDesc(lbOn && Array.isArray(a.slotsLimitBreak) ? a.slotsLimitBreak : a.slots);',
@@ -58,6 +58,40 @@ const MUTANTS = [
     replace: "const wSlots = (wp.w.slots || []).map((x, i) => ({ t: 'head', i, size: Number(x) || 0 }));", why: '6.2' },
   { name: '探索: 防具用の珠の DFS で必須の分を試さない', file: 'app/model/search/solver.js',
     find: 'for (let n = hiN; n >= minN; n--) {', replace: 'for (let n = hiN; n > minN; n--) {', why: '6.2/6.3' },
+  // 締めた上界 (2.4 節。search_bound.test.mjs の「上界 ≥ 本当の最良」で落ちるはず)
+  { name: '締めた上界: ラグランジュ緩和の H*(λ) を足さない (上界が低すぎる)', file: 'app/model/search/solver.js',
+    find: 'for (let j = 0; j < m; j++) if (h[j] > lr) v += h[j] - lr;', replace: '', why: 'bound' },
+  { name: '締めた上界: 足せる Lv の上限を 1 つ少なく数える', file: 'app/model/search/solver.js',
+    find: 'cap[r] = u < len ? u : len;', replace: 'cap[r] = Math.max(0, (u < len ? u : len) - 1);', why: 'bound' },
+  { name: '締めた上界: 足す順の表で、前のスキルも上の所でなくいまの Lv で測る', file: 'app/model/search/solver.js',
+    find: 'const c = exact ? Int8Array.from(P.maxLv) : Int8Array.from(this.ws.ctx);', replace: 'const c = Int8Array.from(L);', why: 'bound' },
+  { name: '締めた上界: 子を測る前のふるいで類ごとの値を足さない', file: 'app/model/search/solver.js',
+    find: 'for (let k = 0; k < kid.length; k++) kid[k] = ub - this.recBest + this.recV[k];',
+    replace: 'for (let k = 0; k < kid.length; k++) kid[k] = ub - this.recBest;', why: 'bound' },
+  { name: '締めた上界: 耐性の珠をまとめて見るとき、部位が埋める分を引かない', file: 'app/model/search/solver.js',
+    find: 'const e = need - cov - per;', replace: 'const e = need - per;', why: 'bound' },
+  // 上界を少しだけ下げる・覚えの誤り (全体の上界の余裕に隠れる。search_bound_random.test.mjs の乱数の問題・覚えと作り直しの比べ・表の行で落ちるはず)
+  { name: '締めた上界: 上界を 0.1% 下げる', file: 'app/model/search/solver.js',
+    find: 'this.screenClasses(kid, L, charmDone, from, rec, sv, cp, thr, need.forced, extra);\n      return ub;',
+    replace: 'this.screenClasses(kid, L, charmDone, from, rec, sv, cp, thr, need.forced, extra);\n      return ub * 0.999;', why: 'bound' },
+  { name: '締めた上界: 子を測る前のふるいを 0.1% 下げる', file: 'app/model/search/solver.js',
+    find: 'for (let k = 0; k < kid.length; k++) kid[k] = ub - this.recBest + this.recV[k];',
+    replace: 'for (let k = 0; k < kid.length; k++) kid[k] = (ub - this.recBest + this.recV[k]) * 0.999;', why: 'bound' },
+  { name: '締めた上界: λ の回で源の防具スキルを λx の半分で数える', file: 'app/model/search/solver.js',
+    find: 'if (lr !== Infinity && this.lagOn[r]) { const t = lr * x; v += t < pre[x] ? t : pre[x]; } else v += pre[x];',
+    replace: 'if (lr !== Infinity && this.lagOn[r]) { const t = lr * x * 0.5; v += t < pre[x] ? t : pre[x]; } else v += pre[x];', why: 'bound' },
+  { name: '締めた上界: 後の組が変わっても前の組の行を作り直さない', file: 'app/model/search/solver.js',
+    find: 'if (!dirty && code === bt.code[g]) continue;', replace: 'if (code === bt.code[g]) continue;', why: 'bound' },
+  { name: '締めた上界: 防具スキルを順にしないとき、後の組が変わっても防具スキルの行を引き直さない', file: 'app/model/search/solver.js',
+    find: 'if (g === 0 && G.blockA && !dirty && bt.code[0] !== null) continue;', replace: 'if (g === 0 && G.blockA && bt.code[0] !== null) continue;', why: 'bound' },
+  { name: '締めた上界: 武器の珠の上積みの覚えの鍵から武器スキルの Lv を外す', file: 'app/model/search/solver.js',
+    find: 'for (const r of this.weaponR) key = key * 8 + L[r];', replace: '', why: 'bound' },
+  { name: '締めた上界: 足す順の表で、武器スキルの組だけ前のスキルもいまの Lv で測る', file: 'app/model/search/solver.js',
+    find: '    const ev = exact ? (P.touchesAffinity[r] ? this.wp.evU : this.wp.evA) : this.wp.ev;\n    const f = new Float64Array(P.maxLv[r] + 1);',
+    replace: '    if (g === 2) for (const x of G[2]) c[x] = L[x] > P.maxLv[x] ? P.maxLv[x] : L[x];\n    const ev = exact ? (P.touchesAffinity[r] ? this.wp.evU : this.wp.evA) : this.wp.ev;\n    const f = new Float64Array(P.maxLv[r] + 1);',
+    why: 'bound' },
+  { name: '締めた上界: 耐性の珠をまとめて見るとき、ふるいで決めた類が埋める分を数えない', file: 'app/model/search/solver.js',
+    find: 'if (rec >= from && rec < 5) cov += cover(cl);', replace: '', why: 'bound' },
   // シリーズ/グループの必須 (部位の割り当て。2.8 節)。複数のシリーズ/グループから出る必須のゆるい判定は、いまのデータでは通らない
   { name: '探索: シリーズ/グループの必須で残りの部位を 1 つ少なく数える', file: 'app/model/search/solver.js',
     find: 'if (need[b] > this.sgAvail[from][b]) return false;', replace: 'if (need[b] > this.sgAvail[from][b] - 1) return false;', why: '6.3' },
