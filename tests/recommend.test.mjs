@@ -838,6 +838,315 @@ test('createPlanRunner: 中止 (それまでの上位を返す)・続けて探�
   assert.ok(r5.result().warnings.some((w) => w.code === 'blight-resist-infeasible'));
 });
 
+// ---------------------------------------------------------------- 回の予算の配り方 (持ち時間の繰り越し。docs/SEARCH_DESIGN.md 5.3 節)
+
+/**
+ * 1 回の step で終わる作り物の探索。result().stats は本物と同じ形 (activeMs = 下ごしらえを含む計算の時間・prepareMs)。
+ * spend(input, i) → {active (予算と比べる計算の時間), prepare, status} で、i 回目に作った探索が使った時間を決める
+ */
+function spendingSearch(spend, log) {
+  return (input) => {
+    const i = log.length;
+    const me = { input, done: false, cancelled: false };
+    log.push(me);
+    const s = spend(input, i);
+    return {
+      step() { if (!me.cancelled) me.done = true; return true; },
+      progress() { return { phase: me.done ? 'done' : 'prepare', elapsedMs: 0, best: [], partialReady: me.done, stats: {} }; },
+      result() {
+        return {
+          status: me.cancelled ? 'cancelled' : (s.status || 'done'), warnings: [], infeasible: null,
+          results: [{ rank: 1, value: 800 - i, build: simpleBuild(FIRE_SNS, 648), weapon: FIRE_SNS }],
+          stats: { activeMs: s.active + s.prepare, prepareMs: s.prepare },
+        };
+      },
+      cancel() { me.cancelled = true; },
+      extend() { return false; },
+      get extendable() { return false; },
+    };
+  };
+}
+
+test('createPlanRunner: 探索の回の予算は始めるときに持ち時間から配る (最後まで終わった回の残りは後の回へ・下ごしらえは数えない・Job は書き換えない)', () => {
+  const job = R.planToJob(planOf(NU_UDRA, AT), { K: 5, budgetMs: 6000 });
+  assert.deepEqual(job.runs.map((r) => r.key), ['blight-skill', 'blight-resist']);
+  assert.ok(job.costRun);
+  const pool = Math.round(6000 * R.RUN_SHARE);
+  assert.deepEqual(job.runsBudget, { activeMs: pool }, '探索の回の持ち時間 = 予算 × RUN_SHARE (火力の差の回があるとき)');
+  assert.deepEqual(job.runs.map((r) => r.input.budget), [{ activeMs: pool / 2 }, { activeMs: pool / 2 }], '入力は最初の値 (持ち時間 ÷ 回の数)');
+  const before = JSON.stringify(job);
+  // 1 回目は予算の中で最後まで終わる (計算 1,000ms + 下ごしらえ 200ms): 使わなかった 800ms が 2 回目に回る (下ごしらえは予算で数えない)
+  const log = [];
+  const r1 = R.createPlanRunner(job, data, { createSearch: spendingSearch(() => ({ active: 1000, prepare: 200 }), log) });
+  while (!r1.step(5));
+  assert.deepEqual(log.map((x) => x.input.budget), [{ activeMs: 1800 }, { activeMs: 2600 }, job.costRun.input.budget],
+    '2 回目は 3,600 − 1,000。火力の差の回は入力の予算のまま');
+  assert.deepEqual(r1.result().stats.runs.map((x) => x.budget), [{ activeMs: 1800 }, { activeMs: 2600 }, null]);
+  assert.equal(r1.result().status, 'done');
+  assert.equal(JSON.stringify(job), before, 'Job (画面が持っている入力) を書き換えた');
+  // 1 回目が予算で切れた (仕上げ 2 の分だけ予算をこえる): 引くのは渡した予算まで。2 回目は前と同じ 1,800ms (繰り越しで減らない)
+  const log2 = [];
+  const r2 = R.createPlanRunner(job, data, {
+    createSearch: spendingSearch((input, i) => (i === 0 ? { active: 2100, prepare: 150, status: 'stopped' } : { active: 500, prepare: 100 }), log2),
+  });
+  while (!r2.step(5));
+  assert.deepEqual(log2.slice(0, 2).map((x) => x.input.budget), [{ activeMs: 1800 }, { activeMs: 1800 }]);
+  assert.equal(r2.result().status, 'stopped');
+  // 探索が計算の時間を返さない (作り物): runner で測った回の時間で数える (6 段 × 10ms = 60ms)
+  const clock = fakeClock();
+  const log4 = [];
+  const r4 = R.createPlanRunner(job, data, { createSearch: scriptedSearch(() => ({ results: [] }), log4, clock), now: clock.now });
+  while (!r4.step(5));
+  assert.deepEqual(log4.slice(0, 2).map((x) => x.input.budget), [{ activeMs: 1800 }, { activeMs: 3600 - 60 }]);
+  // 予算を明示した Job (テスト・ベンチの仕事量の予算) は、入力の予算のまま
+  const fixed = R.planToJob(planOf(NU_UDRA, AT), { K: 5, budget: { work: 500 } });
+  assert.equal(fixed.runsBudget, null);
+  const log3 = [];
+  const r3 = R.createPlanRunner(fixed, data, { createSearch: spendingSearch(() => ({ active: 10, prepare: 5 }), log3) });
+  while (!r3.step(5));
+  assert.deepEqual(log3.map((x) => x.input.budget), [{ work: 500 }, { work: 500 }, { work: 500 }]);
+  assert.deepEqual(r3.result().stats.runs.map((x) => x.budget), [null, null, null]);
+});
+
+test('createPlanRunner: 回が予算と比べて使った時間の合計は持ち時間をこえない・後の回ほど予算は同じか多い (使った時間をいろいろ変えて)', () => {
+  const base = R.planToJob(planOf(NU_UDRA, AT), { K: 5, costRun: false });
+  let seed = 12345;
+  const rand = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+  for (let trial = 0; trial < 300; trial++) {
+    const n = 1 + Math.floor(rand() * 4);
+    const total = 300 + Math.floor(rand() * 9000);
+    const job = { ...base, runs: Array.from({ length: n }, (_, i) => ({ ...base.runs[0], key: `r${i}` })), runsBudget: { activeMs: total } };
+    const log = [];
+    const used = [];
+    const runner = R.createPlanRunner(job, data, {
+      createSearch: spendingSearch((input) => {
+        // 予算の 0〜1.5 倍 (1 をこえたら打ち切り。仕上げ 2 の分だけこえる)。たまに満たせない (すぐ終わる)
+        const f = rand() < 0.1 ? 0 : rand() * 1.5;
+        const s = { active: Math.round(f * input.budget.activeMs), prepare: Math.round(rand() * 300), status: f === 0 ? 'infeasible' : f > 1 ? 'stopped' : 'done' };
+        used.push(s.active);
+        return s;
+      }, log),
+    });
+    while (!runner.step(5));
+    const given = log.map((x) => x.input.budget.activeMs);
+    const ctx = JSON.stringify({ trial, n, total, given, used });
+    assert.equal(given.length, n, ctx);
+    assert.equal(given[0], Math.floor(total / n), ctx);
+    let spent = 0;
+    for (let i = 0; i < n; i++) {
+      assert.equal(given[i], Math.floor((total - spent) / (n - i)), `残り ÷ 残りの回の数 ${ctx}`);
+      assert.ok(spent + given[i] <= total, `渡した予算が残りをこえた ${ctx}`);
+      if (i > 0) assert.ok(given[i] >= given[i - 1], `後の回の予算が減った ${ctx}`);
+      spent += Math.min(given[i], used[i]);
+    }
+    assert.ok(spent <= total, ctx);
+  }
+});
+
+test('createPlanRunner: 持ち時間を配る Job の途中の結果・回目と回の予算 (progress().run)・中止', () => {
+  const job = R.planToJob(planOf(NU_UDRA, AT), { K: 5, budgetMs: 6000 });
+  const clock = fakeClock();
+  const log = [];
+  const make = (input) => ({ results: [{ rank: 1, value: input.required.some((r) => r.skillId === BLIGHT_RES) ? 800 : 810, build: simpleBuild(FIRE_SNS, 648), weapon: FIRE_SNS }] });
+  const runner = R.createPlanRunner(job, data, { createSearch: scriptedSearch(make, log, clock), now: clock.now });
+  const seen = [];
+  for (let k = 0; k < 200 && !(log.length === 2 && log[1].phase >= PHASES.indexOf('dfs')); k++) {
+    assert.equal(runner.step(5), false);
+    seen.push(runner.progress());
+  }
+  // 1 回目: 予算 1,800ms と、その回を始めてからの計算の時間
+  const first = seen.filter((p) => p.run.key === 'blight-skill' && p.run.budgetMs != null);
+  assert.ok(first.length > 0);
+  assert.ok(first.every((p) => p.run.index === 0 && p.run.count === 3 && p.run.budgetMs === 1800));
+  assert.deepEqual(first.map((p) => p.run.elapsedMs), first.map((_, i) => (i + 1) * 10));
+  // 2 回目: 1 回目が使わなかった分が入る (3,600 − 60)。経過はその回の分だけ (Job の経過ではない)
+  const p = runner.progress();
+  assert.equal(p.run.key, 'blight-resist');
+  assert.equal(p.run.index, 1);
+  assert.equal(p.run.budgetMs, 3540);
+  assert.equal(p.run.elapsedMs, 40);
+  assert.ok(p.elapsedMs > p.run.elapsedMs);
+  assert.equal(p.phase, 'dfs');
+  // 途中の結果: 1 回目の結果と 2 回目の途中の上位
+  const mid = runner.result();
+  assert.equal(mid.status, 'partial');
+  assert.deepEqual(mid.results.map((r) => r.value), [810]);
+  // 中止: それまでの上位を返す・2 回目は中止される・火力の差の回は始めない
+  runner.cancel();
+  assert.equal(runner.step(5), true);
+  const c = runner.result();
+  assert.equal(c.status, 'cancelled');
+  assert.equal(c.results.length, 1);
+  assert.equal(log[1].cancelled, true);
+  assert.equal(log.length, 2);
+  assert.equal(runner.extend({ activeMs: 1000 }), false);
+  // 火力の差の回は持ち時間から配らない (入力の予算のまま。progress().run に予算は出さない)
+  const runner2 = R.createPlanRunner(job, data, { createSearch: scriptedSearch(make, [], clock), now: clock.now });
+  let costSeen = 0;
+  while (!runner2.step(5)) {
+    const q = runner2.progress();
+    if (q.run.key === 'cost') {
+      costSeen += 1;
+      assert.equal(q.run.index, 2);
+      assert.equal(q.run.budgetMs, undefined);
+    }
+  }
+  assert.ok(costSeen > 0);
+});
+
+test('createPlanRunner: 「続けて探す」(activeMs) も回を始めるときに配る (先の回の残りは後の回へ・最後まで回り終えた回には配らない)', () => {
+  const job = R.planToJob(planOf(NU_UDRA, AT), { K: 5, budgetMs: 6000 });
+  const row = (input) => [{ rank: 1, value: input.required.some((r) => r.skillId === BLIGHT_RES) ? 800 : 810, build: simpleBuild(FIRE_SNS, 648), weapon: FIRE_SNS }];
+  // 2 回とも続ける所がある: 1 回目に 500ms、延長は 2 段 (dfs → 仕上げ 2 = 20ms) で終わるので 2 回目に 980ms
+  const clock = fakeClock();
+  const log = [];
+  const r1 = R.createPlanRunner(job, data, { createSearch: scriptedSearch((input) => ({ results: row(input) }), log, clock), now: clock.now });
+  while (!r1.step(5));
+  assert.equal(r1.result().extendable, true);
+  assert.equal(r1.extend({ activeMs: 1000 }), true);
+  // 延長の 1 回目は extend を受けたときに始める (途中経過が前の回の「終わり」にならない)
+  assert.deepEqual(log[0].lastExtend, { activeMs: 500 });
+  assert.equal(log[1].extended, 0, '2 回目の延長は 1 回目が終わってから始める');
+  const p = r1.progress();
+  assert.equal(p.run.key, 'blight-skill');
+  assert.equal(p.run.budgetMs, 500);
+  assert.equal(p.run.elapsedMs, 0, '回の経過は延長を始めてからの分');
+  assert.equal(p.phase, 'dfs');
+  assert.equal(r1.result().status, 'partial');
+  // 延長の途中の進み具合は延長する回の段のまま (最後の回が終わった直後に step の締め切りに当たっても、「準備しています」と
+  // 前の回の帯に戻らない。点検の指摘)
+  const extSeen = [];
+  while (!r1.step(5)) extSeen.push(r1.progress());
+  const trace = extSeen.map((q) => `${q.run.index}:${q.phase}`).join(' ');
+  assert.ok(extSeen.length > 0);
+  assert.ok(extSeen.every((q) => q.phase !== 'prepare'), trace);
+  assert.ok(extSeen.every((q, i) => i === 0 || q.run.index >= extSeen[i - 1].run.index), trace);
+  assert.deepEqual(log.map((x) => x.lastExtend), [{ activeMs: 500 }, { activeMs: 1000 - 20 }, undefined], '火力の差の回は延長しない');
+  assert.deepEqual(r1.result().stats.runs.map((x) => x.budget), [{ activeMs: 500 }, { activeMs: 980 }, null]);
+  assert.equal(r1.result().status, 'done');
+  // 1 回目が最後まで回り終えた (extendable: false): 延長は 2 回目だけで、持ち時間は全部 2 回目に
+  const log2 = [];
+  const r2 = R.createPlanRunner(job, data, {
+    createSearch: scriptedSearch((input) => ({ results: row(input), extendable: !input.required.some((r) => r.skillId === BLIGHT_RES) }), log2, clock),
+    now: clock.now,
+  });
+  while (!r2.step(5));
+  assert.equal(r2.extend({ activeMs: 1000 }), true);
+  while (!r2.step(5));
+  assert.deepEqual(log2.map((x) => x.lastExtend), [undefined, { activeMs: 1000 }, undefined]);
+  // ms (始めてからの時間。テスト・ベンチ) は回の数で分けたまま (回さない)
+  const log3 = [];
+  const r3 = R.createPlanRunner(job, data, { createSearch: scriptedSearch((input) => ({ results: row(input) }), log3, clock), now: clock.now });
+  while (!r3.step(5));
+  r3.extend({ ms: 1000 });
+  while (!r3.step(5));
+  assert.deepEqual(log3.map((x) => x.lastExtend), [{ ms: 500 }, { ms: 500 }, undefined]);
+  // 1 回は 200ms を下限にする (持ち時間が少なくても延長がすぐ切れない): 300 ÷ 2 = 150 → 200。2 回目は残り 300 − 20
+  const log5 = [];
+  const r5 = R.createPlanRunner(job, data, { createSearch: scriptedSearch((input) => ({ results: row(input) }), log5, clock), now: clock.now });
+  while (!r5.step(5));
+  r5.extend({ activeMs: 300 });
+  while (!r5.step(5));
+  assert.deepEqual(log5.map((x) => x.lastExtend), [{ activeMs: 200 }, { activeMs: 280 }, undefined]);
+  // 延長の途中で中止: 前の結果のまま・2 回目の延長は始めない
+  const log4 = [];
+  const r4 = R.createPlanRunner(job, data, { createSearch: scriptedSearch((input) => ({ results: row(input) }), log4, clock), now: clock.now });
+  while (!r4.step(5));
+  r4.extend({ activeMs: 1000 });
+  r4.cancel();
+  assert.equal(r4.step(5), true);
+  assert.equal(r4.result().status, 'cancelled');
+  assert.equal(r4.result().results[0].value, 810);
+  assert.equal(log4[1].extended, 0);
+});
+
+test('createPlanRunner: 「続けて探す」で延長を受けなかった回 (extend が false) は並びから外し、その回の予算は後の回に回す', () => {
+  const job = R.planToJob(planOf(NU_UDRA, AT), { K: 5, budgetMs: 6000, costRun: false });
+  const clock = fakeClock();
+  const log = [];
+  // 3 段で終わる作り物。1 回目 (属性やられ耐性) は extendable のまま extend で false を返す
+  const make = (input) => {
+    const a = input.required.some((r) => r.skillId === BLIGHT_RES);
+    const me = { steps: 0, done: false, ext: [] };
+    log.push(me);
+    return {
+      step() { clock.t += 10; if (!me.done) { me.steps += 1; me.done = me.steps >= 3; } return me.done; },
+      progress() { return { phase: me.done ? 'done' : 'dfs', elapsedMs: 0, best: [], partialReady: me.done, stats: {} }; },
+      result() {
+        return { status: me.done ? 'stopped' : 'partial', warnings: [], infeasible: null, stats: {},
+          results: [{ rank: 1, value: a ? 800 : 810, build: simpleBuild(FIRE_SNS, 648), weapon: FIRE_SNS }] };
+      },
+      cancel() {},
+      extend(b) {
+        me.ext.push(b);
+        // 何度も呼ばれたら止める (並びから外さないと、ここで回り続ける)
+        if (me.ext.length > 3) throw new Error('同じ回の延長を何度も始めた');
+        if (a) return false;
+        me.done = false;
+        me.steps = 0;
+        return true;
+      },
+      get extendable() { return true; },
+    };
+  };
+  const runner = R.createPlanRunner(job, data, { createSearch: make, now: clock.now });
+  while (!runner.step(5));
+  assert.equal(runner.extend({ activeMs: 1000 }), true);
+  let k = 0;
+  while (!runner.step(5)) assert.ok(++k < 100, '終わらない');
+  assert.deepEqual(log.map((x) => x.ext), [[{ activeMs: 500 }], [{ activeMs: 1000 }]], '延長を受けなかった回の 500ms は使わずに後の回へ');
+  assert.deepEqual(runner.result().stats.runs.map((x) => x.budget), [{ activeMs: 500 }, { activeMs: 1000 }]);
+  assert.equal(runner.result().status, 'stopped');
+});
+
+test('createPlanRunner: 回の経過 (progress().run.elapsedMs) は探索が予算と比べる時間で数える (下ごしらえは入れない・延長はその延長の分)', () => {
+  const job = R.planToJob(planOf(NU_UDRA, AT), { K: 5, budgetMs: 6000, costRun: false });
+  const clock = fakeClock();
+  // 最初の段で下ごしらえ 50ms + 計算 10ms、そのあとは 1 段で計算 10ms。progress() / result() の stats は本物と同じ形
+  // (activeMs = 下ごしらえを含む計算の時間・prepareMs)
+  const make = () => {
+    const me = { phase: 0, prep: null, act: 0 };
+    const stats = () => (me.prep == null ? {} : { prepareMs: me.prep, activeMs: me.prep + me.act });
+    return {
+      step() {
+        if (PHASES[me.phase] === 'done') return true;
+        if (me.prep == null) {
+          me.prep = 50;
+          clock.t += 50;
+        }
+        clock.t += 10;
+        me.act += 10;
+        me.phase += 1;
+        return PHASES[me.phase] === 'done';
+      },
+      progress() { return { phase: PHASES[me.phase], elapsedMs: 0, best: [], partialReady: me.phase >= 3, stats: stats() }; },
+      result() {
+        return { status: PHASES[me.phase] === 'done' ? 'done' : 'partial', warnings: [], infeasible: null, stats: stats(),
+          results: [{ rank: 1, value: 800, build: simpleBuild(FIRE_SNS, 648), weapon: FIRE_SNS }] };
+      },
+      cancel() {},
+      extend() { me.phase = PHASES.indexOf('dfs'); return true; },
+      get extendable() { return true; },
+    };
+  };
+  const runner = R.createPlanRunner(job, data, { createSearch: make, now: clock.now });
+  const first = [];
+  while (!runner.step(5)) {
+    const p = runner.progress();
+    if (p.run.index === 0 && p.run.budgetMs != null) first.push(p.run.elapsedMs);
+  }
+  // runner で測った回の時間は下ごしらえの 50ms を含む (60, 70, …) が、帯は予算と同じ時計で伸ばす
+  assert.deepEqual(first, [10, 20, 30, 40, 50]);
+  assert.equal(runner.extend({ activeMs: 1000 }), true);
+  const ext = [];
+  while (!runner.step(5)) {
+    const p = runner.progress();
+    if (p.run.budgetMs != null) ext.push([p.run.index, p.run.elapsedMs]);
+  }
+  // 延長はその延長を始めてからの分 (前の回し方の計算の時間は入れない)
+  assert.deepEqual(ext, [[0, 10], [1, 0], [1, 10]]);
+});
+
 test('createPlanRunner: 武器 2 本の 2 本目は、体力で重みを付けた T が小さくなる武器を選ぶ', () => {
   // 体力の小さい相手 a と大きい相手 b。1 本目 (武器 1) は両方に 50。候補 X (武器 2) は a に強く、Y (武器 3) は b に強い
   // 2 本目: X = 1000/200 + 100000/50 = 2005、Y = 1000/50 + 100000/60 ≒ 1686.7 → Y (体力を見ないと X を選んでしまう)
@@ -1220,6 +1529,8 @@ test('createPlanRunner: 武器 2 本の「続けて探す」は 2 本目で倒�
   const T1 = r1.results[0].score.value;
   assert.ok(Math.abs(T1 - (1000 / 200 + 100000 / 60)) < 1e-9);
   assert.equal(runner.extend({ ms: 1000 }), true);
+  // 足す回は仕事量の予算のまま回るので、延長の持ち時間は元の回だけで分ける (足す回の分を取っておかない)
+  assert.deepEqual(log[0].lastExtend, { ms: 1000 });
   // 延長中も武器 2 本の結果のまま (武器 1 本の並びに戻らない)
   const mid = runner.result();
   assert.equal(mid.status, 'partial');
@@ -1264,7 +1575,10 @@ test('createPlanRunner: 2 本目の相手に合わせた回の重みは H_i / D_
   const side = (input, fixed, d, { score, N }) => input.weapons
     .map((w) => ({ weapon: w, decorations: { weapon: [] }, perGroup: pg(fixed.armor.head, w), score: score(pg(fixed.armor.head, w)) }))
     .sort((x, y) => y.score - x.score).slice(0, N);
-  const runner = R.createPlanRunner(job, { index, effects, motions }, { createSearch: scriptedSearch(make, log), optimizeWeaponSide: side });
+  const clock = fakeClock();
+  const runner = R.createPlanRunner(job, { index, effects, motions }, {
+    createSearch: scriptedSearch(make, log, clock), optimizeWeaponSide: side, now: clock.now,
+  });
   while (!runner.step(50));
   const T1 = 1000 / 200 + 50000 / 60 + 80000 / 55;
   assert.ok(Math.abs(runner.result().results[0].score.value - T1) < 1e-9);
@@ -1275,10 +1589,11 @@ test('createPlanRunner: 2 本目の相手に合わせた回の重みは H_i / D_
   const want = [raw.b / (raw.b + raw.c), raw.c / (raw.b + raw.c)];
   focus.input.targets.forEach((g, i) => assert.ok(Math.abs(g.weight - want[i]) < 1e-12, `${g.group}: ${g.weight} と ${want[i]}`));
   assert.deepEqual(focus.input.budget, { ms: 1000 / 2 });
-  // activeMs (計算した時間の合計) で延長したら、足す回も activeMs で切る
+  // activeMs (計算した時間の合計) で延長したら、足す回も activeMs で切る。予算は回を始めるときに配るので、
+  // 先の回 (延長は dfs と仕上げ 2 の 2 段 = 20ms) が使わなかった分は後の回に回る (900 − 20)
   runner.extend({ activeMs: 900 });
   while (!runner.step(50));
-  assert.deepEqual(log.map((x) => x.lastExtend), [{ activeMs: 900 / 2 }, { activeMs: 900 / 2 }]);
+  assert.deepEqual(log.map((x) => x.lastExtend), [{ activeMs: 900 / 2 }, { activeMs: 900 - 20 }]);
   const r = runner.result();
   assert.equal(r.results[0].builds[0].armor.head, 2, '2 本目の相手に合わせた回の組を合わせていない');
   assert.ok(Math.abs(r.results[0].score.value - (1000 / 180 + 50000 / 90 + 80000 / 85)) < 1e-9);

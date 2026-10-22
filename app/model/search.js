@@ -366,7 +366,10 @@ export function createSearch(input, data) {
       return {
         phase, elapsedMs: now() - t0, partialReady: !!(S && (S.partialReady || S.done)),
         best: S ? S.list.slice(0, n.K).map((e) => ({ value: e.value, exact: !!e.exact })) : [],
-        stats: S ? { nodes: S.stats.nodes, leaves: S.stats.leaves, boundCalls: S.stats.boundCalls } : {},
+        // prepareMs・activeMs は result().stats と同じ意味 (activeMs は下ごしらえを含む計算の時間。activeMs − prepareMs が予算と比べる時間)
+        stats: S ? {
+          nodes: S.stats.nodes, leaves: S.stats.leaves, boundCalls: S.stats.boundCalls, prepareMs, activeMs: S.activeMs + (prepareMs || 0),
+        } : {},
       };
     },
     /** その時点の結果 (3.4 節の形)。途中で呼んでもよい */

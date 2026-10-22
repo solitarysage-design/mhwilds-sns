@@ -188,7 +188,11 @@ async function childPlan(spec) {
     costOfDefense: r.costOfDefense ? r.costOfDefense.pct : null,
     defenseOk: r.results.filter((x) => !x.defense || x.defense.ok).length,
     stats: { mergeMs: r.stats.mergeMs, twoWeaponsMs: r.stats.twoWeaponsMs,
-      runs: r.stats.runs.map((x) => ({ key: x.key, status: x.status, ms: Math.round(x.ms), weapons: x.stats ? x.stats.weapons : null })) },
+      runs: r.stats.runs.map((x) => ({
+        key: x.key, status: x.status, ms: Math.round(x.ms), weapons: x.stats ? x.stats.weapons : null,
+        // 持ち時間から受け取った予算 (回を始めるときに配る。前の回の残りが入る) と上界を求めた回数
+        budget: x.budget ? x.budget.activeMs ?? x.budget.ms ?? null : null, boundCalls: x.stats ? x.stats.boundCalls ?? null : null,
+      })) },
     phases: phases.map((x) => `${x.tag}@${Math.round(x.atMs)}`).join(' '),
     warnings: r.warnings.map((w) => w.code),
   };

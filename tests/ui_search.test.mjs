@@ -377,8 +377,11 @@ test('Job: 相手に合わせるときは本物の recommend.js の Plan → Job
   assert.deepEqual(f.job.subjects.map((x) => x.name), ['ヌ・エグドラ（歴戦王）']);
   assert.ok(f.job.requirements.some((x) => x.label.includes('環境適応')));
   assert.ok(f.job.gamma && Object.keys(f.job.gamma.armor).length === 25, 'γ の印の表');
+  // 探索の回の持ち時間は予算の RUN_SHARE (火力の差の回の分を残す)。回の入力の予算はそれを回の数で分けた最初の値 (runner が回を
+  // 始めるときに「残り ÷ 残りの回の数」で配り直す)
+  assert.deepEqual(f.job.runsBudget, { activeMs: Math.round(6000 * R.RUN_SHARE) });
   for (const r of f.job.runs) {
-    assert.deepEqual(r.input.budget, { activeMs: Math.round((6000 * R.RUN_SHARE) / 2) }, '予算は回の数で分ける (火力の差の回の分を残す)');
+    assert.deepEqual(r.input.budget, { activeMs: Math.round((6000 * R.RUN_SHARE) / 2) }, '入力の予算は持ち時間を回の数で分けた値');
     assert.equal(r.input.charms.extra.length, 1, '端末の護石は足す');
     assert.equal(r.input.current, build);
     assert.ok(r.input.gamma);
@@ -694,6 +697,29 @@ test('計算中: 帯は Job 全体で数える (回が変わっても戻らな�
   for (const k of ['prepare', 'beam1', 'beam2', 'polish1', 'dfs', 'polish2', 'done', 'merge', 'twoWeapons', 'cost']) {
     assert.ok(F.PHASE_SHORT[k] && !/[a-z]/i.test(F.PHASE_SHORT[k].replace(/\d/g, '')), k);
   }
+});
+
+test('計算中: runner が回の予算と回の経過を出していれば、帯はその回の予算で伸びる (前の回の残りが回って回ごとに予算が違う)', () => {
+  const B = 6000;
+  const at = (phase, elapsedMs, budgetMs, jobMs = 9000) => F.progressView({ phase, elapsedMs: jobMs, run: { index: 1, count: 3, elapsedMs, budgetMs } }, B);
+  // 回の予算の半分 → その回の dfs の段の半分 (Job の経過ではなく回の経過で数える)
+  close(at('dfs', 1500, 3000).share, (1 + 0.55 + (0.9 - 0.55) * 0.5) / 3);
+  close(at('dfs', 1500, 3000, 1600).share, at('dfs', 1500, 3000, 4000).share);
+  assert.ok(at('dfs', 500, 3000).share < at('dfs', 2500, 3000).share);
+  assert.ok(at('dfs', 9000, 3000).share <= 2 / 3, '回の予算をこえても次の回の分に入らない');
+  // 前の回が早く終わって回ってきた予算 (3,540ms) でも、回の途中で帯が止まらない (Job の経過で数えると 2,000ms まで動かなかった)
+  const early = [100, 600, 1200, 2400, 3500].map((ms) => at('dfs', ms, 3540, 1000 + ms).share);
+  for (let i = 1; i < early.length; i++) assert.ok(early[i] > early[i - 1], JSON.stringify(early));
+  // 回目の文は同じ
+  assert.equal(at('dfs', 100, 3540).runText, '2 / 3 回目');
+  // 予算を出していない回 (火力の差の回・予算を明示した Job) は前と同じ目安
+  close(F.progressView({ phase: 'dfs', elapsedMs: 3000, run: { index: 1, count: 3 } }, B).share,
+    F.progressView({ phase: 'dfs', elapsedMs: 3000, run: { index: 1, count: 3, budgetMs: null } }, B).share);
+  // 回が 1 つの Job (武器 2 本の合わせだけがある多頭などで、持ち時間は予算の RUN_SHARE): 回の予算で伸びる (全体の予算では 6 割で止まる)
+  const one = F.progressView({ phase: 'dfs', elapsedMs: 3600, run: { index: 0, count: 1, elapsedMs: 3600, budgetMs: 3600 } }, B);
+  close(one.share, 0.9);
+  assert.equal(one.runText, '');
+  close(F.progressView({ phase: 'dfs', elapsedMs: 3600, run: { index: 0, count: 1 } }, B).share, 0.55 + 0.35 * 0.6);
 });
 
 test('相手: 一時的な部位 (水膜) は弱点 1 か所・主な部位 3 か所の自動の選び方で選ばない', () => {

@@ -1160,6 +1160,7 @@ export function buildPlan({ target, tabTarget, search, targetData, core, current
  *   userRequired: state.search.required, extraCharms (この端末で足した護石), extraWeapons, current (いまの装備。baseline 用),
  *   searchK (探索で集める件数。既定 K), costRun (守りの火力の差を測る回を足すか。既定 true), tryKey (「試す」の行の key)}
  * @returns Job = {kind: 'plan', runs: [{key, label, input}], costRun: {key, label, input} | null,
+ *   runsBudget: {activeMs} | null (探索の回の合計の持ち時間。createPlanRunner が回を始めるときに配る。opts.budget を渡したら null),
  *   merge: {mode: 'single'|'multi'|'twoWeapons', subjects, weights, alternatives, groups}, K, subjects, requirements, gamma,
  *   baseline, players, blocked, warnings, tryKey}
  */
@@ -1167,7 +1168,7 @@ export function planToJob(plan, opts = {}) {
   const K = Math.max(1, Math.min(50, Math.round(Number(opts.K) || 10)));
   const searchK = Math.max(K, Math.round(Number(opts.searchK) || K));
   const job = {
-    kind: 'plan', runs: [], costRun: null, K, merge: null, subjects: [], requirements: [], gamma: null, baseline: null,
+    kind: 'plan', runs: [], costRun: null, runsBudget: null, K, merge: null, subjects: [], requirements: [], gamma: null, baseline: null,
     players: plan ? plan.players : 1, blocked: null, warnings: [], tryKey: opts.tryKey ?? null,
   };
   if (!plan || !plan.subjects || !plan.subjects.length) {
@@ -1229,11 +1230,15 @@ export function planToJob(plan, opts = {}) {
   const willCost = opts.costRun !== false && opts.tryKey == null && (skillReq.length > 0 || blightRows.length > 0);
   const two = !!(plan.element.twoWeapons && plan.element.twoWeapons.suggested && opts.tryKey == null);
   const budgetMs = Math.max(500, Number(opts.budgetMs) || 6000);
-  // 予算は回の数で分ける。既定は計算した時間の合計で数える (activeMs。iPhone で裏に回っていた時間を数えない。5.4 節)。
+  // 予算は既定で計算した時間の合計で数える (activeMs。iPhone で裏に回っていた時間を数えない。5.4 節)。
   // 火力の差を測る回・武器 2 本の合わせがあるときは、探索の回に予算の RUN_SHARE だけを使う (残りはそれらの分。
-  // 合わせと火力の差は予算で切れないので、全部で予算の近くに収める。iPhone で 10 秒以内にするため。docs/SEARCH_DESIGN.md 5 章)
+  // 合わせと火力の差は予算で切れないので、全部で予算の近くに収める。iPhone で 10 秒以内にするため。docs/SEARCH_DESIGN.md 5 章)。
+  // 探索の回の合計の持ち時間 (job.runsBudget) は、createPlanRunner が回を始めるときに「残り ÷ 残りの回の数」で配る (先に最後まで
+  // 終わった回が使わなかった分が後の回に回る)。入力の budget はその最初の値 (持ち時間 ÷ 回の数)。opts.budget はそのまま各回に渡す
+  // (持ち時間は出さない)
   const share = willCost || two ? RUN_SHARE : 1;
-  const budgetOf = () => (isObj(opts.budget) ? { ...opts.budget } : { activeMs: Math.round((budgetMs * share) / runCount) });
+  const runsMs = Math.round(budgetMs * share);
+  const budgetOf = () => (isObj(opts.budget) ? { ...opts.budget } : { activeMs: Math.floor(runsMs / runCount) });
   const stopAfter = opts.tryKey != null ? { stopAfter: 'partial' } : {};
   const req = merged([...userReq, ...skillReq]);
   if (blightRows.length) {
@@ -1258,6 +1263,7 @@ export function planToJob(plan, opts = {}) {
     if (blightRows.length) job.warnings.push({ code: 'blight-not-required', message: '属性やられの防ぎ方のデータが足りないので、必須にせずに探します' });
     job.runs.push({ key: 'main', label: '装備を探しています', input: { ...base, required: req, budget: budgetOf(), ...stopAfter } });
   }
+  if (!isObj(opts.budget)) job.runsBudget = { activeMs: runsMs };
   if (willCost) {
     job.costRun = {
       key: 'cost', label: '守りのスキルの火力の差を測っています',
@@ -1478,10 +1484,30 @@ function indexWithExtras(index, input) {
 }
 
 /**
+ * 回の持ち時間 (探索の回の合計の予算。docs/SEARCH_DESIGN.md 5.3 節「回の予算の配り方」)。kind 'activeMs' (計算した時間) は、
+ * 回を始めるときに「残り ÷ 残りの回の数」を渡し、回が終わったら使った分 (渡した予算が上限) を引く。最後まで終わった回が
+ * 使わなかった分は後の回に回る。各回の予算は渡すときの残りをこえず、引いた分の合計 (= 回が予算と比べて使った時間の合計) は
+ * 持ち時間をこえない (min が 0 のとき。渡した予算の合計は、前の回の残りが後の回にも入るので持ち時間をこえることがある)。
+ * 後の回ほど予算は同じか多い。
+ * kind 'ms' (始めてからの時間。テストとベンチだけ) は回の数で分けたまま (回の使った時間を数えないので回さない)。
+ */
+function poolOf(kind, total, count, min = 0) {
+  return { kind, total, count: Math.max(1, count), min, spent: 0, started: 0 };
+}
+
+/** 持ち時間から、次に始める回の予算 ({activeMs} か {ms}) */
+function sliceOf(pool) {
+  const rest = pool.kind === 'activeMs' ? (pool.total - pool.spent) / Math.max(1, pool.count - pool.started) : pool.total / pool.count;
+  pool.started += 1;
+  return { [pool.kind]: Math.max(pool.min, Math.floor(rest)) };
+}
+
+/**
  * Job を Worker の中で回す (docs/RECOMMEND_DESIGN.md 5.3 節)。createSearch と同じ形:
  *   runner.step(ms) → 終わったら true / runner.progress() / runner.result() / runner.cancel() / runner.extend({ms})
  * 探索 (createSearch) を runs の順に回し、結果を合わせて (属性やられの 2 回分・多頭の T の並べ直し・武器 2 本の合わせ)、
- * 最後に守りのスキルの火力の差を測る回 (costRun) を回す。
+ * 最後に守りのスキルの火力の差を測る回 (costRun) を回す。job.runsBudget があれば、探索の回の予算は回を始めるときに
+ * その持ち時間から「残り ÷ 残りの回の数」で渡す (poolOf。無ければ入力の budget のまま)。
  * @param job planToJob の結果
  * @param data createSearch に渡すのと同じ ({index, effects, motions, ...})。守りのチェックと、perGroup が無い結果の計算し直しに使う
  * @param deps {createSearch, optimizeWeaponSide, now} (探索の本体は引数で受ける。テストでは作り物を渡せる)
@@ -1503,7 +1529,12 @@ export function createPlanRunner(job, data, deps = {}) {
     cost: job && job.costRun ? { ...job.costRun, search: null, result: null, status: null, ms: 0 } : null,
     cancelled: false, error: null, activeMs: 0, merged: null, two: null, twoQueue: [], extendQueue: [],
     mergeMs: 0, twoMs: 0, extended: 0, warnings: [...((job && job.warnings) || [])],
+    // 探索の回の持ち時間 (job.runsBudget) と、「続けて探す」の持ち時間 (extend の予算)。配り方は poolOf / beginPass / endPass
+    runsPool: null, extPool: null,
   };
+  if (job && isObj(job.runsBudget) && finite(job.runsBudget.activeMs) > 0) {
+    st.runsPool = poolOf('activeMs', job.runsBudget.activeMs, st.runs.length);
+  }
   if (!job || job.blocked || !st.runs.length) st.phase = 'done';
   else if (typeof createSearch !== 'function') {
     st.error = '装備を探す機能を読み込めませんでした';
@@ -1771,10 +1802,43 @@ export function createPlanRunner(job, data, deps = {}) {
     };
   };
 
+  /** 探索の stats (result() か progress() の) → 予算と比べた計算の時間 (activeMs − prepareMs。予算で数えない下ごしらえは除く)。無ければ null */
+  const activeOf = (s) => {
+    const a = s ? finite(s.activeMs) : null;
+    return a != null ? Math.max(0, a - (finite(s.prepareMs) ?? 0)) : null;
+  };
+  /** 回が予算と比べて使った時間 (探索が数えた計算の時間。探索が返さなければ runner で測った回の時間) */
+  const spentOf = (run) => activeOf(run.result && run.result.stats) ?? run.ms;
+  /**
+   * 回 (延長も) を始める: 持ち時間から予算を受け取り、使った分を数える起点を覚える。受け取った予算を返す。
+   * act0 = 探索が数えた計算の時間の起点 (まだ探索が無ければ 0。結果が数えていなければ null で、経過は runner で測った時間で出す)
+   */
+  const beginPass = (run, pool) => {
+    const given = sliceOf(pool);
+    run.pass = { pool, given, spent0: spentOf(run), act0: run.result ? activeOf(run.result.stats) : 0, ms0: run.ms };
+    return given;
+  };
+  /**
+   * 回 (延長はその延長) を始めてからの、予算と比べた計算の時間 (progress().run.elapsedMs。画面の帯の回の中の伸び)。
+   * 探索の progress().stats で数える (下ごしらえを入れない。予算と同じ時計)。数えていなければ runner で測った時間
+   */
+  const passElapsedOf = (run, pass, sub) => {
+    const a = activeOf(sub && sub.stats);
+    return a != null && pass.act0 != null ? Math.max(0, a - pass.act0) : run.ms - pass.ms0;
+  };
+  /** 回 (延長も) が終わった: 使った分 (渡した予算が上限) を持ち時間から引く。残りは後の回に回る */
+  const endPass = (run) => {
+    const p = run.pass;
+    if (!p || p.done) return;
+    p.done = true;
+    if (p.pool.kind === 'activeMs') p.pool.spent += Math.min(p.given.activeMs, Math.max(0, spentOf(run) - p.spent0));
+  };
+
   const stepRunSearch = (run, deadline) => {
     if (!run.search) {
       try {
-        run.search = createSearch(run.input, data);
+        // 予算を回を始めるときに受け取った回 (run.budget) は、入力の予算の代わりにそれで回す
+        run.search = createSearch(run.budget ? { ...run.input, budget: run.budget } : run.input, data);
       } catch (e) {
         st.error = (e && e.message) || String(e);
         return true;
@@ -1826,15 +1890,22 @@ export function createPlanRunner(job, data, deps = {}) {
             st.phase = 'done';
             break;
           }
-          if (done) st.extendQueue.shift();
+          if (done) {
+            endPass(run);
+            st.extendQueue.shift();
+            beginExtendHead();
+          }
         } else if (st.phase === 'runs') {
           const run = st.runs[st.runIndex];
+          // 回の予算は始めるときに持ち時間から受け取る (前の回が使わなかった分も入る)
+          if (!run.search && st.runsPool) run.budget = beginPass(run, st.runsPool);
           const done = stepRunSearch(run, deadline);
           if (st.error) {
             st.phase = 'done';
             break;
           }
           if (done) {
+            endPass(run);
             st.runIndex += 1;
             if (st.runIndex >= st.runs.length) st.phase = 'merge';
           }
@@ -1896,6 +1967,10 @@ export function createPlanRunner(job, data, deps = {}) {
     const searching = st.phase === 'runs' || st.phase === 'extend';
     const best = searching && !multi && sub && Array.isArray(sub.best) ? sub.best : merged;
     const top = st.merged && st.merged.results[0] ? st.merged.results[0].score : null;
+    // 持ち時間から予算を受け取った回は、その回の予算と、回 (延長はその延長) を始めてからの計算の時間 (下ごしらえは入れない) も出す
+    // (画面の帯が回ごとの予算で伸びる)
+    const pass = searching && run && run.pass && !run.pass.done ? run.pass : null;
+    const passBudget = pass ? finite(pass.given.activeMs ?? pass.given.ms) : null;
     return {
       phase: searching ? (sub ? sub.phase : 'prepare')
         : st.phase === 'two' ? 'twoWeapons' : st.phase === 'cost' ? 'cost' : st.phase === 'done' ? 'done' : 'merge',
@@ -1904,7 +1979,10 @@ export function createPlanRunner(job, data, deps = {}) {
       partialReady,
       run: run === st.cost && run
         ? { index: st.runs.length, count, label: st.cost.label, key: 'cost' }
-        : { index: idx, count, label: (st.runs[idx] || {}).label || '', key: (st.runs[idx] || {}).key || null },
+        : {
+          index: idx, count, label: (st.runs[idx] || {}).label || '', key: (st.runs[idx] || {}).key || null,
+          ...(passBudget != null ? { budgetMs: passBudget, elapsedMs: passElapsedOf(run, pass, sub) } : {}),
+        },
       stats: sub ? sub.stats || null : null,
     };
   }
@@ -1914,6 +1992,8 @@ export function createPlanRunner(job, data, deps = {}) {
       elapsedMs: st.activeMs, mergeMs: st.mergeMs, twoWeaponsMs: st.twoMs, extended: st.extended,
       runs: [...st.runs, ...(st.cost ? [st.cost] : [])].map((r) => ({
         key: r.key, label: r.label, status: r.status, ms: r.ms, stats: r.result ? r.result.stats || null : null,
+        // 持ち時間から受け取った予算 (いちばん新しい回・延長の分。入力の予算のまま回した回は null)
+        budget: r.pass ? { ...r.pass.given } : null,
       })),
     };
   }
@@ -1963,29 +2043,49 @@ export function createPlanRunner(job, data, deps = {}) {
   }
 
   /**
+   * 延長の並びの先頭の回の延長を始める (予算は始めるときに「続けて探す」の持ち時間から受け取る)。延長できない回は飛ばす。
+   * 足す回 (武器 2 本の 2 本目の相手に合わせた回) は、受け取った予算で探索を作る (仕事量の予算の Job では、元の回の予算のまま)
+   */
+  const beginExtendHead = () => {
+    while (st.extendQueue.length) {
+      const run = st.extendQueue[0];
+      if (!run.search) {
+        if (!run.fixedBudget) run.budget = beginPass(run, st.extPool);
+        return;
+      }
+      const given = beginPass(run, st.extPool);
+      // 前の結果は新しい結果が出るまで残す (延長中に result() を呼んでも上位が消えない)
+      if (run.search.extend({ ...given }) !== false) return;
+      endPass(run);
+      st.extendQueue.shift();
+    }
+    // 延長する回が無くなったら合わせに進む (最後の回が終わった直後に step の締め切りに当たっても、progress() が
+    // 「準備しています」と前の回の帯に戻らない。最初の回し方と同じ)
+    st.phase = 'merge';
+  };
+
+  /**
    * 「続けて探す」: 終わった回 (満たせなかった回と、最後まで回り終えた回を除く) の探索を延長して、もう一度合わせる。
    * 武器 2 本の案では、2 本目の武器で倒す相手に合わせた回を 1 つ足す (3.3 節の 4。良くなれば上位が入れ替わる)。
-   * 予算は延長する回 (と足す回) で分ける。
+   * 予算は延長する回 (と足す回) に、回を始めるときに配る (activeMs は「残り ÷ 残りの回の数」で、先に終わった回の残りが後の回に回る)。
    */
   function extend({ ms, activeMs } = {}) {
     if (!canExtend()) return false;
     const runs = extendableRuns();
     const focus = focusRun();
-    // activeMs (計算した時間の合計) で受けたらそれで、ms (始めてからの時間) ならそれで、回の数で分ける
+    // activeMs (計算した時間の合計) で受けたらそれを持ち時間にして回を始めるときに配る。ms (始めてからの時間) は回の数で分ける
     const active = activeMs != null && Number(activeMs) > 0;
     const total = Number(active ? activeMs : ms) || 6000;
-    const each = Math.max(200, Math.round(total / (runs.length + (focus ? 1 : 0))));
-    const slice = active ? { activeMs: each } : { ms: each };
-    // 前の結果は新しい結果が出るまで残す (延長中に result() を呼んでも上位が消えない)
-    for (const r of runs) r.search.extend({ ...slice });
     if (focus) {
       const b = focus.input.budget;
-      focus.input.budget = isObj(b) && b.work != null ? { ...b } : { ...slice };
+      focus.fixedBudget = isObj(b) && b.work != null;
       st.runs.push(focus);
     }
-    st.extendQueue = focus ? [...runs, focus] : runs;
+    st.extPool = poolOf(active ? 'activeMs' : 'ms', total, runs.length + (focus && !focus.fixedBudget ? 1 : 0), 200);
+    st.extendQueue = focus ? [...runs, focus] : [...runs];
     st.extended += 1;
     st.phase = 'extend';
+    beginExtendHead();
     return true;
   }
 

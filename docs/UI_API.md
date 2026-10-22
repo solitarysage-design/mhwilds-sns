@@ -497,7 +497,7 @@ search_results.js (一覧・詳しくのシート)  →「装備に入れる」=
 | `resultRows(result, {idx, currentBuild, currentSkills, baseline, startBuild, gamma})` | 一覧の行: いまとの差 (`diffPct` = 期待値の %・`diffCombos` = 多頭の回数の差・`diffTPct` = 体力の分からない相手がいて回数を切り上げて数えられないときの回数の割合。+ なら少ない)・`killCombos` (1 体でクエストを選んでいるときの討伐までの回数)・`baseKind` / `baseValue` / `baseCombos` (比べた基準)・`sameAsTop` (1 位と同じ値)・`sameAsPrev` (1 つ上の行と同じ値)・変わる部位・スキルの差・空きスロット・γ・2 本目の武器・守り `defense`。基準: いまの装備が `startBuild` (探し始めた時の装備) のままなら行の `baseline` (Worker が探索と同じ式で計算)、変わっていたら (結果の組を装備に入れたなど) `baseline` (いまの装備で計算し直したもの。数か `recommend.js` の `baselineView` の形 `{kind, value, T, combos}`。相手に合わせた Job は `recommend.planBaseline`) を使う (2026-10-22。前は入れたあとも探す前の装備と比べた「いまより +30%」が残った) |
 | `tiesWithTop(rows)` / `tieRuns(rows)` / `baseText(row, {zeroed, players})` / `playersText(players)` | 1 位と同じ値の行の数 / 1 位とは違う値で同じ値が続く順位のまとまり `[{from, to}]` (2026-10-22。一覧の行に「上と同じ値」、下に「2〜10 位は同じ値です」) / 詳しくの「比べた基準: いまの装備 約 269 回 (4 人のとき) (仮の条件は 0% で計算)」/ 人数の添え書き |
 | `defenseView(defense, defense2)` / `defenseText(view)` / `costOfDefenseText(cost)` | 守りのチェック (`recommend.defenseCheck`。武器 2 本は悪い方) → 行の「守り ✓環境適応 Lv2・✓火耐性の合計 22」 / 「守りのスキルのために火力 −x.x% (目安)」(多頭は回数の増え) |
-| `progressView` / `PHASE_TEXT` / `PHASE_SHORT` | 計算中の段階の文 (「候補を絞っています」など。「ビーム」などの言葉は出さない。相手に合わせるときの `merge` / `twoWeapons` / `cost` も) と進み具合の帯・「1 / 3 回目: …」(回の数は火力の差を測る回も数える)・いまの最良の文 `bestText` (多頭は「全部倒すまで 約 n 回」)。帯は回が 2 つ以上の Job では Job 全体で数える (回が変わっても 0% に戻らない) / くわしくの段階の短い名前 (「準備」「候補を絞る」…。内部の名前は出さない) |
+| `progressView` / `PHASE_TEXT` / `PHASE_SHORT` | 計算中の段階の文 (「候補を絞っています」など。「ビーム」などの言葉は出さない。相手に合わせるときの `merge` / `twoWeapons` / `cost` も) と進み具合の帯・「1 / 3 回目: …」(回の数は火力の差を測る回も数える)・いまの最良の文 `bestText` (多頭は「全部倒すまで 約 n 回」)。帯は回が 2 つ以上の Job では Job 全体で数える (回が変わっても 0% に戻らない。回の中の B&B の伸びは、runner が `run.budgetMs` / `run.elapsedMs` (その回の予算と、その回を始めてからの計算の時間。下ごしらえは入れない) を出していればそれで、無ければ全体の予算を回の数で分けた目安で数える。2026-10-22) / くわしくの段階の短い名前 (「準備」「候補を絞る」…。内部の名前は出さない) |
 
 ### search_client.js (Worker の出し入れ)
 
@@ -520,7 +520,8 @@ getSearchController().getSnapshot();            // 部品の外 (テストなど
 `inputKey` / `summary`・`restored {savedAt, appVersion}` (保存から戻した結果)。
 
 - 予算は `{activeMs}` で渡す (計算した時間だけで数える。iPhone で裏に回っていた間に予算を使い切らない。`docs/RECOMMEND_DESIGN.md` 5.4 節)。
-  相手に合わせる Job は `planToJob` が回の数で分ける (`docs/MODEL_API.md` の recommend.js 節)。予算の既定 (6 秒) と iPhone の見込みは
+  相手に合わせる Job は、探索の回の持ち時間 (`job.runsBudget`) を `createPlanRunner` が回を始めるときに「残り ÷ 残りの回の数」で配る
+  (先に最後まで終わった回の残りが後の回に回る。`docs/MODEL_API.md` の recommend.js 節)。予算の既定 (6 秒) と iPhone の見込みは
   `docs/SEARCH_DESIGN.md` 5 章。
 - Worker が無い・作れない・一度も返事をしないまま落ちた (読み込めなかった) ときは、画面のスレッドで回す (`createModelEngine`:
   model の `createSearch` / recommend.js の `createPlanRunner` を 16ms ずつ回し、Worker と同じメッセージを返す)。

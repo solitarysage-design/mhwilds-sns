@@ -1046,15 +1046,19 @@ function innerShare(table, phase, el, budgetMs) {
 export function progressView(p, budgetMs) {
   const phase = p && Object.prototype.hasOwnProperty.call(PHASE_AT, p.phase) ? p.phase : 'prepare';
   const el = p && num(p.elapsedMs);
-  const run = p && isObj(p.run) && p.run.count > 1 && num(p.run.index) != null ? p.run : null;
+  const pr = p && isObj(p.run) ? p.run : null;
+  // その回の予算とその回の経過 (runner が出していれば。回を始めるときに持ち時間から配る予算で、前の回の残りが入るので回ごとに違う。
+  // 「続けて探す」では延長を始めてからの分)
+  const own = pr && num(pr.budgetMs) > 0 && num(pr.elapsedMs) != null ? pr : null;
+  const run = pr && pr.count > 1 && num(pr.index) != null ? pr : null;
   let share;
   if (run) {
-    // 回ごとの予算は全体の予算を回の数で分けた目安 (経過は Job の最初から数えているので、前の回の分を引く)
-    const per = budgetMs > 0 ? budgetMs / run.count : 0;
-    const local = el != null ? el - run.index * per : null;
+    // 回の予算が無ければ全体の予算を回の数で分けた目安 (経過は Job の最初から数えているので、前の回の分を引く)
+    const per = own ? own.budgetMs : budgetMs > 0 ? budgetMs / run.count : 0;
+    const local = own ? own.elapsedMs : el != null ? el - run.index * per : null;
     share = (Math.min(run.index, run.count - 1) + innerShare(RUN_PHASE_AT, phase, local, per)) / run.count;
   } else {
-    share = innerShare(PHASE_AT, phase, el, budgetMs);
+    share = own ? innerShare(PHASE_AT, phase, own.elapsedMs, own.budgetMs) : innerShare(PHASE_AT, phase, el, budgetMs);
   }
   const best = p ? num(p.best) : null;
   const bestKind = p && p.bestKind === 'combos' ? 'combos' : 'damage';

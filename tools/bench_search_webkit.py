@@ -80,7 +80,7 @@ try {
         twoWeapons: (r.results || []).filter((x) => x.twoWeapons).length,
         stats: r.stats ? { prepareMs: r.stats.prepareMs, activeMs: r.stats.activeMs, phases: r.stats.phases, relevantSkills: r.stats.relevantSkills,
           nodes: r.stats.nodes, leaves: r.stats.leaves, weapons: r.stats.weapons, mergeMs: r.stats.mergeMs, twoWeaponsMs: r.stats.twoWeaponsMs,
-          runs: r.stats.runs ? r.stats.runs.map((x) => ({ key: x.key, status: x.status, ms: Math.round(x.ms) })) : null } : null,
+          runs: r.stats.runs ? r.stats.runs.map((x) => ({ key: x.key, status: x.status, ms: Math.round(x.ms), budget: x.budget ? (x.budget.activeMs ?? x.budget.ms ?? null) : null })) : null } : null,
         progress: events.filter((x) => x.type === 'progress').map((x) => [Math.round(x.at), x.phase, x.best == null ? null : Math.round(x.best * 1000) / 1000]),
       };
       log(JSON.stringify(window.__result));

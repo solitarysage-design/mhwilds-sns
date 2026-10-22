@@ -73,6 +73,9 @@ test('途中の結果 (partial) が done より前に出て、段階は PHASES �
   const done = s.result();
   assert.ok(done.results[0].value >= partial.results[0].value - 1e-9);
   assert.equal(s.progress().phase, 'done');
+  // progress().stats の prepareMs・activeMs は result().stats と同じ意味 (recommend.js が回の経過を予算と同じ時計で数えるのに使う)
+  assert.equal(s.progress().stats.prepareMs, done.stats.prepareMs);
+  assert.equal(s.progress().stats.activeMs, done.stats.activeMs);
 });
 
 test('cancel の後の step で止まり、status: cancelled と、それまでの上位が返る', () => {

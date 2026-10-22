@@ -424,13 +424,16 @@ const base = planBaseline(job, state.build, { index, skillEffects, motions });  
 
 ### Job (`planToJob`) と探索の回し方 (`createPlanRunner`)
 
-- Job = `{kind: 'plan', runs: [{key, label, input}], costRun, merge: {mode: 'single'|'multi'|'twoWeapons', subjects, weights, alternatives, groups}, K, subjects: [{key, name, health, healthAssumed, healthBasis}], requirements, gamma, baseline, players, blocked, warnings, tryKey}`。
+- Job = `{kind: 'plan', runs: [{key, label, input}], costRun, runsBudget, merge: {mode: 'single'|'multi'|'twoWeapons', subjects, weights, alternatives, groups}, K, subjects: [{key, name, health, healthAssumed, healthBasis}], requirements, gamma, baseline, players, blocked, warnings, tryKey}`。
   - `runs[].input` は `createSearch` の入力 (`docs/SEARCH_DESIGN.md` 3.2 節)。`targets[]` は相手 × 部位の行で `group` = 相手の key、
     `weight` = 相手の重み × 部位の割合 (足して 1)。`required` = 自分で足した必須 + オンの要件 (同じスキルは Lv の大きい方)。
     `charms.fixedExclude` (狩猟証γ の護石)・`armorExclude` (使わない防具 + γ 防具)・`current` (いまの装備。既定 `plan.inputs.currentBuild`。「いまより +x%」用)・
     `gamma` (γ の印の表 = `gammaIndex`。探索が同じ値の γ でない防具・護石を代表にする)・
     `budget` (既定 `{activeMs: budgetMs × 割合 / 回数}`。割合は `costRun` か武器 2 本の合わせがあれば `RUN_SHARE` = 0.6 (残りは予算で切れない
     合わせと火力の差の分)、無ければ 1。`opts.budget` を渡すとそのまま各回に)。
+  - `runsBudget` = 探索の回の合計の持ち時間 `{activeMs: budgetMs × 割合}` (2026-10-22)。`createPlanRunner` が回を始めるときに
+    「残り ÷ 残りの回の数」を渡す (先に最後まで終わった回が使わなかった分が後の回に回る。`runs[].input.budget` はその最初の値)。
+    `opts.budget` を渡したとき (テスト・ベンチの仕事量の予算など) は `null` で、各回は入力の `budget` のまま。
   - 属性やられがオン → `runs` は `blight-skill` (属性やられ耐性 Lv3) と `blight-resist` (各属性の耐性スキル Lv3) の 2 つ。オフなら `main` の 1 つ。
   - `costRun` = 守りの要件を外した探索 (`stopAfter: 'partial'`・自分で足した必須は残す)。守りの要件がオンのときだけ。
   - `tryKey` を渡すと「試す」用 (その行をオンにして全部 `stopAfter: 'partial'`・`costRun` なし・武器 2 本なし)。
@@ -438,20 +441,32 @@ const base = planBaseline(job, state.build, { index, skillEffects, motions });  
   - `blocked` (相手のデータの読み込み中・装備固定) のときは `runs: []`。
 - `createPlanRunner(job, data, {createSearch, optimizeWeaponSide, now})`: `step(ms)` / `progress()` / `result()` / `cancel()` / `extend({ms} | {activeMs})`。
   `data` は Worker の data (生データ + `index`)。索引には入力の `extraWeapons`・`charms.extra` (端末の所持アーティア・護石) を足して使う
-  (守りのチェック・いまの装備の値・相手ごとの値の計算し直し)。`extend` は `activeMs` (計算した時間) か `ms` (始めてからの時間) を回の数で分ける。
-  `runs` を順に回し (`progress().run = {index, count, label, key}`。`count` は火力の差を測る回 (`costRun`) も数える (その回は `index` が最後)。
+  (守りのチェック・いまの装備の値・相手ごとの値の計算し直し)。
+  探索の回の予算は、`job.runsBudget` があれば回を始めるときに渡す: 「残りの持ち時間 ÷ 残りの回の数」(`activeMs`)。回が終わったら
+  使った分 (探索の `stats.activeMs − prepareMs` = 予算と比べた計算の時間。下ごしらえは予算で数えないので持ち時間からも引かない。
+  返さない探索は runner で測った回の時間) を、渡した予算を上限に持ち時間から引く。最後まで終わった回の残りは後の回に回り、予算で切れた回は渡した予算だけを
+  使ったことにする (仕上げ 2 でこえた分で後の回を減らさない)。後の回の予算は前の回と同じか多く、回が予算と比べて使った時間の合計は
+  持ち時間をこえない。火力の差を測る回 (`costRun`。途中の結果まで) は入力の予算のまま。
+  `extend` は `activeMs` (計算した時間) なら同じく回を始めるときに「残り ÷ 残りの回の数」(1 回 200ms 以上) を、`ms` (始めてからの時間。
+  テスト・ベンチ) なら回の数で分けた値を渡す (延長は回ごとに順に始める。2026-10-22 までは全部の回を `extend` を受けたときに始めていた)。
+  `runs` を順に回し (`progress().run = {index, count, label, key, budgetMs?, elapsedMs?}`。`count` は火力の差を測る回 (`costRun`) も数える (その回は `index` が最後)。
+  `budgetMs` / `elapsedMs` は持ち時間から予算を受け取った回だけ: その回 (延長はその延長) の予算と、始めてからの計算の時間 (探索の
+  `progress().stats` の `activeMs − prepareMs` で数える。予算と同じ時計で、下ごしらえは入れない。数えない探索は runner で測った時間)。画面の帯はこれで伸ばす。
   `phase` は探索の段か `'merge'` / `'twoWeapons'` / `'cost'` / `'done'`。`best` (いまの最良) は 1 体の探索の回ならその回の上位、
   それ以外 (多頭の探索の回 = 重み付きの期待値で T ではない・火力の差の回 = 守りなし・合わせ) は合わせた結果の上位で、
   `bestKind` は `'damage'` か `'combos'` (多頭の T))、
   合わせる → 武器 2 本 (上位 `TWO_WEAPON_TOP` = 5 件の防具の組に、その回の候補の武器から 2 本目と 1 本目を `optimizeWeaponSide` で選び直す。
   計算し直しは省き (`check: false`)、同じ回の入力の物を使い回して下ごしらえを 1 回にする) → `costRun`。
   `partialReady` は 1 回目の探索の途中の結果 (仕上げ 1) が出たとき。`extend` は終わった回 (満たせなかった回と、B&B を最後まで回り終えた回
-  (`search.extendable` が false) を除く) を延長してもう一度合わせる。予算は延長する回 (と下の足す回) の数で分ける。
+  (`search.extendable` が false) を除く) を延長してもう一度合わせる。予算は延長する回 (と下の足す回) に上のとおり配る
+  (最後まで回り終えた回には配らない。足す回は、仕事量の予算の Job では元の回の予算のまま回り、持ち時間はほかの回だけで分ける。
+  `extendable` なのに `extend` が false を返した回は並びから外し、受け取った予算は後の回に回す)。
   武器 2 本の案では `extend` が「2 本目の武器で倒す相手だけ」を見た回 (`two-focus:<相手の key>`。重み = いまの最良の組での H_i / D_i²・部位の割合はそのまま) を 1 つ足し、
   その回の上位も 2 本の合わせにかける (`docs/RECOMMEND_DESIGN.md` 3.3 節の 4。前の組も残るので、良くなったときだけ上位が入れ替わる)。
   回が全部終わったあと (合わせ・`costRun`・延長の途中も) の `result()` は合わせた結果 (延長中は前の結果のまま)。合わせの途中でやめたら、それまでに合わせた分で出す。
-  - `result()` = `{status: 'partial'|'done'|'stopped'|'cancelled'|'infeasible'|'error'|'blocked', results, infeasible, warnings, stats: {elapsedMs, mergeMs, twoWeaponsMs, extended, runs: [{key, label, status, ms, stats}]}, quality: 'heuristic', merge, costOfDefense, singleWeapon, twoWeaponsGain, extendable}`。
+  - `result()` = `{status: 'partial'|'done'|'stopped'|'cancelled'|'infeasible'|'error'|'blocked', results, infeasible, warnings, stats: {elapsedMs, mergeMs, twoWeaponsMs, extended, runs: [{key, label, status, ms, stats, budget}]}, quality: 'heuristic', merge, costOfDefense, singleWeapon, twoWeaponsGain, extendable}`。
     `extendable` = 「続けて探す」で続ける所があるか (延長できる回か、2 本目の相手に合わせた回を足せる。`extend` が true を返すか。2026-10-22)。
+    `stats.runs[].budget` = 持ち時間から受け取った予算 (いちばん新しい回・延長の分。入力の予算のまま回した回は `null`)。
   - `results[]` = 探索の結果に `score: {kind: 'damage'|'combos', value, better}`・`perSubject: [{key, name, value, combos, weapon: 1|2}]`・`combosTotal`・
     `perGroup` (無ければ計算し直す)・`weapons`・`builds` (武器 2 本なら 2 つ。防具・護石は共通)・`defense` (`defenseCheck`。2 本目は `defense2`)・
     `gamma: [{part, monsterId, name}]`・`baseline` (`baselineView` の形 `{kind, value, T, combos, perGroup}`)・`vsBaselinePct`・`run` を足したもの。守りを満たす組を先に、その中で score の順
@@ -517,7 +532,8 @@ const search = createSearch({
 }, data);                          // data = data.js の core のデータ (index・skillEffects・motions を読む) か {index, effects, motions}
 
 while (!search.step(80)) {         // 80ms ぶん進める。終わったら (中止・失敗を含む) true
-  const p = search.progress();     // {phase, elapsedMs, partialReady, best: [{value, exact}], stats: {nodes, leaves, boundCalls}}
+  const p = search.progress();     // {phase, elapsedMs, partialReady, best: [{value, exact}], stats: {nodes, leaves, boundCalls, prepareMs, activeMs}}
+                                   // (stats の prepareMs・activeMs は result().stats と同じ意味。下ごしらえの前は stats: {})
 }
 const r = search.result();         // 途中で呼んでもよい
 search.cancel();                   // 次の step で止まる
