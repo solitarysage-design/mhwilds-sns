@@ -75,6 +75,18 @@ test('古い保存データ (段階 2・3 の項目が無い) を読んでも壊
   assert.deepEqual(S.sanitizeState(JSON.parse(JSON.stringify(s))), s);
 });
 
+test('発動率: 新しい state は空 (全部の条件が既定の値)。読めない値は「入れていない」にし、0% にしない', () => {
+  // 既定の値 (本人の前提の怒り・連撃・スタミナ満タン 100% など) を state に書き込まない = data が変われば新しい既定になる
+  assert.deepEqual(S.defaultState().uptimes, {});
+  assert.deepEqual(S.sanitizeState({}).uptimes, {});
+  // null・空の文字・配列は捨てる (Number(null) = 0 で「0% を入れた」にすると、既定 100% の条件が 0% で計算される)
+  const s = S.sanitizeState({ uptimes: {
+    staminaFull: null, enraged: '', hpLow: [], hpFull: '  ', redHp: '0.3', latentPower: true, wet: 0,
+    chain: { hit1to4: null, hit5plus: '0.6' }, frenzy: { infected: '', overcome: 2 },
+  } });
+  assert.deepEqual(s.uptimes, { redHp: 0.3, latentPower: 1, wet: 0, chain: { hit5plus: 0.6 }, frenzy: { overcome: 1 } });
+});
+
 test('sanitizeState: 壊れた値の段階 2・3 の項目は初期値か範囲の中にそろえる', () => {
   const s = S.sanitizeState({
     target: { individual: 'king', questTargetIndex: 99, players: 9, useUncertainWound: 'yes', questId: 'Freedom from Solitude' },

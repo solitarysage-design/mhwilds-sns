@@ -116,6 +116,9 @@ const r = validateCharm(charm, talismanRules, skills, { charmsFixed });
 | `categorical` (段階がある) | `{段 id: 割合}`。渡さない段は 0、残りが「未発動」の段 (`offState`)。合計が 1 を超えたら縮める (警告)。数だけを保存する入れ物向けに平らなキー `"<グループ id>.<段 id>"` でもよい (入れ子の形があればそちら優先) | `{ chain: { hit1to4: 0.2, hit5plus: 0.7 } }` か `{ 'chain.hit1to4': 0.2, 'chain.hit5plus': 0.7 }` |
 
 - 既定値は各グループの `defaultUptime`。`placeholder: true` のものは根拠の無い**仮置き** (`uptimeBasis` にそう書いてある)。
+  `placeholder: false` は根拠のある既定値 (`beforeGuts`・`festival`) と**本人の前提** (`enraged` 1.0・`chain` 5 ヒット以降段 1.0・
+  `staminaFull` 1.0。2026-10-22 本人の決定「基本発動する前提で」。`uptimeBasis` は「本人の前提 (2026-10-22): …」)。
+  計算での扱いは根拠のある既定値と同じ (同時に起きない条件で保つ順も、探すタブの `'zero'` で 0% にしないのも)。
 - `exclusiveWith` の組は同時に起きない条件 (体力満タン `hpFull` と 赤ゲージあり `redHp`・体力 35% 以下 `hpLow`)。
   全パターンの加重平均で「両方発動」に重みを付けず、それぞれの発動率は入れた値のまま保つ。
   合計が 100% を超えて保てないときは、**本人が入れた条件 → 根拠のある既定値 → 仮置き** の順に保ち、後の方 (仮置きなど) を
@@ -140,10 +143,11 @@ const r = validateCharm(charm, talismanRules, skills, { charmsFixed });
 | id | 中身 | 動くスキル (2026-10 時点) |
 |---|---|---|
 | `hpFull` / `redHp` / `hpLow` | 体力が満タン / 赤ゲージあり / 35% 以下 (満タンとは同時に起きない) | フルチャージ / 逆恨み / 火事場力 |
-| `enraged` | モンスターが怒っている | 挑戦者・巨戟龍の黙示録 |
-| `chain` (段階) | 連撃: 未発動 / 1〜4 ヒット段 / 5 ヒット以降段 | 連撃 (5 段以降が主効果)・兇爪竜の力 (1〜4 段と 5 段以降) |
+| `enraged` | モンスターが怒っている (既定 1.0・本人の前提) | 挑戦者・巨戟龍の黙示録 |
+| `chain` (段階) | 連撃: 未発動 / 1〜4 ヒット段 / 5 ヒット以降段 (既定 5 段以降 1.0・本人の前提) | 連撃 (5 段以降が主効果)・兇爪竜の力 (1〜4 段と 5 段以降) |
 | `frenzy` (段階) | 狂竜症: かかっていない / 感染中 / 克服した後 | 黒蝕竜の力 (感染中と克服後で違う)・無我の境地 (克服後) |
-| そのほか | 力の解放・スタミナ満タン・武器出し直後・ジャストガード後 など 1 条件 1 グループ | `rules.conditionGroups[].skills` を見る |
+| `staminaFull` | スタミナ満タンをしばらく保っている (既定 1.0・本人の前提) | 渾身 |
+| そのほか | 力の解放・武器出し直後・ジャストガード後 など 1 条件 1 グループ | `rules.conditionGroups[].skills` を見る |
 
 ### 傷口
 
@@ -414,7 +418,8 @@ const base = planBaseline(job, state.build, { index, skillEffects, motions });  
 - `multiWeights(subjects, dRef)` → `[{key, name, weight (足して 1), time = H/D_ref, timeShare, health, healthAssumed, healthBasis, dRef, dRefAssumed, reason}]`。
   `weight ∝ H_i / D_ref_i²`。D_ref はいまの装備の期待値 (武器が無ければ候補の先頭の武器のスキルなし)。
 - `searchUptimes(effects, uptimes, 'zero'|'keep')` → `{mode, uptimes, placeholders: [{id, label, type, defaultUptime, zeroed}]}`
-  (本人が入れていない仮置きの条件を 0% に。binary は 0、categorical は `{}`)。
+  (本人が入れていない仮置きの条件を 0% に。binary は 0、categorical は `{}`。`placeholder: false` の条件 = 根拠のある既定値と
+  本人の前提 (怒り・連撃・スタミナ満タン 100%。2026-10-22) は触らないので、既定の値で探す)。
 - `evaluateBuild(build, targets, ctx)` → `{value, perTarget, perGroup, skillLevels}` か null (computeBuild + comboExpected。探索と同じ式)。
 
 ### Job (`planToJob`) と探索の回し方 (`createPlanRunner`)

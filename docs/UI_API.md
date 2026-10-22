@@ -87,6 +87,9 @@ export default function EquipTab({ data, active }) {
   まとまった説明は `<${Notice} kind="unconfirmed" title="…">`。damage.js の `lowConfidence` は未確定、`unsupported` は未対応。
   「未確定」は**根拠の弱い数値のスキル**だけに使う。仮置きの発動率 (`conditions[].placeholder`) はどの画面でも
   `<${Badge} kind="warn">仮</${Badge}>` / `<${Notice} kind="warn" badge="仮">` にそろえる。
+  本人の前提の発動率 (怒り・連撃・スタミナ満タン。2026-10-22 から 100%。`placeholder: false`) は印を付けず、根拠のある既定値と同じく
+  火力タブの発動率の欄に `uptimeBasis` (「本人の前提 (2026-10-22): …。下げたいときは上のスライダーで入れる」) を添える
+  (その条件のスライダーのすぐ下に出るので、文では「火力タブで」と書かない)。
   データで確かめられていないこと (属性やられの `blightsUncertain` など) は `<${Badge} kind="warn">未確認</${Badge}>`。
 - 画面の文言に、ファイル名・HTTP の番号・内部の id・英語 (DPS・MV など) を出さない。出すなら「くわしく」(`<details class="more">`) の中に。
   「DPS」は「1 秒あたりの火力」、「MV」は「モーション値」と書く。名前を文の中に入れるときは「」で囲む (「の」「は」の前に空白を入れない)。
@@ -197,7 +200,7 @@ const off = subscribe((s) => { … });                 // 変わるたびに呼�
 | `requestSearch({from})` → id / `takeSearchRequest(id)` → 印 か null | 自動で探し始める受け渡し (下) |
 | `setManualHitzone(patch, {wound})` | 手入力の肉質 (0〜100 に丸める)。`{wound: true}` で傷口の肉質、`setManualHitzone(null, {wound: true})` で傷口の手入力をやめる |
 | `setCombo(comboIdOrMoves)` | コンボ (null で既定) |
-| `setUptime(groupId, value)` | 条件グループの発動率。binary は 0〜1 の数、categorical は `{段 id: 0〜1}` |
+| `setUptime(groupId, value)` | 条件グループの発動率。binary は 0〜1 の数、categorical は `{段 id: 0〜1}`。読めない値 (null・空の文字・配列など) は入れない (保存データの読み込みでも捨てる = 既定の値で計算。damage.js の読み方と同じ。2026-10-22 から。前は null を 0% にしていた) |
 | `setUptimeState(groupId, stateId, ratio)` | categorical の 1 つの段だけ変える |
 | `resetUptime(groupId?)` | 既定 (skill_effects.json の defaultUptime) に戻す。省くと全部 |
 | `setSharpness(color \| null)` | 斬れ味の色の固定 / 自動 |
@@ -483,14 +486,16 @@ search_results.js (一覧・詳しくのシート)  →「装備に入れる」=
 | `searchTargets({target, tabTarget, targetData, policy})` | 狙う部位 (`asSelected` = 相手タブの部位・割合 / `weak1` / `main3`)。個体の傷口は hunt.js の `hitzoneFor` で置き換える。部位を選んでいなければ弱点 1 か所 (`fallback: 'no-part'`)、相手が無ければ既定の肉質。弱点 1 か所 (`target_mix.js` の `defaultPartKey`)・主な部位 3 か所 (`mainParts`) は一時的な部位 (`transient`。ウズ・トゥナの水膜) を選ばない (2026-10-22。自分で選べば狙える) |
 | `weaponChoice({mode, build, idx, weapons, myWeapons, monster, kind})` | 武器の範囲 (`docs/RECOMMEND_DESIGN.md` 2.3 節の 1 体の行)。おまかせ: 武器が無い → 片手剣すべて、おすすめがはっきりで属性が違う → おすすめの属性 (1 位と差 2 以内の属性の片手剣 + 所持武器 + いまの武器)、ほかはいまの武器 |
 | `placeholderConditions(effects, uptimes)` / `searchUptimes(effects, uptimes, policy)` | 仮置きの発動率の条件の一覧 (本人が火力タブで入れたものは `fromInput`) / 探すときの発動率 (`zero` = 仮のまま条件を 0%。段階のある条件は `{}`) |
+| `fixedConditions(effects, uptimes)` | 仮でない条件 (根拠のある既定値・本人の前提。`placeholder: false`) の一覧 `{id, label, fromInput, valueText, basis, skills}` (`fromInput` = 火力タブで値を入れた。平らなキーも。ただし「発動していない」段のキー (`chain.none`) は damage.js と同じく読まない。`valueText` = 使う値の短い文で 0% の段を省く。例「5 ヒット以降段 100%」)。発動率のカードに、値を入れていないものを「仮でない条件 (…) は、どちらでもこの値で探します」(`[data-sr-fixed]`)、入れたものを「火力タブで値を入れた条件」の行 (`[data-sr-mine]`) に出す (2026-10-22) |
+| `uptimeCardRows(placeholders, fixed)` | 発動率のカードの行の分け方 `{still, mine, preset}`: 値を入れていない仮置きの条件 (数と一覧)・火力タブで値を入れた条件 (仮置きも仮でない条件も)・値を入れていない仮でない条件。名前は「」で囲み、値は段ごと (「5 ヒット以降段 100%」) に途中で折り返さない (`.sr-nowrap`。段の間の「・」では折り返せる) |
 | `gammaInfo(targetData)` / `huntedExclusions(gamma, hunted)` / `gammaMarksOf(build, gamma)` | 歴戦王の素材が要る γ 防具・狩猟証γ の護石 (表は hunt.js の `archTemperedRewards` / `gammaIndex`。`index` に探索の入力用の表) / 倒していない歴戦王の分を外す (`armorExclude`・`charms.fixedExclude`) / 結果の印 |
 | `limitBreakFor(mode, build)` / `budgetOf(budgetSec, test)` | 限界突破 (`build` / `all` / `none`) / 予算 `{activeMs}` (計算した時間。テストの差し替えがあればそれ) |
 | `inputKeyOf(job, dataVersion)` / `dataVersionOf(core)` | 条件の短いハッシュ (予算といまの装備は入れない。「装備に入れる」で「条件が変わりました」にならないように) / データの版 (各ファイルの generatedAt + 持っている護石・武器の id) |
 | `isResultBuild(result, build)` | いまの装備が結果の組 (2 本目の武器の組も) と同じか。同じなら、武器の範囲・限界突破 (いまの装備から決まる) は `summary.startBuild` (探し始めた時の装備。search-last にも入る) で作り直した条件で比べる (結果を入れただけで「条件が変わりました」にしない) |
 | `requiredRows` / `requiredPickerItems(skills, required, bonuses)` / `bonusLevelsText` | 自分で足す必須スキルの行・「スキルを足す」の一覧。シリーズ/グループも選べる (Lv は段。「Lv1 = 2 部位・Lv2 = 4 部位」を添える。探索が 2b で対応したので 3f で選べるようにした。`docs/SEARCH_DESIGN.md` 2.8 節) |
 | `normalizeResult` / `resultRows` / `buildDiff` / `changeText` / `skillDiff` / `freeSlotsText` / `buildLines` / `baselineValue` | 結果をそろえる (壊れた値を捨てる。行の中の配列 `skills`・`perSubject`・`builds`・`defense.rows`・`infeasible.missing` も物だけにし、装備の `decorations` などの形もそろえる。search-last が壊れていても画面を落とさない。相手に合わせた Job の満たせない理由 (回ごとの配列) は `missing` にまとめる) / 一覧の行 (下) / いまの装備の値 (探した時の入力で計算。火力タブの `summarizePower` と同じ値) |
-| `resultRows(result, {idx, currentBuild, currentSkills, baseline, startBuild, gamma})` | 一覧の行: いまとの差 (`diffPct` = 期待値の %・`diffCombos` = 多頭の回数の差・`diffTPct` = 体力の分からない相手がいて回数を切り上げて数えられないときの回数の割合。+ なら少ない)・`killCombos` (1 体でクエストを選んでいるときの討伐までの回数)・`baseKind` / `baseValue` / `baseCombos` (比べた基準)・`sameAsTop` (1 位と同じ値)・変わる部位・スキルの差・空きスロット・γ・2 本目の武器・守り `defense`。基準: いまの装備が `startBuild` (探し始めた時の装備) のままなら行の `baseline` (Worker が探索と同じ式で計算)、変わっていたら (結果の組を装備に入れたなど) `baseline` (いまの装備で計算し直したもの。数か `recommend.js` の `baselineView` の形 `{kind, value, T, combos}`。相手に合わせた Job は `recommend.planBaseline`) を使う (2026-10-22。前は入れたあとも探す前の装備と比べた「いまより +30%」が残った) |
-| `tiesWithTop(rows)` / `baseText(row, {zeroed, players})` / `playersText(players)` | 1 位と同じ値の行の数 / 詳しくの「比べた基準: いまの装備 約 269 回 (4 人のとき) (仮の条件は 0% で計算)」/ 人数の添え書き |
+| `resultRows(result, {idx, currentBuild, currentSkills, baseline, startBuild, gamma})` | 一覧の行: いまとの差 (`diffPct` = 期待値の %・`diffCombos` = 多頭の回数の差・`diffTPct` = 体力の分からない相手がいて回数を切り上げて数えられないときの回数の割合。+ なら少ない)・`killCombos` (1 体でクエストを選んでいるときの討伐までの回数)・`baseKind` / `baseValue` / `baseCombos` (比べた基準)・`sameAsTop` (1 位と同じ値)・`sameAsPrev` (1 つ上の行と同じ値)・変わる部位・スキルの差・空きスロット・γ・2 本目の武器・守り `defense`。基準: いまの装備が `startBuild` (探し始めた時の装備) のままなら行の `baseline` (Worker が探索と同じ式で計算)、変わっていたら (結果の組を装備に入れたなど) `baseline` (いまの装備で計算し直したもの。数か `recommend.js` の `baselineView` の形 `{kind, value, T, combos}`。相手に合わせた Job は `recommend.planBaseline`) を使う (2026-10-22。前は入れたあとも探す前の装備と比べた「いまより +30%」が残った) |
+| `tiesWithTop(rows)` / `tieRuns(rows)` / `baseText(row, {zeroed, players})` / `playersText(players)` | 1 位と同じ値の行の数 / 1 位とは違う値で同じ値が続く順位のまとまり `[{from, to}]` (2026-10-22。一覧の行に「上と同じ値」、下に「2〜10 位は同じ値です」) / 詳しくの「比べた基準: いまの装備 約 269 回 (4 人のとき) (仮の条件は 0% で計算)」/ 人数の添え書き |
 | `defenseView(defense, defense2)` / `defenseText(view)` / `costOfDefenseText(cost)` | 守りのチェック (`recommend.defenseCheck`。武器 2 本は悪い方) → 行の「守り ✓環境適応 Lv2・✓火耐性の合計 22」 / 「守りのスキルのために火力 −x.x% (目安)」(多頭は回数の増え) |
 | `progressView` / `PHASE_TEXT` / `PHASE_SHORT` | 計算中の段階の文 (「候補を絞っています」など。「ビーム」などの言葉は出さない。相手に合わせるときの `merge` / `twoWeapons` / `cost` も) と進み具合の帯・「1 / 3 回目: …」(回の数は火力の差を測る回も数える)・いまの最良の文 `bestText` (多頭は「全部倒すまで 約 n 回」)。帯は回が 2 つ以上の Job では Job 全体で数える (回が変わっても 0% に戻らない) / くわしくの段階の短い名前 (「準備」「候補を絞る」…。内部の名前は出さない) |
 

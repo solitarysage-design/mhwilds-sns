@@ -314,9 +314,15 @@ test('火力の要約: 期待値とスキルなし比', () => {
   assert.ok(withAtk.total > none.total);
   assert.ok(withAtk.vsNoSkillsPct > 0);
   assert.ok(Math.abs(withAtk.noSkills - none.total) < 1e-9);
-  // 条件つきスキル (挑戦者) は既定の割合が仮置きなので placeholders に出る
+  // 条件つきスキル (火事場力) は既定の割合が仮置きなので placeholders に出る
+  const hl = L.summarizePower({ ...base, skills: [{ skillId: skillIdByName('火事場力'), level: 5 }] });
+  assert.ok(hl.placeholders.some((c) => c.id === 'hpLow'));
+  // 挑戦者 (怒り) は本人の前提 (2026-10-22: 基本発動する = 100%) なので仮ではなく、placeholders に出ない
   const ch = L.summarizePower({ ...base, skills: [{ skillId: skillIdByName('挑戦者'), level: 5 }] });
-  assert.ok(ch.placeholders.some((c) => c.id === 'enraged'));
+  assert.ok(!ch.placeholders.some((c) => c.id === 'enraged'));
+  const enr = ch.conditions.find((c) => c.id === 'enraged');
+  assert.deepEqual([enr.uptime, enr.placeholder], [1, false]);
+  assert.ok(Math.abs(ch.total - L.summarizePower({ ...base, skills: [{ skillId: skillIdByName('挑戦者'), level: 5 }], uptimes: { enraged: 1 } }).total) < 1e-9);
   assert.ok(L.summarizePower({ ...base, skills: [], uptimes: { enraged: 1 } }).total > 0);
   // コンボが無ければエラーの文 (投げない)
   assert.ok(L.summarizePower({ ...base, combo: null, skills: [] }).error);

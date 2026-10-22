@@ -9,7 +9,7 @@
    "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/database-20261020-070700-4a99b26/MHWS-in-json/natives/STM/GameDesign/Enemy/CommonData/Data/EmCommonData.user.3.json",
    "data/skills.json"
   ],
-  "generatedAt": "2026-10-21T12:34:06Z",
+  "generatedAt": "2026-10-22T01:16:44Z",
   "gameVersion": "1.042",
   "gameDataBuild": "1.42.0.2",
   "license": "ゲームデータの抽出は dzxrly/MHWS-in-json (MIT)。数値はカプコンのゲームデータ由来。",
@@ -130,9 +130,9 @@
     "id": "enraged",
     "label": "モンスターが怒っている",
     "type": "binary",
-    "defaultUptime": 0.5,
-    "placeholder": true,
-    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "defaultUptime": 1.0,
+    "placeholder": false,
+    "uptimeBasis": "基本発動する前提で計算 (2026-10-22 に決めた既定)。実際は怒っていない時間もあるので、下げたいときは上のスライダーで入れる",
     "exclusiveWith": [],
     "note": "",
     "skills": [
@@ -166,13 +166,13 @@
     ],
     "offState": "none",
     "defaultUptime": {
-     "hit1to4": 0.5,
-     "hit5plus": 0.5
+     "hit1to4": 0,
+     "hit5plus": 1.0
     },
-    "placeholder": true,
-    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "placeholder": false,
+    "uptimeBasis": "基本発動する前提で計算 (2026-10-22 に決めた既定)。いつも 5 ヒット以降段にいる扱い。下げたいときは上のスライダーで入れる",
     "exclusiveWith": [],
-    "note": "既定の値 (各 50%) は仮置きで、攻撃を当て続けている前提です。当てていない時間があるなら、その分を未発動に回してください。",
+    "note": "攻撃を当て続けると 1〜4 ヒット段から 5 ヒット以降段に上がる。当て始めの時間は 1〜4 ヒット段に、当てていない時間は未発動に回す。",
     "skills": [
      {
       "skillId": 95,
@@ -252,9 +252,9 @@
     "id": "staminaFull",
     "label": "スタミナ満タンをしばらく保っている",
     "type": "binary",
-    "defaultUptime": 0.5,
-    "placeholder": true,
-    "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+    "defaultUptime": 1.0,
+    "placeholder": false,
+    "uptimeBasis": "基本発動する前提で計算 (2026-10-22 に決めた既定)。実際はダッシュや回避でスタミナが減っている時間もあるので、下げたいときは上のスライダーで入れる",
     "exclusiveWith": [],
     "note": "",
     "skills": [
@@ -3473,8 +3473,8 @@
    "activeStates": [
     "hit5plus"
    ],
-   "defaultUptime": 0.5,
-   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "defaultUptime": 1.0,
+   "uptimeBasis": "基本発動する前提で計算 (2026-10-22 に決めた既定)。いつも 5 ヒット以降段にいる扱い。下げたいときは上のスライダーで入れる",
    "condition": "攻撃を当て続けると段階的に上がる (1〜4 ヒット段 / 5 ヒット以降段)",
    "supported": true,
    "levels": [
@@ -3708,8 +3708,8 @@
    "activeStates": [
     "on"
    ],
-   "defaultUptime": 0.5,
-   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "defaultUptime": 1.0,
+   "uptimeBasis": "基本発動する前提で計算 (2026-10-22 に決めた既定)。実際はダッシュや回避でスタミナが減っている時間もあるので、下げたいときは上のスライダーで入れる",
    "condition": "スタミナ満タンをしばらく維持",
    "supported": true,
    "levels": [
@@ -4024,7 +4024,7 @@
     "hit5plus"
    ],
    "defaultUptime": 1.0,
-   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "uptimeBasis": "基本発動する前提で計算 (2026-10-22 に決めた既定)。いつも 5 ヒット以降段にいる扱い。下げたいときは上のスライダーで入れる",
    "condition": "「連撃」スキルの発動中 (1〜4 ヒット段・5 ヒット以降段のどちらでも)",
    "supported": true,
    "levels": [
@@ -4962,8 +4962,8 @@
    "activeStates": [
     "on"
    ],
-   "defaultUptime": 0.5,
-   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "defaultUptime": 1.0,
+   "uptimeBasis": "基本発動する前提で計算 (2026-10-22 に決めた既定)。実際は怒っていない時間もあるので、下げたいときは上のスライダーで入れる",
    "condition": "戦闘中の大型モンスターが怒り状態",
    "supported": true,
    "levels": [
@@ -5843,8 +5843,8 @@
    "activeStates": [
     "on"
    ],
-   "defaultUptime": 0.5,
-   "uptimeBasis": "仮置き (根拠なし。人が発動率を入れる前提)",
+   "defaultUptime": 1.0,
+   "uptimeBasis": "基本発動する前提で計算 (2026-10-22 に決めた既定)。実際は怒っていない時間もあるので、下げたいときは上のスライダーで入れる",
    "condition": "戦闘中の大型モンスターが怒り状態",
    "supported": true,
    "levels": [

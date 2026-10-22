@@ -97,6 +97,7 @@ function ResultRow({ row, onOpen, players }) {
           ${multi && html`<${PlayersMark} players=${players} />`}
           <${RowDiff} row=${row} />
           ${row.sameAsTop && html`<span class="sr-tie" data-sr-tie>1 位と同じ値</span>`}
+          ${!row.sameAsTop && row.sameAsPrev && html`<span class="sr-tie" data-sr-tie="prev">上と同じ値</span>`}
         </span>
         ${row.killCombos != null && html`
           <span class="sr-kill" data-sr-row-kill=${row.killCombos}>討伐まで 約 ${formatNumber(row.killCombos, 0)} 回 (目安) <${PlayersMark} players=${players} /></span>`}
@@ -141,12 +142,16 @@ const hasWarning = (r, code) => !!(r && r.warnings.some((w) => w.code === code))
 function ResultNotes({ snap, zeroed, rows, K }) {
   const r = snap.result;
   const ties = F.tiesWithTop(rows);
+  // 1 位とは違う値で、同じ値が続く順位 (例 2〜10 位)
+  const runs = F.tieRuns(rows);
   const two = rows.some((x) => x.second);
   return html`
     ${!snap.busy && snap.improved && snap.status !== 'cancelled' && html`
       <p class="hint" data-sr-note="improved">途中の結果より良い組が見つかったので、差し替えました。</p>`}
     ${ties > 1 && html`
       <p class="hint" data-sr-note="ties">上から ${ties} 件は同じ値です (どれを選んでも火力の目安は同じです)。スキルや空きスロットの違いで選んでください。</p>`}
+    ${runs.length > 0 && html`
+      <p class="hint" data-sr-note="ties-more">${runs.map((x) => `${x.from}〜${x.to} 位`).join('・')}は${runs.length > 1 ? '、それぞれ' : ''}同じ値です。${ties > 1 ? '' : 'スキルや空きスロットの違いで選んでください。'}</p>`}
     ${two && K > rows.length && html`<p class="hint" data-sr-note="two-top">武器 2 本の案は、上位 ${rows.length} 件の防具に合わせたものです (出す件数より少なくなります)。</p>`}
     ${snap.status === 'stopped' && !hasWarning(r, 'budget-stopped') && html`
       <p class="hint" data-sr-note="stopped">時間で打ち切りました (見つかった組を出しています)。</p>`}
@@ -303,6 +308,7 @@ export function ResultSheet({ open, row, idx, onClose, onApply, zeroed = 0, play
           <p data-sr-sheet-kill>討伐まで 約 ${formatNumber(row.killCombos, 0)} 回${row.baseCombos != null ? ` (いまの装備は 約 ${formatNumber(row.baseCombos, 0)} 回)` : ''} <${PlayersMark} players=${players} /></p>`}
         ${F.baseText(row, { zeroed, players }) && html`<p class="hint" data-sr-sheet-base>比べた基準: ${F.baseText(row, { zeroed, players })}</p>`}
         ${row.sameAsTop && html`<p class="hint">1 位と同じ値の組です。</p>`}
+        ${!row.sameAsTop && row.sameAsPrev && html`<p class="hint">1 つ上の順位と同じ値の組です。</p>`}
         ${Number(players) > 1 && (row.killCombos != null || row.scoreKind === 'combos') && html`
           <p class="hint">回数は ${players} 人ぶんの体力を、この装備 1 人で削る目安です (相手タブの「1 人あたり」とは違います)。人数の倍率の読み方は確かめていません。</p>`}
         <p class="hint">${row.changeText}</p>

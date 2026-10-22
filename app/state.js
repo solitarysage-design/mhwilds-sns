@@ -150,8 +150,13 @@ function refOrNull(x) {
   return null;
 }
 
+/**
+ * 発動率の 0〜1。読めない値は null (= 入れていない。既定の値で計算する)。damage.js の toProb と同じ読み方:
+ * null・空の文字・配列などを Number で 0 にして「0% を入れた」にしない (既定が 100% の条件で 100 ポイントずれるため)
+ */
 function clamp01(x) {
-  const n = Number(x);
+  if (typeof x === 'boolean') return x ? 1 : 0;
+  const n = typeof x === 'number' ? x : typeof x === 'string' && x.trim() !== '' ? Number(x) : NaN;
   if (!Number.isFinite(n)) return null;
   return Math.min(1, Math.max(0, n));
 }

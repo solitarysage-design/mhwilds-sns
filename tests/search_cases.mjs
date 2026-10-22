@@ -8,7 +8,9 @@
 // B3 = 武器を片手剣 95 本から探す (ほかは B1 と同じ)
 // B4 = 泣シミュ型 (攻撃3・見切り3・超会心3・弱点特効5・挑戦者5・渾身3 を満たす構成)。B4x = 満たせない必須 (攻撃5・見切り5・弱点特効5・超会心5)
 // B5 = B1 の相手を 頭 6 割・左翼 4 割
-// B1z・B3z・B5z = 仮置きの発動率を 0% にしたもの (探すタブの既定の条件)
+// B1z・B3z・B5z = 仮置きの発動率を 0% にしたもの (探すタブの既定の条件)。2026-10-22 から怒り・連撃・スタミナ満タンは仮置きでなく
+//   本人の前提 (100%) なので、挑戦者・連撃・渾身が関係スキルに入り、B&B は予算の中で最後まで終わらない
+// B3z0 = B3z からさらに本人の前提の 3 条件も 0% にしたもの (2026-10-21 までの B3z と同じ条件。B&B を最後まで回すテスト用)
 //
 // S1〜S3 = 相手に合わせて探す (recommend.js の buildPlan → planToJob の Job。docs/RECOMMEND_DESIGN.md 6.4 節。makePlanCases):
 // S1 = ヌ・エグドラの歴戦王・『黒き揺り篭の吾子』・B1 の武器 (いまの武器)・バランス (環境適応 Lv2 + 火属性やられ → 探索 2 回 + 火力の差)
@@ -90,6 +92,8 @@ export function makeCases(raw) {
   // 仮置きの発動率の条件を全部 0% にしたもの (探すタブの既定。本人の決定: 仮置きは探索では 0% として扱う)
   const zeroPlaceholders = Object.fromEntries(listOf(raw.skillEffects.rules, 'conditionGroups').filter((g) => g.placeholder)
     .map((g) => [g.id, g.type === 'categorical' ? {} : 0]));
+  // さらに本人の前提 (2026-10-22。怒り・連撃・スタミナ満タン = 既定 100%) も 0% にしたもの (条件つきスキルがほぼ効かない)
+  const zeroAssumed = { ...zeroPlaceholders, enraged: 0, chain: {}, staminaFull: 0 };
   const cases = {
     B1: { ...base },
     B2: { ...base, required: req([['耐震', 3], ['風圧耐性', 3], ['回避性能', 2]]) },
@@ -103,7 +107,9 @@ export function makeCases(raw) {
   cases.B1z = { ...cases.B1, uptimes: zeroPlaceholders };
   cases.B3z = { ...cases.B3, uptimes: zeroPlaceholders };
   cases.B5z = { ...cases.B5, uptimes: zeroPlaceholders };
-  return { cases, artian, skillId, targetOf, zeroPlaceholders };
+  // B3z0 = 本人の前提も 0% (2026-10-21 までの B3z と同じ。B&B が 1 秒ほどで最後まで終わる。最後まで回すテスト用)
+  cases.B3z0 = { ...cases.B3, uptimes: zeroAssumed };
+  return { cases, artian, skillId, targetOf, zeroPlaceholders, zeroAssumed };
 }
 
 /** createSearch に渡す data (data.js の core と同じ形: 生データ + skillEffects / motions。索引は createSearch が作る) */

@@ -146,15 +146,23 @@ test('同じ条件で動くスキルは一緒に発動する (挑戦者と巨戟
   // 怒り中: 攻撃 220・会心 15% → 物理 220 × (1 + 0.15 × 0.25) = 228.25
   //   属性 300 × 1.3 + 40 = 430 → 43 × 0.75 (黄) × (1 + 0.15 × 0.15) = 32.975625 → 計 261.225625
   // 怒っていない: 物理 200、属性 30 × 0.75 = 22.5 → 計 222.5
-  // 発動率 0.5 (既定・仮置き): (261.225625 + 222.5) / 2 = 241.8628125
+  // 発動率 0.5 (人が入れた値): (261.225625 + 222.5) / 2 = 241.8628125
   //   (スキルごとに独立と扱うと 4 パターンで 241.80796875 になる)
-  const r = comboExpected(input);
+  const r = comboExpected({ ...input, uptimes: { enraged: 0.5 } });
   close(r.total, 241.8628125, 1e-9);
   assert.equal(r.patterns, 2);
   assert.equal(r.conditions.length, 1);
-  assert.equal(r.conditions[0].placeholder, true);
+  assert.equal(r.conditions[0].fromInput, true);
+  // 既定 (本人の前提 2026-10-22: 基本発動する = 100%): 怒り中だけの 1 パターン。仮置きではない
+  const d = comboExpected(input);
+  close(d.total, 261.225625, 1e-9);
+  assert.equal(d.patterns, 1);
+  assert.deepEqual([d.conditions[0].uptime, d.conditions[0].placeholder, d.conditions[0].fromInput], [1, false, false]);
+  assert.match(d.conditions[0].uptimeBasis, /^基本発動する前提で計算/);
   close(comboExpected({ ...input, uptimes: { enraged: 1 } }).total, 261.225625, 1e-9);
   close(comboExpected({ ...input, uptimes: { enraged: 0 } }).total, 222.5, 1e-9);
+  // 本人が入れた値が既定より優先: 0.4 → 261.225625 × 0.4 + 222.5 × 0.6 = 237.99025
+  close(comboExpected({ ...input, uptimes: { enraged: 0.4 } }).total, 237.99025, 1e-9);
 });
 
 test('同時に起きない条件 (exclusive) は「両方発動」に重みを付けず、各条件の発動率は保つ', () => {
@@ -316,8 +324,14 @@ test('連撃は段階のある条件 (未発動 / 1〜4 ヒット段 / 5 ヒッ�
   // 未発動: 100 + 200/10 × 0.75 = 115
   // 1〜4 ヒット段: 105 + 250/10 × 0.75 = 123.75
   // 5 ヒット以降段: 118 + 340/10 × 0.75 = 143.5
-  // 既定 (仮置き) 1〜4 段 0.5 / 5 段以降 0.5 → 133.625
-  close(comboExpected(base).total, 133.625);
+  // 既定 (本人の前提 2026-10-22: いつも 5 ヒット以降段) → 143.5。1 パターンだけ (未発動・1〜4 段は数えない)
+  const def = comboExpected(base);
+  close(def.total, 143.5);
+  assert.equal(def.patterns, 1);
+  assert.deepEqual(def.conditions[0].uptime, { hit1to4: 0, hit5plus: 1 });
+  assert.equal(def.conditions[0].placeholder, false);
+  // 1〜4 段 0.5 / 5 段以降 0.5 (2026-10-21 までの既定の値) → 133.625
+  close(comboExpected({ ...base, uptimes: { chain: { hit1to4: 0.5, hit5plus: 0.5 } } }).total, 133.625);
   // 1〜4 段 0.3 / 5 段以降 0.5 / 未発動 0.2 → 23 + 37.125 + 71.75 = 131.875
   const r = comboExpected({ ...base, uptimes: { chain: { hit1to4: 0.3, hit5plus: 0.5 } } });
   close(r.total, 131.875);
@@ -336,9 +350,9 @@ test('連撃は段階のある条件 (未発動 / 1〜4 ヒット段 / 5 ヒッ�
   close(comboExpected({ ...base, uptimes: { 'chain.hit5plus': 1 } }).total, 143.5);
   // 入れ子の形があればそちらが優先
   close(comboExpected({ ...base, uptimes: { chain: { hit5plus: 1 }, 'chain.hit1to4': 1 } }).total, 143.5);
-  // 数で渡すなど読めない値は既定値で計算して警告
+  // 数で渡すなど読めない値は既定値 (5 ヒット以降段 100%) で計算して警告
   const bad = comboExpected({ ...base, uptimes: { chain: 0.9 } });
-  close(bad.total, 133.625);
+  close(bad.total, 143.5);
   assert.deepEqual(bad.warnings.map((w) => w.code), ['bad-uptime']);
 });
 
@@ -377,6 +391,64 @@ test('条件グループのデータ: 条件つきで計算するスキルは全
   // 根拠のある既定値 (ヌシの魂・祈り) は仮置きではない
   assert.equal(groups.find((g) => g.id === 'beforeGuts').placeholder, false);
   assert.equal(groups.find((g) => g.id === 'festival').placeholder, false);
+  // 仮置きでないのは、根拠のある既定値 2 つと本人の前提 3 つだけ (残りは全部仮置き 50%)
+  assert.deepEqual(groups.filter((g) => !g.placeholder).map((g) => g.id).sort(),
+    ['beforeGuts', 'chain', 'enraged', 'festival', 'staminaFull']);
+  for (const g of groups.filter((x) => x.placeholder)) {
+    assert.deepEqual(g.type === 'categorical' ? Object.values(g.defaultUptime) : [g.defaultUptime],
+      g.type === 'categorical' ? g.states.slice(1).map(() => 0.5) : [0.5], g.id);
+  }
+});
+
+test('本人の前提 (2026-10-22「基本発動する前提で」): 怒り・連撃・スタミナ満タンは既定 100% で、仮置きではない', () => {
+  const groups = EFFECTS.rules.conditionGroups;
+  const g = (id) => groups.find((x) => x.id === id);
+  assert.deepEqual([g('enraged').defaultUptime, g('enraged').placeholder], [1, false]);
+  assert.deepEqual([g('chain').defaultUptime, g('chain').placeholder], [{ hit1to4: 0, hit5plus: 1 }, false]);
+  assert.deepEqual([g('staminaFull').defaultUptime, g('staminaFull').placeholder], [1, false]);
+  for (const id of ['enraged', 'chain', 'staminaFull']) {
+    // 根拠の文は火力タブの発動率の欄 (その条件のスライダーのすぐ下) に出るので、「火力タブで」とは書かない
+    assert.match(g(id).uptimeBasis, /^基本発動する前提で計算 \(2026-10-22 に決めた既定\)。.*上のスライダーで入れる$/, id);
+    assert.doesNotMatch(g(id).uptimeBasis, /仮置き|火力タブ/, id);
+  }
+  // スキルの defaultUptime (主効果が出る割合の参考値) も 100%。兇爪竜の力は連撃のどの段でも
+  for (const name of ['挑戦者', '巨戟龍の黙示録', '連撃', '兇爪竜の力', '渾身']) {
+    assert.equal(EFFECTS.effects[skillIdByName(name)].defaultUptime, 1, name);
+  }
+  // 何も入れないと、3 条件とも「発動中」だけの 1 パターン (0% の段を数え上げない = 0% のときと同じ速さ)
+  const skills = ['挑戦者', '巨戟龍の黙示録', '連撃', '兇爪竜の力', '渾身'].map((name) => ({ skillId: skillIdByName(name), level: 2 }));
+  const input = {
+    weapon: { attack: 200, affinity: 0, element: { type: 'fire', value: 300 } }, sharpness: 'white', skills,
+    effects: EFFECTS, motions: ONE_HIT_EARLY, combo: ['m'], target: { hitzone: { slash: 60, fire: 20 } },
+  };
+  const on = comboExpected(input);
+  assert.equal(on.patterns, 1);
+  assert.equal(on.conditions.filter((c) => c.placeholder).length, 0);
+  const all = { enraged: 1, chain: { hit5plus: 1 }, staminaFull: 1 };
+  close(on.total, comboExpected({ ...input, uptimes: all }).total, 1e-12);
+  const off = comboExpected({ ...input, uptimes: { enraged: 0, chain: {}, staminaFull: 0 } });
+  assert.equal(off.patterns, 1);
+  assert.ok(on.total > off.total);
+  // 本人が入れた値が優先 (怒り 40%): 2 パターン。怒り 100% と 0% の 4:6 の加重平均
+  const mine = comboExpected({ ...input, uptimes: { enraged: 0.4 } });
+  assert.equal(mine.patterns, 2);
+  const hi = comboExpected({ ...input, uptimes: { enraged: 1 } }).total;
+  const lo = comboExpected({ ...input, uptimes: { enraged: 0 } }).total;
+  close(mine.total, 0.4 * hi + 0.6 * lo, 1e-9);
+});
+
+test('仮置きの条件に値を入れると仮でなくなる (火力タブの「仮」の印のもと。0% を入れても同じ)', () => {
+  // 本人の前提の 3 条件は仮でなくなったので、残っている仮置きの条件 (体力 35% 以下 = 火事場力) で確かめる
+  const input = {
+    weapon: { attack: 200, affinity: 0, element: null }, sharpness: 'white', skills: [{ skillId: skillIdByName('火事場力'), level: 5 }],
+    effects: EFFECTS, motions: ONE_HIT_EARLY, combo: ['m'], target: { hitzone: { slash: 60 } },
+  };
+  const hpLow = (uptimes) => comboExpected({ ...input, uptimes }).conditions.find((c) => c.id === 'hpLow');
+  assert.deepEqual([hpLow({}).placeholder, hpLow({}).fromInput, hpLow({}).uptime], [true, false, 0.5]);
+  assert.deepEqual([hpLow({ hpLow: 0.3 }).placeholder, hpLow({ hpLow: 0.3 }).fromInput, hpLow({ hpLow: 0.3 }).uptime], [false, true, 0.3]);
+  assert.deepEqual([hpLow({ hpLow: 0 }).placeholder, hpLow({ hpLow: 0 }).fromInput], [false, true]);
+  // null は「入れていない」(既定の仮置き 50% のまま)
+  assert.deepEqual([hpLow({ hpLow: null }).placeholder, hpLow({ hpLow: null }).fromInput], [true, false]);
 });
 
 test('モーション値はゲームデータどおり (ジャストラッシュ・集中急所突き・溜め斬り落とし)', () => {

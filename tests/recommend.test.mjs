@@ -599,22 +599,45 @@ test('装備固定のクエストは探さない (体力は出す)。相手を�
 
 test('仮置きの発動率: 既定は 0% で探す (本人が入れた値はそのまま)。keep なら火力タブの値のまま', () => {
   const groups = effects.rules.conditionGroups.filter((g) => g.placeholder);
-  const zero = R.searchUptimes(effects, { enraged: 0.7 }, 'zero');
-  assert.equal(zero.uptimes.enraged, 0.7);
+  const zero = R.searchUptimes(effects, { hpLow: 0.7 }, 'zero');
+  assert.equal(zero.uptimes.hpLow, 0.7);
   assert.equal(zero.placeholders.length, groups.length - 1);
   for (const p of zero.placeholders) {
     const g = groups.find((x) => x.id === p.id);
     assert.deepEqual(zero.uptimes[p.id], g.type === 'categorical' ? {} : 0);
   }
-  const keep = R.searchUptimes(effects, { enraged: 0.7 }, 'keep');
-  assert.deepEqual(keep.uptimes, { enraged: 0.7 });
+  const keep = R.searchUptimes(effects, { hpLow: 0.7 }, 'keep');
+  assert.deepEqual(keep.uptimes, { hpLow: 0.7 });
   assert.ok(keep.placeholders.every((p) => !p.zeroed));
-  // 平らなキー ("chain.hit5plus") で入れた条件も本人の値として残す
-  assert.equal(R.searchUptimes(effects, { 'chain.hit5plus': 0.3 }, 'zero').uptimes.chain, undefined);
+  // 平らなキー ("frenzy.overcome") で入れた条件も本人の値として残す
+  assert.equal(R.searchUptimes(effects, { 'frenzy.overcome': 0.3 }, 'zero').uptimes.frenzy, undefined);
   // planToJob で選び直せる
   const plan = planOf(NU_UDRA, AT);
-  assert.equal(R.planToJob(plan).runs[0].input.uptimes.enraged, 0);
-  assert.equal(R.planToJob(plan, { placeholders: 'keep' }).runs[0].input.uptimes.enraged, undefined);
+  assert.equal(R.planToJob(plan).runs[0].input.uptimes.hpLow, 0);
+  assert.equal(R.planToJob(plan, { placeholders: 'keep' }).runs[0].input.uptimes.hpLow, undefined);
+  // 0% にした数の注意 (仮置きは 50% のものだけ)
+  const msg = plan.warnings.find((w) => w.code === 'placeholder-uptimes').message;
+  assert.ok(msg.includes(`仮置き (50%) の条件 ${groups.length} 個を 0% に`), msg);
+});
+
+test('本人の前提 (怒り・連撃・スタミナ満タン。2026-10-22) は 0% にせず既定の 100% で探す。本人が入れた値が優先', () => {
+  for (const mode of ['zero', 'keep']) {
+    const up = R.searchUptimes(effects, {}, mode);
+    for (const id of ['enraged', 'chain', 'staminaFull']) {
+      assert.equal(id in up.uptimes, false, `${mode}: ${id} は触らない (既定の 100% のまま)`);
+      assert.ok(!up.placeholders.some((p) => p.id === id), `${mode}: ${id} は仮の一覧に出ない`);
+    }
+  }
+  assert.equal(R.searchUptimes(effects, { enraged: 0.4 }, 'zero').uptimes.enraged, 0.4);
+  const plan = planOf(NU_UDRA, AT);
+  const inp = R.planToJob(plan).runs[0].input;
+  assert.equal(inp.uptimes.enraged, undefined);
+  assert.equal(inp.uptimes.hpLow, 0, '火事場力の条件 (仮置き) は 0%');
+  const mine = planOf(NU_UDRA, AT, { current: { ...currentOf(), uptimes: { enraged: 0.4, 'chain.hit5plus': 0.6 } } });
+  const mi = R.planToJob(mine).runs[0].input;
+  assert.equal(mi.uptimes.enraged, 0.4);
+  assert.equal(mi.uptimes['chain.hit5plus'], 0.6);
+  assert.equal(mi.uptimes.chain, undefined);
 });
 
 // ---------------------------------------------------------------- 並べ直し

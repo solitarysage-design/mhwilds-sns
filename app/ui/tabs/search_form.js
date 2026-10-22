@@ -106,6 +106,54 @@ export function placeholderConditions(effects, uptimes = {}) {
   });
 }
 
+/** 発動率の短い文: 0% の段を省く (例「5 ヒット以降段 100%」)。全部 0% なら「0%」。binary は uptimeText と同じ */
+function shortUptimeText(g, value) {
+  if (g.type !== 'categorical') return uptimeText(g, value);
+  const v = isObj(value) ? value : {};
+  const on = (g.states || []).filter((s) => s.id !== g.offState && Number(v[s.id]) > 0)
+    .map((s) => `${stateLabel(g, s.id)} ${Math.round(Number(v[s.id]) * 100)}%`);
+  return on.join('・') || '0%';
+}
+
+/**
+ * 仮でない条件 (根拠のある既定値と本人の前提。placeholder: false) の一覧。どちらの探し方でも火力タブと同じ値で探す
+ * (本人が値を入れていなければ既定の値。本人の前提 (2026-10-22) = 怒り・連撃 5 ヒット以降段・スタミナ満タンは 100%)。
+ * fromInput = 本人が火力タブで値を入れた (平らなキー "<id>.<段 id>" も)。valueText = 使う値の短い文 (0% の段を省く)。
+ * @returns {{id, label, fromInput, valueText, basis, skills: string[]}[]}
+ */
+export function fixedConditions(effects, uptimes = {}) {
+  const groups = (effects && effects.rules && Array.isArray(effects.rules.conditionGroups)) ? effects.rules.conditionGroups : [];
+  const u = isObj(uptimes) ? uptimes : {};
+  return groups.filter((g) => isObj(g) && g.id && g.placeholder === false).map((g) => {
+    const has = (k) => Object.prototype.hasOwnProperty.call(u, k) && u[k] != null;
+    let value = has(g.id) ? u[g.id] : undefined;
+    if (value === undefined && g.type === 'categorical') {
+      // 平らなキーは「発動していない」段のもの ("chain.none") を読まない (damage.js の resolveConditions と同じ)
+      const flat = {};
+      for (const st of g.states || []) if (st.id !== g.offState && has(`${g.id}.${st.id}`)) flat[st.id] = u[`${g.id}.${st.id}`];
+      if (Object.keys(flat).length) value = flat;
+    }
+    const fromInput = value !== undefined;
+    return {
+      id: g.id, label: g.label || g.id, fromInput, valueText: shortUptimeText(g, fromInput ? value : g.defaultUptime),
+      basis: g.uptimeBasis || '', skills: (g.skills || []).map((x) => x && x.name).filter(Boolean),
+    };
+  });
+}
+
+/**
+ * 探すタブの発動率のカード (search.js の PlaceholderCard) の行の分け方。
+ * still = 本人が値を入れていない仮置きの条件 (探索の既定では 0%)、mine = 火力タブで値を入れた条件 (仮置きも仮でない条件も。
+ * どちらの探し方でもその値で探す)、preset = 値を入れていない仮でない条件 (根拠のある既定値と本人の前提。既定の値で探す)
+ * @param placeholders placeholderConditions の結果 @param fixed fixedConditions の結果
+ * @returns {{still, mine, preset}}
+ */
+export function uptimeCardRows(placeholders = [], fixed = []) {
+  const p = Array.isArray(placeholders) ? placeholders : [];
+  const f = Array.isArray(fixed) ? fixed : [];
+  return { still: p.filter((x) => !x.fromInput), mine: [...p, ...f].filter((x) => x.fromInput), preset: f.filter((x) => !x.fromInput) };
+}
+
 /**
  * 探すときの発動率。policy 'zero' なら、本人が値を入れていない仮置きの条件を 0% にする
  * (binary は 0、段階のある条件は {} = 全部の段が 0%)。'keep' なら火力タブの値 (state.uptimes) のまま。
@@ -651,6 +699,9 @@ export function valueOf(r) {
   return num(Number(isObj(r.score) ? r.score.value : r.value));
 }
 
+/** 2 つの値が同じか (どちらも数で、相対 1e-9 まで。結果の行の「1 位と同じ値」「上と同じ値」) */
+const sameValue = (a, b) => a != null && b != null && Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(b));
+
 /** 2 つの結果の 1 位が違うか (値か装備が違う) */
 export function topChanged(prev, next) {
   const a = prev && prev.results && prev.results[0];
@@ -816,7 +867,7 @@ function baseObjOf(baseline) {
  *             startBuild (探し始めた時の装備 = summary.startBuild。無ければ結果の行の baseline を使う), gamma}
  * @returns 行 [{rank, value, scoreKind, diffPct (期待値の差 %), diffCombos (回数の差), diffTPct (回数の差 %。回数を切り上げて
  *   数えられないとき。+ なら少ない), combosTotal, killCombos (1 体の討伐までの回数), baseValue / baseCombos / baseKind (比べた基準),
- *   sameAsTop (1 位と同じ値), ...}]
+ *   sameAsTop (1 位と同じ値), sameAsPrev (1 つ上の行と同じ値), ...}]
  */
 export function resultRows(result, ctx) {
   const { idx, currentBuild, currentSkills = [], baseline = null, startBuild = null, gamma = null } = ctx;
@@ -855,7 +906,8 @@ export function resultRows(result, ctx) {
       rank: Number(r.rank) || i + 1, index: i, value, scoreKind, diffPct, diffCombos, diffTPct, combosTotal, diff, changeText: changeText(diff),
       killCombos: perSubject.length === 1 ? num(perSubject[0].combos) : null,
       baseKind, baseValue: baseKind != null ? num(b.value) : null, baseCombos,
-      sameAsTop: i > 0 && top != null && value != null && Math.abs(value - top) <= 1e-9 * Math.max(1, Math.abs(top)),
+      sameAsTop: i > 0 && sameValue(value, top),
+      sameAsPrev: i > 0 && sameValue(value, valueOf(result.results[i - 1])),
       skills, skillsText: mainSkillsText(skills), skillDiff: skillDiff(currentSkills, skills),
       freeSlots: isObj(r.freeSlots) ? r.freeSlots : (br ? freeSlotsOf(br) : null),
       weaponName: w ? weaponName(w) : '武器なし',
@@ -874,6 +926,22 @@ export function resultRows(result, ctx) {
 /** 1 位と同じ値の行の数 (1 位を含む。2 件以上同じなら「同じ値の組が n 件」と出す) */
 export function tiesWithTop(rows) {
   return rows.length ? 1 + rows.filter((r) => r.sameAsTop).length : 0;
+}
+
+/**
+ * 1 位を含まない、同じ値が続く順位のまとまり (例 2〜10 位が同じ値なら [{from: 2, to: 10}])。1 位と同じ値のまとまりは
+ * tiesWithTop で出すので入れない。
+ * @returns {{from, to}[]} from / to は順位 (rank)
+ */
+export function tieRuns(rows) {
+  const out = [];
+  let start = -1;
+  for (let i = 1; i <= rows.length; i++) {
+    const cont = i < rows.length && rows[i].sameAsPrev && !rows[i].sameAsTop;
+    if (cont && start < 0) start = i - 1;
+    if (!cont && start >= 0) { out.push({ from: rows[start].rank, to: rows[i - 1].rank }); start = -1; }
+  }
+  return out;
 }
 
 /**

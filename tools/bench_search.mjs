@@ -34,7 +34,11 @@ const TARGETS = {
   B4: { firstMs: 100 }, B4x: { doneMs: 50 },
 };
 const VALUE_TOL = { top1: 0.003, rank: 0.02 };
-/** 既知の最良 (証明は無い。docs/SEARCH_DESIGN.md 5.1 節の基準。3 方式の試作で見つかった値) */
+/**
+ * 既知の最良 (証明は無い。docs/SEARCH_DESIGN.md 5.1 節の基準。3 方式の試作で見つかった値)。
+ * 2026-10-21 までのデータ (怒り・連撃・スタミナ満タンが仮置き 50%) の値。2026-10-22 の本人の前提 (100%) の後は B1〜B5 の値が
+ * 上がったので、--make-ref では新しい探索の値の方が大きく、使われない (使うのは既知の最良の方が大きいときだけ)
+ */
 const KNOWN_BEST = {
   B1: [920.804, '整数計画・目標列挙・B&B の長時間の試作で一致した値'],
   B2: [866.030, 'B&B の試作の 90 秒 (報告)'],
@@ -368,7 +372,11 @@ async function main() {
         firstSolutionMs: r0.firstSolutionMs != null ? r3(med(runs.map((x) => x.firstSolutionMs))) : null,
         infeasible: r0.infeasible, cpuBusyDuring: load == null ? null : r3(load), otherNodes: otherNodes(),
       };
-      if (!objectiveNone && ref && ref.cases[name]) line.vsRef = compare(r0.top, ref.cases[name]);
+      // 基準が古い (データが変わった) ときは差だけ出して、合否 (ok) は出さない (値の目標を見ていないのと同じなので)
+      if (!objectiveNone && ref && ref.cases[name]) {
+        const c = compare(r0.top, ref.cases[name]);
+        line.vsRef = c && stale ? { ...c, ok: null, stale: true } : c;
+      }
       const tg = TARGETS[name.replace(/z$/, '')];
       if (tg && mode === 'time') {
         line.target = tg;

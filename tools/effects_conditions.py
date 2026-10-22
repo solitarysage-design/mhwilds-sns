@@ -10,8 +10,10 @@
     states        categorical のときの段階 [{id, label}]。offState が「発動していない」段
     offState      categorical の「発動していない」段の id
     defaultUptime binary は数 (0〜1)、categorical は {段の id: 割合} (残りが offState)
-    placeholder   True = 既定の発動率に根拠が無い (仮置き)。画面で人が入れる前提
-    uptimeBasis   既定の発動率の根拠 (仮置きならそう書く)
+    placeholder   True = 既定の発動率に根拠が無い (仮置き)。画面で人が入れる前提。探すタブの既定では 0% にして探す
+                  False = 根拠のある既定値 (根性【果敢】など) か、本人の前提 (本人が決めた既定値。怒り・連撃・渾身)。
+                  探すタブでもこの値で探す
+    uptimeBasis   既定の発動率の根拠 (仮置きならそう書く。本人の前提は「基本発動する前提で計算 (決めた日に決めた既定)。…」と書く)
     exclusiveWith 同時に起きない条件のグループ id (体力満タン と 赤ゲージあり など)。
                   全パターンの加重平均で「両方発動」に重みを付けない
     sources       (あるものだけ) その条件が起きるもとになるもの {skillIds, monsterStatus, label, inactiveText}。
@@ -22,6 +24,12 @@
 from __future__ import annotations
 
 PLACEHOLDER = "仮置き (根拠なし。人が発動率を入れる前提)"
+# 本人の前提 (2026-10-22 本人の決定「基本発動する前提で」)。根拠はゲームデータではなく本人の狩り方なので、
+# 実際に起きない時間を書き添えて、下げたいときは発動率のスライダーで入れてもらう (入れた値が優先)。
+# 根拠の文 (uptimeBasis) は火力タブの発動率の欄で、その条件のスライダーのすぐ下に出る (app/ui/tabs/power.js の ConditionRow) ので、
+# 「火力タブで」ではなく「上のスライダーで」と書く
+OWNER_ASSUMED = "基本発動する前提で計算 (2026-10-22 に決めた既定)。"
+LOWER_BY_SLIDER = "下げたいときは上のスライダーで入れる"
 
 
 def _bin(gid: str, label: str, *, uptime: float = 0.5, basis: str = PLACEHOLDER, placeholder: bool = True,
@@ -48,10 +56,14 @@ CONDITION_GROUPS: list[dict] = [
     _bin("redHp", "体力ゲージに赤い部分がある", exclusive=("hpFull",)),
     _bin("hpLow", "体力が 35% 以下", exclusive=("hpFull",),
          note="赤ゲージありとは同時に起きてよい (体力が満タンでないときだけ起きる)。"),
-    _bin("enraged", "モンスターが怒っている"),
+    _bin("enraged", "モンスターが怒っている", uptime=1.0, placeholder=False,
+         basis=OWNER_ASSUMED + "実際は怒っていない時間もあるので、" + LOWER_BY_SLIDER),
     _cat("chain", "連撃の段階", [("none", "未発動"), ("hit1to4", "1〜4 ヒット段"), ("hit5plus", "5 ヒット以降段")],
-         uptime={"hit1to4": 0.5, "hit5plus": 0.5},
-         note="既定の値 (各 50%) は仮置きで、攻撃を当て続けている前提です。当てていない時間があるなら、その分を未発動に回してください。"),
+         uptime={"hit1to4": 0, "hit5plus": 1.0}, placeholder=False,
+         # 当て始め・当てていない時間の回し方は note (根拠の文のすぐ下に出る) に書くので、根拠の文には重ねて書かない
+         basis=OWNER_ASSUMED + "いつも 5 ヒット以降段にいる扱い。" + LOWER_BY_SLIDER,
+         note="攻撃を当て続けると 1〜4 ヒット段から 5 ヒット以降段に上がる。当て始めの時間は 1〜4 ヒット段に、"
+              "当てていない時間は未発動に回す。"),
     _cat("frenzy", "狂竜症", [("none", "かかっていない"), ("infected", "感染中"), ("overcome", "克服した後")],
          uptime={"infected": 0.5, "overcome": 0.5},
          sources={"skillIds": [106], "monsterStatus": ["frenzy"],
@@ -61,7 +73,8 @@ CONDITION_GROUPS: list[dict] = [
          note="黒蝕竜の力は感染中と克服後で効果が違う。無我の境地は克服後だけ。"
               "黒蝕竜の力も狂竜症を使う相手もいないときは、かかっていない (0%) として計算する。"),
     _bin("latentPower", "力の解放が発動中"),
-    _bin("staminaFull", "スタミナ満タンをしばらく保っている"),
+    _bin("staminaFull", "スタミナ満タンをしばらく保っている", uptime=1.0, placeholder=False,
+         basis=OWNER_ASSUMED + "実際はダッシュや回避でスタミナが減っている時間もあるので、" + LOWER_BY_SLIDER),
     _bin("afterDraw", "武器を出した直後"),
     _bin("justGuard", "ジャストガードの後"),
     _bin("afterKnockback", "ふきとばされた後"),

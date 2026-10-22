@@ -8,7 +8,7 @@ import { loadRepoData, makeCases } from './search_cases.mjs';
 import { makeSmallProblem, bruteForce } from './search_brute.mjs';
 
 const raw = await loadRepoData();
-const { artian, targetOf, skillId } = makeCases(raw);
+const { artian, targetOf, skillId, zeroPlaceholders } = makeCases(raw);
 const HEAD = [{ weight: 1, target: targetOf('アルシュベルド', 'head') }];
 const MIX = [{ weight: 0.6, target: targetOf('アルシュベルド', 'head') }, { weight: 0.4, target: targetOf('アルシュベルド', 'left-wing') }];
 const LB_MIXED = { head: true, chest: false, arms: true, waist: false, legs: true };
@@ -33,11 +33,15 @@ const PROBLEMS = [
   { seed: 7, perPart: 3, charms: 2, targets: MIX, required: [['ヌシの魂', 1]], combo: 3, include: { head: [328], arms: [330] } },
   { seed: 9, perPart: 3, charms: 3, targets: HEAD, required: [['火竜の力', 1]], include: { head: [66], chest: [676], waist: [69] } },
   { seed: 8, perPart: 3, charms: 3, targets: MIX, required: [['挑戦者', 3], ['見切り', 4]], limitBreak: LB_MIXED },
+  // 探すタブの既定の発動率 (仮置きは 0%・本人の前提の怒り・連撃 5 ヒット以降段・スタミナ満タンは 100%。2026-10-22)。
+  // 連撃・渾身・兇爪竜の力 (連撃が要る) も残す。1 位は挑戦者・連撃・渾身・兇爪竜の力が入った組
+  { seed: 22, perPart: 2, charms: 3, targets: MIX, include: { head: [349], waist: [673] }, keepArmor: ['連撃', '渾身'],
+    keepSets: ['兇爪竜の力'], uptimes: zeroPlaceholders, note: '探すタブの既定の発動率', topSkills: ['挑戦者', '連撃', '渾身', '兇爪竜の力'] },
 ];
 
 const outcomes = [];
 for (const pr of PROBLEMS) {
-  const label = `種 ${pr.seed}${pr.required ? ` 必須 ${pr.required.map(([nm, l]) => nm + l).join('・')}` : ''}`;
+  const label = `種 ${pr.seed}${pr.required ? ` 必須 ${pr.required.map(([nm, l]) => nm + l).join('・')}` : ''}${pr.note ? ` (${pr.note})` : ''}`;
   test(`総当たりと一致: ${label}`, () => {
     const required = (pr.required || []).map(([nm, level]) => ({ skillId: skillId(nm), level }));
     const { data, input, info } = makeSmallProblem(raw, artian, { ...pr, required });
@@ -53,6 +57,9 @@ for (const pr of PROBLEMS) {
     const got = ex.results.map((x) => x.value);
     assert.equal(got.length, want.length);
     got.forEach((v, i) => assert.ok(Math.abs(v - want[i]) <= 1e-9 * want[i], `${i + 1} 位: ${v} / 総当たり ${want[i]}`));
+    for (const nm of pr.topSkills || []) {
+      assert.ok(ex.results[0].skills.some((x) => x.skillId === skillId(nm) && x.level > 0), `1 位に ${nm} が入る`);
+    }
 
     // exact (優越の除去あり): 上位 1 件が一致。どの結果も総当たりの値のどれか
     const exd = run({ ...input, mode: 'exact', K }, data);

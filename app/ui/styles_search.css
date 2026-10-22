@@ -15,6 +15,8 @@
 .sr-list { margin: 4px 0 0; padding-left: 1.2em; }
 .sr-list li + li { margin-top: 4px; }
 .sr-small { font-size: 13px; color: var(--text-sub); }
+/* 条件の値の段 (「5 ヒット以降段 100%」など) を途中で折り返さない */
+.sr-nowrap { white-space: nowrap; }
 
 /* 守りのスキルの行 */
 .sr-req-list { list-style: none; margin: 8px 0 0; padding: 0; }

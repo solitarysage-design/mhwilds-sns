@@ -297,8 +297,10 @@ test('上界の前提が崩れる入力: 同時に起きない条件の合計が
   assert.equal(s2.result().quality, 'exact');
 });
 
-test('武器も探す (B3z) の 2 段のふるい: dfs を回す武器を 3 本以下に絞り、全部の武器で回したときと同じ上位。extend で残りの武器も回る', () => {
-  const B3 = { ...cases.B3z, beam: [10, 30], budget: { work: 1e9 } };
+test('武器も探す (B3z0) の 2 段のふるい: dfs を回す武器を 3 本以下に絞り、全部の武器で回したときと同じ上位。extend で残りの武器も回る', () => {
+  // B&B を最後まで回して比べるので、条件つきスキルの条件を全部 0% にした B3z0 (2026-10-21 までの B3z と同じ条件)。
+  // 探すタブの既定の B3z (本人の前提で挑戦者・連撃・渾身が効く) は、B&B が数十秒で終わらない
+  const B3 = { ...cases.B3z0, beam: [10, 30], budget: { work: 1e9 } };
   const { s, r } = run(B3);
   assert.equal(r.status, 'done');
   assert.ok(r.stats.sieve && r.stats.sieve.weapons.length <= 3 && r.stats.sieve.weapons.length >= 1, JSON.stringify(r.stats.sieve));

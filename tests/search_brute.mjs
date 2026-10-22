@@ -46,16 +46,18 @@ export function smallUptimes(effects) {
  * 小さい問題を作る。
  * @param raw tests/search_cases.mjs の loadRepoData() の結果
  * @param o {seed, perPart (2〜3), charms (2〜3), weapon ('w-test' か weapons_sns の id), limitBreak, required, targets,
- *            include: {部位: [必ず入れる防具の id]}}
+ *            include: {部位: [必ず入れる防具の id]},
+ *            keepArmor / keepSets: KEEP_ARMOR_SKILLS / KEEP_SETS に足して残すスキル・シリーズの名前,
+ *            uptimes: 発動率 (省略は smallUptimes。探すタブの既定で解くときは仮置きを 0% にしたもの)}
  * @returns {{data, input, artian, info}}  data は createSearch に渡すデータ (絞ったもの)、input は createSearch の入力
  */
 export function makeSmallProblem(raw, artian, o) {
   const rnd = makeRng(o.seed);
   const skills = raw.skills.skills;
   const sid = (name) => skills.find((s) => s.name === name).id;
-  const keepArmor = new Set(KEEP_ARMOR_SKILLS.map(sid));
+  const keepArmor = new Set([...KEEP_ARMOR_SKILLS, ...(o.keepArmor || [])].map(sid));
   const keepWeapon = new Set(KEEP_WEAPON_SKILLS.map(sid));
-  const keepSets = new Set(KEEP_SETS.map((n) => raw.bonuses.setBonuses.find((b) => b.name === n).id));
+  const keepSets = new Set([...KEEP_SETS, ...(o.keepSets || [])].map((n) => raw.bonuses.setBonuses.find((b) => b.name === n).id));
   const keepGroups = new Set(KEEP_GROUPS.map((n) => raw.bonuses.groupBonuses.find((b) => b.name === n).id));
   const strip = (a) => {
     const sets = [...new Set([...(a.setBonusIds || []), a.setBonusId].filter((x) => x != null && keepSets.has(x)))];
@@ -119,7 +121,7 @@ export function makeSmallProblem(raw, artian, o) {
   const combo = raw.combos.combos[o.combo ?? 0];
   const input = {
     weapons: [o.weapon ?? 'w-test'], extraWeapons: [artian], targets: o.targets, combo,
-    uptimes: smallUptimes(raw.skillEffects), monsterStatus: [], buffs: {}, sharpness: null, required: o.required || [],
+    uptimes: o.uptimes || smallUptimes(raw.skillEffects), monsterStatus: [], buffs: {}, sharpness: null, required: o.required || [],
     charms: { owned: true, fixed: true }, limitBreak, decorations: { owned: null }, armorExclude: [], objective: 'damage', K: o.K ?? 10,
   };
   const info = {

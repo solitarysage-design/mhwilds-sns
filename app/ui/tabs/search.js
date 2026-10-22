@@ -257,10 +257,18 @@ function EquipOptionsCard({ data, idx, form, search, localCharms, targetLoading 
 
 // ---------------------------------------------------------------- 仮置きの発動率
 
-function PlaceholderCard({ form, search }) {
-  const list = form.placeholders || [];
-  const still = list.filter((p) => !p.fromInput);
-  const mine = list.filter((p) => p.fromInput);
+/**
+ * 条件の名前と値の並び (「連撃の段階」5 ヒット以降段 100%・…)。値は段ごと (「・」の区切りごと) に折り返さない
+ * (「5」と「ヒット」の間で切れないように。段が 2 つある長い値でも、段の間では折り返せる)
+ */
+function condList(list) {
+  const value = (t) => String(t).split('・').map((x, j) => html`${j > 0 ? '・' : ''}<span class="sr-nowrap">${x}</span>`);
+  return list.map((p, i) => html`${i > 0 ? '・' : ''}「${p.label}」${value(p.valueText)}`);
+}
+
+function PlaceholderCard({ form, search, fixed = [] }) {
+  // 火力タブで値を入れた条件 (仮置きも仮でない条件も) は mine、仮でない条件 (本人の前提など) の既定の値は preset の行に出す
+  const { still, mine, preset } = F.uptimeCardRows(form.placeholders || [], fixed);
   return html`
     <${Card} title="条件つきスキルの発動率" actions=${html`<${Badge} kind="warn">仮</${Badge}>`}>
       <div data-sr="placeholders" data-sr-placeholder-count=${still.length}>
@@ -272,7 +280,8 @@ function PlaceholderCard({ form, search }) {
         <p class="hint">${search.placeholders === 'zero'
           ? '仮の条件は 0% (起きない) として探します。条件つきのスキルばかり積んだ、現実的でない組が出にくくなります。結果の値は火力タブの値と違うことがあります。'
           : '仮の条件も火力タブの値 (多くは 50%) のまま探します。条件つきのスキルを積んだ組が上に来やすくなります。'}</p>
-        ${mine.length > 0 && html`<p class="hint">火力タブで値を入れた条件 (${mine.map((p) => `${p.label} ${p.valueText}`).join('・')}) は、どちらでもその値で探します。</p>`}
+        ${mine.length > 0 && html`<p class="hint" data-sr-mine>火力タブで値を入れた条件 (${condList(mine)}) は、どちらでもその値で探します。</p>`}
+        ${preset.length > 0 && html`<p class="hint" data-sr-fixed>仮でない条件 (${condList(preset)}) は、どちらでもこの値で探します。変えるときは火力タブで入れてください。</p>`}
         ${still.length > 0 && html`
           <details class="more">
             <summary>仮の条件の一覧 (${still.length} 個)</summary>
@@ -324,6 +333,7 @@ export default function SearchTab({ data, active }) {
   });
   const form = useMemo(() => jobOf(build),
     [build, target, search, comboRef, uptimes, sharpness, tabTarget, data, idx, targetData, combo, localCharms, localWeapons]);
+  const fixed = useMemo(() => F.fixedConditions(data.skillEffects, uptimes), [data, uptimes]);
 
   const { snap, ctrl } = useSearchRun();
   // 「条件が変わりました」の比べ方: 結果の組を装備に入れただけなら、探し始めた時の装備で条件を作り直して比べる
@@ -457,7 +467,7 @@ export default function SearchTab({ data, active }) {
       <${DefenseCard} form=${form} search=${search} />
       <${RequiredCard} data=${data} idx=${idx} search=${search} />
       <${EquipOptionsCard} data=${data} idx=${idx} form=${form} search=${search} localCharms=${localCharms} targetLoading=${targetLoading} />
-      <${PlaceholderCard} form=${form} search=${search} />
+      <${PlaceholderCard} form=${form} search=${search} fixed=${fixed} />
       <${BudgetCard} search=${search} />
       <div class="sr-start" data-sr="start">
         ${form.blockers.map((b) => html`<div key=${b.code} data-sr-blocker=${b.code}><${Notice} kind="warn" title=${b.message} /></div>`)}

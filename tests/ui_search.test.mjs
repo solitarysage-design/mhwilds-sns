@@ -91,30 +91,88 @@ const FIRE_WEAPON = raw.weapons.weapons.find((w) => w.element && w.element.type 
 
 test('仮置きの発動率: 仮の条件の一覧と、0% にして探すときの発動率', () => {
   const all = F.placeholderConditions(raw.skillEffects, {});
+  assert.equal(all.length, raw.skillEffects.rules.conditionGroups.filter((g) => g.placeholder).length);
   assert.ok(all.length >= 20, `仮の条件が ${all.length} 個`);
   assert.ok(all.every((p) => !p.fromInput));
-  assert.ok(all.some((p) => p.id === 'chain' && p.type === 'categorical'));
-  const mine = F.placeholderConditions(raw.skillEffects, { enraged: 0.7 });
-  assert.equal(mine.find((p) => p.id === 'enraged').fromInput, true);
-  assert.equal(mine.find((p) => p.id === 'enraged').valueText, '70%');
+  assert.ok(all.some((p) => p.id === 'frenzy' && p.type === 'categorical'));
+  for (const id of ['enraged', 'chain', 'staminaFull']) assert.ok(!all.some((p) => p.id === id), `${id} は本人の前提なので仮の一覧に出ない`);
+  const mine = F.placeholderConditions(raw.skillEffects, { hpLow: 0.7 });
+  assert.equal(mine.find((p) => p.id === 'hpLow').fromInput, true);
+  assert.equal(mine.find((p) => p.id === 'hpLow').valueText, '70%');
 
-  const z = F.searchUptimes(raw.skillEffects, { enraged: 0.7 }, 'zero');
-  assert.equal(z.enraged, 0.7, '本人が入れた値はそのまま');
+  const z = F.searchUptimes(raw.skillEffects, { hpLow: 0.7 }, 'zero');
+  assert.equal(z.hpLow, 0.7, '本人が入れた値はそのまま');
   assert.equal(z.hpFull, 0);
-  assert.deepEqual(z.chain, {}, '段階のある条件は全部の段 0%');
+  assert.deepEqual(z.frenzy, {}, '段階のある条件は全部の段 0%');
   assert.equal('beforeGuts' in z, false, '仮置きでない条件は触らない');
-  assert.deepEqual(F.searchUptimes(raw.skillEffects, { enraged: 0.7 }, 'keep'), { enraged: 0.7 });
+  assert.equal('enraged' in z, false, '本人の前提も触らない (既定の 100% で探す)');
+  assert.deepEqual(F.searchUptimes(raw.skillEffects, { hpLow: 0.7 }, 'keep'), { hpLow: 0.7 });
 
-  // 0% にすると条件つきのスキル (挑戦者) は効かない = そのスキルが無いときと同じ値
+  // 0% にすると条件つきのスキル (火事場力) は効かない = そのスキルが無いときと同じ値
   const z0 = F.searchUptimes(raw.skillEffects, {}, 'zero');
   const w = L.damageWeapon(L.resolveWeaponRef(FIRE_WEAPON.id, idx));
   const base = { weapon: w, sharpness: 'white', effects: raw.skillEffects, motions: raw.motions, combo: COMBOS.combos[0],
     target: { hitzone: L.DEFAULT_HITZONE, wound: null } };
-  const withSkill = comboExpected({ ...base, skills: [{ skillId: skillId('挑戦者'), level: 5 }], uptimes: z0 }).total;
+  const withSkill = comboExpected({ ...base, skills: [{ skillId: skillId('火事場力'), level: 5 }], uptimes: z0 }).total;
   const none = comboExpected({ ...base, skills: [], uptimes: z0 }).total;
   close(withSkill, none);
-  const kept = comboExpected({ ...base, skills: [{ skillId: skillId('挑戦者'), level: 5 }], uptimes: {} }).total;
+  const kept = comboExpected({ ...base, skills: [{ skillId: skillId('火事場力'), level: 5 }], uptimes: {} }).total;
   assert.ok(kept > none, '火力タブの値 (仮 50%) のままなら効く');
+});
+
+test('本人の前提 (2026-10-22「基本発動する前提で」): 探すタブの既定 (仮は 0%) でも挑戦者・連撃・渾身は 100% で効き、本人が入れた値が優先', () => {
+  const z0 = F.searchUptimes(raw.skillEffects, {}, 'zero');
+  const w = L.damageWeapon(L.resolveWeaponRef(FIRE_WEAPON.id, idx));
+  const base = { weapon: w, sharpness: 'white', effects: raw.skillEffects, motions: raw.motions, combo: COMBOS.combos[0],
+    target: { hitzone: L.DEFAULT_HITZONE, wound: null } };
+  const none = comboExpected({ ...base, skills: [], uptimes: z0 }).total;
+  for (const [name, lv] of [['挑戦者', 5], ['連撃', 5], ['渾身', 3]]) {
+    const skills = [{ skillId: skillId(name), level: lv }];
+    const inSearch = comboExpected({ ...base, skills, uptimes: z0 }).total;
+    assert.ok(inSearch > none * 1.01, `${name} は探索でも効く (${inSearch} / ${none})`);
+    close(inSearch, comboExpected({ ...base, skills, uptimes: {} }).total); // 火力タブの既定と同じ値
+  }
+  // 本人が入れた値 (怒り 40%) が優先: 探す発動率にもそのまま入り、怒り 100% と 0% の 4:6
+  const mine = F.searchUptimes(raw.skillEffects, { enraged: 0.4 }, 'zero');
+  assert.equal(mine.enraged, 0.4);
+  const ch = [{ skillId: skillId('挑戦者'), level: 5 }];
+  close(comboExpected({ ...base, skills: ch, uptimes: mine }).total,
+    0.4 * comboExpected({ ...base, skills: ch, uptimes: z0 }).total + 0.6 * none);
+  // 発動率のカードに出す「仮でない条件」(根拠のある既定値 2 つ + 本人の前提 3 つ)
+  const fixed = F.fixedConditions(raw.skillEffects, {});
+  assert.deepEqual(fixed.map((p) => p.id).sort(), ['beforeGuts', 'chain', 'enraged', 'festival', 'staminaFull']);
+  assert.ok(fixed.every((p) => !p.fromInput));
+  assert.equal(fixed.find((p) => p.id === 'chain').valueText, '5 ヒット以降段 100%');
+  assert.equal(fixed.find((p) => p.id === 'enraged').valueText, '100%');
+  assert.match(fixed.find((p) => p.id === 'staminaFull').basis, /^基本発動する前提で計算 \(2026-10-22/);
+  // 火力タブで値を入れたもの (平らなキーも) は fromInput で、入れた値の文
+  const set = F.fixedConditions(raw.skillEffects, { enraged: 0.4, 'chain.hit1to4': 0.3, 'chain.hit5plus': 0.5 });
+  assert.deepEqual([set.find((p) => p.id === 'enraged').fromInput, set.find((p) => p.id === 'enraged').valueText], [true, '40%']);
+  assert.deepEqual([set.find((p) => p.id === 'chain').fromInput, set.find((p) => p.id === 'chain').valueText],
+    [true, '1〜4 ヒット段 30%・5 ヒット以降段 50%']);
+  assert.equal(set.find((p) => p.id === 'staminaFull').fromInput, false);
+  // 平らなキーは「発動していない」段のもの ("chain.none") を読まない (damage.js と同じ。前は画面だけ「入れた・0%」になった)
+  const offKey = F.fixedConditions(raw.skillEffects, { 'chain.none': 0.5 }).find((p) => p.id === 'chain');
+  assert.deepEqual([offKey.fromInput, offKey.valueText], [false, '5 ヒット以降段 100%']);
+  const up = { 'chain.none': 0.5 };
+  assert.equal(comboExpected({ ...base, skills: [{ skillId: skillId('連撃'), level: 5 }], uptimes: up }).conditions
+    .find((c) => c.id === 'chain').fromInput, false, '計算も「入れていない」');
+  // null は入れていない扱い
+  assert.equal(F.fixedConditions(raw.skillEffects, { enraged: null, 'chain.hit5plus': null }).filter((p) => p.fromInput).length, 0);
+});
+
+test('探すタブの発動率のカードの行: 仮の条件・火力タブで入れた条件・仮でない条件の既定 に分ける', () => {
+  const ph = F.placeholderConditions(raw.skillEffects, { hpLow: 0.3 });
+  const fixed = F.fixedConditions(raw.skillEffects, { enraged: 0.4 });
+  const rows = F.uptimeCardRows(ph, fixed);
+  assert.equal(rows.still.length, ph.length - 1);
+  assert.ok(rows.still.every((p) => !p.fromInput));
+  // 火力タブで入れた条件は、仮置き (体力 35% 以下) も本人の前提 (怒り) も「入れた条件」の行に出す
+  assert.deepEqual(rows.mine.map((p) => [p.id, p.valueText]), [['hpLow', '30%'], ['enraged', '40%']]);
+  // 怒りは「仮でない条件」の行には出さない (入れた値で探すため)
+  assert.deepEqual(rows.preset.map((p) => p.id).sort(), ['beforeGuts', 'chain', 'festival', 'staminaFull']);
+  assert.deepEqual(F.uptimeCardRows(), { still: [], mine: [], preset: [] });
+  assert.deepEqual(F.uptimeCardRows(null, 'x'), { still: [], mine: [], preset: [] });
 });
 
 // ---------------------------------------------------------------- 限界突破・歴戦王
@@ -564,8 +622,27 @@ test('結果: 1 位と同じ値の行に印・同じ値の件数', () => {
   ] }), { idx, currentBuild: b, currentSkills: [], baseline: 800 });
   assert.deepEqual(rows.map((r) => r.sameAsTop), [false, true, false]);
   assert.equal(F.tiesWithTop(rows), 2);
-  assert.equal(F.baseText(rows[0], { zeroed: 23 }), 'いまの装備 800.0 (仮の条件は 0% で計算)');
+  assert.equal(F.baseText(rows[0], { zeroed: 20 }), 'いまの装備 800.0 (仮の条件は 0% で計算)');
   assert.equal(F.tiesWithTop([]), 0);
+  assert.deepEqual(F.tieRuns(rows), []);
+  assert.deepEqual(F.tieRuns([]), []);
+});
+
+test('結果: 1 位とは違う値で同じ値が続く順位 (2〜10 位など) にも印と注', () => {
+  // 2026-10-22 の本人の前提の後、探すタブの既定で「1 位 911.3・2〜10 位が全部 901.8」のような並びが出る (点検の指摘)
+  const b = emptyBuild();
+  const vals = [911.3, 901.8, 901.8, 901.8, 890, 880, 880, 870, 870, 870];
+  const rows = F.resultRows(F.normalizeResult({ status: 'stopped', results: vals.map((value, i) => ({ rank: i + 1, value, build: b })) }),
+    { idx, currentBuild: b, currentSkills: [], baseline: 800 });
+  assert.deepEqual(rows.map((r) => r.sameAsTop), vals.map(() => false));
+  assert.deepEqual(rows.map((r) => r.sameAsPrev), [false, false, true, true, false, false, true, false, true, true]);
+  assert.equal(F.tiesWithTop(rows), 1);
+  assert.deepEqual(F.tieRuns(rows), [{ from: 2, to: 4 }, { from: 6, to: 7 }, { from: 8, to: 10 }]);
+  // 1 位と同じ値のまとまりは tiesWithTop で数え、tieRuns には入れない
+  const top = F.resultRows(F.normalizeResult({ results: [900, 900, 900, 850, 850].map((value, i) => ({ rank: i + 1, value, build: b })) }),
+    { idx, currentBuild: b, currentSkills: [] });
+  assert.equal(F.tiesWithTop(top), 3);
+  assert.deepEqual(F.tieRuns(top), [{ from: 4, to: 5 }]);
 });
 
 test('結果: 壊れた保存データ (行の中の配列に null・装飾品の形が違う など) でも行を作れる', () => {

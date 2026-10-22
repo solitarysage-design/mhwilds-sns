@@ -1052,22 +1052,25 @@ def power_tab_expected_value(page, ctx: Ctx):
             ctx.fail(f"火力タブのスキルなし比が damage.js と合いません: 画面 {vs} / 計算 {exp['vs']}")
         if "既定の肉質" not in page.inner_text(f"{POWER_PANEL} [data-power-target]"):
             ctx.fail("相手を選んでいないのに「既定の肉質」と出ていません")
-        # 発動率: 連撃の段 (仮置きの既定値) → スライダーで 1〜4 段を 0% にすると期待値が変わり、「仮」が消える
+        # 発動率: 連撃の段は本人の前提 (2026-10-22: 5 ヒット以降段 100%。仮ではない) → 「仮」の印は無く、根拠の文が出る。
+        # スライダーで 1〜4 段を 30% にすると期待値が変わり、「既定に戻す」が出る
         chain = f'{POWER_PANEL} [data-condition="chain"]'
         if not page.locator(chain).count():
             ctx.fail("連撃の発動率 (条件 chain) の欄がありません")
         else:
-            if "仮" not in page.inner_text(f"{chain} .pw-cond-title"):
-                ctx.fail("仮置きの発動率に「仮」の印がありません")
-            page.evaluate(JS_SET_RANGE, [f"{chain} input[type=range]", 0])
+            if "仮" in page.inner_text(f"{chain} .pw-cond-title"):
+                ctx.fail("本人の前提の発動率 (連撃) に「仮」の印が付いています")
+            if "基本発動する前提で計算" not in page.inner_text(chain):
+                ctx.fail("連撃の発動率に本人の前提の根拠の文が出ていません")
+            page.evaluate(JS_SET_RANGE, [f"{chain} input[type=range]", 0.3])
             page.wait_for_function(
                 "(v) => Number(document.querySelector('[data-tab-panel=\"power\"] [data-power-total]').dataset.powerTotal) !== v",
                 arg=total, timeout=5000)
             up = _app_state(page, "s.uptimes.chain")
-            if not isinstance(up, dict) or up.get("hit1to4") != 0:
+            if not isinstance(up, dict) or up.get("hit1to4") != 0.3 or up.get("hit5plus") != 0.7:
                 ctx.fail(f"連撃のスライダーが state.uptimes に入っていません: {up}")
-            if "仮" in page.inner_text(f"{chain} .pw-cond-title"):
-                ctx.fail("発動率を入れた後も「仮」の印が残っています")
+            if "既定に戻す" not in page.inner_text(chain):
+                ctx.fail("発動率を入れた後に「既定に戻す」がありません")
             exp = page.evaluate(JS_POWER_EXPECT, [{"w": 1, "default": True}])
             if not _close(_power_total(page), exp["total"]):
                 ctx.fail(f"発動率を変えた後の期待値が damage.js と合いません: 画面 {_power_total(page)} / 計算 {exp['total']}")
@@ -1086,6 +1089,15 @@ def power_tab_expected_value(page, ctx: Ctx):
             ctx.fail(f"スキル火力表の行が少ない ({n} 行)")
         if not page.locator(f"{POWER_PANEL} [data-power-unsupported]").count():
             ctx.fail("スキル火力表に「未対応 (計算に入れていません)」の一覧がありません")
+        # 仮置きの条件のスキル (火事場力) には「(仮)」、本人の前提の挑戦者 (怒り 100%) には付かない
+        ids = page.evaluate("""async () => { const D = await import('./app/data.js'); const s = D.getCoreData().lists.skills;
+          const id = (n) => (s.find((x) => x.name === n) || {}).id; return { hl: id('火事場力'), ch: id('挑戦者') }; }""")
+        hl_row = page.locator(f'{POWER_PANEL} [data-power-table] tr[data-skill-row="{ids["hl"]}"] .pw-name')
+        ch_row = page.locator(f'{POWER_PANEL} [data-power-table] tr[data-skill-row="{ids["ch"]}"] .pw-name')
+        if not hl_row.count() or "(仮)" not in hl_row.inner_text():
+            ctx.fail("スキル火力表の火事場力 (仮置きの条件) に「(仮)」がありません")
+        if not ch_row.count() or "(仮)" in ch_row.inner_text() or "100%" not in ch_row.inner_text():
+            ctx.fail(f"スキル火力表の挑戦者 (本人の前提 100%) の書き方が違います: {ch_row.inner_text() if ch_row.count() else 'なし'}")
         check_layout(page, ctx, "火力タブ (装備あり)")
         ctx.shot("power-with-build")
     finally:
@@ -1738,6 +1750,22 @@ def search_walkthrough(browser, ctx_opts, server, base_url) -> Ctx:
         page.locator(f'{P} [data-sr="placeholders"] summary').click()
         if page.locator(f'{P} [data-sr-placeholder-list] li').count() != n:
             ctx.fail("探す: 仮の条件の一覧の行数が数と合いません")
+        # 本人の前提 (怒り・連撃・スタミナ満タン 100%。2026-10-22) は仮の一覧に入れず、「仮でない条件」の行に出す
+        listed = page.inner_text(f'{P} [data-sr-placeholder-list]')
+        fixed = page.inner_text(f'{P} [data-sr-fixed]') if page.locator(f'{P} [data-sr-fixed]').count() else ""
+        if "モンスターが怒っている" in listed or "モンスターが怒っている" not in fixed or "5 ヒット以降段 100%" not in fixed:
+            ctx.fail(f"探す: 本人の前提の条件の出し方が違います (仮でない条件: {fixed!r})")
+        # 火力タブで怒りに値 (40%) を入れると、「火力タブで値を入れた条件」の行に移り、「仮でない条件」の行からは消える
+        page.evaluate("async () => { const S = await import('./app/state.js'); S.setUptime('enraged', 0.4); await S.flushState(); }")
+        page.wait_for_function(
+            "() => (document.querySelector('[data-tab-panel=\"search\"] [data-sr-mine]') || {}).textContent?.includes('モンスターが怒っている')",
+            timeout=5000)
+        mine = page.inner_text(f'{P} [data-sr-mine]') if page.locator(f'{P} [data-sr-mine]').count() else ""
+        fixed = page.inner_text(f'{P} [data-sr-fixed]') if page.locator(f'{P} [data-sr-fixed]').count() else ""
+        if "「モンスターが怒っている」40%" not in mine or "モンスターが怒っている" in fixed:
+            ctx.fail(f"探す: 火力タブで入れた怒り 40% の出し方が違います (入れた条件: {mine!r} / 仮でない条件: {fixed!r})")
+        page.evaluate("async () => { const S = await import('./app/state.js'); S.resetUptime('enraged'); await S.flushState(); }")
+        page.wait_for_function("() => !document.querySelector('[data-tab-panel=\"search\"] [data-sr-mine]')", timeout=5000)
         page.locator(f'{P} [data-sr="placeholders"] .segment', has_text="火力タブの値で探す").click()
         if _app_state(page, "s.search.placeholders") != "keep":
             ctx.fail("探す: 「火力タブの値で探す」が state.search.placeholders に入りません")
