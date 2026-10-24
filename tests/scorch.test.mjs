@@ -261,10 +261,16 @@ test('火力タブの「追加」の説明: 結論 (約 N 秒に 1 回) → 判�
     weapon: { attack: 200, affinity: 0, element: null }, sharpness: 'white', effects: EFFECTS, motions: MOTIONS,
     skills: [{ skillId: SCORCH, level: 1 }],
   };
-  // △連携: 2.333 秒 / 発動 0.4 回 = 5.83 秒
+  // △連携: 2.333 秒 / 発動 0.4 回 = 5.83 秒。判定の決まりは「対象の攻撃が当たったときだけ」「2.4 秒たつまでは判定しない」の 2 つ
+  // (点検 2026-10-24: 「2.4 秒に 1 回だけ判定し」だと 2.4 × 2 = 4.8 秒と読めて、結論の 5.8 秒と合わない)
+  const rule = '判定は、灼熱化の出る攻撃が当たったときだけです。前の判定から 2.4 秒たつまでは判定しません。平均すると、判定 2 回に 1 回出ます。';
   const t = extraHintText(mixExpected({ ...inp, combo: comboById('ground_basic') }, [{ weight: 1, target: { hitzone: HZ } }]));
   assert.equal(t, '追加 = 灼熱化などスキルの追加ダメージです。灼熱化は、この連携を続けると約 5.8 秒に 1 回出ます。'
-    + '2.4 秒に 1 回だけ判定し、平均すると 2 回に 1 回出るためです。技のつなぎの秒数は見積もりです。');
+    + `${rule}技のつなぎの秒数は見積もりです。`);
+  // 技が 1 つのコンボ (溜め斬り落とし 1.5 秒 / 発動 0.25 回 = 6.0 秒) は、その技だけを続けて出す前提だと書く
+  const c = extraHintText(mixExpected({ ...inp, combo: comboById('charged_chop') }, [{ weight: 1, target: { hitzone: HZ } }]));
+  assert.equal(c, '追加 = 灼熱化などスキルの追加ダメージです。灼熱化は、この技を続けて出すと約 6.0 秒に 1 回出ます。'
+    + `${rule}技のつなぎの秒数は見積もりです。`);
   // 秒数の分からない技があるときは、そう断る
   const u = extraHintText(mixExpected({ ...inp, combo: ['slash_1', 'jump_slash'] }, [{ weight: 1, target: { hitzone: HZ } }]));
   assert.match(u, /秒数の分からない技は、仮の長さで数えています。$/);

@@ -14,7 +14,7 @@ import { useTargetData } from '../../data.js';
 import { computeBuild } from '../../model/build.js';
 import {
   mixContribution, skillTableCandidates, tableContext, skillTableRow, sortTableRows, conditionSummary, rebalanceCategorical,
-  extraHintText,
+  extraHintText, extraOnlyText, otherElementExtraText,
 } from './power_calc.js';
 import { resolveTargetMix, monsterStatusOf, ELEMENT_KEYS } from './target_mix.js';
 import { useEquipIndex } from './equip_index.js';
@@ -352,7 +352,7 @@ function useSkillTable(enabled, input, targets, effects, weapon, handicraft) {
       let cands;
       let ctx;
       try {
-        cands = skillTableCandidates(effects, weapon, { handicraft });
+        cands = skillTableCandidates(effects, weapon, { handicraft, skills: input.skills });
         ctx = tableContext(input, targets);
       } catch (e) {
         if (!cancelled) setSt({ status: 'error', rows: null, error: e });
@@ -409,6 +409,7 @@ function TableNameCell({ row, effects, uptimes, nameOf, ctx }) {
       ${cond && html`<span class="pw-name-sub">${condText(cond)}${cond.placeholder ? ' (仮)' : ''}</span>`}
       ${cond && cond.inactive && html`<span class="pw-name-sub">${cond.needs}が要ります</span>`}
       ${row.requiresMissing && html`<span class="pw-name-sub">${nameOf(row.requiresSkillId)} が無いと効きません</span>`}
+      ${row.extraOnly && html`<span class="pw-name-sub" data-extra-only>${extraOnlyText(row)}</span>`}
       ${row.conflict && html`<span class="pw-name-sub text-danger">同時に起きない条件の合計が 100% を超えるので、減らして計算しています</span>`}
       ${row.lowConfidence && html`<${Badge} kind="unconfirmed" />`}
     </th>`;
@@ -470,7 +471,7 @@ function SkillTableCard({ table, ui, effects, uptimes, data, open, ctx }) {
               <${ReasonNotice} kind="unsupported" title="未対応 (計算に入れていません)" items=${table.unsupported}
                 intro="効き方が分からないので表に入れていないスキルです。" attr=${{ 'data-power-unsupported': '1' }} />`}
             ${table.otherElement && table.otherElement.length > 0 && html`
-              <${Hint}>武器の属性と合わない (または武器に属性が無い) ので表から外したスキル: ${table.otherElement.map((s) => s.name).join('・')}</${Hint}>`}`}`}
+              <${Hint}><span data-power-other-element>武器の属性と合わない (または武器に属性が無い) ので表から外したスキル: ${table.otherElement.map((s) => s.name).join('・')}。${otherElementExtraText(table.otherElement)}</span></${Hint}>`}`}`}
     </${Card}>`;
 }
 

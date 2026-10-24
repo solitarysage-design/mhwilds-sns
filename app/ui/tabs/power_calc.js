@@ -17,7 +17,7 @@ import {
   comboExpected, normalizeSkills, conditionGroupDefs, conditionSourceMissing,
   resolveSkills, resolveConditions, factorPatterns,
 } from '../../model/damage.js';
-import { formatNumber } from '../components/labels.js';
+import { formatNumber, ELEMENT_LABEL } from '../components/labels.js';
 
 /** スキルの組に合わせた input (perSkills があれば斬れ味などを決め直す) */
 export function inputFor(input, skills) {
@@ -115,14 +115,19 @@ export function mixExpected(input0, targets) {
 
 /**
  * 「追加」の説明。灼熱化があれば、この連携を続けたときの発動の間隔 (結論) → 判定の決まり (理由) → 見積もりの断り の順。
+ * 判定の決まりは「対象の攻撃が当たったときだけ」「前の判定から待ちの秒数たつまでは判定しない」の 2 つを書く
+ * (待ちの秒数 × 2 が間隔だと読めないように。実際の判定の間隔は技の並びで決まる)。
+ * 技が 1 つだけのコンボは「この技を続けて出すと」と書く (その技だけを続けて出す前提の目安なので)。
  * r = mixExpected の結果 (extraChecks の灼熱化を使う。部位の割合で平均したもの)。文は本人の好み (短い文・結論が先・です/ます)
  */
 export function extraHintText(r) {
   const x = (r.extraChecks || []).find((c) => c.kind === 'scorch' && c.secPerProc > 0);
   if (!x) return '追加 = スキルの追加ダメージです (発動の確率込み)。';
   const every = formatNumber(1 / x.perCheck, 0);
-  return `追加 = 灼熱化などスキルの追加ダメージです。灼熱化は、この連携を続けると約 ${formatNumber(x.secPerProc, 1)} 秒に 1 回出ます。`
-    + `${formatNumber(x.cooldownSec, 1)} 秒に 1 回だけ判定し、平均すると ${every} 回に 1 回出るためです。`
+  const repeat = (r.steps || []).length === 1 ? 'この技を続けて出すと' : 'この連携を続けると';
+  return `追加 = 灼熱化などスキルの追加ダメージです。灼熱化は、${repeat}約 ${formatNumber(x.secPerProc, 1)} 秒に 1 回出ます。`
+    + '判定は、灼熱化の出る攻撃が当たったときだけです。'
+    + `前の判定から ${formatNumber(x.cooldownSec, 1)} 秒たつまでは判定しません。平均すると、判定 ${every} 回に 1 回出ます。`
     + `技のつなぎの秒数は見積もりです。${x.estimated ? '秒数の分からない技は、仮の長さで数えています。' : ''}`;
 }
 
@@ -177,16 +182,53 @@ export function isLowConfidenceEntry(entry) {
   return (entry.levels || []).some((l) => l.confidence === 'low' || (l.extraDamage && l.extraDamage.confidence === 'low'));
 }
 
+/** 追加ダメージの種類の名前 (画面の文に使う) */
+const EXTRA_KIND_LABEL = { scorch: '灼熱化' };
+
+/**
+ * 属性スキルが掛かる追加ダメージ (extraDamage.elementSkillsApply。いまは火竜の力の灼熱化) の属性の種類 →
+ * {skillId, skillName, label, elementType}。skills を渡すと、そのスキルの組 (いまの Lv の効果) にあるものだけ。省略すると全スキルから。
+ */
+function extraElementSources(map, skills) {
+  const out = new Map();
+  const add = (skillId, e, lv) => {
+    const x = lv && lv.extraDamage;
+    if (!x || !x.elementSkillsApply || !x.elementType || out.has(x.elementType)) return;
+    out.set(x.elementType, {
+      skillId, skillName: e.name, label: EXTRA_KIND_LABEL[x.kind] || '追加ダメージ', elementType: x.elementType,
+    });
+  };
+  if (skills) {
+    for (const s of normalizeSkills(skills)) {
+      const e = map[String(s.skillId)];
+      const levels = (e && e.supported !== false && e.levels) || [];
+      if (!levels.length) continue;
+      const top = levels[levels.length - 1].level;
+      add(s.skillId, e, levels.find((l) => l.level === Math.min(s.level, top)));
+    }
+  } else {
+    for (const [id, e] of Object.entries(map)) {
+      if (e && e.supported !== false) for (const l of e.levels || []) add(Number(id), e, l);
+    }
+  }
+  return out;
+}
+
 /**
  * スキル火力表に載せるスキルを skill_effects.json から選ぶ。
+ * 武器の属性と合わない「〇属性攻撃強化」は表から外す。ただし、いまのスキルにその属性の追加ダメージ (灼熱化 = 火竜の力。
+ * 火属性攻撃強化は武器の属性と関係なく火の分に効く) があれば表に残し、行の extraOnly にそれを書く。
  * @param {object} effects skill_effects.json 丸ごと
  * @param {object|null} weapon 武器 (属性が合わない「〇属性攻撃強化」を分けるため)
- * @param {object} [opts] {handicraft: {skillId, name, maxLevel}} 匠の行を足す (斬れ味の色で効く)
+ * @param {object} [opts] {handicraft: {skillId, name, maxLevel}} 匠の行を足す (斬れ味の色で効く)。
+ *   {skills} いまのスキル ([{skillId, level}] か {id: Lv})。灼熱化のように属性スキルが掛かる追加ダメージがあるかを見る
  * @returns {{rows: Array, unsupported: Array, otherElement: Array}}
  *   rows[]: {skillId, name, kind, maxLevel, conditional, conditionGroup, requiresSkillId, lowConfidence, lowReason, confidence,
- *            entry (skill_effects の要素。匠は null), sharpnessSkill (匠なら true)}
+ *            entry (skill_effects の要素。匠は null), sharpnessSkill (匠なら true),
+ *            extraOnly (武器の属性と合わないが追加ダメージにだけ効く属性スキルなら {skillId, skillName, label, elementType}。ほかは null)}
  *   unsupported[]: supported:false のスキル {skillId, name, kind, reason} (計算に入れていない)
- *   otherElement[]: 武器の属性と違う属性の強化スキル {skillId, name, elementTypes}
+ *   otherElement[]: 武器の属性と違う属性の強化スキル {skillId, name, elementTypes,
+ *            extraIfAdded (そのスキルをつけると追加ダメージに効くようになるなら {skillId, skillName, label, elementType}。ほかは null)}
  */
 export function skillTableCandidates(effects, weapon, opts = {}) {
   const map = effectsMap(effects);
@@ -194,6 +236,8 @@ export function skillTableCandidates(effects, weapon, opts = {}) {
   const rows = [];
   const unsupported = [];
   const otherElement = [];
+  const extraNow = extraElementSources(map, opts.skills || []);
+  let extraAll = null;
   const hc = opts.handicraft;
   if (hc && hc.skillId != null && !map[String(hc.skillId)]) {
     rows.push({
@@ -211,19 +255,48 @@ export function skillTableCandidates(effects, weapon, opts = {}) {
       continue;
     }
     const types = [...new Set(levels.map((l) => l.elementType).filter(Boolean))];
+    let extraOnly = null;
     if (types.length && !types.includes(elem)) {
-      otherElement.push({ skillId, name: e.name, elementTypes: types });
-      continue;
+      extraOnly = types.map((t) => extraNow.get(t)).find(Boolean) || null;
+      if (!extraOnly) {
+        if (!extraAll) extraAll = extraElementSources(map, null);
+        const extraIfAdded = types.map((t) => extraAll.get(t)).find(Boolean) || null;
+        otherElement.push({ skillId, name: e.name, elementTypes: types, extraIfAdded });
+        continue;
+      }
     }
     const low = isLowConfidenceEntry(e);
     rows.push({
       skillId, name: e.name, kind: e.kind, maxLevel: levels[levels.length - 1].level,
       conditional: !!e.conditional, conditionGroup: e.conditional ? (e.conditionGroup ?? null) : null,
       requiresSkillId: e.requiresSkillId ?? null, confidence: e.confidence,
-      lowConfidence: low, lowReason: low ? (e.note || '') : '', entry: e, sharpnessSkill: false,
+      lowConfidence: low, lowReason: low ? (e.note || '') : '', entry: e, sharpnessSkill: false, extraOnly,
     });
   }
   return { rows, unsupported, otherElement };
+}
+
+/** 表の行の名前の欄の注記: 武器の属性と合わないが、追加ダメージ (灼熱化) の属性の分にだけ効く属性スキル。それ以外は null */
+export function extraOnlyText(row) {
+  const x = row && row.extraOnly;
+  if (!x) return null;
+  return `効くのは${x.label} (${x.skillName}) の${ELEMENT_LABEL[x.elementType] || x.elementType}の分だけです`;
+}
+
+/**
+ * 表から外したスキルの一覧の後ろに足す文: 外したもののうち、別のスキル (火竜の力) をつけると追加ダメージに効くようになるもの。
+ * 無ければ空文字。otherElement = skillTableCandidates(...).otherElement
+ */
+export function otherElementExtraText(otherElement) {
+  const bySource = new Map();
+  for (const s of otherElement || []) {
+    if (!s.extraIfAdded) continue;
+    const k = s.extraIfAdded.skillId;
+    if (!bySource.has(k)) bySource.set(k, { src: s.extraIfAdded, names: [] });
+    bySource.get(k).names.push(s.name);
+  }
+  return [...bySource.values()].map(({ src, names }) => `${names.join('・')}は、${src.skillName}をつけると表に出ます。`
+    + `${src.label}の${ELEMENT_LABEL[src.elementType] || src.elementType}の分に効くためです。`).join('');
 }
 
 /**
@@ -288,7 +361,7 @@ export function skillTableRow(input, targets, cand, ctx) {
 
 /** スキル火力表を一度に作る (テスト・小さい画面以外用。画面は skillTableRow を少しずつ呼ぶ)。 */
 export function skillTable(input, targets, weapon) {
-  const cands = skillTableCandidates(input.effects, weapon, { handicraft: input.handicraft });
+  const cands = skillTableCandidates(input.effects, weapon, { handicraft: input.handicraft, skills: input.skills });
   const ctx = tableContext(input, targets);
   return { ...cands, rows: cands.rows.map((c) => skillTableRow(input, targets, c, ctx)), baseTotal: ctx.baseTotal };
 }

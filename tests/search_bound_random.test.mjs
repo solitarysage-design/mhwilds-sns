@@ -1,6 +1,6 @@
 // 締めた上界 (docs/SEARCH_DESIGN.md 2.4 節「締めた上界」) を、乱数で作る小さい問題 (tests/search_brute.mjs の makeRandomProblem) で
-// 確かめる (中身は tests/search_bound_check.mjs。決めた 7 問は tests/search_bound.test.mjs)。決めた 7 問は上界と本当の最良の差が
-// いちばん小さい所でも 1% ほどあり、上界を 1% 以下だけ下げる誤りが見えないので、上界かふるいが本当の最良とぴったり同じになる状態がある
+// 確かめる (中身は tests/search_bound_check.mjs。決めた 8 問は tests/search_bound.test.mjs)。決めた問題 (種 31 を足す前の 7 問) は
+// 上界と本当の最良の差がいちばん小さい所でも 1% ほどあり、上界を 1% 以下だけ下げる誤りが見えないので、上界かふるいが本当の最良とぴったり同じになる状態がある
 // 種を選んだ (最後のテストでそれを確かめる)。乱数の種は固定。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';

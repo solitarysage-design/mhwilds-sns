@@ -150,6 +150,45 @@ test('同時に起きない条件: 本人が入れた値 (赤ゲージ・35% 以
   assert.equal(ok.conflict, null);
 });
 
+test('スキル火力表: 火でない武器でも、火竜の力があれば火属性攻撃強化を表に残す (灼熱化の火の分に効く)', () => {
+  // 点検 (2026-10-24): 武器の属性と合わない属性スキルを全部外していたので、龍属性の武器 + 火竜の力 で火属性攻撃強化が
+  // 「武器の属性と合わないので表から外した」と出ていた (探すタブは関係するスキルに入れている)
+  const fire = skillId('火属性攻撃強化');
+  const scorch = { skillId: skillId('火竜の力'), level: 2 };
+  const hz = { slash: 45, blunt: 45, fire: 20, water: 10, thunder: 10, ice: 10, dragon: 25 };
+  const targets = [{ weight: 1, target: { hitzone: hz } }];
+  for (const element of [{ type: 'dragon', value: 250 }, null]) {
+    const weapon = { attack: 220, affinity: 0, element };
+    const base = { weapon, sharpness: 'white', effects: EFFECTS, motions: MOTIONS, combo: COMBOS.find((c) => c.id === 'ground_basic') };
+    // 火竜の力なし: 外した一覧に入り、「火竜の力をつけると表に出ます」と添える
+    const off = P.skillTable({ ...base, skills: [] }, targets, weapon);
+    assert.ok(!off.rows.some((r) => r.skillId === fire));
+    const o = off.otherElement.find((x) => x.skillId === fire);
+    assert.ok(o && o.extraIfAdded && o.extraIfAdded.skillId === scorch.skillId, JSON.stringify(o));
+    assert.equal(P.otherElementExtraText(off.otherElement), '火属性攻撃強化は、火竜の力をつけると表に出ます。灼熱化の火の分に効くためです。');
+    // 火竜の力あり: 表の行にあり、伸びは comboExpected と同じ (火属性攻撃強化 3 で上がる)
+    const input = { ...base, skills: [scorch] };
+    const on = P.skillTable(input, targets, weapon);
+    assert.ok(!on.otherElement.some((x) => x.skillId === fire));
+    assert.equal(P.otherElementExtraText(on.otherElement), '');
+    const row = on.rows.find((r) => r.skillId === fire);
+    assert.ok(row && row.extraOnly && row.extraOnly.skillId === scorch.skillId, JSON.stringify(row && row.extraOnly));
+    assert.equal(P.extraOnlyText(row), '効くのは灼熱化 (火竜の力) の火の分だけです');
+    const t0 = comboExpected({ ...input, target: { hitzone: hz } }).total;
+    const t3 = comboExpected({ ...input, skills: [scorch, { skillId: fire, level: 3 }], target: { hitzone: hz } }).total;
+    assert.ok(t3 > t0);
+    close(row.maxPct, (t3 / t0 - 1) * 100);
+    assert.ok(row.maxPct > 0);
+    // ほかの属性 (水) は外したまま。添える文も無い
+    const water = off.otherElement.find((x) => x.name === '水属性攻撃強化');
+    assert.ok(water && water.extraIfAdded === null);
+  }
+  // 火属性の武器: いつも表にあり、注記は付かない
+  const fw = { attack: 220, affinity: 0, element: { type: 'fire', value: 250 } };
+  const fr = P.skillTableCandidates(EFFECTS, fw, { skills: [scorch] }).rows.find((r) => r.skillId === fire);
+  assert.ok(fr && fr.extraOnly === null && P.extraOnlyText(fr) === null);
+});
+
 test('部位不明の部位は内部名を出さず「部位不明 1」のように番号にする', () => {
   const m = MONSTERS.monsters.find((x) => x.parts.some((p) => p.unknownPart));
   const unknown = m.parts.filter((p) => p.unknownPart).sort((a, b) => a.ordinal - b.ordinal);

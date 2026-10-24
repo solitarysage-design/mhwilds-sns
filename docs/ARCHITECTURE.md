@@ -218,7 +218,8 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
     どちらも null の対象ヒットは技の始まり (0 秒) に置いて同じ警告。count が 2 以上のヒットは `multiHitTimer` (フレーム) か 0.1 秒おきに
     並べる。秒の値 (`linkSec` / `atSec`) は小数 6 桁に丸めた表示用で、計算はフレームを使う (丸めた秒を足すと周の境目がずれる)。
 - (追記 2026-10-24) コンボの `cycleSec` = 1 周の秒数の見積もり `{low, mid, high}` (各段の `linkSec` の和。どれかの段が null なら null)。
-  計算は技の `timing` から毎回出す (自作のコンボでも同じ決まり) ので、`cycleSec` は画面と確かめ用。
+  計算は技の `timing` から毎回出す (自作のコンボでも同じ決まり) ので、`cycleSec` は確かめ用 (画面では使わない。`tests/scorch.test.mjs` が
+  技の `linkSec` の和と同じかを見る)。
 
 ### data/monsters.json
 ```json

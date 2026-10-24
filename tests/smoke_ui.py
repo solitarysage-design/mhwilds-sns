@@ -1052,11 +1052,13 @@ def power_tab_expected_value(page, ctx: Ctx):
             ctx.fail(f"火力タブのスキルなし比が damage.js と合いません: 画面 {vs} / 計算 {exp['vs']}")
         if "既定の肉質" not in page.inner_text(f"{POWER_PANEL} [data-power-target]"):
             ctx.fail("相手を選んでいないのに「既定の肉質」と出ていません")
-        # 灼熱化 (火竜の力) の説明: この連携を続けたときの間隔 (結論) と、技のつなぎの秒数が見積もりであること (2026-10-24)
+        # 灼熱化 (火竜の力) の説明: この連携を続けたときの間隔 (結論)・判定は前の判定から 2.4 秒たつまで起きないこと・
+        # 技のつなぎの秒数が見積もりであること (2026-10-24。技が 1 つのコンボは「この技を続けて出すと」)
         hint = page.locator(f"{POWER_PANEL} [data-power-extra-hint]")
         hint_text = hint.inner_text() if hint.count() else ""
-        if "この連携を続けると約" not in hint_text or "技のつなぎの秒数は見積もりです" not in hint_text:
-            ctx.fail(f"火力タブに灼熱化の説明 (約 N 秒に 1 回・見積もり) が出ていません: {hint_text!r}")
+        if ("この連携を続けると約" not in hint_text and "この技を続けて出すと約" not in hint_text) \
+                or "前の判定から 2.4 秒たつまでは判定しません" not in hint_text or "技のつなぎの秒数は見積もりです" not in hint_text:
+            ctx.fail(f"火力タブに灼熱化の説明 (約 N 秒に 1 回・判定の待ち・見積もり) が出ていません: {hint_text!r}")
         # 発動率: 連撃の段は本人の前提 (2026-10-22: 5 ヒット以降段 100%。仮ではない) → 「仮」の印は無く、根拠の文が出る。
         # スライダーで 1〜4 段を 30% にすると期待値が変わり、「既定に戻す」が出る
         chain = f'{POWER_PANEL} [data-condition="chain"]'
@@ -1105,6 +1107,23 @@ def power_tab_expected_value(page, ctx: Ctx):
             ctx.fail(f"スキル火力表の挑戦者 (本人の前提 100%) の書き方が違います: {ch_row.inner_text() if ch_row.count() else 'なし'}")
         check_layout(page, ctx, "火力タブ (装備あり)")
         ctx.shot("power-with-build")
+        # 火でない武器 (龍属性) + 火竜の力: 火属性攻撃強化は灼熱化の火の分に効くので、表に残して注記を出す。
+        # 外した一覧には入れない (点検 2026-10-24。前は「武器の属性と合わないので表から外した」と出ていた)
+        fid = page.evaluate("""async () => { const S = await import('./app/state.js'); const D = await import('./app/data.js');
+          const data = D.getCoreData(); const w = data.lists.weapons.find((x) => x.element && x.element.type === 'dragon');
+          S.setWeapon(w.id); return (data.lists.skills.find((x) => x.name === '火属性攻撃強化') || {}).id; }""")
+        fire_note = f'{POWER_PANEL} [data-power-table] tr[data-skill-row="{fid}"] [data-extra-only]'
+        try:
+            page.wait_for_selector(fire_note, timeout=20000)
+        except Exception:
+            ctx.fail("龍属性の武器 + 火竜の力 で、スキル火力表に火属性攻撃強化の行 (灼熱化の火の分だけ) が出ていません")
+        else:
+            if "灼熱化" not in page.inner_text(fire_note):
+                ctx.fail(f"火属性攻撃強化の行の注記が違います: {page.inner_text(fire_note)!r}")
+            other = page.locator(f"{POWER_PANEL} [data-power-other-element]")
+            if other.count() and "火属性攻撃強化" in other.inner_text():
+                ctx.fail(f"火竜の力があるのに、火属性攻撃強化を「表から外したスキル」に出しています: {other.inner_text()!r}")
+            ctx.shot("power-dragon-scorch-table")
     finally:
         page.evaluate(JS_STATE_RESTORE, snap)
 

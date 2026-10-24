@@ -1,4 +1,4 @@
-// 締めた上界 (docs/SEARCH_DESIGN.md 2.4 節「締めた上界」) が上界のままか。決めた小さい問題 7 問 (tests/search_brute.mjs) の乱数の
+// 締めた上界 (docs/SEARCH_DESIGN.md 2.4 節「締めた上界」) が上界のままか。決めた小さい問題 8 問 (tests/search_brute.mjs) の乱数の
 // 部分状態で、上界・ふるい ≥ 本当の最良・前の上界以下・覚えと作り直しが同じ・表の行 ≥ 本当の増え方 を確かめる
 // (確かめの中身は tests/search_bound_check.mjs)。乱数で作る問題は tests/search_bound_random.test.mjs、探すタブの既定の B&B が
 // 最後まで終わることは tests/search_bound_done.test.mjs (node --test はファイルごとに並べて回すので、重いものを分けた)。乱数の種は固定。
