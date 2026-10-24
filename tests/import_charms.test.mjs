@@ -284,3 +284,27 @@ test('data/charms.json: シートの護石は s + No.、c0001 は No.5、全部�
   assert.deepEqual(c1.armorSlots, [2, 0, 0]);
   assert.equal(c1.slotsProvisional, false);
 });
+
+test('--slots-confirmed: シートのスロット①〜③を確かめた Lv として読む (RARE 8 は 1 つ目が武器用)。抽選表に無い形は一番低い形にして一覧に出す', () => {
+  const rows = [
+    row(88, 7, [['KO術', 3], ['連撃', 1]], [2]),                    // 防具用 Lv2 (列なしでも確かめた値)
+    row(148, 6, [['ガード強化', 2], ['スタミナ急速回復', 1], ['龍耐性', 2]], [2, 1]), // 防具用 2-1
+    row(29, 8, [['KO術', 2], ['見切り', 1], ['攻勢', 1]], [1, 1]),  // 武器用 1・防具用 1
+    row(36, 7, [['KO術', 2], ['見切り', 1], ['攻勢', 1]], [2, 2]),  // RARE 7 の 2-2 は抽選表に無い → 一番低い形 (未確認)
+  ];
+  const res = run(rows, { schema: 1, charms: [C0001] }, { date: '2026-10-25', slotsConfirmed: true });
+  const c88 = byNo(res, 88);
+  assert.deepEqual([c88.armorSlots, c88.weaponSlots, c88.slotsProvisional], [[2, 0, 0], [0], false]);
+  const c148 = byNo(res, 148);
+  assert.deepEqual([c148.armorSlots, c148.weaponSlots, c148.slotsProvisional], [[2, 1, 0], [0], false]);
+  const c29 = byNo(res, 29);
+  assert.deepEqual([c29.armorSlots, c29.weaponSlots, c29.slotsProvisional], [[1, 0, 0], [1], false]);
+  const s36 = res.skipped.find((s) => s.no === 36);
+  const c36 = byNo(res, 36);
+  assert.ok(s36 || (c36 && c36.slotsProvisional === true), 'RARE 7 の 2-2 は確かめた値として使わない');
+  if (c36) assert.ok(res.notes.some((n) => n.no === 36 && n.code === 'slot-sheet-invalid'));
+  for (const c of res.charms) assert.ok(validateCharm(c, ctx.rules, ctx.skills, { charmsFixed: ctx.charmsFixed }).ok, c.id);
+  // 指定しなければ今までどおり (数だけ信じて一番低い形・未確認)
+  const plain = run(rows.slice(0, 1), { schema: 1, charms: [C0001] }, { date: '2026-10-25' });
+  assert.deepEqual([byNo(plain, 88).armorSlots, byNo(plain, 88).slotsProvisional], [[1, 0, 0], true]);
+});

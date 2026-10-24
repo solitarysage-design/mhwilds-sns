@@ -1,6 +1,10 @@
 // 所持護石の一覧 (Google スプレッドシート「所持護石一覧」を CSV に書き出したもの) を data/charms.json に取り込む。
 //
-//   node tools/import_charms.mjs <シートの CSV> [--out data/charms.json] [--report 一覧.json] [--date 2026-10-24] [--dry-run]
+//   node tools/import_charms.mjs <シートの CSV> [--out data/charms.json] [--report 一覧.json] [--date 2026-10-24] [--slots-confirmed] [--dry-run]
+//
+// --slots-confirmed: シートのスロット①〜③を、確かめた Lv として読む (2026-10-24 にシートを動画の全コマで直した後の書き方。
+//   RARE 8 は 1 つ目が武器用、残りが防具用。RARE 5〜7 は全部防具用。0 と空は穴なし)。抽選表に無い形の行は下の 2・3 にして一覧に出す。
+//   「防具スロット」「武器スロット」の列がある行は、そちらが先。
 //
 // 決まり (docs/ARCHITECTURE.md の data/charms.json の節。2026-10-24 本人の決定):
 // - 見出しは「No.」で始まる行 (その前の行は表の題などなので読まない)。列は見出しの名前で探す
@@ -177,7 +181,8 @@ export const sheetIdOf = (no) => `s${padNo(no)}`;
  * @param sheet readSheet の結果
  * @param ctx {skills: skills.json, rules: talisman_rules.json, charmsFixed: charms_fixed.json}
  * @param existing いまの data/charms.json ({charms: [...]})
- * @param opts {date: 新しく足す護石の addedAt, links: {No.: 前からある id} (既定 LINKS)}
+ * @param opts {date: 新しく足す護石の addedAt, links: {No.: 前からある id} (既定 LINKS),
+ *   slotsConfirmed: シートのスロット①〜③を確かめた Lv として読む (RARE 8 は 1 つ目が武器用)}
  * @returns {{charms, skipped: [{no, line, read, code, reason}], notes: [{no, id, code, text}], removed: [{id, sheetNo}],
  *   changed: [{id, sheetNo, fields: [変わった所], before, after (読める文)}], counts}}
  */
@@ -281,6 +286,16 @@ export function importSheet(sheet, ctx, existing, opts = {}) {
       } else if (!blank) {
         colIssue = { code: 'slot-columns-unreadable', text: `${cellText}が読めないので` };
       }
+    }
+    // 1'. --slots-confirmed: シートのスロット①〜③を確かめた Lv として読む (RARE 8 は 1 つ目が武器用)
+    if (!chosen && !colIssue && opts.slotsConfirmed) {
+      const lv = sheetSlots.filter((v) => typeof v === 'number' && v > 0);
+      const bad = sheetSlots.some((v) => typeof v !== 'number' || v < 0 || v > 3);
+      const armor = normalizeSlots(rarity === 8 ? lv.slice(1) : lv, 3);
+      const weapon = normalizeSlots(rarity === 8 ? lv.slice(0, 1) : [], 1);
+      const hit = !bad && armor.length === 3 && weapon.length === 1 && allowed.find((p) => sameAs(p, armor, weapon));
+      if (hit) { chosen = hit; provisional = false; }
+      else colIssue = { code: 'slot-sheet-invalid', text: `シートのスロット①〜③ (${sheetSlots.join(',') || 'なし'}) は抽選表に無い形なので` };
     }
     // 2. 前に確かめたスロット (同じ id・同じレア度とスキル・slotsProvisional: false・抽選表にある形)
     if (!chosen && old && old.slotsProvisional === false && sigOf(old) === sigOf(base)) {
@@ -448,17 +463,18 @@ export function summaryText(res) {
 // ---------------------------------------------------------------- コマンド
 
 function parseArgs(argv) {
-  const o = { csv: null, out: path.join(ROOT, 'data', 'charms.json'), report: null, date: null, dryRun: false };
+  const o = { csv: null, out: path.join(ROOT, 'data', 'charms.json'), report: null, date: null, dryRun: false, slotsConfirmed: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--out') o.out = argv[++i];
     else if (a === '--report') o.report = argv[++i];
     else if (a === '--date') o.date = argv[++i];
     else if (a === '--dry-run') o.dryRun = true;
+    else if (a === '--slots-confirmed') o.slotsConfirmed = true;
     else if (!o.csv) o.csv = a;
     else throw new Error(`知らない引数: ${a}`);
   }
-  if (!o.csv) throw new Error('使い方: node tools/import_charms.mjs <シートの CSV> [--out data/charms.json] [--report 一覧.json] [--date YYYY-MM-DD] [--dry-run]');
+  if (!o.csv) throw new Error('使い方: node tools/import_charms.mjs <シートの CSV> [--out data/charms.json] [--report 一覧.json] [--date YYYY-MM-DD] [--slots-confirmed] [--dry-run]');
   return o;
 }
 
@@ -468,7 +484,7 @@ export function main(argv = process.argv.slice(2)) {
   const ctx = { skills: readJson('skills.json'), rules: readJson('talisman_rules.json'), charmsFixed: readJson('charms_fixed.json') };
   const existing = fs.existsSync(o.out) ? JSON.parse(fs.readFileSync(o.out, 'utf8')) : { schema: 1, charms: [] };
   const sheet = readSheet(fs.readFileSync(o.csv, 'utf8'));
-  const res = importSheet(sheet, ctx, existing, { date: o.date || undefined });
+  const res = importSheet(sheet, ctx, existing, { date: o.date || undefined, slotsConfirmed: o.slotsConfirmed });
   if (!o.dryRun) fs.writeFileSync(o.out, charmsJsonText(res.charms));
   if (o.report) {
     fs.writeFileSync(o.report, `${JSON.stringify({ csv: path.basename(o.csv), counts: res.counts, skipped: res.skipped, notes: res.notes, removed: res.removed, changed: res.changed }, null, 1)}\n`);
