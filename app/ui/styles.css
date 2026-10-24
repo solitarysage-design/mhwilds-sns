@@ -734,3 +734,9 @@ details.more[open] > summary::before { content: '▾'; }
 .credit-what { display: block; font-size: 14px; color: var(--text-sub); }
 
 ul.data-files { margin: 4px 0 0; padding-left: 1.2em; }
+
+/* ---------------------------------------------------------------- 護石タブ (シートの護石が 250 個ある一覧) */
+
+.charm-tools { padding: 8px 16px 10px; border-bottom: 1px solid var(--border); }
+.charm-tools .field { margin-top: 8px; }
+.charm-sheet-no { color: var(--text); font-weight: 600; white-space: nowrap; }

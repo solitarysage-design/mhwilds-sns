@@ -500,14 +500,49 @@ def charms_list_and_photo_hint(page, ctx: Ctx):
         if word not in text:
             ctx.fail(f"護石タブに「{word}」が出ていません")
     want = json.loads((REPO / "data" / "charms.json").read_text(encoding="utf-8"))["charms"]
-    n = page.locator(f'{CHARMS_PANEL} [data-charm-origin="data"]').count()
-    if n != len(want):
-        ctx.fail(f"data/charms.json の護石 {len(want)} 個のうち {n} 個しか一覧に出ていません")
-    for c in want:
-        badge = page.locator(f'{CHARMS_PANEL} [data-charm-id="{c["id"]}"] .row-end .badge')
+    # 一覧は 40 個ずつ出す (シートの護石が 250 個ある。2026-10-24)。9 個以上なら探す欄と絞り方がある
+    page_size = 40
+    rows = page.locator(f'{CHARMS_PANEL} [data-charm-origin="data"]')
+    n = rows.count()
+    if n != min(len(want), page_size):
+        ctx.fail(f"data/charms.json の護石 {len(want)} 個のうち、一覧の最初に {n} 個が出ています ({min(len(want), page_size)} 個のはず)")
+    shown_ids = rows.evaluate_all("els => els.map((e) => e.dataset.charmId)")
+    if shown_ids != [c["id"] for c in want[:page_size]]:
+        ctx.fail(f"一覧の並びが data/charms.json と違います: {shown_ids[:5]}")
+    for cid in shown_ids:
+        badge = page.locator(f'{CHARMS_PANEL} [data-charm-id="{cid}"] .row-end .badge')
         label = badge.inner_text().strip() if badge.count() else ""
         if label not in ("OK", "注意", "エラー"):
-            ctx.fail(f"護石 {c['id']} に検証の印 (OK/注意/エラー) がありません: {label!r}")
+            ctx.fail(f"護石 {cid} に検証の印 (OK/注意/エラー) がありません: {label!r}")
+    if len(want) > page_size:
+        rest = page.locator(f'{CHARMS_PANEL} [data-charm-rest]')
+        if not rest.count() or rest.get_attribute("data-charm-rest") != str(len(want) - page_size):
+            ctx.fail(f"一覧の下に「あと {len(want) - page_size} 個あります」が出ていません")
+    if len(want) > 8:
+        # シートの No. で探すと 1 個になり、スロットを確かめていない護石には印がある
+        sheet = [c for c in want if c.get("sheetNo") is not None]
+        if sheet:
+            c = sheet[-1]
+            page.fill(f'{CHARMS_PANEL} [data-charm-search]', str(c["sheetNo"]))
+            got = page.locator(f'{CHARMS_PANEL} [data-charm-origin="data"]').evaluate_all("els => els.map((e) => e.dataset.charmId)")
+            if got != [c["id"]]:
+                ctx.fail(f"一覧で「{c['sheetNo']}」を探すと {got} が出ます ({c['id']} だけのはず)")
+            row_text = page.inner_text(f'{CHARMS_PANEL} [data-charm-id="{c["id"]}"]')
+            if f"シート No.{c['sheetNo']}" not in row_text:
+                ctx.fail(f"シートの護石 {c['id']} の行に「シート No.{c['sheetNo']}」が出ていません: {row_text!r}")
+            if c.get("slotsProvisional") and "スロット未確認" not in row_text:
+                ctx.fail(f"スロットを確かめていない護石 {c['id']} の行に「スロット未確認」の印がありません")
+            check_layout(page, ctx, "護石タブ (No. で探した)")
+            page.fill(f'{CHARMS_PANEL} [data-charm-search]', "")
+        # 「スロット未確認」だけに絞る → 合う数が出る
+        n_prov = sum(1 for c in want if c.get("slotsProvisional"))
+        page.locator(f'{CHARMS_PANEL} [data-charm-tools] .segment', has_text="スロット未確認").click()
+        matched = page.locator(f'{CHARMS_PANEL} [data-charm-matched]')
+        if not matched.count() or matched.get_attribute("data-charm-matched") != str(n_prov):
+            ctx.fail(f"「スロット未確認」で絞った数が {n_prov} 個になりません")
+        page.locator(f'{CHARMS_PANEL} [data-charm-tools] .segment', has_text="全部").click()
+        if page.locator(f'{CHARMS_PANEL} [data-charm-origin="data"]').count() != min(len(want), page_size):
+            ctx.fail("絞り方を「全部」に戻しても、一覧が元の数に戻りません")
 
 
 @scenario_check

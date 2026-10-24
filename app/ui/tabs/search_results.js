@@ -102,6 +102,8 @@ function ResultRow({ row, onOpen, players }) {
         ${row.killCombos != null && html`
           <span class="sr-kill" data-sr-row-kill=${row.killCombos}>討伐まで 約 ${formatNumber(row.killCombos, 0)} 回 (目安) <${PlayersMark} players=${players} /></span>`}
         <span class="sr-change">${row.changeText}</span>
+        ${row.charm && html`
+          <span class="sr-skills" data-sr-row-charm>護石: ${row.charm.name}${row.charm.unconfirmed && html` <${Badge} kind="unconfirmed">スロット未確認</${Badge}>`}</span>`}
         ${row.skillsText && html`<span class="sr-skills">${row.skillsText}</span>`}
         ${row.second && html`<span class="sr-skills" data-sr-row-second>2 本目: ${row.second.weaponName}</span>`}
         ${row.defense && F.defenseText(row.defense) && html`
@@ -319,7 +321,7 @@ export function ResultSheet({ open, row, idx, onClose, onApply, zeroed = 0, play
               <li key=${l.key} class=${row.diff && ((l.key === 'weapon' && row.diff.weapon) || (l.key === 'charm' && row.diff.charm) || row.diff.parts.includes(l.key)) ? 'is-changed' : ''}>
                 <span class="sr-part-label">${l.label}</span>
                 <span class="sr-part-body">
-                  <span class="sr-part-name">${l.name}${l.limitBreak ? ' (限界突破)' : ''}</span>
+                  <span class="sr-part-name">${l.name}${l.limitBreak ? ' (限界突破)' : ''}${l.unconfirmed && html` <${Badge} kind="unconfirmed">スロット未確認</${Badge}>`}</span>
                   ${l.decorations.length > 0 && html`<span class="sr-part-sub">珠: ${l.decorations.join('・')}</span>`}
                   ${alt.length > 0 && showAlt && html`<span class="sr-part-sub">同じ値になる${l.key === 'charm' ? '護石' : '防具'}: ${alt.join('・')}</span>`}
                   ${alt.length > 0 && !showAlt && html`<span class="sr-part-sub">同じ値になる${l.key === 'charm' ? '護石' : '防具'}: ほか ${alt.length} 個</span>`}
@@ -335,6 +337,8 @@ export function ResultSheet({ open, row, idx, onClose, onApply, zeroed = 0, play
             <p>${row.second.weaponName}${row.second.decorations.length ? `・珠: ${row.second.decorations.join('・')}` : ''}</p>
             <p class="hint">装備には武器を 1 本ずつ入れます (2 本を同時には持てません)。</p>
           </div>`}
+        ${lines.some((l) => l.unconfirmed) && html`
+          <p class="hint" data-sr-sheet-unconfirmed>この護石のスロットはまだ確かめていません。一番低い Lv で計算しているので、珠は必ず入ります。</p>`}
         ${row.gamma.length > 0 && html`
           <p class="sr-gamma" data-sr-gamma><${Badge} kind="info">γ</${Badge}> ${row.gamma.map((n) => `${n}`).join('・')}の素材が要ります。</p>`}
         <p class="card-subhead">スキル (いまと比べて)</p>

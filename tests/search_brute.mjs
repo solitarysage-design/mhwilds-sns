@@ -101,7 +101,8 @@ export function makeSmallProblem(raw, artian, o) {
     seenC.add(key);
     fixed.push(c);
   }
-  const owned = raw.charms.charms.slice(0, 1).map(stripCharm);
+  // 所持護石は c0001 (2026-10-21 に写真で取り込んだ最初の護石) だけ。シートの護石 (2026-10-24 から) が増えても問題が変わらないように
+  const owned = [raw.charms.charms.find((c) => c.id === 'c0001') || raw.charms.charms[0]].filter(Boolean).map(stripCharm);
   // 珠: 防具用 (弱点特効 ③・挑戦者 ③・逆襲 ②) と、武器用 (残すスキルだけの珠から大きさ 1〜3 と 2 スキルのもの)
   const decos = raw.decorations.decorations;
   const armorDecos = decos.filter((d) => d.kind === 'armor' && d.skills.length === 1 && keepArmor.has(d.skills[0].skillId));
@@ -352,6 +353,9 @@ export function bruteForce(data, input) {
     for (const charm of charms) {
       count++;
       const armor = Object.fromEntries(ARMOR_PARTS.map((p, i) => [p, chosen[i]]));
+      // 防具の耐性の合計の下限 (armorResistMin。相手タブの耐性の回)
+      if (input.armorResistMin && Object.entries(input.armorResistMin).some(([e, min]) =>
+        ARMOR_PARTS.reduce((t, p) => t + (Number(idx.armor.get(armor[p]).resist?.[e]) || 0), 0) < min)) continue;
       const r0 = computeBuild({ weapon: input.weapons[0], armor, charm, decorations: {}, limitBreak: input.limitBreak }, idx);
       if (r0.errors.length) throw new Error(JSON.stringify(r0.errors));
       const aSizes = [...ARMOR_PARTS.flatMap((p) => r0.slots[p].map((s) => s.size)), ...r0.slots.charmArmor.map((s) => s.size)];
