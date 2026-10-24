@@ -7,9 +7,11 @@
 //   物理   = 攻撃力 × MV/100 × 物理肉質/100 × 斬れ味物理補正 × 会心期待値 × (心眼・飛燕・鈍器使い)
 //   属性   = 属性値(表示)/10 × 技の属性補正 × 属性肉質/100 × 斬れ味属性補正 × 会心撃【属性】期待値
 //   属性値 = 元 × min(乗算, 2.3) + min(加算, 400)   (攻撃と同じく倍率と加算を別々に切る)
+//   灼熱化 = Σ (対象ヒットごと) 判定あたりの平均 0.5 × 判定の割合 w × (固定 + (火 × 火の倍率 + 火の加算)/10 × 火肉質/100)
+//            w はコンボを繰り返したときの定常状態で、そのヒットが判定になる割合 (判定は待ち 2.4 秒に 1 回まで。checkWeights)
 // 条件つきスキルの発動率は「条件ごと」(skill_effects.json の rules.conditionGroups) に持ち、
 // 条件の組み合わせ (パターン) の加重平均を出す。
-// 秒あたり DPS は技の時間が非公開なので出さない。代表コンボ 1 回の期待値と、その比 (%) を出す。
+// 秒あたり DPS は出さない (技のつなぎの秒数は見積もりで、灼熱化の判定の間隔にだけ使う)。代表コンボ 1 回の期待値と、その比 (%) を出す。
 
 /** ゲームデータ (PlayerStatusParam / EmCommonData) の値。data/skill_effects.json の rules で上書きできる。 */
 export const DEFAULT_RULES = Object.freeze({
@@ -515,7 +517,16 @@ function elementMatches(fx, weaponElementType) {
   return !fx.elementType || fx.elementType === weaponElementType;
 }
 
-/** 有効な効果 (レベルの値か段ごとの値) の集まりを、1 つの補正値にまとめる。 */
+/** 灼熱化の火の分に効く属性の効果か (elementType が火か無指定。武器の属性とは関係ない) */
+function fireMatches(fx) {
+  return !fx.elementType || fx.elementType === 'fire';
+}
+
+/**
+ * 有効な効果 (レベルの値か段ごとの値) の集まりを、1 つの補正値にまとめる。
+ * fireMul / fireAdd = 灼熱化の火の分に掛ける属性の倍率と加算 (elementType が火か無指定の効果を、武器の属性と関係なく集める。
+ * アイテムなどの buffs は武器の属性にだけ掛け、ここには入れない)。
+ */
 export function aggregateModifiers(effectList, weaponElementType, buffs = {}) {
   const m = {
     attackMul: buffs.attackMul ?? 1, attackAdd: buffs.attackAdd ?? 0,
@@ -523,7 +534,7 @@ export function aggregateModifiers(effectList, weaponElementType, buffs = {}) {
     elementMul: buffs.elementMul ?? 1, elementAdd: buffs.elementAdd ?? 0,
     weakPointAffinity: 0, woundAffinity: 0, weakPointMinHitzone: null,
     critElementMul: null, hardPartMul: 1, hardPartMaxHitzone: null, jumpMul: 1,
-    lowSharpnessMul: 1, lowSharpnessMaxColor: null, extraDamage: [],
+    lowSharpnessMul: 1, lowSharpnessMaxColor: null, extraDamage: [], fireMul: 1, fireAdd: 0,
   };
   for (const raw of effectList) {
     const fx = { ...EMPTY_FIELDS, ...raw };
@@ -534,6 +545,10 @@ export function aggregateModifiers(effectList, weaponElementType, buffs = {}) {
     if (elementMatches(fx, weaponElementType)) {
       m.elementMul *= fx.elementMul ?? 1;
       m.elementAdd += fx.elementAdd ?? 0;
+    }
+    if (fireMatches(fx)) {
+      m.fireMul *= fx.elementMul ?? 1;
+      m.fireAdd += fx.elementAdd ?? 0;
     }
     m.weakPointAffinity += fx.weakPointAffinity ?? 0;
     m.woundAffinity += fx.woundAffinity ?? 0;
@@ -584,11 +599,32 @@ function physicalHitzone(hz, type) {
 }
 
 /**
+ * 追加ダメージ 1 回分 (表示値の単位)。固定 + 属性/10 × その属性の肉質/100。
+ * elementSkillsApply なら属性は「× 火の倍率 + 火の加算」(mods.fireMul / fireAdd。属性の上限は掛けない)。
+ */
+export function extraDamageOnce(x, mods, hz) {
+  const xHz = x.elementType ? (hz[x.elementType] ?? 0) : 0;
+  let el = x.element || 0;
+  if (x.elementSkillsApply) {
+    if (x.elementType !== 'fire') throw new Error(`elementSkillsApply は火 (fire) だけ対応: ${x.elementType}`);
+    el = el * (mods.fireMul ?? 1) + (mods.fireAdd ?? 0);
+  }
+  return (x.fixed || 0) + (el / 10) * (xHz / 100);
+}
+
+/** その追加ダメージの対象ヒットか (appliesTo が additionalDamageHits なら hits[].additionalDamage のヒットだけ) */
+export function extraApplies(x, hit) {
+  return !(x.appliesTo === 'additionalDamageHits' && !hit.additionalDamage);
+}
+
+/**
  * 1 ヒットの期待ダメージ (count 回分の合計)。
  * @param {object} hit motions_sns.json の moves[].hits[] の 1 件
  * @param {object} stats computeStats の結果
- * @param {object} ctx {hitzone, isWound, sharpness, rules}
+ * @param {object} ctx {hitzone, isWound, sharpness, rules, checkWeight}
  *   hitzone: {slash, blunt, fire, water, thunder, ice, dragon} (0〜100)。傷口なら傷口の肉質を渡す
+ *   checkWeight: (extraDamage の spec) → このヒット (count 回分) が判定になる 1 周あたりの割合 (model 'checks' の追加ダメージ用。
+ *   comboExpected が planCheckWeights で出して渡す)。無いときは「待ちの明けた所で 1 回だけ判定する」として 1
  * @returns {{physical, element, extra, total, affinity, critExp}}
  */
 export function hitDamage(hit, stats, ctx) {
@@ -628,16 +664,23 @@ export function hitDamage(hit, stats, ctx) {
     element = (stats.element / 10) * rate * (elemHz / 100) * sharp.element * critE;
   }
 
-  // 灼熱化などの追加ダメージ: 固定 + 属性(表示/10) × その属性の肉質。確率で掛ける。クールタイムは入れない。
-  let extra = 0;
+  // 灼熱化などの追加ダメージ。model 'checks' (灼熱化) = 判定あたりの平均 × 判定の割合 (count 回分の和) × 1 回分。
+  // model の無いもの (前の形・テスト用) = ヒットごとの確率 chance × 1 回分 × count
+  let extraPer = 0;
+  let extraChecks = 0;
   for (const x of m.extraDamage) {
-    if (x.appliesTo === 'additionalDamageHits' && !hit.additionalDamage) continue;
-    const xHz = x.elementType ? (hz[x.elementType] ?? 0) : 0;
-    extra += (x.chance ?? 1) * ((x.fixed || 0) + ((x.element || 0) / 10) * (xHz / 100));
+    if (!extraApplies(x, hit)) continue;
+    if (x.model === 'checks') {
+      const w = ctx.checkWeight ? ctx.checkWeight(x) : 1;
+      if (w > 0) extraChecks += (x.perCheck ?? 0.5) * w * extraDamageOnce(x, m, hz);
+    } else {
+      extraPer += (x.chance ?? 1) * extraDamageOnce(x, m, hz);
+    }
   }
+  const extra = extraPer * count + extraChecks;
   return {
-    physical: physical * count, element: element * count, extra: extra * count,
-    total: (physical + element + extra) * count, affinity, critExp,
+    physical: physical * count, element: element * count, extra,
+    total: (physical + element) * count + extra, affinity, critExp,
   };
 }
 
@@ -671,12 +714,39 @@ function pushWarning(warnings, w) {
   if (!warnings.some((x) => x.code === w.code && x.move === w.move)) warnings.push(w);
 }
 
+/** 技の時間を読む決まり (docs/ARCHITECTURE.md の motions の節): 長さ = つなぎの見積もり (mid) → 全長 → 1.0 秒 */
+export const DEFAULT_MOVE_SEC = 1.0;
+/** count が 2 以上のヒットの間隔 (multiHitTimer が無いとき・秒) */
+export const DEFAULT_MULTI_HIT_SEC = 0.1;
+const DEFAULT_FPS = 60;
+
 /**
- * コンボの段ごとに、使う肉質・傷口かどうか・数えるヒットを決める。
+ * 技の長さ (秒) と、その出どころ ('link' = つなぎの見積もり / 'frames' = 後隙込みの全長 / 'default' = 分からないので 1.0 秒)。
+ * フレームがあればフレーム ÷ fps で出す (linkSec は丸めた表示用。丸めた秒を足すと周の境目がずれる)。
+ */
+function moveLength(mv) {
+  const t = mv.timing || null;
+  const fps = (t && t.fps) || DEFAULT_FPS;
+  if (t && t.linkFrames && t.linkFrames.mid > 0) return { sec: t.linkFrames.mid / fps, from: 'link', fps };
+  if (t && t.linkSec && Number.isFinite(t.linkSec.mid) && t.linkSec.mid > 0) return { sec: t.linkSec.mid, from: 'link', fps };
+  if (t && Number.isFinite(t.frameCount) && t.frameCount > 0) return { sec: t.frameCount / fps, from: 'frames', fps };
+  return { sec: DEFAULT_MOVE_SEC, from: 'default', fps };
+}
+
+/** ヒットが技の始まりから何秒で当たるか (atFrame ÷ fps、無ければ atSec。分からなければ null) */
+function hitAtSec(h, fps) {
+  if (Number.isFinite(h.atFrame)) return h.atFrame / fps;
+  return Number.isFinite(h.atSec) ? h.atSec : null;
+}
+
+/**
+ * コンボの段ごとに、使う肉質・傷口かどうか・数えるヒット・始まりの時刻を決める。
  * 傷口の段 (onWound か target.isWound) でも、部位に傷口が無い (target.wound が null) なら傷口なしで計算し、
  * 傷口でだけ出るヒットと弱点特効の傷口分は入れない。傷口でない段でも傷口でだけ出るヒットは数えない。
+ * startSec / lengthSec / lengthFrom は灼熱化の判定の間隔を数えるのに使う (moveLength)。
  */
 function planSteps(steps, moves, target, warnings) {
+  let at = 0;
   return steps.map((s) => {
     const mv = moves.get(s.move);
     if (!mv) throw new Error(`技 ${s.move} が motions に無い`);
@@ -696,8 +766,164 @@ function planSteps(steps, moves, target, warnings) {
         message: `「${mv.name}」は傷口に当てない段なので、傷口でだけ出るヒットは数えていません`,
       });
     }
-    return { move: s.move, name: mv.name, hitzone: isWound ? target.wound : target.hitzone, isWound, hits };
+    const len = moveLength(mv);
+    const startSec = at;
+    at += len.sec;
+    return {
+      move: s.move, name: mv.name, hitzone: isWound ? target.wound : target.hitzone, isWound, hits,
+      startSec, lengthSec: len.sec, lengthFrom: len.from, fps: len.fps,
+    };
   });
+}
+
+/**
+ * コンボ (combos_sns.json の 1 件か技 id の配列) → 段ごとのプラン (planSteps)。探索の評価器もこれでヒットを並べる
+ * (傷口の決まりと時刻を二重に書かない)。warnings に no-wound / wound-only-hits-skipped を足す。
+ */
+export function comboPlan(motions, combo, target, warnings = []) {
+  return planSteps(comboSteps(combo), movesMap(motions), target || {}, warnings);
+}
+
+// ------------------------------------------------------------------ 追加ダメージの判定 (灼熱化)
+
+/** 判定の時刻を比べるときの幅 (秒)。1 フレーム (1/60 秒) よりずっと小さい */
+export const CHECK_EPS = 1e-6;
+/** 定常状態を探すときに回す周の数の上限 */
+const CHECK_MAX_CYCLES = 2000;
+
+/**
+ * 判定の重み (純関数)。コンボを繰り返したときの定常状態で、各ヒット (の回) が判定になる 1 周あたりの割合。
+ * 決まり: 時刻の順に見て、前の判定から cooldownSec 秒 (CHECK_EPS の幅つき) たっていれば判定する。当たっても外れても次の判定を待つ
+ * ので、判定の時刻は成否に関係なく決まる。周の始まりの「前の判定からの秒数」(待ちが明けていれば「明けている」1 つにまとめる) が
+ * 前の周と同じ値に戻ったら、そこからは同じ繰り返しなので、その間の平均を返す (時刻がフレームの倍数なら必ず戻る)。
+ * 戻らないときは CHECK_MAX_CYCLES 周回し、最初の 1 割を捨てて平均する。
+ * @param {number[]} times 1 周の中の時刻 (秒。順は問わない。周の長さを超えてもよい = 後の周の同じ位置と同じに扱う)
+ * @param {number} cycleSec 1 周の秒数
+ * @param {number} cooldownSec 判定の待ち (秒)
+ * @returns {Float64Array} times と同じ並びの割合 (0〜1)
+ */
+export function checkWeights(times, cycleSec, cooldownSec) {
+  const n = times.length;
+  const w = new Float64Array(n);
+  if (!n) return w;
+  const T = Number.isFinite(cycleSec) && cycleSec > CHECK_EPS ? cycleSec : CHECK_EPS;
+  const cd = Math.max(0, Number(cooldownSec) || 0);
+  const pos = times.map((t) => {
+    const r = t - Math.floor(t / T) * T;
+    return r >= T - CHECK_EPS ? 0 : r;
+  });
+  const order = pos.map((_, i) => i).sort((a, b) => pos[a] - pos[b] || a - b);
+  const counts = new Float64Array(n);
+  const cum = [new Float64Array(n)]; // cum[c] = 周 c の始まりまでの判定の数
+  const seen = new Map();            // 周の始まりの状態 → 周の番号
+  let last = -Infinity;
+  for (let c = 0; c < CHECK_MAX_CYCLES; c++) {
+    const start = c * T;
+    const since = start - last;
+    const key = since >= cd - CHECK_EPS ? -1 : Math.round(since / CHECK_EPS);
+    const prev = seen.get(key);
+    if (prev !== undefined) {
+      for (let i = 0; i < n; i++) w[i] = (counts[i] - cum[prev][i]) / (c - prev);
+      return w;
+    }
+    seen.set(key, c);
+    for (const i of order) {
+      const t = start + pos[i];
+      if (t - last >= cd - CHECK_EPS) { last = t; counts[i] += 1; }
+    }
+    cum.push(Float64Array.from(counts));
+  }
+  const skip = Math.floor(CHECK_MAX_CYCLES / 10);
+  for (let i = 0; i < n; i++) w[i] = (counts[i] - cum[skip][i]) / (CHECK_MAX_CYCLES - skip);
+  return w;
+}
+
+/**
+ * プラン (comboPlan) のヒットごとの判定の割合 (model 'checks' の追加ダメージ 1 つ分)。
+ * 対象ヒット (extraApplies) の時刻 = 段の始まり + hits[].atFrame ÷ fps (無ければ atSec)。count が 2 以上なら multiHitTimer (フレーム)
+ * か 0.1 秒おきに並べる。
+ * 1 周 = 段の長さの和。技の長さか対象ヒットの時刻が分からない段があれば、警告 no-timing を warnings に足す (対象ヒットが無ければ足さない)。
+ * @returns {{perHit: Float64Array[], cycleSec, checksPerCycle, estimated}}
+ *   perHit[段][ヒット] = そのヒット (count 回分) が判定になる 1 周あたりの割合。estimated = 秒数の分からない段があった
+ */
+export function planCheckWeights(plan, spec, warnings = []) {
+  const times = [];
+  const owner = [];
+  plan.forEach((st, si) => {
+    st.hits.forEach((h, hi) => {
+      if (!extraApplies(spec, h)) return;
+      const cnt = h.count ?? 1;
+      const base = st.startSec + (hitAtSec(h, st.fps) ?? 0);
+      const dt = h.multiHitTimer > 0 ? h.multiHitTimer / (st.fps || DEFAULT_FPS) : DEFAULT_MULTI_HIT_SEC;
+      for (let k = 0; k < cnt; k++) { times.push(base + k * dt); owner.push([si, hi]); }
+    });
+  });
+  const perHit = plan.map((st) => new Float64Array(st.hits.length));
+  const cycleSec = plan.reduce((t, st) => t + st.lengthSec, 0);
+  let estimated = false;
+  if (times.length) {
+    for (const st of plan) {
+      const noAt = st.hits.some((h) => extraApplies(spec, h) && hitAtSec(h, st.fps) == null);
+      if (st.lengthFrom === 'link' && !noAt) continue;
+      estimated = true;
+      const len = st.lengthFrom === 'frames' ? `技の全長 (後隙込み ${st.lengthSec.toFixed(2)} 秒)`
+        : st.lengthFrom === 'default' ? `${DEFAULT_MOVE_SEC.toFixed(1)} 秒` : '';
+      const parts = [];
+      if (len) parts.push(`長さを${len}`);
+      if (noAt) parts.push('当たる時刻を技の始まり');
+      pushWarning(warnings, {
+        code: 'no-timing', move: st.move,
+        message: `「${st.name}」は技の秒数が分からないので、${parts.join('、')}として灼熱化の判定の間隔を数えました`,
+      });
+    }
+  }
+  const w = checkWeights(times, cycleSec, spec.cooldownSec);
+  let checksPerCycle = 0;
+  owner.forEach(([si, hi], e) => { perHit[si][hi] += w[e]; checksPerCycle += w[e]; });
+  return { perHit, cycleSec, checksPerCycle, estimated };
+}
+
+/** 効いているスキル (resolveConditions の active) が持つ model 'checks' の追加ダメージ (主効果と段ごとの効果。並びは active の順) */
+function checkSpecsOf(active) {
+  const out = [];
+  for (const a of active) {
+    const list = [a.lv && a.lv.extraDamage, ...Object.values((a.lv && a.lv.byState) || {}).map((b) => b && b.extraDamage)];
+    for (const x of list) {
+      if (x && x.model === 'checks' && !out.some((o) => o.spec === x)) {
+        out.push({ spec: x, skillId: a.skillId, name: a.name, level: a.level, conditional: !!a.conditional });
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * 判定の割合をプランと spec ごとに 1 回だけ出し (全部のパターンで同じ)、hitDamage に渡す ctx (段ごと・ヒットごと) を作る。
+ * checks[] は画面用の要約 (判定と発動の 1 周あたりの回数・発動の間隔の秒)。
+ */
+function planContexts(plan, active, sharpness, rules, warnings) {
+  const specs = checkSpecsOf(active);
+  const weights = new Map();
+  for (const s of specs) weights.set(s.spec, planCheckWeights(plan, s.spec, warnings));
+  const weightOf = (x) => {
+    let r = weights.get(x);
+    if (!r) weights.set(x, (r = planCheckWeights(plan, x, [])));
+    return r;
+  };
+  const ctxs = plan.map((st, si) => st.hits.map((_, hi) => ({
+    hitzone: st.hitzone, isWound: st.isWound, sharpness, rules, checkWeight: (x) => weightOf(x).perHit[si][hi],
+  })));
+  const checks = specs.map((s) => {
+    const r = weights.get(s.spec);
+    const perCheck = s.spec.perCheck ?? 0.5;
+    const procsPerCycle = perCheck * r.checksPerCycle;
+    return {
+      kind: s.spec.kind ?? null, skillId: s.skillId, name: s.name, level: s.level, conditional: s.conditional,
+      cooldownSec: s.spec.cooldownSec ?? 0, perCheck, cycleSec: r.cycleSec, checksPerCycle: r.checksPerCycle, procsPerCycle,
+      secPerProc: procsPerCycle > 0 ? r.cycleSec / procsPerCycle : null, estimated: r.estimated,
+    };
+  });
+  return { ctxs, checks };
 }
 
 /** 画面に出す形の条件グループ (probs は残す。exclusiveWith は使っているグループだけ)。 */
@@ -726,7 +952,7 @@ function emptyPart(buffs = {}) {
   return {
     am: buffs.attackMul ?? 1, aa: buffs.attackAdd ?? 0, af: buffs.affinityAdd ?? 0,
     em: buffs.elementMul ?? 1, ea: buffs.elementAdd ?? 0, wpa: 0, wa: 0, jm: 1, cm: null, cem: null,
-    wp: null, hp: null, ls: null, extra: [],
+    wp: null, hp: null, ls: null, extra: [], fm: 1, fa: 0,
   };
 }
 
@@ -745,6 +971,10 @@ function addEffectToPart(part, raw, pos, weaponElementType) {
   if (elementMatches(fx, weaponElementType)) {
     part.em *= fx.elementMul ?? 1;
     part.ea += fx.elementAdd ?? 0;
+  }
+  if (fireMatches(fx)) {
+    part.fm *= fx.elementMul ?? 1;
+    part.fa += fx.elementAdd ?? 0;
   }
   part.wpa += fx.weakPointAffinity ?? 0;
   part.wa += fx.woundAffinity ?? 0;
@@ -767,10 +997,11 @@ function mergeParts(a, b) {
     wpa: a.wpa + b.wpa, wa: a.wa + b.wa, jm: a.jm * b.jm, cm: maxOrNull(a.cm, b.cm), cem: maxOrNull(a.cem, b.cem),
     wp: laterWins(a.wp, b.wp), hp: hardWins(a.hp, b.hp), ls: lowWins(a.ls, b.ls),
     extra: b.extra.length ? (a.extra.length ? [...a.extra, ...b.extra] : b.extra) : a.extra,
+    fm: a.fm * b.fm, fa: a.fa + b.fa,
   };
 }
 
-/** 入れ物 → aggregateModifiers と同じ形の補正値 (攻撃・属性の乗算と加算は lin の値を使う) */
+/** 入れ物 → aggregateModifiers と同じ形の補正値 (攻撃・属性・火 (灼熱化) の乗算と加算は lin の値を使う) */
 function modsOfPart(p, lin) {
   return {
     attackMul: lin.am, attackAdd: lin.aa, affinityAdd: p.af, critMul: p.cm,
@@ -779,15 +1010,17 @@ function modsOfPart(p, lin) {
     hardPartMul: p.hp ? p.hp[0] : 1, hardPartMaxHitzone: p.hp ? p.hp[2] : null, jumpMul: p.jm,
     lowSharpnessMul: p.ls ? p.ls[0] : 1, lowSharpnessMaxColor: p.ls ? p.ls[2] : null,
     extraDamage: [...p.extra].sort((x, y) => x[0] - y[0]).map((x) => x[1]),
+    fireMul: lin.fm, fireAdd: lin.fa,
   };
 }
 
 /**
  * パターンを全部並べずに、コンボ 1 回の期待値の合計を出す (comboExpected の因子分解の道)。
- * @param fp factorPatterns の結果、active resolveConditions(...).active、plan planSteps の結果
+ * 火 (灼熱化の火の分) の乗算と加算は上限が無く、期待値に線形に効くので、攻撃・属性と同じく期待値で持つ (状態に入れない)。
+ * @param fp factorPatterns の結果、active resolveConditions(...).active、plan planSteps の結果、ctxs planContexts の ctx
  * @returns {{total, physical, element, extra}}
  */
-function factoredTotals(fp, active, weapon, buffs, rules, plan, sharpness) {
+function factoredTotals(fp, active, weapon, buffs, rules, plan, ctxs) {
   const elemType = weapon.element ? weapon.element.type : null;
   const elemBase = weapon.element ? Number(weapon.element.value) || 0 : 0;
   // 条件なしの効果 (位置は active の並び)
@@ -836,7 +1069,9 @@ function factoredTotals(fp, active, weapon, buffs, rules, plan, sharpness) {
     return k;
   };
   // 畳み込み: 状態ごとに 確率 P と E[乗算の積 × 1{状態}]・E[加算の和 × 1{状態}] を持つ
-  let dist = new Map([[keyOf(base), { part: base, P: 1, sAm: base.am, sAa: base.aa, sEm: base.em, sEa: base.ea }]]);
+  let dist = new Map([[keyOf(base), {
+    part: base, P: 1, sAm: base.am, sAa: base.aa, sEm: base.em, sEa: base.ea, sFm: base.fm, sFa: base.fa,
+  }]]);
   for (const bl of blocks) {
     const next = new Map();
     for (const d of dist.values()) {
@@ -846,13 +1081,15 @@ function factoredTotals(fp, active, weapon, buffs, rules, plan, sharpness) {
         let e = next.get(k);
         if (!e) {
           if (next.size >= FACTOR_MAX_STATES) throw new Error(`条件の組み合わせが多すぎる (まとめても ${next.size} 通りを超える)`);
-          next.set(k, (e = { part, P: 0, sAm: 0, sAa: 0, sEm: 0, sEa: 0 }));
+          next.set(k, (e = { part, P: 0, sAm: 0, sAa: 0, sEm: 0, sEa: 0, sFm: 0, sFa: 0 }));
         }
         e.P += s.w * d.P;
         e.sAm += s.w * s.part.am * d.sAm;
         e.sAa += s.w * (d.sAa + s.part.aa * d.P);
         e.sEm += s.w * s.part.em * d.sEm;
         e.sEa += s.w * (d.sEa + s.part.ea * d.P);
+        e.sFm += s.w * s.part.fm * d.sFm;
+        e.sFa += s.w * (d.sFa + s.part.fa * d.P);
       }
     }
     dist = next;
@@ -861,11 +1098,15 @@ function factoredTotals(fp, active, weapon, buffs, rules, plan, sharpness) {
   for (const e of dist.values()) {
     if (!(e.P > 0)) continue;
     // 状態の中の期待値 (上限に当たらない・属性がいつも正なので、攻撃力・属性値の期待値をそのまま使える)
-    const mods = modsOfPart(e.part, { am: e.sAm / e.P, aa: e.sAa / e.P, em: e.sEm / e.P, ea: e.sEa / e.P });
+    const mods = modsOfPart(e.part, {
+      am: e.sAm / e.P, aa: e.sAa / e.P, em: e.sEm / e.P, ea: e.sEa / e.P, fm: e.sFm / e.P, fa: e.sFa / e.P,
+    });
     const stats = computeStats(weapon, mods, rules);
-    for (const st of plan) {
-      for (const hit of st.hits) {
-        const d = hitDamage(hit, stats, { hitzone: st.hitzone, isWound: st.isWound, sharpness, rules });
+    for (let si = 0; si < plan.length; si++) {
+      const st = plan[si];
+      for (let hi = 0; hi < st.hits.length; hi++) {
+        const hit = st.hits[hi];
+        const d = hitDamage(hit, stats, ctxs[si][hi]);
         total += e.P * d.total; physical += e.P * d.physical; element += e.P * d.element; extra += e.P * d.extra;
       }
     }
@@ -889,9 +1130,13 @@ function factoredTotals(fp, active, weapon, buffs, rules, plan, sharpness) {
  *              条件のもと (sources) が装備にも相手にも無い条件 (狂竜症) は 0% にする。分からないときは決めつけない
  *   rules:     既定は effects.rules → DEFAULT_RULES
  *   maxPatterns: (テスト用) 全パターンを並べる数の上限。既定 MAX_PATTERNS。0 にすると必ず因子分解の道で計算する
- * @returns {{total, physical, element, extra, patterns, factored, steps, conditions, warnings, unsupported, unknown, lowConfidence}}
+ * @returns {{total, physical, element, extra, patterns, factored, steps, conditions, warnings, unsupported, unknown, lowConfidence,
+ *            extraChecks}}
  *   条件の組み合わせ (パターン) が MAX_PATTERNS を超えるときは、同時に起きない条件の塊ごとに畳み込んで合計だけを出す
  *   (factored: true。値は全パターンの加重平均と同じ。steps は空で、警告 many-patterns)。patterns はパターンの数。
+ *   extraChecks[]: 判定のある追加ダメージ (灼熱化) の要約 {kind, skillId, name, level, conditional, cooldownSec, perCheck,
+ *   cycleSec (1 周の秒数), checksPerCycle (1 周の判定の回数), procsPerCycle (1 周の平均の発動), secPerProc (発動の間隔の秒。出ないなら null),
+ *   estimated (秒数の分からない段があった)}
  */
 export function comboExpected(input) {
   const effectsRules = (input.effects && input.effects.rules) || {};
@@ -912,14 +1157,16 @@ export function comboExpected(input) {
   const weapon = input.weapon || { attack: 0, affinity: 0, element: null };
   const elemType = weapon.element ? weapon.element.type : null;
   const sharpness = input.sharpness || 'white';
+  const { ctxs, checks } = planContexts(plan, cond.active, sharpness, rules, warnings);
   const common = {
     conditions: cond.groups.map(publicGroup), warnings,
     unsupported: resolved.unsupported, unknown: resolved.unknown, lowConfidence: resolved.lowConfidence,
+    extraChecks: checks,
   };
 
   if (factored) {
     // パターンが多すぎて並べられない: 条件の塊ごとに畳み込んで合計だけ出す (技ごとの内訳は出さない)
-    const t = factoredTotals(fp, cond.active, weapon, input.buffs || {}, rules, plan, sharpness);
+    const t = factoredTotals(fp, cond.active, weapon, input.buffs || {}, rules, plan, ctxs);
     warnings.push({
       code: 'many-patterns', count: fp.count,
       message: `条件つきスキルの組み合わせが多い (${fp.count.toLocaleString('en-US')} 通り) ので、条件ごとにまとめて計算しました。`
@@ -935,8 +1182,8 @@ export function comboExpected(input) {
     const mods = aggregateModifiers(effectsFor(cond.active, p.states), elemType, input.buffs || {});
     const stats = computeStats(weapon, mods, rules);
     plan.forEach((st, si) => {
-      for (const hit of st.hits) {
-        const d = hitDamage(hit, stats, { hitzone: st.hitzone, isWound: st.isWound, sharpness, rules });
+      for (let hi = 0; hi < st.hits.length; hi++) {
+        const d = hitDamage(st.hits[hi], stats, ctxs[si][hi]);
         const acc = stepTotals[si];
         acc.total += p.weight * d.total; acc.physical += p.weight * d.physical;
         acc.element += p.weight * d.element; acc.extra += p.weight * d.extra;

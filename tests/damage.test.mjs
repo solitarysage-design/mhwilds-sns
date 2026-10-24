@@ -268,14 +268,20 @@ test('会心撃【属性】が無ければ会心は属性に掛からない', ()
 test('灼熱化 (火竜の力) は火肉質に依存し、固定分は肉質に依存しない', () => {
   const id = skillIdByName('火竜の力');
   const lv2 = EFFECTS.effects[id].levels[1];
-  // ゲームデータ: 確率 33%、上位Ⅱ 固定 40 + 火 1200 (表示) = 内部 120
-  assert.deepEqual([lv2.extraDamage.chance, lv2.extraDamage.fixed, lv2.extraDamage.element], [0.33, 40, 1200]);
+  // ゲームデータ: 上位Ⅱ 固定 40 + 火 1200 (表示) = 内部 120。判定の待ち 2.4 秒・判定あたり平均 0.5 (段階 33→50→100%)。
+  // ヒットごとの確率 chance は持たない (残すとヒットごとに数える道が残る)
+  const x = lv2.extraDamage;
+  assert.deepEqual([x.model, x.fixed, x.element, x.cooldownSec, x.perCheck, x.checkChances], ['checks', 40, 1200, 2.4, 0.5, [0.33, 0.5, 1]]);
+  assert.equal('chance' in x, false);
   const st = stats({ attack: 100, affinity: 0, element: null }, [lv2]);
   const hit = { ...HIT, mv: 0, additionalDamage: true };
-  // 火肉質 20: 0.33 × (40 + 120 × 0.20) = 0.33 × 64 = 21.12
-  close(hitDamage(hit, st, { hitzone: { slash: 50, fire: 20 }, sharpness: 'white' }).extra, 21.12);
-  // 火肉質 0: 0.33 × 40 = 13.2 (肉質無視ではないが固定分は残る)
-  close(hitDamage(hit, st, { hitzone: { slash: 50, fire: 0 }, sharpness: 'white' }).extra, 13.2);
+  // 1 ヒットだけ見る (判定の割合を渡さない) ときは、待ちの明けた所の判定 1 回: 0.5 × 1 回分
+  // 火肉質 20: 0.5 × (40 + 120 × 0.20) = 0.5 × 64 = 32
+  close(hitDamage(hit, st, { hitzone: { slash: 50, fire: 20 }, sharpness: 'white' }).extra, 32);
+  // 火肉質 0: 0.5 × 40 = 20 (固定分は肉質によらず残る)
+  close(hitDamage(hit, st, { hitzone: { slash: 50, fire: 0 }, sharpness: 'white' }).extra, 20);
+  // 判定の割合を渡すと、その割合を掛ける (0.2 → 0.5 × 0.2 × 64 = 6.4)
+  close(hitDamage(hit, st, { hitzone: { slash: 50, fire: 20 }, sharpness: 'white', checkWeight: () => 0.2 }).extra, 6.4);
   // 追加ダメージ対象でないヒットには出ない
   assert.equal(hitDamage({ ...hit, additionalDamage: false }, st, { hitzone: { fire: 20 } }).extra, 0);
 });
@@ -746,15 +752,19 @@ test('傷口に当てない段では、傷口でだけ出るヒットを数え�
   assert.deepEqual(r.warnings.map((w) => w.code), ['wound-only-hits-skipped']);
 });
 
-test('火竜の力 (灼熱化) は値の読みが 2 通りあるので確度 low。計算に使うと lowConfidence に必ず入る', () => {
+test('火竜の力 (灼熱化) は技のつなぎの秒数が見積もりなので確度 low。計算に使うと lowConfidence に必ず入る', () => {
   const id = skillIdByName('火竜の力');
   const e = EFFECTS.effects[id];
   assert.equal(e.confidence, 'low');
-  // 別の読み (Ⅰ 固定20+火24 / Ⅱ 固定30+火60。火は内部値) を note と extraDamageAlt に残す
+  // 理由の文 (画面の「くわしく」に出る) は、値の読みではなく技のつなぎの秒数
+  assert.match(e.note, /^確度 low の理由: 技のつなぎの秒数が見積もり/);
+  assert.doesNotMatch(e.note, /別の読み/);
+  // [3..6] は下位の値とみられる (Ⅰ 固定20+火24 / Ⅱ 固定30+火60。火は内部値)。lowRank に残し、計算には使わない
   assert.match(e.note, /20\+24/);
   assert.match(e.note, /30\+60/);
-  assert.deepEqual(e.levels.map((l) => [l.extraDamageAlt.fixed, l.extraDamageAlt.element]), [[20, 240], [30, 600]]);
-  // 計算は採用した読み (Ⅱ 固定40+火1200) のまま
+  assert.deepEqual(e.levels.map((l) => [l.extraDamage.lowRank.fixed, l.extraDamage.lowRank.element]), [[20, 240], [30, 600]]);
+  assert.equal(e.levels.some((l) => 'extraDamageAlt' in l), false);
+  // 計算は上位 (Ⅱ 固定40+火1200)
   assert.deepEqual([e.levels[1].extraDamage.fixed, e.levels[1].extraDamage.element], [40, 1200]);
   const input = {
     weapon: { attack: 200, affinity: 0, element: null }, sharpness: 'white', skills: [{ skillId: id, level: 2 }],

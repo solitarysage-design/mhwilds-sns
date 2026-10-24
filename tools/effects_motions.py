@@ -3,17 +3,156 @@
 数値 (MV・属性補正・斬れ味の扱い・会心可否・飛燕対象) はすべて RCOL (当たり判定) の
 AttackParamPl から読む。技とヒットの対応 (どの requestSet がどの技か) は MHWS-in-json の
 技名対応表 (WeaponActionValues.xlsx の MappingInternalName) を元に、ここで手で並べる。
+
+技の時間 (moves[].timing と hits[].atSec。灼熱化の判定の間隔に使う) は、モーション一覧 (wp01_00.motlist.992) の
+frameCount と当たり判定の区間 (_RequestSetID) と、モーションのつなぎ (wp01_00_mct) の再生の始まりから読む。
+どのモーションを使うかと、次の技へのつなぎのフレーム (見積もり) は TIMING に手で書く。
 """
 from __future__ import annotations
 
 import math
 import re
 
-from effects_source import rcol_hits, shell_list, shell_main, xlsx_move_names
+from effects_source import load_raw, rcol_hits, shell_list, shell_main, xlsx_move_names
 
 FILES = {"A": "Wp01_Attack", "SA": "Wp01_SubAttack", "S": "Wp01_Shell"}
 ENUM_RE = re.compile(r"^\[(-?\d+)\]\s*(\S+)$")
-FRAMES_PER_SEC = 60  # _MultiHitTimer をフレーム (60fps) と見たときの換算 (推定)
+FRAMES_PER_SEC = 60  # _MultiHitTimer とモーションのフレームを 60fps と見たときの換算 (推定。確度 medium)
+
+# ---------------------------------------------------------------- 技の時間 (docs/sources/damage.md「技の時間」)
+# 技 id → (モーション番号, つなぎのフレーム (low, mid, high) | None, 注記)。
+# モーション番号 = wp01_00.motlist.992 の motionId (その技のヒットの requestSetID が出るもの。2026-10-24 の調査で選んだ)。
+# None = その技のモーションが決められない (timing を null にする)。
+# つなぎ = 技の始まり (再生の始まり) から、次の技につなげられるまでのフレーム。ゲームデータに無いので見積もり (確度 low):
+#   判定が終わった次のフレーム〜+20f を目安にした (斜め斬り下ろしは +40f まで)。調査の作業ファイル
+#   (motion_timing/cycle_est.py) の値。None = 見積もっていない (計算では技の全長を使い、警告 no-timing を出す)。
+TIMING: dict[str, tuple[int | None, tuple[int, int, int] | None, str]] = {
+    "slash_1": (301, (24, 33, 43), "別系統のモーション 255 (判定 26f) もある。△連携の主の方を 301 とした (推定)。"),
+    "slash_2": (302, (15, 24, 34), "別系統 256 (判定 12f)。"),
+    "slash_3": (308, (29, 38, 48), "別系統 257 (判定 24f)。"),
+    "slash_4": (309, (27, 45, 66), "別系統 258。締めの技で後隙が長いので、つなぎの幅を広く取った。"),
+    "spin_slash": (305, None, ""),
+    "spin_upper_slash": (331, None, ""),
+    "spin_slash_2": (307, (37, 50, 82), ""),
+    "horizontal_slash": (320, None, "A#7 は 335〜338 にも出る (つながり方の違いとみられる)。"),
+    "vertical_slash": (321, None, ""),
+    "upper_slash": (306, None, "A#6 は 167〜170・340 にも出る。"),
+    "dash_slash": (304, None, ""),
+    "guard_slash": (316, None, ""),
+    "sliding_slash": (330, None, ""),
+    "charge_slash": (313, None, "溜めの長押しの時間はモーションに入らない。"),
+    "finish_slash": (340, (55, 90, 151),
+                     "340 は既定で 50f 目から再生する (mct)。340 を溜め斬り落とし本体とみなしたのは推定 (332・341 にも A#13/A#14)。"
+                     "溜めの長押しの時間は入らない。子弾の時刻は motlist に無い。"),
+    "finish_slash_strong": (340, (55, 90, 151), "finish_slash と同じモーション・同じつなぎの見積もり。"),
+    "shield_bash_1": (318, None, ""),
+    "shield_bash_2": (319, None, ""),
+    "shield_bash_3": (322, None, ""),
+    "jump_slash": (None, None, "A#10/A#11 の出るモーションは 313 (溜め斬り) と 358 (既定で 50f 目から再生し、判定 44f より後) で、"
+                               "ジャンプ斬りのものを決められない。"),
+    "fall_bash": (355, None, "SA#106 (着地) は別のモーション 357 に出るので時刻を入れていない。"),
+    "em_step_jump_slash": (347, None, ""),
+    "jump_dash_slash": (353, None, ""),
+    "jump_upper_slash": (352, None, ""),
+    "sliding_draw_slash": (390, None, ""),
+    "just_guard_slash": (329, None, "329 は既定で 15f 目から再生する (mct)。"),
+    "just_rush_start": (414, (66, 75, 90), "旋刈り (307) から入るときは 70f 目から再生する (mct)。計算は既定の 0f から。"),
+    "just_rush_1_just": (415, (60, 72, 90), "2 段目へのつなぎ (ジャストの受付) はデータに無く見積もり。"),
+    "just_rush_1_miss": (415, None, ""),
+    "just_rush_2_just": (416, (21, 30, 45), "3 段目は 2 段目のすぐ後に来るので、つなぎを早めに置いた。"),
+    "just_rush_2_miss": (416, None, ""),
+    "just_rush_3_just": (410, (47, 65, 90), "盾 SA#160 と子弾の時刻は motlist に無い。"),
+    "just_rush_3_miss": (410, None, ""),
+    "aim_attack_nohit": (465, None, ""),
+    "aim_attack_wound": (465, (30, 60, 78), ""),
+    "aim_attack_old_scar": (465, None, "白傷の追加ヒット (子弾) の時刻は motlist に無い。"),
+    "const_finish": (504, None, ""),
+    "const_finish_bash": (510, None, ""),
+}
+TIMING_SOURCE = ("MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・"
+                 "wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)")
+
+
+def _motion_table() -> dict[int, dict]:
+    """motlist → {motionId: {name, frameCount, rs: {requestSetId: [開始フレーム, ...]}}} (当たり判定のあるモーションだけ)。"""
+    doc = load_raw("Wp01Motlist")
+    if doc.get("_format") != "re_engine_motlist_action_tracks_v1":
+        raise SystemExit(f"motlist の形式が想定と違う: {doc.get('_format')}")
+    out: dict[int, dict] = {}
+    for m in doc["motions"]:
+        clips = [c for c in m["clips"] if c.get("source") == "motion"]
+        out[m["motionId"]] = {"name": m["motionName"], "frameCount": clips[0]["frameCount"] if clips else None,
+                              "clips": len(m["clips"]), "rs": {}}
+    for r in doc["requestSetMappings"]:
+        if not r["trackName"].endswith("AttackCollision_PlWp"):
+            continue
+        out[r["motionId"]]["rs"].setdefault(r["requestSetId"], []).append(r["startFrame"])
+    return out
+
+
+def _default_starts() -> dict[int, float]:
+    """mct (MotionConnect) → {motionId: 既定 (_Default_ から入るとき) の再生の始まりのフレーム}。"""
+    lst = load_raw("Wp01Mct")[0]["ace.user_data.MotionConnect"]["_DataList"]
+    out: dict[int, float] = {}
+    for e in lst:
+        o = e["ace.user_data.MotionConnect.cOneMotionData"]
+        for c in o["_ChangeParamList"]:
+            c = c["ace.user_data.MotionConnect.cChangeParamElement"]
+            if c["_MotionListName"] == "_Default_":
+                out[o["_MotionID"]] = c["_StartFrame"]
+    return out
+
+
+def _attach_timing(moves: list[dict], hit_tables: dict, warnings: list[str]) -> None:
+    """moves[].timing と hits[].atFrame / atSec を入れる (TIMING に無い技があれば止める)。"""
+    if set(hit_tables["A"]) & set(hit_tables["SA"]):
+        raise SystemExit("Wp01_Attack と Wp01_SubAttack の requestSetID が重なっている (motlist の番号と突き合わせられない)")
+    missing = [m["id"] for m in moves if m["id"] not in TIMING]
+    if missing or set(TIMING) - {m["id"] for m in moves}:
+        raise SystemExit(f"TIMING と技の一覧が合わない: 足りない {missing} / 余分 {sorted(set(TIMING) - {m['id'] for m in moves})}")
+    mot = _motion_table()
+    starts = _default_starts()
+    fps = FRAMES_PER_SEC
+    for m in moves:
+        motion, link, note = TIMING[m["id"]]
+        if motion is None:
+            # モーションが決められない: 長さも時刻も無い (計算は 1.0 秒と 0 秒に置き、警告 no-timing)
+            m["timing"] = {"motionId": None, "motionName": None, "startFrame": None, "frameCount": None, "fps": fps,
+                           "linkFrames": None, "linkSec": None, "source": TIMING_SOURCE, "confidence": "low", "note": note}
+            for h in m["hits"]:
+                h["atFrame"] = None
+                h["atSec"] = None
+            continue
+        info = mot.get(motion)
+        if info is None or info["frameCount"] is None:
+            raise SystemExit(f"{m['id']}: モーション {motion} が motlist に無い")
+        if info["clips"] != 1:
+            warnings.append(f"{m['id']}: モーション {motion} のクリップが {info['clips']} 個 (先頭の長さを使った)")
+        start = starts.get(motion, 0)
+        length = info["frameCount"] - start
+        for h in m["hits"]:
+            f, rs = h["ref"].split("#")
+            at = None
+            if f in (FILES["A"], FILES["SA"]):
+                frames = info["rs"].get(int(rs))
+                if frames:
+                    at = min(frames) - start
+                    if at < 0:
+                        warnings.append(f"{m['id']}: {h['ref']} の判定 ({min(frames)}f) が再生の始まり ({start}f) より前なので時刻なし")
+                        at = None
+                elif h["additionalDamage"]:
+                    warnings.append(f"{m['id']}: 灼熱化の対象ヒット {h['ref']} がモーション {motion} に無い")
+            h["atFrame"] = int(at) if at is not None else None
+            h["atSec"] = round(at / fps, 6) if at is not None else None
+        timing = {"motionId": motion, "motionName": info["name"], "startFrame": int(start), "frameCount": int(length),
+                  "fps": fps, "linkFrames": None, "linkSec": None, "source": TIMING_SOURCE, "confidence": "low", "note": note}
+        if link is not None:
+            lo, mid, hi = link
+            if not (0 < lo <= mid <= hi <= length):
+                raise SystemExit(f"{m['id']}: つなぎの見積もり {link} が技の長さ {length}f と合わない")
+            timing["linkFrames"] = {"low": lo, "mid": mid, "high": hi}
+            timing["linkSec"] = {k: round(v / fps, 6) for k, v in timing["linkFrames"].items()}
+        m["timing"] = timing
 
 
 def _sym(v) -> str:
@@ -171,6 +310,7 @@ def build_motions() -> tuple[dict, list[str]]:
             warnings.append(f"技名の食い違い: {mid} 表示={name} 対応表={game_name}")
         out_moves.append({"id": mid, "name": name, "internal": internal, "gameName": game_name,
                           "hits": hits, "confidence": conf, "note": note})
+    _attach_timing(out_moves, ht.tables, warnings)
 
     # どの技にも入れていないヒット (発生条件・回数が不明)。データとして残す。
     unused = []
@@ -217,10 +357,22 @@ COMBOS = [
 ]
 
 
+def _cycle_sec(steps: list[dict], by_id: dict[str, dict]) -> dict | None:
+    """1 周の秒数の見積もり {low, mid, high} = 各段のつなぎの秒数の和 (どれかの段に見積もりが無ければ None)。"""
+    links = [(by_id[s["move"]].get("timing") or {}).get("linkFrames") for s in steps]
+    if not steps or any(x is None for x in links):
+        return None
+    return {k: round(sum(x[k] for x in links) / FRAMES_PER_SEC, 6) for k in ("low", "mid", "high")}
+
+
 def build_combos(moves: list[dict]) -> dict:
-    ids = {m["id"] for m in moves}
+    by_id = {m["id"]: m for m in moves}
+    out = []
     for c in COMBOS:
         for s in c["steps"]:
-            if s["move"] not in ids:
+            if s["move"] not in by_id:
                 raise ValueError(f"コンボ {c['id']} の技 {s['move']} が motions に無い")
-    return {"combos": COMBOS}
+        d = {"id": c["id"], "name": c["name"], "steps": c["steps"], "cycleSec": _cycle_sec(c["steps"], by_id)}
+        d.update({k: v for k, v in c.items() if k not in d})
+        out.append(d)
+    return {"combos": out}

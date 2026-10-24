@@ -87,7 +87,8 @@ const r = validateCharm(charm, talismanRules, skills, { charmsFixed });
 ## damage.js
 
 `app/model/damage.js` — 片手剣のダメージ期待値 (純粋関数、ブラウザでも node でも動く)。
-出典と未確定事項は `docs/sources/damage.md`。**秒あたり DPS は出さない** (技の時間が非公開)。
+出典と未確定事項は `docs/sources/damage.md`。**秒あたり DPS は出さない** (技のつなぎの秒数は公開データに無く見積もり。
+灼熱化の判定の間隔を数えるのにだけ使う。2026-10-24)。
 
 ### 入力
 
@@ -177,6 +178,9 @@ const r = comboExpected(input);
 // r.warnings[] … {code, message, ...}。message はそのまま画面に出せる日本語
 // r.unsupported[] … 計算に入れていないスキル {skillId, name, level, reason} (画面で「未対応」)
 // r.lowConfidence[] … 確度 low の値で計算したスキル {skillId, name, level, confidence, reason} (画面で「未確定」)
+// r.extraChecks[] … 判定のある追加ダメージ (灼熱化) の要約 (2026-10-24)
+//     {kind, skillId, name, level, conditional, cooldownSec, perCheck, cycleSec (1 周の秒数), checksPerCycle (1 周の判定の回数),
+//      procsPerCycle (= perCheck × checksPerCycle), secPerProc (発動の間隔の秒。出ないなら null), estimated (秒数の分からない段があった)}
 
 const c = skillContribution(input);
 // c.vsNoSkillsPct … スキルなし比の上昇 (%)
@@ -189,7 +193,11 @@ const c = skillContribution(input);
 |---|---|
 | `comboExpected(input)` | 代表コンボ 1 回の期待値 |
 | `skillContribution(input)` | スキルなし比・1 つ外したときの低下・Lv ごとの上昇 |
-| `hitDamage(hit, stats, {hitzone, isWound, sharpness, rules})` | 1 ヒット (×count) の期待値 `{physical, element, extra, total, affinity, critExp}` |
+| `hitDamage(hit, stats, {hitzone, isWound, sharpness, rules, checkWeight})` | 1 ヒット (×count) の期待値 `{physical, element, extra, total, affinity, critExp}`。`checkWeight(spec)` = このヒット (count 回分) が判定になる 1 周あたりの割合 (灼熱化用。comboExpected が渡す)。無ければ「待ちの明けた所で 1 回」として 1 |
+| `comboPlan(motions, combo, target, warnings)` | コンボ → 段ごとのプラン `[{move, name, hitzone, isWound, hits, startSec, lengthSec, lengthFrom, fps}]` (傷口の決まり・段の時刻。探索の評価器も使う) |
+| `checkWeights(times, cycleSec, cooldownSec)` | 判定の重みの純関数: 1 周の中の時刻 → 繰り返したときの定常状態で、各時刻が判定になる 1 周あたりの割合 (Float64Array)。前の判定から `cooldownSec` (幅 `CHECK_EPS` = 1e-6 秒) たっていれば判定 |
+| `planCheckWeights(plan, spec, warnings)` | プランのヒットごとの判定の割合 `{perHit: [段][ヒット], cycleSec, checksPerCycle, estimated}`。秒数の分からない段は警告 `no-timing` |
+| `extraDamageOnce(spec, mods, hitzone)` / `extraApplies(spec, hit)` | 追加ダメージ 1 回分 / 対象ヒットか |
 | `resolveSkills(skills, effects)` | スキルを `active` / `unsupported` / `unknown` / `lowConfidence` に分ける |
 | `resolveConditions(active, effects, uptimes, {skillIds, monsterStatus}?)` | 使う条件グループと発動率 `{active, groups, warnings}` (4 番目は条件のもとの確かめ) |
 | `conditionSourceMissing(def, skillIdSet, monsterStatus)` | 条件のもと (`sources`) が装備にも相手にも無いか |
@@ -204,7 +212,8 @@ const c = skillContribution(input);
 
 警告のコード: `bad-uptime` (発動率が読めない → 既定値) / `unknown-state` (知らない段) / `uptime-over-100` (段の合計が 100% 超え →
 縮める) / `exclusive-conflict` (同時に起きない条件の合計が 100% 超え) / `unknown-condition-group` / `no-wound` /
-`wound-only-hits-skipped` / `many-patterns` (パターンが `MAX_PATTERNS` を超えたので因子分解の合計で出した。技ごとの内訳なし)。
+`wound-only-hits-skipped` / `many-patterns` (パターンが `MAX_PATTERNS` を超えたので因子分解の合計で出した。技ごとの内訳なし) /
+`no-timing` (灼熱化があるとき、技の長さかヒットの時刻が分からない段がある。`move` = 技 id。長さは全長か 1.0 秒、時刻は技の始まりで数えた)。
 
 `comboExpected` の入力にはテスト用に `maxPatterns` (全パターンを並べる数の上限。0 で必ず因子分解の道) がある
 (`tests/damage_factored.test.mjs` が両方の道を同じ入力で比べる)。
@@ -217,8 +226,13 @@ const c = skillContribution(input);
 - 属性 = 属性値/10 × 技の属性補正 × 属性肉質/100 × 斬れ味属性 × 会心撃【属性】期待値 (無ければ 1、マイナス会心は掛けない)
 - 属性値 = 元 × min(乗算の積, 2.3) + min(加算の和, 400) (攻撃と同じく倍率と加算を別々に切る。確度 medium)。
   `elementType` 付きの効果は武器の属性が一致するときだけ
-- 追加ダメージ (灼熱化) = 確率 × (固定 + 属性/10 × その属性の肉質/100)。`additionalDamage` のヒットだけ。クールタイムは入れない
-  (火竜の力の値は読み方が 2 通りあり確度 low。計算に使うと `lowConfidence` に入る)
+- 追加ダメージ (灼熱化。`extraDamage.model: 'checks'`。2026-10-24) = Σ (対象ヒットごと) `perCheck` (0.5) × w × 1 回分。
+  1 回分 = 固定 + (火 × 火の倍率 + 火の加算)/10 × 火肉質/100 (`extraDamageOnce`)。火の倍率・加算 = `elementType` が火か無指定の効果の
+  `elementMul` の積・`elementAdd` の和を、**武器の属性と関係なく**集めたもの (`aggregateModifiers` の `fireMul` / `fireAdd`。buffs は入れない・
+  属性の上限は掛けない)。w = コンボを繰り返したときの定常状態で、そのヒットが判定になる割合 (`planCheckWeights`。判定は対象ヒット
+  (`additionalDamage`) でだけ、前の判定から 2.4 秒たつまではしない)。条件つきのパターンでも w は同じなので、プランごとに 1 回だけ出す。
+  `model` の無い extraDamage (テスト用の前の形) は `chance` × (固定 + 属性/10 × 肉質/100) × count のまま。
+  火竜の力は確度 low (技のつなぎの秒数が見積もりで、判定の回数がそれで変わる)。計算に使うと `lowConfidence` に入る
 - 盾のヒットは属性 0 (`elementRate: 0`)。斬れ味補正は `sharpnessMul` が true のヒットだけ
 
 ## weapon.js

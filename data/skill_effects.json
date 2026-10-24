@@ -9,7 +9,7 @@
    "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/database-20261020-070700-4a99b26/MHWS-in-json/natives/STM/GameDesign/Enemy/CommonData/Data/EmCommonData.user.3.json",
    "data/skills.json"
   ],
-  "generatedAt": "2026-10-22T01:16:44Z",
+  "generatedAt": "2026-10-24T04:33:53Z",
   "gameVersion": "1.042",
   "gameDataBuild": "1.42.0.2",
   "license": "ゲームデータの抽出は dzxrly/MHWS-in-json (MIT)。数値はカプコンのゲームデータ由来。",
@@ -2454,17 +2454,23 @@
      "critElementMul": null,
      "extraDamage": {
       "kind": "scorch",
-      "chance": 0.33,
+      "model": "checks",
+      "cooldownSec": 2.4,
+      "checkChances": [
+       0.33,
+       0.5,
+       1.0
+      ],
+      "perCheck": 0.5,
       "fixed": 20.0,
       "element": 600.0,
       "elementType": "fire",
-      "cooldownSec": 2.4,
-      "appliesTo": "additionalDamageHits"
-     },
-     "extraDamageAlt": {
-      "fixed": 20.0,
-      "element": 240.0,
-      "reading": "_ScorchingHeatData[3, 4] を (固定, 火属性内部値) と読んだ場合。計算には使わない"
+      "elementSkillsApply": true,
+      "appliesTo": "additionalDamageHits",
+      "lowRank": {
+       "fixed": 20.0,
+       "element": 240.0
+      }
      }
     },
     {
@@ -2487,28 +2493,48 @@
      "critElementMul": null,
      "extraDamage": {
       "kind": "scorch",
-      "chance": 0.33,
+      "model": "checks",
+      "cooldownSec": 2.4,
+      "checkChances": [
+       0.33,
+       0.5,
+       1.0
+      ],
+      "perCheck": 0.5,
       "fixed": 40.0,
       "element": 1200.0,
       "elementType": "fire",
-      "cooldownSec": 2.4,
-      "appliesTo": "additionalDamageHits"
-     },
-     "extraDamageAlt": {
-      "fixed": 30.0,
-      "element": 600.0,
-      "reading": "_ScorchingHeatData[5, 6] を (固定, 火属性内部値) と読んだ場合。計算には使わない"
+      "elementSkillsApply": true,
+      "appliesTo": "additionalDamageHits",
+      "lowRank": {
+       "fixed": 30.0,
+       "element": 600.0
+      }
      }
     }
    ],
-   "source": "SkillData HunterSkill_180 _value[0]=発生確率%。固定/火属性は PlayerSkillParam._ScorchingHeatData[7..10] (上位) と読んだ",
+   "source": "SkillData HunterSkill_180 _value[0]=初回の確率%。PlayerSkillParam._ScorchingHeatData ([0]=判定の待ち秒・[1..2]=段階の確率%・[7..10]=上位の固定/火・[3..6]=下位とみられる値)",
    "confidence": "low",
-   "note": "_ScorchingHeatData=[2.4, 50.0, 100.0, 20.0, 24.0, 30.0, 60.0, 20.0, 60.0, 40.0, 120.0]。採用した読み: [7,8]/[9,10] を Ⅰ/Ⅱ の (固定, 火属性内部値) = Ⅰ 20+60 / Ⅱ 40+120 (調査値と一致)。別の読み: [3,4]/[5,6] を Ⅰ/Ⅱ とする = Ⅰ 20+24 / Ⅱ 30+60 (SkillData _value[1]=[24, 60] がこちらの火の値と同じ)。どちらが正しいか決め手が無いので確度は low。levels[].extraDamageAlt に別の読みの値を残した。先頭 2.4 は再発生までの秒数の候補 (調査値は 2 秒)。追加ダメージ = 固定 + 火属性(内部値) × 火肉質/100。クールタイムは秒数が無いので計算に入れていない (多段の技ほど過大評価)。対象ヒットは RCOL の _UseSkillAdditionalDamage が true のものと推定。",
+   "note": "確度 low の理由: 技のつなぎの秒数が見積もりで、判定の回数がそれで変わるため。1 回のダメージ = 固定 + (火 × 火の倍率 + 火の加算)/10 × 火肉質/100。上位 Ⅰ は固定 20 + 火 60、Ⅱ は固定 40 + 火 120 (火は内部値。_ScorchingHeatData[7..10])。火に効く属性スキル (火属性攻撃強化・連撃など) は武器の属性と関係なく火の分に掛かる (倍率が先)。武器の攻撃力・属性値・会心・会心撃【属性】・斬れ味は掛からない。属性の上限は掛けていない (掛かるかは不明。ふつうの装備では届かない)。判定は灼熱化の対象ヒット (RCOL の _UseSkillAdditionalDamage) でだけ行い、前の判定から 2.4 秒 ([0]) たつまでは判定しない (外れても待つ)。判定ごとの確率は 33% → 50% → 100% と上がり、発動すると最初に戻る。平均すると判定 2 回に 1 回出る (perCheck 0.5)。[3..6] は下位の値とみられる (Ⅰ 20+24 / Ⅱ 30+60。lowRank に残す。計算には使わない)。全体防御率と多人数の倍率はゲームデータで全部 1.0 なので掛けない。",
    "verification": [
     {
-     "item": "灼熱化 確率",
-     "gameData": 0.33,
-     "survey": 0.33,
+     "item": "灼熱化 段階の確率",
+     "gameData": [
+      0.33,
+      0.5,
+      1.0
+     ],
+     "survey": [
+      0.33,
+      0.5,
+      1.0
+     ],
+     "match": true
+    },
+    {
+     "item": "灼熱化 判定あたりの平均の発動",
+     "gameData": 0.5,
+     "survey": 0.5,
      "match": true
     },
     {
@@ -2536,10 +2562,10 @@
      "match": true
     },
     {
-     "item": "灼熱化 CT(秒)",
+     "item": "灼熱化 判定の待ち(秒)",
      "gameData": 2.4,
-     "survey": 2.0,
-     "match": false
+     "survey": 2.4,
+     "match": true
     }
    ],
    "requiresSkillId": null
@@ -3692,9 +3718,9 @@
      "critElementMul": null
     }
    ],
-   "source": "PlayerSkillParam._ViolentData (MHWS-in-json も『対応未確認』)",
+   "source": "PlayerSkillParam._RyukiExplosion (MHWS-in-json も『対応未確認』)",
    "confidence": "low",
-   "note": "確率で追加ダメージ。灼熱化と併用すると灼熱化は出ず、火属性ダメージが足される。_ViolentData=[2.0, 45.0, 85.0] の意味が未確定なので計算は未対応。",
+   "note": "確率で追加ダメージ。灼熱化と併用すると灼熱化は出ず、火属性ダメージが足される。値は _RyukiExplosion=[2.4, 33.0, 50.0, 100.0, 30.0, 50.0, 40.0, 60.0, 40.0, 70.0, 60.0, 80.0, 75.0, 140.0] (先頭 2.4 = 判定の待ちの秒、33/50/100 = 段階の確率とみられる。灼熱化の _ScorchingHeatData と同じ形)。残りの並びの意味が未確定なので計算は未対応。前は _ViolentData をこのスキルの値としていたが、それは獄焔蛸の反逆 (恨撃) のもの (2026-10-24 の調査)。",
    "verification": [],
    "requiresSkillId": null
   },
@@ -5158,9 +5184,9 @@
      "critElementMul": null
     }
    ],
-   "source": "SkillData HunterSkill_178 _value[0]=23/50",
+   "source": "SkillData HunterSkill_178 _value[0]=23/50。PlayerSkillParam._ViolentData",
    "confidence": "low",
-   "note": "追加ダメージの式が未確定なので計算は未対応。",
+   "note": "恨撃の追加ダメージ。_ViolentData=[2.0, 45.0, 85.0] はこのスキルの値とみられる (先頭 = 判定の待ちの秒、続く 2 つ = 上位の Ⅰ/Ⅱ。SkillData の 23/50 は下位とみられる。2026-10-24 の調査)。式と発動の仕組みが未確定なので計算は未対応。",
    "verification": [],
    "requiresSkillId": null
   },

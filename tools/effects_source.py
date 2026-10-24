@@ -19,7 +19,8 @@ CACHE = ROOT / "tools" / ".cache" / "damage"
 # MHWS-in-json のリリースタグ (ゲーム版 1.42.0.2)。タグで固定して再現性を保つ。
 MHWS_TAG = "database-20261020-070700-4a99b26"
 MHWS_REPO = "dzxrly/MHWS-in-json"
-MHWS_RAW = f"https://raw.githubusercontent.com/{MHWS_REPO}/{MHWS_TAG}/MHWS-in-json/natives/STM/GameDesign"
+MHWS_STM = f"https://raw.githubusercontent.com/{MHWS_REPO}/{MHWS_TAG}/MHWS-in-json/natives/STM"
+MHWS_RAW = f"{MHWS_STM}/GameDesign"
 MHWS_DB_JA_ZIP = f"DATABASE_ja-JP_{MHWS_TAG.split('database-', 1)[1]}.zip"
 MHWS_DB_JA_URL = f"https://github.com/{MHWS_REPO}/releases/download/{MHWS_TAG}/{MHWS_DB_JA_ZIP}"
 MHDB_SKILLS_URL = "https://wilds.mhdb.io/ja/skills"
@@ -43,9 +44,22 @@ RAW_FILES = {
     "Wp01_OldScarSlash": "Player/ActionData/Wp01/Shell/MainParam/Wp01_OldScarSlash.user.3.json",
 }
 
+# GameDesign の外の生ファイル (natives/STM 以下の相対パス)。片手剣のモーション (技のフレーム) と、モーションのつなぎ (再生の始まり)
+STM_FILES = {
+    "Wp01Motlist": "Motion/Player/Weapon/Wp01/wp01_00/wp01_00.motlist.992.json",
+    "Wp01Mct": "Motion/Player/Weapon/Wp01/wp01_00/wp01_00_mct.user.3.json",
+}
+
+
+def raw_rel(key: str) -> str:
+    """生ファイルの相対パス (RAW_FILES は GameDesign 以下、STM_FILES は natives/STM 以下)。"""
+    return RAW_FILES[key] if key in RAW_FILES else STM_FILES[key]
+
 
 def raw_url(key: str) -> str:
-    return f"{MHWS_RAW}/{RAW_FILES[key]}"
+    if key in RAW_FILES:
+        return f"{MHWS_RAW}/{RAW_FILES[key]}"
+    return f"{MHWS_STM}/{STM_FILES[key]}"
 
 
 def _download(url: str, dest: Path) -> None:
@@ -68,7 +82,7 @@ def _download(url: str, dest: Path) -> None:
 
 def raw_path(key: str) -> Path:
     """生ファイルのキャッシュパス。無ければ取得する。"""
-    dest = CACHE / "raw" / Path(RAW_FILES[key]).name
+    dest = CACHE / "raw" / Path(raw_rel(key)).name
     if not dest.exists():
         print(f"取得: {raw_url(key)}", file=sys.stderr)
         _download(raw_url(key), dest)

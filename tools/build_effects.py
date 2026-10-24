@@ -24,8 +24,8 @@ from effects_conditions import groups_with_skills, validate as validate_conditio
 from effects_motions import build_combos, build_motions  # noqa: E402
 from effects_skills import build_resist_skills, build_specs  # noqa: E402
 from effects_source import (  # noqa: E402
-    GAME_BUILD, GAME_VERSION, MHDB_SKILLS_URL, MHWS_DB_JA_URL, MHWS_TAG, RAW_FILES, ROOT,
-    mhdb_skills, raw_path, raw_url, sha256_of, sharpness_table, skill_enum, skill_param,
+    GAME_BUILD, GAME_VERSION, MHDB_SKILLS_URL, MHWS_DB_JA_URL, MHWS_TAG, ROOT,
+    mhdb_skills, raw_path, raw_rel, raw_url, sha256_of, sharpness_table, skill_enum, skill_param,
     status_param, write_json,
 )
 
@@ -71,7 +71,7 @@ def _raw_sources(keys: list[str]) -> tuple[list[str], dict[str, str]]:
     urls, hashes = [], {}
     for k in keys:
         urls.append(raw_url(k))
-        hashes[RAW_FILES[k]] = sha256_of(raw_path(k))
+        hashes[raw_rel(k)] = sha256_of(raw_path(k))
     return urls, hashes
 
 
@@ -154,7 +154,8 @@ def main() -> int:
     combos = build_combos(body["moves"])
 
     m_urls, m_hashes = _raw_sources(["Wp01_Attack", "Wp01_SubAttack", "Wp01_Shell", "Wp01ShellList",
-                                     "Wp01_FinishSlash", "Wp01_RushFinishSlash", "Wp01_OldScarSlash"])
+                                     "Wp01_FinishSlash", "Wp01_RushFinishSlash", "Wp01_OldScarSlash",
+                                     "Wp01Motlist", "Wp01Mct"])
     m_sources = [f"https://github.com/dzxrly/MHWS-in-json/releases/tag/{MHWS_TAG}", *m_urls, MHWS_DB_JA_URL]
     motions = {"meta": _meta(m_sources, {
         "sourceSha256": m_hashes,
@@ -167,9 +168,17 @@ def main() -> int:
             "additionalDamage": "追加ダメージ系スキル (灼熱化など) の対象と推定 (_UseSkillAdditionalDamage)",
             "count": "このヒットの回数",
             "mapping": "proven=技名の対応表どおり / inferred=調査値から推定 / unmapped=対応なし",
+            "atFrame": "技の始まり (timing.startFrame) から当たり判定が出るまでのフレーム (motlist の _RequestSetID の区間の始まり)。"
+                       "motlist に無いヒット (子弾など) は null",
+            "atSec": "atFrame ÷ fps (60 と仮定)。灼熱化の判定の間隔を数えるのに使う",
+            "timing": "技の時間。motionId = motlist のモーション番号、startFrame = 既定の再生の始まり (mct)、frameCount = startFrame "
+                      "から最後までのフレーム (後隙込み)、linkFrames / linkSec = 次の技につなげるまで (low/mid/high。見積もり。"
+                      "無ければ null)。計算は linkSec.mid、無ければ frameCount ÷ fps、それも無ければ 1.0 秒 (警告 no-timing)",
         }}), **body}
     combo_doc = {"meta": _meta([f"https://github.com/dzxrly/MHWS-in-json/releases/tag/{MHWS_TAG}"],
-                               {"note": "技 (motions_sns.json の moves[].id) の並び。onWound=true の段は傷口の肉質で計算する。"}),
+                               {"note": "技 (motions_sns.json の moves[].id) の並び。onWound=true の段は傷口の肉質で計算する。"
+                                        "cycleSec = 1 周の秒数の見積もり {low, mid, high} (各段の moves[].timing.linkSec の和。"
+                                        "どれかの段に見積もりが無ければ null)。"}),
                  **combos}
 
     changed = []

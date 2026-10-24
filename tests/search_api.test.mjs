@@ -262,12 +262,16 @@ test('budget.activeMs: 計算した時間だけで数える (step の間に止�
     // 予算まで計算した (裏に回っていた時間では切れていない)。経過時間には裏の時間が入る
     assert.ok(r.stats.activeMs >= budget && r.stats.activeMs <= budget * 3, `計算した時間 ${r.stats.activeMs}`);
     assert.ok(r.stats.elapsedMs >= r.stats.activeMs + 10000);
-    // 始めてからの時間 (ms) の予算だと、裏に回っていた時間で切れる (計算した時間はずっと少ない)
-    const s2 = createSearch({ ...cases.B1, beam: [5, 10], budget: { ms: budget } }, data);
+    // 始めてからの時間 (ms) の予算だと、裏に回っていた時間で切れる。予算を 5 秒と大きくして、計算した時間がその半分にも届かないうちに
+    // 切れることを見る (ms が裏の時間を数えなければ、5 秒まで計算するので落ちる)。
+    // 前は同じ 800 ms の予算どうしで比べていた。ほかのテストと並べて回して CPU が混むと、予算で切らない段 (beam・polish) だけで
+    // 800 ms をこえ、どちらも dfs をほとんど回さずに終わるので、差が出ずに落ちた (点検 2026-10-24。計算した時間 759 / 938、節の数 2,985 / 2,985)
+    const msBudget = 5000;
+    const s2 = createSearch({ ...cases.B1, beam: [5, 10], budget: { ms: msBudget } }, data);
     while (!s2.step(30)) away += 10000;
     const r2 = s2.result();
     assert.equal(r2.status, 'stopped');
-    assert.ok(r2.stats.activeMs < r.stats.activeMs - 200, `ms ${r2.stats.activeMs} / activeMs ${r.stats.activeMs}`);
+    assert.ok(r2.stats.activeMs < msBudget / 2, `計算した時間 ${r2.stats.activeMs} / 予算 (ms) ${msBudget}`);
   } finally {
     performance.now = realNow;
   }

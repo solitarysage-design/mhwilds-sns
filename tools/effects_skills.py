@@ -9,7 +9,7 @@
           conditionGroup (発動率を持つ条件グループの id。rules.conditionGroups)、
           activeStates (主効果 = levels[] の値が出る段。binary は ["on"])
     levels[] の追加: gameLevel, raw, byState (段ごとの効果。主効果と違う段だけ), elementType, hardPartMul,
-                     hardPartMaxHitzone, jumpMul, lowSharpnessMul, lowSharpnessMaxColor, extraDamage, extraDamageAlt
+                     hardPartMaxHitzone, jumpMul, lowSharpnessMul, lowSharpnessMaxColor, extraDamage (docs/ARCHITECTURE.md)
 条件つきスキルの発動率はスキルごとに持たない。defaultUptime / uptimeBasis は条件グループの既定値から入れる
 (画面と計算は rules.conditionGroups の値を使う。ここの defaultUptime は主効果が出る割合の参考値)。
 """
@@ -21,6 +21,20 @@ from typing import Callable
 
 from effects_conditions import GROUPS_BY_ID, default_active_states, main_uptime
 from effects_source import skill_data_rows, skill_pack, skill_param, status_param
+
+# 灼熱化の判定 1 回あたりの平均の発動。段階の確率 (33% → 50% → 100%、発動すると戻る) の長い目で見た平均。
+# 33% を 1/3 と見るとちょうど 0.5 (0.33 のままだと 0.499)。日本語の実測 (100 回中 51〜53 回) と合う。
+SCORCH_PER_CHECK = 0.5
+
+
+def _mean_per_check(chances: list[float]) -> float:
+    """段階の確率 (判定ごとに次の段へ。最後の段は 1.0) で、発動 1 回までに要る判定の回数の期待値の逆数。"""
+    expect, reach = 0.0, 1.0
+    for k, p in enumerate(chances, start=1):
+        expect += k * reach * p
+        reach *= 1 - p
+    return 1 / expect
+
 
 # 計算で使う効果項目の既定値 (契約の levels[] の項目)
 BASE_FIELDS = {
@@ -365,33 +379,43 @@ def build_specs() -> dict[str, dict]:
         source="SkillData HunterSkill_179 _value[1]=攻撃加算 _value[0]=効果時間(秒)",
         verification=[_verify("凍峰竜の反逆", _vals(lv, "attackAdd"), [25, 50])]))
 
-    # 火竜の力 (灼熱化)。値の読み方が 2 通りあり決め手が無いので確度は low (画面で「未確定」)。
+    # 火竜の力 (灼熱化)。2026-10-24 の調査で決めた仕様 (docs/sources/damage.md「灼熱化」)。確度は low のまま (画面で「未確定」):
+    # 技のつなぎの秒数が見積もりで、判定の回数がそれで変わるため。
+    # _ScorchingHeatData = [判定の待ち (秒), 段階の確率 2 つ目・3 つ目 (%), 下位 Ⅰ (固定, 火), 下位 Ⅱ (固定, 火), 上位 Ⅰ, 上位 Ⅱ] (火は内部値)
     sh = skill_pack("_ScorchingHeatData")
-    hr = [(sh[7], sh[8]), (sh[9], sh[10])]  # 採用した読み: 上位 Ⅰ/Ⅱ = (固定, 火属性 内部値) = [7,8] / [9,10]
-    alt = [(sh[3], sh[4]), (sh[5], sh[6])]  # 別の読み: Ⅰ/Ⅱ = [3,4] / [5,6] (SkillData _value[1] と同じ火の値)
-    lv = _levels("HunterSkill_180", lambda r, i: {
-        "extraDamage": {
-            "kind": "scorch", "chance": _r(r["value"][0] / 100), "fixed": hr[i][0],
-            "element": hr[i][1] * 10, "elementType": "fire", "cooldownSec": sh[0],
-            "appliesTo": "additionalDamageHits"},
-        "extraDamageAlt": {
-            "fixed": alt[i][0], "element": alt[i][1] * 10,
-            "reading": f"_ScorchingHeatData[{3 + 2 * i}, {4 + 2 * i}] を (固定, 火属性内部値) と読んだ場合。計算には使わない"}})
+    hr = [(sh[7], sh[8]), (sh[9], sh[10])]   # 上位 Ⅰ/Ⅱ = (固定, 火属性 内部値)。計算に使う
+    low = [(sh[3], sh[4]), (sh[5], sh[6])]   # 下位 (STORY ランク) Ⅰ/Ⅱ とみられる値 (確度 medium。計算には使わない)
+
+    def _scorch(r, i):
+        chances = [_r(r["value"][0] / 100), _r(sh[1] / 100), _r(sh[2] / 100)]
+        return {"extraDamage": {
+            "kind": "scorch", "model": "checks", "cooldownSec": sh[0], "checkChances": chances,
+            "perCheck": SCORCH_PER_CHECK, "fixed": hr[i][0], "element": hr[i][1] * 10, "elementType": "fire",
+            "elementSkillsApply": True, "appliesTo": "additionalDamageHits",
+            "lowRank": {"fixed": low[i][0], "element": low[i][1] * 10}}}
+    lv = _levels("HunterSkill_180", _scorch)
+    chances = lv[0]["extraDamage"]["checkChances"]
     add("HunterSkill_180", _skill(
         "HunterSkill_180", conditional=False, levels=lv, confidence="low",
-        source="SkillData HunterSkill_180 _value[0]=発生確率%。固定/火属性は PlayerSkillParam._ScorchingHeatData[7..10] (上位) と読んだ",
-        note=f"_ScorchingHeatData={[float(x) for x in sh]}。採用した読み: [7,8]/[9,10] を Ⅰ/Ⅱ の (固定, 火属性内部値) "
-             f"= Ⅰ {hr[0][0]:g}+{hr[0][1]:g} / Ⅱ {hr[1][0]:g}+{hr[1][1]:g} (調査値と一致)。"
-             f"別の読み: [3,4]/[5,6] を Ⅰ/Ⅱ とする = Ⅰ {alt[0][0]:g}+{alt[0][1]:g} / Ⅱ {alt[1][0]:g}+{alt[1][1]:g} "
-             f"(SkillData _value[1]={[r['raw'][1] for r in lv]} がこちらの火の値と同じ)。どちらが正しいか決め手が無いので確度は low。"
-             f"levels[].extraDamageAlt に別の読みの値を残した。先頭 {sh[0]} は再発生までの秒数の候補 (調査値は 2 秒)。"
-             "追加ダメージ = 固定 + 火属性(内部値) × 火肉質/100。"
-             "クールタイムは秒数が無いので計算に入れていない (多段の技ほど過大評価)。"
-             "対象ヒットは RCOL の _UseSkillAdditionalDamage が true のものと推定。",
-        verification=[_verify("灼熱化 確率", lv[0]["extraDamage"]["chance"], 0.33),
+        source="SkillData HunterSkill_180 _value[0]=初回の確率%。PlayerSkillParam._ScorchingHeatData "
+               "([0]=判定の待ち秒・[1..2]=段階の確率%・[7..10]=上位の固定/火・[3..6]=下位とみられる値)",
+        note="確度 low の理由: 技のつなぎの秒数が見積もりで、判定の回数がそれで変わるため。"
+             f"1 回のダメージ = 固定 + (火 × 火の倍率 + 火の加算)/10 × 火肉質/100。上位 Ⅰ は固定 {hr[0][0]:g} + 火 {hr[0][1]:g}、"
+             f"Ⅱ は固定 {hr[1][0]:g} + 火 {hr[1][1]:g} (火は内部値。_ScorchingHeatData[7..10])。"
+             "火に効く属性スキル (火属性攻撃強化・連撃など) は武器の属性と関係なく火の分に掛かる (倍率が先)。"
+             "武器の攻撃力・属性値・会心・会心撃【属性】・斬れ味は掛からない。属性の上限は掛けていない (掛かるかは不明。ふつうの装備では届かない)。"
+             f"判定は灼熱化の対象ヒット (RCOL の _UseSkillAdditionalDamage) でだけ行い、前の判定から {sh[0]:g} 秒 ([0]) たつまでは"
+             "判定しない (外れても待つ)。"
+             f"判定ごとの確率は {chances[0] * 100:g}% → {chances[1] * 100:g}% → {chances[2] * 100:g}% と上がり、発動すると最初に戻る。"
+             f"平均すると判定 2 回に 1 回出る (perCheck {SCORCH_PER_CHECK:g})。"
+             f"[3..6] は下位の値とみられる (Ⅰ {low[0][0]:g}+{low[0][1]:g} / Ⅱ {low[1][0]:g}+{low[1][1]:g}。lowRank に残す。計算には使わない)。"
+             "全体防御率と多人数の倍率はゲームデータで全部 1.0 なので掛けない。",
+        verification=[_verify("灼熱化 段階の確率", chances, [0.33, 0.5, 1.0]),
+                      _verify("灼熱化 判定あたりの平均の発動", round(_mean_per_check(chances), 2), 0.5),
                       _verify("灼熱化Ⅰ 固定/火(表示)", [lv[0]["extraDamage"]["fixed"], lv[0]["extraDamage"]["element"]], [20.0, 600.0]),
                       _verify("灼熱化Ⅱ 固定/火(表示)", [lv[1]["extraDamage"]["fixed"], lv[1]["extraDamage"]["element"]], [40.0, 1200.0]),
-                      _verify("灼熱化 CT(秒)", sh[0], 2.0)]))
+                      # 人が測った間隔は 2〜3 秒 (待ちの後、次の対象ヒットが当たるまでの分が乗る)。TU4 より前は 3.0 秒
+                      _verify("灼熱化 判定の待ち(秒)", sh[0], 2.4)]))
 
     lv = _levels("HunterSkill_182", lambda r, i: {})
     add("HunterSkill_182", _skill(
@@ -447,9 +471,11 @@ def build_specs() -> dict[str, dict]:
     lv = _levels("HunterSkill_204", lambda r, i: {})
     add("HunterSkill_204", _skill(
         "HunterSkill_204", conditional=False, levels=lv, confidence="low", supported=False,
-        source="PlayerSkillParam._ViolentData (MHWS-in-json も『対応未確認』)",
-        note=f"確率で追加ダメージ。灼熱化と併用すると灼熱化は出ず、火属性ダメージが足される。_ViolentData={skill_pack('_ViolentData')} "
-             "の意味が未確定なので計算は未対応。"))
+        source="PlayerSkillParam._RyukiExplosion (MHWS-in-json も『対応未確認』)",
+        note=f"確率で追加ダメージ。灼熱化と併用すると灼熱化は出ず、火属性ダメージが足される。値は _RyukiExplosion={skill_pack('_RyukiExplosion')} "
+             "(先頭 2.4 = 判定の待ちの秒、33/50/100 = 段階の確率とみられる。灼熱化の _ScorchingHeatData と同じ形)。"
+             "残りの並びの意味が未確定なので計算は未対応。"
+             "前は _ViolentData をこのスキルの値としていたが、それは獄焔蛸の反逆 (恨撃) のもの (2026-10-24 の調査)。"))
 
     for hid in ("HunterSkill_207", "HunterSkill_221", "HunterSkill_223", "HunterSkill_225"):
         lv = _levels(hid, lambda r, i: {"attackMul": _r(r["value"][0] / 100)})
@@ -489,8 +515,9 @@ def build_specs() -> dict[str, dict]:
          "片手剣のどのヒットが対象か (isSkill_048_ValidAttack) が未確定なので計算は未対応。"),
         ("HunterSkill_176", "力の解放の発動時間を延長", "SkillData HunterSkill_176 _value[0]=延長秒",
          "直接の火力上昇は無い。力の解放の発動率を上げる形で人が入れる。"),
-        ("HunterSkill_178", "逆恨み発動中", "SkillData HunterSkill_178 _value[0]=23/50",
-         "追加ダメージの式が未確定なので計算は未対応。"),
+        ("HunterSkill_178", "逆恨み発動中", "SkillData HunterSkill_178 _value[0]=23/50。PlayerSkillParam._ViolentData",
+         f"恨撃の追加ダメージ。_ViolentData={skill_pack('_ViolentData')} はこのスキルの値とみられる (先頭 = 判定の待ちの秒、"
+         "続く 2 つ = 上位の Ⅰ/Ⅱ。SkillData の 23/50 は下位とみられる。2026-10-24 の調査)。式と発動の仕組みが未確定なので計算は未対応。"),
         ("HunterSkill_191", "属性攻撃を受けた後", "SkillData HunterSkill_191",
          "龍属性への変換と追加ダメージ。計算は未対応。"),
         ("HunterSkill_229", "鉱石の入手後", "PlayerSkillParam (未特定)", "上昇値の式が未確定なので未対応。"),

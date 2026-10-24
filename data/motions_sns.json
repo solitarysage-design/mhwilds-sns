@@ -9,9 +9,11 @@
    "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/database-20261020-070700-4a99b26/MHWS-in-json/natives/STM/GameDesign/Player/ActionData/Wp01/Shell/MainParam/Wp01_FinishSlash.user.3.json",
    "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/database-20261020-070700-4a99b26/MHWS-in-json/natives/STM/GameDesign/Player/ActionData/Wp01/Shell/MainParam/Wp01_RushFinishSlash.user.3.json",
    "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/database-20261020-070700-4a99b26/MHWS-in-json/natives/STM/GameDesign/Player/ActionData/Wp01/Shell/MainParam/Wp01_OldScarSlash.user.3.json",
+   "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/database-20261020-070700-4a99b26/MHWS-in-json/natives/STM/Motion/Player/Weapon/Wp01/wp01_00/wp01_00.motlist.992.json",
+   "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/database-20261020-070700-4a99b26/MHWS-in-json/natives/STM/Motion/Player/Weapon/Wp01/wp01_00/wp01_00_mct.user.3.json",
    "https://github.com/dzxrly/MHWS-in-json/releases/download/database-20261020-070700-4a99b26/DATABASE_ja-JP_20261020-070700-4a99b26.zip"
   ],
-  "generatedAt": "2026-10-21T03:14:46Z",
+  "generatedAt": "2026-10-24T04:32:44Z",
   "gameVersion": "1.042",
   "gameDataBuild": "1.42.0.2",
   "license": "ゲームデータの抽出は dzxrly/MHWS-in-json (MIT)。数値はカプコンのゲームデータ由来。",
@@ -22,7 +24,9 @@
    "Player/ActionData/Wp01/Shell/Wp01ShellList.user.3.json": "1561cc9e2fe701b79410267a9e958edc37b5ce22f4403c53cba5d22551a46c32",
    "Player/ActionData/Wp01/Shell/MainParam/Wp01_FinishSlash.user.3.json": "74ecbe57389705aa0467c3ff414ca511b6553e6c70220f43c0a1a85ec745bc32",
    "Player/ActionData/Wp01/Shell/MainParam/Wp01_RushFinishSlash.user.3.json": "e0ec8600f75f24ce76709a18a5d03dbfc0dfdbc2a60f6e3d5e40ffdf36498933",
-   "Player/ActionData/Wp01/Shell/MainParam/Wp01_OldScarSlash.user.3.json": "16442794649ff32f90fb0a7192a33fb671408f14fd62cad97178b90bc6a80b37"
+   "Player/ActionData/Wp01/Shell/MainParam/Wp01_OldScarSlash.user.3.json": "16442794649ff32f90fb0a7192a33fb671408f14fd62cad97178b90bc6a80b37",
+   "Motion/Player/Weapon/Wp01/wp01_00/wp01_00.motlist.992.json": "3e6ac59fbcd062224877004457f5940d8f4f38c39e2f23863a00cf540f94a4f1",
+   "Motion/Player/Weapon/Wp01/wp01_00/wp01_00_mct.user.3.json": "e9be3cdcfbe099a36ee697ba4f494a1bb71ffa855f66e7f81ac81915b74d5dc3"
   },
   "fields": {
    "mv": "物理モーション値 (_Attack)",
@@ -32,7 +36,10 @@
    "hien": "飛燕の対象 (_IsSkillHien)",
    "additionalDamage": "追加ダメージ系スキル (灼熱化など) の対象と推定 (_UseSkillAdditionalDamage)",
    "count": "このヒットの回数",
-   "mapping": "proven=技名の対応表どおり / inferred=調査値から推定 / unmapped=対応なし"
+   "mapping": "proven=技名の対応表どおり / inferred=調査値から推定 / unmapped=対応なし",
+   "atFrame": "技の始まり (timing.startFrame) から当たり判定が出るまでのフレーム (motlist の _RequestSetID の区間の始まり)。motlist に無いヒット (子弾など) は null",
+   "atSec": "atFrame ÷ fps (60 と仮定)。灼熱化の判定の間隔を数えるのに使う",
+   "timing": "技の時間。motionId = motlist のモーション番号、startFrame = 既定の再生の始まり (mct)、frameCount = startFrame から最後までのフレーム (後隙込み)、linkFrames / linkSec = 次の技につなげるまで (low/mid/high。見積もり。無ければ null)。計算は linkSec.mid、無ければ frameCount ÷ fps、それも無ければ 1.0 秒 (警告 no-timing)"
   }
  },
  "moves": [
@@ -61,11 +68,33 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 15,
+     "atSec": 0.25
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 301,
+    "motionName": "wp01_00_301",
+    "startFrame": 0,
+    "frameCount": 52,
+    "fps": 60,
+    "linkFrames": {
+     "low": 24,
+     "mid": 33,
+     "high": 43
+    },
+    "linkSec": {
+     "low": 0.4,
+     "mid": 0.55,
+     "high": 0.716667
+    },
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "別系統のモーション 255 (判定 26f) もある。△連携の主の方を 301 とした (推定)。"
+   }
   },
   {
    "id": "slash_2",
@@ -92,11 +121,33 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 6,
+     "atSec": 0.1
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 302,
+    "motionName": "wp01_00_302",
+    "startFrame": 0,
+    "frameCount": 52,
+    "fps": 60,
+    "linkFrames": {
+     "low": 15,
+     "mid": 24,
+     "high": 34
+    },
+    "linkSec": {
+     "low": 0.25,
+     "mid": 0.4,
+     "high": 0.566667
+    },
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "別系統 256 (判定 12f)。"
+   }
   },
   {
    "id": "slash_3",
@@ -123,11 +174,33 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 20,
+     "atSec": 0.333333
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 308,
+    "motionName": "wp01_00_308",
+    "startFrame": 0,
+    "frameCount": 52,
+    "fps": 60,
+    "linkFrames": {
+     "low": 29,
+     "mid": 38,
+     "high": 48
+    },
+    "linkSec": {
+     "low": 0.483333,
+     "mid": 0.633333,
+     "high": 0.8
+    },
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "別系統 257 (判定 24f)。"
+   }
   },
   {
    "id": "slash_4",
@@ -154,11 +227,33 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 18,
+     "atSec": 0.3
     }
    ],
    "confidence": "high",
-   "note": "ゲーム内ガイドの『斜め斬り下ろし』は△連携 4 段 (18/17/24/27) をまとめて指す。ここでは 4 段目 (27) だけ。"
+   "note": "ゲーム内ガイドの『斜め斬り下ろし』は△連携 4 段 (18/17/24/27) をまとめて指す。ここでは 4 段目 (27) だけ。",
+   "timing": {
+    "motionId": 309,
+    "motionName": "wp01_00_309",
+    "startFrame": 0,
+    "frameCount": 90,
+    "fps": 60,
+    "linkFrames": {
+     "low": 27,
+     "mid": 45,
+     "high": 66
+    },
+    "linkSec": {
+     "low": 0.45,
+     "mid": 0.75,
+     "high": 1.1
+    },
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "別系統 258。締めの技で後隙が長いので、つなぎの幅を広く取った。"
+   }
   },
   {
    "id": "spin_slash",
@@ -185,11 +280,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 25,
+     "atSec": 0.416667
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 305,
+    "motionName": "wp01_00_305",
+    "startFrame": 0,
+    "frameCount": 70,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "spin_upper_slash",
@@ -216,11 +325,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 30,
+     "atSec": 0.5
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 331,
+    "motionName": "wp01_00_331",
+    "startFrame": 0,
+    "frameCount": 58,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "spin_slash_2",
@@ -247,11 +370,33 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 25,
+     "atSec": 0.416667
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 307,
+    "motionName": "wp01_00_307",
+    "startFrame": 0,
+    "frameCount": 82,
+    "fps": 60,
+    "linkFrames": {
+     "low": 37,
+     "mid": 50,
+     "high": 82
+    },
+    "linkSec": {
+     "low": 0.616667,
+     "mid": 0.833333,
+     "high": 1.366667
+    },
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "horizontal_slash",
@@ -278,11 +423,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 21,
+     "atSec": 0.35
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 320,
+    "motionName": "wp01_00_320",
+    "startFrame": 0,
+    "frameCount": 57,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "A#7 は 335〜338 にも出る (つながり方の違いとみられる)。"
+   }
   },
   {
    "id": "vertical_slash",
@@ -309,11 +468,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 8,
+     "atSec": 0.133333
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 321,
+    "motionName": "wp01_00_321",
+    "startFrame": 0,
+    "frameCount": 50,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "upper_slash",
@@ -340,11 +513,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 10,
+     "atSec": 0.166667
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 306,
+    "motionName": "wp01_00_306",
+    "startFrame": 5,
+    "frameCount": 50,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "A#6 は 167〜170・340 にも出る。"
+   }
   },
   {
    "id": "dash_slash",
@@ -371,11 +558,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 34,
+     "atSec": 0.566667
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 304,
+    "motionName": "wp01_00_304",
+    "startFrame": 0,
+    "frameCount": 78,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "guard_slash",
@@ -402,11 +603,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 9,
+     "atSec": 0.15
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 316,
+    "motionName": "wp01_00_316",
+    "startFrame": 0,
+    "frameCount": 37,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "sliding_slash",
@@ -433,7 +648,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 19,
+     "atSec": 0.316667
     },
     {
      "ref": "Wp01_Attack#24",
@@ -454,11 +671,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 66,
+     "atSec": 1.1
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 330,
+    "motionName": "wp01_00_330",
+    "startFrame": 0,
+    "frameCount": 208,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "charge_slash",
@@ -485,7 +716,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 44,
+     "atSec": 0.733333
     },
     {
      "ref": "Wp01_Attack#11",
@@ -506,11 +739,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 44,
+     "atSec": 0.733333
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 313,
+    "motionName": "wp01_00_313",
+    "startFrame": 0,
+    "frameCount": 117,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "溜めの長押しの時間はモーションに入らない。"
+   }
   },
   {
    "id": "finish_slash",
@@ -537,7 +784,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 15,
+     "atSec": 0.25
     },
     {
      "ref": "Wp01_Attack#13",
@@ -558,7 +807,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 40,
+     "atSec": 0.666667
     },
     {
      "ref": "Wp01_Shell#1",
@@ -580,11 +831,33 @@
      "multiHitTimer": 0.0,
      "fixed": 0.0,
      "mapping": "proven",
-     "countBasis": "親の弾 (MainParam) の CallCustomChildShell._CreateNum"
+     "countBasis": "親の弾 (MainParam) の CallCustomChildShell._CreateNum",
+     "atFrame": null,
+     "atSec": null
     }
    ],
    "confidence": "medium",
-   "note": "3〜6 ヒット目は子弾。INDEX_1 の子弾 (MV14・属性補正0.3) を通常とした。INDEX_2 の子弾 (MV28・属性補正1.25) は finish_slash_strong。資料で属性補正が 0.3 と 1.25 に割れるのはこの 2 種類の子弾のため。A#14 (MV22・多段) は発生条件と回数が不明なので含めない。"
+   "note": "3〜6 ヒット目は子弾。INDEX_1 の子弾 (MV14・属性補正0.3) を通常とした。INDEX_2 の子弾 (MV28・属性補正1.25) は finish_slash_strong。資料で属性補正が 0.3 と 1.25 に割れるのはこの 2 種類の子弾のため。A#14 (MV22・多段) は発生条件と回数が不明なので含めない。",
+   "timing": {
+    "motionId": 340,
+    "motionName": "wp01_00_340",
+    "startFrame": 50,
+    "frameCount": 151,
+    "fps": 60,
+    "linkFrames": {
+     "low": 55,
+     "mid": 90,
+     "high": 151
+    },
+    "linkSec": {
+     "low": 0.916667,
+     "mid": 1.5,
+     "high": 2.516667
+    },
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "340 は既定で 50f 目から再生する (mct)。340 を溜め斬り落とし本体とみなしたのは推定 (332・341 にも A#13/A#14)。溜めの長押しの時間は入らない。子弾の時刻は motlist に無い。"
+   }
   },
   {
    "id": "finish_slash_strong",
@@ -611,7 +884,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 15,
+     "atSec": 0.25
     },
     {
      "ref": "Wp01_Attack#13",
@@ -632,7 +907,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 40,
+     "atSec": 0.666667
     },
     {
      "ref": "Wp01_Shell#2",
@@ -654,11 +931,33 @@
      "multiHitTimer": 0.0,
      "fixed": 0.0,
      "mapping": "proven",
-     "countBasis": "親の弾 (MainParam) の CallCustomChildShell._CreateNum"
+     "countBasis": "親の弾 (MainParam) の CallCustomChildShell._CreateNum",
+     "atFrame": null,
+     "atSec": null
     }
    ],
    "confidence": "low",
-   "note": "INDEX_2 の子弾が出る条件は未確定 (ジャスト系・傷口などの候補)。"
+   "note": "INDEX_2 の子弾が出る条件は未確定 (ジャスト系・傷口などの候補)。",
+   "timing": {
+    "motionId": 340,
+    "motionName": "wp01_00_340",
+    "startFrame": 50,
+    "frameCount": 151,
+    "fps": 60,
+    "linkFrames": {
+     "low": 55,
+     "mid": 90,
+     "high": 151
+    },
+    "linkSec": {
+     "low": 0.916667,
+     "mid": 1.5,
+     "high": 2.516667
+    },
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "finish_slash と同じモーション・同じつなぎの見積もり。"
+   }
   },
   {
    "id": "shield_bash_1",
@@ -685,11 +984,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 16,
+     "atSec": 0.266667
     }
    ],
    "confidence": "high",
-   "note": "盾のヒットは属性を使わない (_UseStatusAttrPower=false)。"
+   "note": "盾のヒットは属性を使わない (_UseStatusAttrPower=false)。",
+   "timing": {
+    "motionId": 318,
+    "motionName": "wp01_00_318",
+    "startFrame": 0,
+    "frameCount": 59,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "shield_bash_2",
@@ -716,11 +1029,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 14,
+     "atSec": 0.233333
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 319,
+    "motionName": "wp01_00_319",
+    "startFrame": 0,
+    "frameCount": 62,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "shield_bash_3",
@@ -747,11 +1074,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 17,
+     "atSec": 0.283333
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 322,
+    "motionName": "wp01_00_322",
+    "startFrame": 0,
+    "frameCount": 74,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "jump_slash",
@@ -778,7 +1119,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": null,
+     "atSec": null
     },
     {
      "ref": "Wp01_Attack#11",
@@ -799,11 +1142,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": null,
+     "atSec": null
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": null,
+    "motionName": null,
+    "startFrame": null,
+    "frameCount": null,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "A#10/A#11 の出るモーションは 313 (溜め斬り) と 358 (既定で 50f 目から再生し、判定 44f より後) で、ジャンプ斬りのものを決められない。"
+   }
   },
   {
    "id": "fall_bash",
@@ -830,7 +1187,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 47,
+     "atSec": 0.783333
     },
     {
      "ref": "Wp01_SubAttack#106",
@@ -851,11 +1210,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": null,
+     "atSec": null
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 355,
+    "motionName": "wp01_00_355",
+    "startFrame": 0,
+    "frameCount": 79,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "SA#106 (着地) は別のモーション 357 に出るので時刻を入れていない。"
+   }
   },
   {
    "id": "em_step_jump_slash",
@@ -882,11 +1255,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 0,
+     "atSec": 0.0
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 347,
+    "motionName": "wp01_00_347",
+    "startFrame": 0,
+    "frameCount": 80,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "jump_dash_slash",
@@ -913,11 +1300,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 8,
+     "atSec": 0.133333
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 353,
+    "motionName": "wp01_00_353",
+    "startFrame": 0,
+    "frameCount": 25,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "jump_upper_slash",
@@ -944,11 +1345,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 7,
+     "atSec": 0.116667
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 352,
+    "motionName": "wp01_00_352",
+    "startFrame": 0,
+    "frameCount": 22,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "sliding_draw_slash",
@@ -975,7 +1390,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 24,
+     "atSec": 0.4
     },
     {
      "ref": "Wp01_Attack#22",
@@ -996,11 +1413,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 51,
+     "atSec": 0.85
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 390,
+    "motionName": "wp01_00_390",
+    "startFrame": 0,
+    "frameCount": 65,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "just_guard_slash",
@@ -1027,11 +1458,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 11,
+     "atSec": 0.183333
     }
    ],
    "confidence": "high",
-   "note": "A#701 (MV18・斬れ味消費なし) は発生条件不明なので含めない。"
+   "note": "A#701 (MV18・斬れ味消費なし) は発生条件不明なので含めない。",
+   "timing": {
+    "motionId": 329,
+    "motionName": "wp01_00_329",
+    "startFrame": 15,
+    "frameCount": 67,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "329 は既定で 15f 目から再生する (mct)。"
+   }
   },
   {
    "id": "just_rush_start",
@@ -1058,11 +1503,33 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 49,
+     "atSec": 0.816667
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 414,
+    "motionName": "wp01_00_414",
+    "startFrame": 0,
+    "frameCount": 208,
+    "fps": 60,
+    "linkFrames": {
+     "low": 66,
+     "mid": 75,
+     "high": 90
+    },
+    "linkSec": {
+     "low": 1.1,
+     "mid": 1.25,
+     "high": 1.5
+    },
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "旋刈り (307) から入るときは 70f 目から再生する (mct)。計算は既定の 0f から。"
+   }
   },
   {
    "id": "just_rush_1_just",
@@ -1089,7 +1556,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 8,
+     "atSec": 0.133333
     },
     {
      "ref": "Wp01_Attack#51",
@@ -1110,7 +1579,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 24,
+     "atSec": 0.4
     },
     {
      "ref": "Wp01_Attack#53",
@@ -1131,11 +1602,33 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 49,
+     "atSec": 0.816667
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 415,
+    "motionName": "wp01_00_415",
+    "startFrame": 0,
+    "frameCount": 215,
+    "fps": 60,
+    "linkFrames": {
+     "low": 60,
+     "mid": 72,
+     "high": 90
+    },
+    "linkSec": {
+     "low": 1.0,
+     "mid": 1.2,
+     "high": 1.5
+    },
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "2 段目へのつなぎ (ジャストの受付) はデータに無く見積もり。"
+   }
   },
   {
    "id": "just_rush_1_miss",
@@ -1162,7 +1655,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 8,
+     "atSec": 0.133333
     },
     {
      "ref": "Wp01_Attack#52",
@@ -1183,7 +1678,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 24,
+     "atSec": 0.4
     },
     {
      "ref": "Wp01_Attack#54",
@@ -1204,11 +1701,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 49,
+     "atSec": 0.816667
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 415,
+    "motionName": "wp01_00_415",
+    "startFrame": 0,
+    "frameCount": 215,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "just_rush_2_just",
@@ -1235,11 +1746,33 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 12,
+     "atSec": 0.2
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 416,
+    "motionName": "wp01_00_416",
+    "startFrame": 0,
+    "frameCount": 160,
+    "fps": 60,
+    "linkFrames": {
+     "low": 21,
+     "mid": 30,
+     "high": 45
+    },
+    "linkSec": {
+     "low": 0.35,
+     "mid": 0.5,
+     "high": 0.75
+    },
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "3 段目は 2 段目のすぐ後に来るので、つなぎを早めに置いた。"
+   }
   },
   {
    "id": "just_rush_2_miss",
@@ -1266,11 +1799,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 12,
+     "atSec": 0.2
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 416,
+    "motionName": "wp01_00_416",
+    "startFrame": 0,
+    "frameCount": 160,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "just_rush_3_just",
@@ -1297,7 +1844,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 28,
+     "atSec": 0.466667
     },
     {
      "ref": "Wp01_SubAttack#160",
@@ -1319,7 +1868,9 @@
      "multiHitTimer": 0.0,
      "fixed": 0.0,
      "mapping": "inferred",
-     "note": "技名の対応表に無いヒット。調査値の『80・25・34×3』の 25 に当たるので含めた。"
+     "note": "技名の対応表に無いヒット。調査値の『80・25・34×3』の 25 に当たるので含めた。",
+     "atFrame": null,
+     "atSec": null
     },
     {
      "ref": "Wp01_Shell#4",
@@ -1341,11 +1892,33 @@
      "multiHitTimer": 0.0,
      "fixed": 0.0,
      "mapping": "proven",
-     "countBasis": "親の弾 (MainParam) の CallCustomChildShell._CreateNum"
+     "countBasis": "親の弾 (MainParam) の CallCustomChildShell._CreateNum",
+     "atFrame": null,
+     "atSec": null
     }
    ],
    "confidence": "medium",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 410,
+    "motionName": "wp01_00_410",
+    "startFrame": 0,
+    "frameCount": 147,
+    "fps": 60,
+    "linkFrames": {
+     "low": 47,
+     "mid": 65,
+     "high": 90
+    },
+    "linkSec": {
+     "low": 0.783333,
+     "mid": 1.083333,
+     "high": 1.5
+    },
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "盾 SA#160 と子弾の時刻は motlist に無い。"
+   }
   },
   {
    "id": "just_rush_3_miss",
@@ -1372,7 +1945,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 28,
+     "atSec": 0.466667
     },
     {
      "ref": "Wp01_Shell#3",
@@ -1394,11 +1969,25 @@
      "multiHitTimer": 0.0,
      "fixed": 0.0,
      "mapping": "proven",
-     "countBasis": "親の弾 (MainParam) の CallCustomChildShell._CreateNum"
+     "countBasis": "親の弾 (MainParam) の CallCustomChildShell._CreateNum",
+     "atFrame": null,
+     "atSec": null
     }
    ],
    "confidence": "medium",
-   "note": "失敗時に INDEX_1 の子弾が出ると推定。"
+   "note": "失敗時に INDEX_1 の子弾が出ると推定。",
+   "timing": {
+    "motionId": 410,
+    "motionName": "wp01_00_410",
+    "startFrame": 0,
+    "frameCount": 147,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "aim_attack_nohit",
@@ -1425,11 +2014,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 19,
+     "atSec": 0.316667
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 465,
+    "motionName": "wp01_00_465",
+    "startFrame": 0,
+    "frameCount": 78,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "aim_attack_wound",
@@ -1456,7 +2059,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 19,
+     "atSec": 0.316667
     },
     {
      "ref": "Wp01_Attack#26",
@@ -1477,11 +2082,33 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 19,
+     "atSec": 0.316667
     }
    ],
    "confidence": "high",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 465,
+    "motionName": "wp01_00_465",
+    "startFrame": 0,
+    "frameCount": 78,
+    "fps": 60,
+    "linkFrames": {
+     "low": 30,
+     "mid": 60,
+     "high": 78
+    },
+    "linkSec": {
+     "low": 0.5,
+     "mid": 1.0,
+     "high": 1.3
+    },
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "aim_attack_old_scar",
@@ -1508,7 +2135,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 19,
+     "atSec": 0.316667
     },
     {
      "ref": "Wp01_Attack#26",
@@ -1529,7 +2158,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 19,
+     "atSec": 0.316667
     },
     {
      "ref": "Wp01_Shell#0",
@@ -1551,11 +2182,25 @@
      "multiHitTimer": 10.0,
      "fixed": 0.0,
      "mapping": "proven",
-     "countBasis": "Wp01_OldScarSlash の _LifeSec=0.5 秒 と _MultiHitTimer=10.0 (60fps のフレームと仮定) から 3 回と推定"
+     "countBasis": "Wp01_OldScarSlash の _LifeSec=0.5 秒 と _MultiHitTimer=10.0 (60fps のフレームと仮定) から 3 回と推定",
+     "atFrame": null,
+     "atSec": null
     }
    ],
    "confidence": "medium",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 465,
+    "motionName": "wp01_00_465",
+    "startFrame": 0,
+    "frameCount": 78,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": "白傷の追加ヒット (子弾) の時刻は motlist に無い。"
+   }
   },
   {
    "id": "const_finish",
@@ -1582,7 +2227,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 21,
+     "atSec": 0.35
     },
     {
      "ref": "Wp01_Attack#31",
@@ -1603,11 +2250,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 23,
+     "atSec": 0.383333
     }
    ],
    "confidence": "medium",
-   "note": "A#33 (MV7・多段) の回数が不明なので含めない。"
+   "note": "A#33 (MV7・多段) の回数が不明なので含めない。",
+   "timing": {
+    "motionId": 504,
+    "motionName": "wp01_00_504",
+    "startFrame": 0,
+    "frameCount": 110,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   },
   {
    "id": "const_finish_bash",
@@ -1634,7 +2295,9 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 74,
+     "atSec": 1.233333
     },
     {
      "ref": "Wp01_SubAttack#132",
@@ -1655,11 +2318,25 @@
      "multiHit": false,
      "multiHitTimer": 0.0,
      "fixed": 0.0,
-     "mapping": "proven"
+     "mapping": "proven",
+     "atFrame": 74,
+     "atSec": 1.233333
     }
    ],
    "confidence": "medium",
-   "note": ""
+   "note": "",
+   "timing": {
+    "motionId": 510,
+    "motionName": "wp01_00_510",
+    "startFrame": 0,
+    "frameCount": 230,
+    "fps": 60,
+    "linkFrames": null,
+    "linkSec": null,
+    "source": "MHWS-in-json wp01_00.motlist.992 (frameCount と AttackCollision の _RequestSetID の区間)・wp01_00_mct (既定の再生の始まり)。60fps と仮定。つなぎは見積もり (2026-10-24 の調査)",
+    "confidence": "low",
+    "note": ""
+   }
   }
  ],
  "unusedHits": [

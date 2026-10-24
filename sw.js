@@ -17,7 +17,7 @@
 //   画面を開く要求 (navigate) は、アプリの入口 (/mhwilds-sns/ と index.html) だけキャッシュの index.html を返す
 //   (ライセンスの文書や CC BY-SA のデータを開いたときは、そのファイルを返す)。
 
-const VERSION = '2026-10-22-5c04404d76';
+const VERSION = '2026-10-24-8b8ce5f11a';
 const CACHE_PREFIX = 'mhwilds-sns:app-';
 const CACHE = `${CACHE_PREFIX}${VERSION}`;
 

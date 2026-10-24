@@ -41,7 +41,7 @@ docs/                   設計・出典・未確定事項
 | データ | 出典 | 備考 |
 |---|---|---|
 | 防具・スキル・装飾品・片手剣・固定護石・モンスター基本肉質 | wilds.mhdb.io `/ja/` | 2026-04-15 取込。スキルは `gameId` で他ソースと結合 |
-| スキルの内部数値・モーション値・斬れ味/会心補正・鑑定護石の抽選表 | GitHub `dzxrly/MHWS-in-json` (MIT) | ゲーム版 1.42.0.2。スナップショットを固定して使う |
+| スキルの内部数値・モーション値・技のフレーム (motlist)・斬れ味/会心補正・鑑定護石の抽選表 | GitHub `dzxrly/MHWS-in-json` (MIT) | ゲーム版 1.42.0.2。スナップショットを固定して使う |
 | 咆哮/風圧/振動/属性やられ・クエスト構成 | monsterhunterwiki.org Bucket API (CC BY-SA 4.0) | 派生データは同ライセンス表記 |
 
 Kiranico と Game8 は規約が不明・禁止のためデータの取り込み元にしない (照合用に人が見るのは可)。
@@ -163,6 +163,23 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
 }}
 ```
 - 値の根拠と確度を必ず持つ。確度が low のものは画面にも「未確定」と出す。
+- (追記 2026-10-24) 追加ダメージは `levels[].extraDamage` に持つ。灼熱化 (火竜の力) の形:
+  ```json
+  "extraDamage": {"kind": "scorch", "model": "checks", "cooldownSec": 2.4, "checkChances": [0.33, 0.5, 1.0], "perCheck": 0.5,
+                  "fixed": 40, "element": 1200, "elementType": "fire", "elementSkillsApply": true,
+                  "appliesTo": "additionalDamageHits", "lowRank": {"fixed": 30, "element": 600}}
+  ```
+  - `model: "checks"` = 対象ヒット (`appliesTo: "additionalDamageHits"` なら motions の `hits[].additionalDamage` が true のヒット) でだけ
+    判定し、前の判定から `cooldownSec` 秒たつまでは判定しない (当たっても外れても待つ)。判定 1 回あたりの平均の発動は `perCheck`
+    (段階の確率 `checkChances` = 33% → 50% → 100%、発動すると 33% に戻る の平均)。どのヒットが判定になるかは、コンボを繰り返したときの
+    定常状態で決める (motions の `timing` と `hits[].atFrame` を使う。下の motions の節)。
+  - 1 回のダメージ = `fixed` + (`element` × 火の倍率 + 火の加算)/10 × 火肉質/100。`fixed` と `element` は表示値 (上位)。
+    `elementSkillsApply: true` なら、火に効く属性スキル (`elementType` が `fire` か無指定) の倍率と加算を、**武器の属性と関係なく**掛ける
+    (倍率が先・属性の上限は掛けない)。武器の攻撃力・属性値・会心・会心撃【属性】・斬れ味は掛けない。`elementSkillsApply` は
+    `elementType: "fire"` だけ対応 (ほかの属性で true なら計算が例外で止まる)。
+  - `lowRank` は下位 (STORY ランク) の値とみられるもの (`_ScorchingHeatData[3..6]`。確度 medium)。計算には使わない (アプリは上位前提)。
+  - `model` の無い extraDamage (いまはテスト用の作り物だけ) は前の形: `chance` = ヒットごとの確率、1 回 = `fixed` + `element`/10 ×
+    その属性の肉質/100 (属性スキルは掛けない)。灼熱化には `chance` を持たせない (残すとヒットごとに数える道が残るため)。
 
 - (追記 2026-10-21) `rules.conditionGroups[]` は条件ごとの発動率の定義 (`docs/MODEL_API.md`)。条件のもとがある条件
   (狂竜症) は `sources: {skillIds, monsterStatus, label, inactiveText}` を持ち、もとのスキルも相手の状態異常も無いときは 0% で計算する。
@@ -180,6 +197,29 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
 技ごとのモーション値と属性補正、代表コンボ (技とヒット数の並び)。日本語の技名。
 - (追記 2026-10-21) コンボは `description` (画面に出す短い説明。やさしい日本語) と `note` (データの根拠。画面では「くわしく」の
   中にだけ出す) を分けて持つ。どちらも `tools/effects_motions.py` の `COMBOS` で書く。
+- (追記 2026-10-24) 技の時間 (灼熱化の判定の間隔を数えるのに使う。DPS には使わない):
+  ```json
+  "moves": [{"id": "slash_1", ...,
+             "timing": {"motionId": 301, "motionName": "wp01_00_301", "startFrame": 0, "frameCount": 52, "fps": 60,
+                        "linkFrames": {"low": 24, "mid": 33, "high": 43}, "linkSec": {"low": 0.4, "mid": 0.55, "high": 0.716667},
+                        "source": "...", "confidence": "low", "note": ""},
+             "hits": [{"ref": "Wp01_Attack#0", ..., "atFrame": 15, "atSec": 0.25}]}]
+  ```
+  - `timing.motionId` = MHWS-in-json の `wp01_00.motlist.992.json` のモーション番号。`startFrame` = そのモーションを再生し始めるフレーム
+    (`wp01_00_mct.user.3.json` の既定のつなぎ。溜め斬り落としの 340 は 50)。`frameCount` = `startFrame` から最後までのフレーム数 (後隙込み)。
+    `fps` は 60 と仮定 (確度 medium)。モーションが決められない技 (ジャンプ斬り) は `motionId` / `startFrame` / `frameCount` が null で、
+    理由を `note` に持つ。`confidence` は計算に使う技の長さの確度 (つなぎの見積もりか後隙込みの全長なので、いまは全部 low)。
+  - `linkFrames` / `linkSec` = 次の技につなげるまでの長さ (技の始まりから)。ゲームデータに無いので**見積もり** (low / mid / high。
+    確度 low)。見積もっていない技は null。計算は mid を使う。
+  - `hits[].atFrame` / `atSec` = 技の始まり (`startFrame`) からそのヒットの当たり判定が出るまで (motlist の `_RequestSetID` の区間の始まり)。
+    motlist に無いヒット (子弾・対応表に無いヒットなど) は null。
+  - 計算の決まり (`app/model/damage.js`): 技の長さ = `linkFrames.mid` ÷ `fps` (無ければ `linkSec.mid`)。どちらも無ければ
+    `frameCount` ÷ `fps`、それも無ければ 1.0 秒で、警告 `no-timing` を出す。ヒットの時刻 = `atFrame` ÷ `fps` (無ければ `atSec`)。
+    どちらも null の対象ヒットは技の始まり (0 秒) に置いて同じ警告。count が 2 以上のヒットは `multiHitTimer` (フレーム) か 0.1 秒おきに
+    並べる。秒の値 (`linkSec` / `atSec`) は小数 6 桁に丸めた表示用で、計算はフレームを使う (丸めた秒を足すと周の境目がずれる)。
+- (追記 2026-10-24) コンボの `cycleSec` = 1 周の秒数の見積もり `{low, mid, high}` (各段の `linkSec` の和。どれかの段が null なら null)。
+  計算は技の `timing` から毎回出す (自作のコンボでも同じ決まり) ので、`cycleSec` は確かめ用 (画面では使わない。`tests/scorch.test.mjs` が
+  技の `linkSec` の和と同じかを見る)。
 
 ### data/monsters.json
 ```json
@@ -421,11 +461,15 @@ ID は MHDB の数値 ID を使う。スキルは `skillId` (MHDB の skill id) 
   根拠のある既定値 (根性【果敢】の前・祈りの期間中 = 100%)、**本人の前提** (怒り・連撃 5 ヒット以降段・スタミナ満タン = 100%。
   2026-10-22 本人の決定「基本発動する前提で」。それまでは仮置き 50% で、探すタブでは 0% になり挑戦者・連撃・渾身が効かなかった)、
   仮置き (根拠なし 50%。残り 20 個。探すタブの既定では 0%)。前の 2 つは `placeholder: false` で、探すタブでもその値で探す。
-- 「DPS」は秒数が公開されていないので出さない。**代表コンボ1回の期待値**と、**スキルなし比の上昇率 (%)** を出す。
+- 「DPS」は出さない。**代表コンボ1回の期待値**と、**スキルなし比の上昇率 (%)** を出す。技のつなぎの秒数は公開データに無く見積もり
+  なので、灼熱化の判定の間隔を数えるのにだけ使う (2026-10-24)。
 - 弱点特効は肉質 45 以上 (弱点) で効く。ヒットごとに、そのヒットの物理肉質で決める (剣 = 切断・盾 = 打撃。傷口を狙う段は
   傷口の肉質)。傷口には追加分。
 - 斬れ味が「自動」のときは、スキルの組ごとに斬れ味の色を決め直す (匠を外すと色が下がる。スキルなし比のスキルなしは匠なしの色)。
 - 灼熱化などシリーズ由来の追加ダメージは、肉質に依存する部分と固定部分を分けて持つ。
+- (変更 2026-10-24) 灼熱化 = Σ (対象ヒットごと) 0.5 × w × 1 回のダメージ。w = そのコンボを繰り返したときの定常状態で、そのヒットが判定に
+  なる割合 (count が 1 のヒットなら 0〜1。判定は 2.4 秒に 1 回まで)。1 回のダメージの火の分には、火に効く属性スキルを武器の属性と関係なく掛ける。
+  形は上の skill_effects.json の節。それまでは「対象ヒットごとに 33%」で、△連携のように対象ヒットが詰まった連携で約 3 倍多く数えていた。
 
 ## 段階
 
