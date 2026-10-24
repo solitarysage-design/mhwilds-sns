@@ -533,6 +533,20 @@ def charms_list_and_photo_hint(page, ctx: Ctx):
             if c.get("slotsProvisional") and "スロット未確認" not in row_text:
                 ctx.fail(f"スロットを確かめていない護石 {c['id']} の行に「スロット未確認」の印がありません")
             check_layout(page, ctx, "護石タブ (No. で探した)")
+            if c.get("slotsProvisional"):
+                # 詳しい画面: ゲームで確かめたら、シートの No. を添えて Claude に伝える案内 (2026-10-24 点検の後)
+                page.click(f'{CHARMS_PANEL} [data-charm-id="{c["id"]}"]')
+                page.wait_for_selector(f'[data-charm-sheet="detail"][data-charm-id="{c["id"]}"]')
+                _wait_sheet_ready(page)
+                detail = page.inner_text('[data-charm-sheet="detail"]')
+                for word in ["スロットはまだ確かめていません", f"シート No.{c['sheetNo']} のスロットは", "合っていたときも伝えてください"]:
+                    if word not in detail:
+                        ctx.fail(f"スロット未確認の護石 {c['id']} の詳しい画面に「{word}」が出ていません")
+                check_layout(page, ctx, "護石の詳しい画面 (スロット未確認)")
+                page.locator('[data-charm-sheet="detail"] p', has_text="のスロットは").first.scroll_into_view_if_needed()
+                ctx.shot("charms-detail-unconfirmed", full_page=False)
+                _close_sheets(page)
+                page.wait_for_selector('[data-charm-sheet="detail"]', state="detached")
             page.fill(f'{CHARMS_PANEL} [data-charm-search]', "")
         # 「スロット未確認」だけに絞る → 合う数が出る
         n_prov = sum(1 for c in want if c.get("slotsProvisional"))

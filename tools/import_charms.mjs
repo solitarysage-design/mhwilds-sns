@@ -8,12 +8,16 @@
 // - id はシートの No. から決める (No.88 → "s088")。取り込み直しても同じ護石は同じ id になる (ブラウザに保存した装備が護石の id を持つため)。
 //   シートの行が、前からある護石 (写真で取り込んだ c0001 など) と同じ護石なら、その id を保つ (LINKS の表と、data/charms.json で
 //   sheetNo を持つ "s" 以外の id の護石)。その護石のスロットは写真で確かめた値を正とし、シートの値で上書きしない。
-// - スロットの読み方:
-//   - 「防具スロット」「武器スロット」の列があり、その行に値があれば、それを使う (slotsProvisional: false)。書き方は
+// - スロットの読み方 (1 → 2 → 3 の順。docs/ARCHITECTURE.md の data/charms.json の節):
+//   1. 「防具スロット」「武器スロット」の列があり、その行に値があれば、それを使う (slotsProvisional: false)。書き方は
 //     "2-1-0" / "2,1" / "2・1" / "21" / "①②" (どれも Lv の並び。0 は穴なし) / "1" / 空 (= その種類の穴なし) / "なし"。
-//     「?」など読めない値・両方とも空 (鑑定護石は必ず穴が 1 つ以上ある) は「読めていない」として下の読み方にする。
-//     抽選表に無い形だったときも下の読み方にして、一覧に出す (スキルは合っているので、護石ごと落とさない)。
-//   - 列が無い・読めていないとき: シートのスロット①〜③は「数」だけを信じ (Lv は動画の読み取りで当てにならない。剣・兜の印を
+//     「?」など読めない値・両方とも空 (鑑定護石は必ず穴が 1 つ以上ある) は「読めていない」として 2・3 にする。
+//     抽選表に無い形だったときも 2・3 にして、一覧に出す (スキルは合っているので、護石ごと落とさない)。
+//   2. 前の data/charms.json の同じ id の護石が slotsProvisional: false (ゲームで確かめて Claude が charms.json を直した値・前の取り込みで
+//     列から読んだ値) で、レア度とスキルが同じで、そのスロットが抽選表にあれば、前のスロットのまま (false。一覧には数を出し、
+//     列が使えなかった・シートのスロットの数と違うときは行も出す)。
+//     取り込み直しで、確かめた値を黙って一番低い形に戻さないため。
+//   3. 列が無い・読めていないとき: シートのスロット①〜③は「数」だけを信じ (Lv は動画の読み取りで当てにならない。剣・兜の印を
 //     「2」と読んでいた)、そのレア度とスキルで抽選表が許す形のうち、その数で一番低い Lv の形にする (出した装備が必ずゲームで
 //     組めるように。いまの抽選表では、同じ数の形の中で一番低い形はほかのどの形よりも各段が低いか同じ)。slotsProvisional: true。
 //     RARE 8 は武器用 Lv1 が必ず 1 つ付くので、1 つ目が武器用 Lv1、残りが防具用 Lv1 になる (抽選表どおり)。
@@ -23,6 +27,8 @@
 // - 同じ護石 (同じ RARE・スキル・スロット) が 2 行あってもどちらも残す (別の個体のことがある。探索では同じ類になるだけ)。
 // - 検証は app/model/charms.js (findSkillByName / validateCharm / normalizeSlots)。出す護石は全部 validateCharm を通ることを確かめてから書く。
 // - シートに無くなった "s" の護石は消える (一覧に出す)。シートと関係の無い護石 (sheetNo の無いもの) はそのまま残す。
+// - note は人が書く欄なので、前の data/charms.json の同じ id の値を保つ。前から変わった "s" の護石 (レア度・スキル・スロット・未確認の印) は
+//   「前から変わった護石」として前と後を一覧に出す (黙って変えない)。
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -172,7 +178,8 @@ export const sheetIdOf = (no) => `s${padNo(no)}`;
  * @param ctx {skills: skills.json, rules: talisman_rules.json, charmsFixed: charms_fixed.json}
  * @param existing いまの data/charms.json ({charms: [...]})
  * @param opts {date: 新しく足す護石の addedAt, links: {No.: 前からある id} (既定 LINKS)}
- * @returns {{charms, skipped: [{no, line, read, code, reason}], notes: [{no, id, code, text}], removed: [{id, sheetNo}], counts}}
+ * @returns {{charms, skipped: [{no, line, read, code, reason}], notes: [{no, id, code, text}], removed: [{id, sheetNo}],
+ *   changed: [{id, sheetNo, fields: [変わった所], before, after (読める文)}], counts}}
  */
 export function importSheet(sheet, ctx, existing, opts = {}) {
   const { skills, rules, charmsFixed } = ctx;
@@ -193,6 +200,7 @@ export function importSheet(sheet, ctx, existing, opts = {}) {
   const notes = [];
   const out = [];
   const seenNo = new Set();
+  let keptConfirmed = 0; // 前に確かめたスロットのままにした "s" の護石の数
   for (const { line, cells } of sheet.rows) {
     const noText = nfkc(cells[COL.no]);
     const no = /^\d+$/.test(noText) ? Number(noText) : null;
@@ -252,24 +260,46 @@ export function importSheet(sheet, ctx, existing, opts = {}) {
       notes.push({ no, id: linked.id, code: 'linked', text: `前からある護石 ${linked.id} として扱いました (スロットは ${slotText(linked.armorSlots, linked.weaponSlots)} のまま)` });
       continue;
     }
-    // スロット
+    // スロット (頭のコメントの 1 → 2 → 3 の順)
+    const id = sheetIdOf(no);
+    const old = prevById.get(id);
+    const sameAs = (p, armor, weapon) => p.armor.join() === armor.join() && p.weapon.join() === weapon.join();
     let chosen = null;
     let provisional = true;
+    let colIssue = null; // 列はあるのに使えなかった {code, text} (2 か 3 にしたことと一緒に一覧に出す)
     if (hasSlotCols) {
       const a = parseSlotCell(armorCell);
       const w = parseSlotCell(weaponCell);
       const blank = !nfkc(armorCell) && !nfkc(weaponCell);
+      const cellText = `防具スロット「${armorCell}」・武器スロット「${weaponCell}」`;
       if (a && w && !blank) {
         const armor = normalizeSlots(a, 3);
         const weapon = normalizeSlots(w, 1);
-        const hit = armor.length === 3 && weapon.length === 1
-          && allowed.find((p) => p.armor.join() === armor.join() && p.weapon.join() === weapon.join());
+        const hit = armor.length === 3 && weapon.length === 1 && allowed.find((p) => sameAs(p, armor, weapon));
         if (hit) { chosen = hit; provisional = false; }
-        else notes.push({ no, id: sheetIdOf(no), code: 'slot-columns-invalid',
-          text: `防具スロット「${armorCell}」・武器スロット「${weaponCell}」は抽選表に無い形なので、スロットの数から一番低い形にしました` });
+        else colIssue = { code: 'slot-columns-invalid', text: `${cellText}は抽選表に無い形なので` };
       } else if (!blank) {
-        notes.push({ no, id: sheetIdOf(no), code: 'slot-columns-unreadable',
-          text: `防具スロット「${armorCell}」・武器スロット「${weaponCell}」が読めないので、スロットの数から一番低い形にしました` });
+        colIssue = { code: 'slot-columns-unreadable', text: `${cellText}が読めないので` };
+      }
+    }
+    // 2. 前に確かめたスロット (同じ id・同じレア度とスキル・slotsProvisional: false・抽選表にある形)
+    if (!chosen && old && old.slotsProvisional === false && sigOf(old) === sigOf(base)) {
+      const hit = allowed.find((p) => sameAs(p, normalizeSlots(old.armorSlots, 3), normalizeSlots(old.weaponSlots, 1)));
+      if (hit) {
+        chosen = hit;
+        provisional = false;
+        keptConfirmed++;
+        // 数だけ数える (列の無い CSV を取り込み直すたびに、確かめた護石が全部並ばないように)。列が使えなかった・シートの数と違うときだけ一覧に出す
+        const n = countOf(hit);
+        if (colIssue || n !== sheetSlots.length) {
+          notes.push({ no, id, code: 'kept-confirmed',
+            text: `${colIssue ? `${colIssue.text}、` : ''}前に確かめたスロット (${slotText(hit.armor, hit.weapon)}) のままにしました`
+              + (n !== sheetSlots.length ? ` (シートのスロットの数は ${sheetSlots.length} つで、違います)` : '') });
+        }
+        colIssue = null;
+      } else {
+        notes.push({ no, id, code: 'confirmed-not-in-table',
+          text: `前に確かめたスロット (${slotText(normalizeSlots(old.armorSlots, 3), normalizeSlots(old.weaponSlots, 1))}) は抽選表に無い形なので、使いませんでした` });
       }
     }
     if (!chosen) {
@@ -284,7 +314,8 @@ export function importSheet(sheet, ctx, existing, opts = {}) {
         skip('slot-count', `スロット ${n} つの形は、このレア度とスキルでは出ません (出るのは ${counts.join('・')} つ)`);
         continue;
       }
-      if (!lp.lowest) notes.push({ no, id: sheetIdOf(no), code: 'slot-not-lowest', text: '一番低い形がほかの形より低いとは限りません (抽選表を確かめてください)' });
+      if (colIssue) notes.push({ no, id, code: colIssue.code, text: `${colIssue.text}、スロットの数から一番低い形にしました` });
+      if (!lp.lowest) notes.push({ no, id, code: 'slot-not-lowest', text: '一番低い形がほかの形より低いとは限りません (抽選表を確かめてください)' });
       chosen = lp;
     }
     const v = validateCharm({ ...base, armorSlots: chosen.armor, weaponSlots: chosen.weapon }, rules, skills, { charmsFixed });
@@ -293,18 +324,34 @@ export function importSheet(sheet, ctx, existing, opts = {}) {
       const text = wn.code === 'not-exact'
         ? `スキルの Lv が抽選表の Lv より低くなっています (読み違いかもしれません。${sk.map((s) => `${s.name}${s.level}`).join('・')})`
         : wn.message;
-      notes.push({ no, id: sheetIdOf(no), code: wn.code, text });
+      notes.push({ no, id, code: wn.code, text });
     }
-    const id = sheetIdOf(no);
-    const old = prevById.get(id);
     const src = nfkc(cells[COL.src]);
     out.push({
       id, name: base.name, rarity, skills: sk, armorSlots: chosen.armor, weaponSlots: chosen.weapon,
       sheetNo: no, slotsProvisional: provisional, sheetSlots,
       source: `シート「${SHEET_NAME}」No.${no}${src ? ` (${src})` : ''}`,
       addedAt: old && old.addedAt ? old.addedAt : date,
-      note: '',
+      // 人が書く欄なので前の値を保つ (取り込みは書かない)
+      note: old && typeof old.note === 'string' ? old.note : '',
     });
+  }
+
+  // 前の data/charms.json から変わった "s" の護石 (黙って変えない。一覧に前と後を出す)
+  const changed = [];
+  let added = 0;
+  const charmText = (c) => `RARE${c.rarity} ${(c.skills || []).map((s) => `${s.name}${s.level}`).join('・')}`
+    + ` / ${slotText(c.armorSlots || [], c.weaponSlots || [])}${c.slotsProvisional === true ? ' (スロット未確認)' : ''}`;
+  for (const c of out) {
+    if (!/^s\d+$/.test(c.id)) continue;
+    const o = prevById.get(c.id);
+    if (!o) { added++; continue; }
+    const fields = [];
+    if (sigOf(o) !== sigOf(c)) fields.push('レア度かスキル');
+    if (normalizeSlots(o.armorSlots || [], 3).join() !== c.armorSlots.join()
+      || normalizeSlots(o.weaponSlots || [], 1).join() !== c.weaponSlots.join()) fields.push('スロット');
+    if ((o.slotsProvisional === true) !== (c.slotsProvisional === true)) fields.push(c.slotsProvisional ? '未確認に戻った' : '確かめた値になった');
+    if (fields.length) changed.push({ id: c.id, sheetNo: c.sheetNo, fields, before: charmText(o), after: charmText(c) });
   }
 
   // シートと関係の無い前からある護石 (sheetNo が無いもの。写真で足した分など) は残す。"s" でシートに無くなったものは消える
@@ -340,10 +387,11 @@ export function importSheet(sheet, ctx, existing, opts = {}) {
     ids.add(c.id);
   }
   return {
-    charms, skipped, notes, removed,
+    charms, skipped, notes, removed, changed,
     counts: {
       rows: sheet.rows.length, imported: out.length, provisional: out.filter((c) => c.slotsProvisional).length,
       skipped: skipped.length, kept: keep.length, removed: removed.length, total: charms.length,
+      added, changed: changed.length, keptConfirmed,
     },
   };
 }
@@ -376,6 +424,12 @@ export function summaryText(res) {
   const c = res.counts;
   L.push(`シート ${c.rows} 行 → 取り込み ${c.imported} 個 (うちスロット未確認 ${c.provisional} 個)・取り込まない ${c.skipped} 行`);
   L.push(`data/charms.json は全部で ${c.total} 個 (シートと関係の無い護石 ${c.kept} 個を含む)`);
+  L.push(`前の data/charms.json と比べると: 新しい護石 ${c.added} 個・変わった護石 ${c.changed} 個・消した護石 ${c.removed} 個`
+    + (c.keptConfirmed ? `・前に確かめたスロットのままにした護石 ${c.keptConfirmed} 個` : ''));
+  if (res.changed.length) {
+    L.push('', '前から変わった護石 (本人に見せて、合っているか確かめてください):');
+    for (const x of res.changed) L.push(`  No.${x.sheetNo} (${x.id})  ${x.fields.join('・')}\n      前: ${x.before}\n      後: ${x.after}`);
+  }
   if (res.skipped.length) {
     L.push('', '取り込まない行:');
     for (const s of res.skipped) L.push(`  No.${s.no ?? '?'}  ${s.read}\n      → ${s.reason}`);
@@ -417,7 +471,7 @@ export function main(argv = process.argv.slice(2)) {
   const res = importSheet(sheet, ctx, existing, { date: o.date || undefined });
   if (!o.dryRun) fs.writeFileSync(o.out, charmsJsonText(res.charms));
   if (o.report) {
-    fs.writeFileSync(o.report, `${JSON.stringify({ csv: path.basename(o.csv), counts: res.counts, skipped: res.skipped, notes: res.notes, removed: res.removed }, null, 1)}\n`);
+    fs.writeFileSync(o.report, `${JSON.stringify({ csv: path.basename(o.csv), counts: res.counts, skipped: res.skipped, notes: res.notes, removed: res.removed, changed: res.changed }, null, 1)}\n`);
   }
   process.stdout.write(`${summaryText(res)}\n${o.dryRun ? '(--dry-run なので書いていません)\n' : `${path.relative(process.cwd(), o.out)} に書きました\n`}`);
   return res;

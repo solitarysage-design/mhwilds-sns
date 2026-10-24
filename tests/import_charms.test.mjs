@@ -8,7 +8,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
-  parseCsv, readSheet, parseSlotCell, importSheet, charmsJsonText, sheetIdOf, lowestPattern, allowedSlotPatterns,
+  parseCsv, readSheet, parseSlotCell, importSheet, charmsJsonText, sheetIdOf, lowestPattern, allowedSlotPatterns, summaryText,
 } from '../tools/import_charms.mjs';
 import { validateCharm, nextCharmId } from '../app/model/charms.js';
 
@@ -145,6 +145,67 @@ test('取り込み直し: 同じ中身・入れた日を保つ・シートに無
   const c1 = noFive.charms.find((x) => x.id === 'c0001');
   assert.ok(c1 && c1.sheetNo === undefined && c1.sheetSlots === undefined);
   assert.ok(noFive.notes.some((n) => n.code === 'link-row-gone'));
+});
+
+test('取り込み直し: 確かめたスロット (slotsProvisional false) と note は前のまま。変わった護石は一覧に前と後を出す', () => {
+  const first = JSON.parse(charmsJsonText(run(ROWS).charms));
+  // 本人がゲームで No.88 のスロットを確かめ、Claude が data/charms.json を直した (防具用 Lv2 が 1 つ)
+  const edit = (patch) => ({ schema: 1, charms: first.charms.map((c) => (c.id === 's088' ? { ...c, ...patch } : c)) });
+  const confirmed = edit({ armorSlots: [2, 0, 0], slotsProvisional: false, note: 'ゲームで確かめた' });
+  const again = run(ROWS, confirmed, { date: '2026-11-01' });
+  const c = byNo(again, 88);
+  assert.deepEqual([c.armorSlots, c.weaponSlots, c.slotsProvisional, c.note], [[2, 0, 0], [0], false, 'ゲームで確かめた'],
+    '列が無い取り込み直しで、一番低い形 [1,0,0] に戻さない');
+  assert.equal(again.counts.keptConfirmed, 1, '前に確かめた値のままにした数');
+  assert.match(summaryText(again), /前に確かめたスロットのままにした護石 1 個/);
+  assert.ok(!again.notes.some((n) => n.no === 88), 'シートの数 (1 つ) と同じなら行は出さない (確かめた護石が増えても一覧が埋まらない)');
+  assert.deepEqual(again.changed, [], '確かめた値のままなので、変わった護石は無い');
+  assert.equal(again.counts.added, 0);
+  // シートのスロットの数と違うときは行も出す (確かめた値のまま)
+  const two = run(ROWS, edit({ armorSlots: [1, 1, 0], slotsProvisional: false }));
+  assert.deepEqual([byNo(two, 88).armorSlots, byNo(two, 88).slotsProvisional], [[1, 1, 0], false]);
+  assert.ok(two.notes.some((n) => n.no === 88 && n.code === 'kept-confirmed' && /防具用 1-1/.test(n.text) && /1 つで、違います/.test(n.text)));
+  assert.equal(charmsJsonText(run(ROWS, JSON.parse(charmsJsonText(again.charms))).charms), charmsJsonText(again.charms), '3 回目も同じ');
+  // note は未確認の護石でも保つ (人が書く欄)
+  assert.equal(byNo(run(ROWS, edit({ note: 'メモ' })), 88).note, 'メモ');
+  // シートのスキルが変わった (読み直した) ら、前の確かめた値は使わない。変わった護石に前と後を出す
+  const reread = ROWS.map((r) => (r.startsWith('88,') ? row(88, 7, [['KO術', 2], ['連撃', 1]], [2]) : r));
+  const sk = run(reread, confirmed);
+  assert.deepEqual([byNo(sk, 88).armorSlots, byNo(sk, 88).slotsProvisional], [[1, 0, 0], true]);
+  const ch = sk.changed.find((x) => x.id === 's088');
+  assert.deepEqual(ch.fields, ['レア度かスキル', 'スロット', '未確認に戻った']);
+  assert.match(ch.before, /ＫＯ術3・連撃1 \/ 防具用 2・武器用 なし$/);
+  assert.match(ch.after, /ＫＯ術2・連撃1 \/ 防具用 1・武器用 なし \(スロット未確認\)$/);
+  assert.match(summaryText(sk), /前から変わった護石[^]*No\.88 \(s088\)/, '一覧 (標準出力) に出す');
+  // 確かめた値が抽選表に無い形 (直し間違い) なら使わず、一番低い形にして一覧に出す
+  const bad = run(ROWS, edit({ armorSlots: [3, 3, 3], slotsProvisional: false }));
+  assert.deepEqual([byNo(bad, 88).armorSlots, byNo(bad, 88).slotsProvisional], [[1, 0, 0], true]);
+  assert.ok(bad.notes.some((n) => n.no === 88 && n.code === 'confirmed-not-in-table'));
+  assert.ok(bad.changed.some((x) => x.id === 's088' && x.fields.includes('未確認に戻った')));
+  // 初めての取り込みは「新しい護石」に数える (変わった護石には出さない)
+  const fresh = run(ROWS);
+  assert.equal(fresh.counts.added, fresh.charms.filter((x) => /^s/.test(x.id)).length);
+  assert.deepEqual(fresh.changed, []);
+});
+
+test('取り込み直し: スロットの列の値は前に確かめた値より先。列が読めないときは前に確かめた値', () => {
+  const first = JSON.parse(charmsJsonText(run(ROWS).charms));
+  const confirmed = { schema: 1, charms: first.charms.map((c) => (c.id === 's088' ? { ...c, armorSlots: [2, 0, 0], slotsProvisional: false } : c)) };
+  const head = [...HEAD.slice(0, 3), `${HEAD[3]},防具スロット,武器スロット`];
+  const csv = (a) => `${[...head, `${row(88, 7, [['KO術', 3], ['連撃', 1]], [2])},${a},`].join('\n')}\n`;
+  const imp = (a) => importSheet(readSheet(csv(a)), ctx, confirmed, { date: '2026-11-01' });
+  // 列の値 (動画で読み直した値) があればそれを使い、前と違えば一覧に出す
+  const col = imp('1');
+  assert.deepEqual([byNo(col, 88).armorSlots, byNo(col, 88).slotsProvisional], [[1, 0, 0], false]);
+  assert.deepEqual(col.changed.find((x) => x.id === 's088').fields, ['スロット']);
+  // 列が読めない (?) ・空なら前に確かめた値。読めないときは、そのことを行で出す (一番低い形にしたとは書かない)
+  for (const a of ['?', '']) {
+    const r = imp(a);
+    assert.deepEqual([byNo(r, 88).armorSlots, byNo(r, 88).slotsProvisional], [[2, 0, 0], false], `列が「${a}」`);
+    assert.equal(r.counts.keptConfirmed, 1);
+    assert.equal(r.notes.some((n) => n.no === 88 && n.code === 'kept-confirmed' && /読めないので、前に確かめた/.test(n.text)), a === '?');
+    assert.ok(!r.notes.some((n) => n.no === 88 && /一番低い形にしました/.test(n.text)), '一番低い形にしたとは書かない');
+  }
 });
 
 test('スロットの列 (防具スロット・武器スロット) があればそちらを使う。読めない・抽選表に無い・空は数から一番低い形', () => {

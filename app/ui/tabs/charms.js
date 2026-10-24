@@ -901,7 +901,8 @@ function DetailSheet({ entry, ctx, equippedId, onClose, onEdit }) {
         ${slotsUnconfirmed(c) && html`
           <${Notice} kind="unconfirmed" title="スロットはまだ確かめていません">
             <p>シートのスロットの Lv は、動画の読み取りで当てになりません。数だけを使い、ゲームで出る一番低い Lv にしています。</p>
-            <p>シートの値は ${Array.isArray(c.sheetSlots) && c.sheetSlots.length ? c.sheetSlots.join('・') : 'なし'} です。ゲームの画面で確かめて、違っていたら Claude に伝えてください。</p>
+            <p>シートの値は ${Array.isArray(c.sheetSlots) && c.sheetSlots.length ? c.sheetSlots.join('・') : 'なし'} です。</p>
+            <p>ゲームの画面で確かめたら、Claude に「${c.sheetNo != null ? `シート No.${c.sheetNo}` : `護石 ${c.id}`} のスロットは 防具用 Lv2 が 1 つ」のように伝えてください。合っていたときも伝えてください。Claude が直すと、アプリが次に新しくなったときに「スロット未確認」の印が消えます。</p>
           </${Notice}>`}
         <${ValidationNotice} entry=${entry} />
         ${entry.importedAs && html`
