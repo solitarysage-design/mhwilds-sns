@@ -803,7 +803,7 @@ function MySetSheet({ set, idx, isCurrent, onClose }) {
     ['護石', (() => {
       if (b.charm == null) return 'なし';
       const c = typeof b.charm === 'number' ? idx.charmsFixed.get(b.charm) : idx.charms.get(b.charm);
-      return c ? c.name : '見つからない護石';
+      return c ? L.charmLabel(c) : '見つからない護石';
     })()],
     ['装飾品', `${Object.values(b.decorations).flat().filter((x) => x != null).length} 個`],
   ];
@@ -906,7 +906,7 @@ export default function EquipTab({ data, active }) {
   }
   if (build.charm != null) {
     const c = typeof build.charm === 'number' ? idx.charmsFixed.get(build.charm) : idx.charms.get(build.charm);
-    if (c) names.charm = c.name;
+    if (c) names.charm = L.charmLabel(c);
   }
 
   const ps = usePowerSummary({ active, data, idx, weapon, result });

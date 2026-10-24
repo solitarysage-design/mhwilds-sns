@@ -828,10 +828,19 @@ export function armorNameOf(idx, id) {
   return a ? a.name : id != null ? `見つからない防具 (${id})` : 'なし';
 }
 
+/** 護石の名前 (シートから取り込んだ護石は「秘歴の護石 (シート No.88)」) */
 export function charmNameOf(idx, ref) {
   if (ref == null) return 'なし';
   const c = typeof ref === 'number' ? idx.charmsFixed.get(ref) : idx.charms.get(ref);
-  return c ? (c.name || '護石') : '見つからない護石';
+  if (!c) return '見つからない護石';
+  return `${c.name || '護石'}${c.sheetNo != null ? ` (シート No.${c.sheetNo})` : ''}`;
+}
+
+/** 護石のスロットを確かめていないか (シートの読み取りのスロットを一番低い形にした護石。docs/ARCHITECTURE.md の data/charms.json) */
+export function charmUnconfirmed(idx, ref) {
+  if (ref == null || typeof ref === 'number') return false;
+  const c = idx.charms.get(ref);
+  return !!(c && c.slotsProvisional === true);
 }
 
 export function decoNamesOf(idx, build, target) {
@@ -911,6 +920,8 @@ export function resultRows(result, ctx) {
       skills, skillsText: mainSkillsText(skills), skillDiff: skillDiff(currentSkills, skills),
       freeSlots: isObj(r.freeSlots) ? r.freeSlots : (br ? freeSlotsOf(br) : null),
       weaponName: w ? weaponName(w) : '武器なし',
+      // 護石 (シートの No. とスロット未確認の印。一覧の行に出す)
+      charm: r.build.charm != null ? { name: charmNameOf(idx, r.build.charm), unconfirmed: charmUnconfirmed(idx, r.build.charm) } : null,
       second: second ? { build: second, weaponName: w2 ? weaponName(w2) : '武器なし', decorations: decoNamesOf(idx, second, 'weapon') } : null,
       gamma: gammaMarksOf(r.build, gamma),
       errors: br ? br.errors : [],
@@ -1018,6 +1029,7 @@ export function buildLines(build, idx) {
   lines.push({
     key: 'charm', label: '護石', name: charmNameOf(idx, build.charm),
     decorations: [...decoNamesOf(idx, build, 'charmArmor'), ...decoNamesOf(idx, build, 'charmWeapon')], limitBreak: false,
+    unconfirmed: charmUnconfirmed(idx, build.charm),
   });
   return lines;
 }

@@ -6,6 +6,8 @@
 // 3. 書き出し: 泣シミュ (wiki-db) 形式の 12 項目 / Claude に渡す用 (data/charms.json に足せる JSON)。読み込み: 泣シミュ形式の貼り付け。
 // 4. 「写真で足すには」の案内を常に出す。
 // 5. 選んだ護石を装備の護石にする (state.js の setCharm)。
+// 6. (2026-10-24) シート「所持護石一覧」から取り込んだ護石 (tools/import_charms.mjs。約 250 個) は、シートの No. と
+//    「スロット未確認」の印を出す。一覧は No. かスキルの名前で探せて、「スロット未確認」「注意・エラー」だけにも絞れる。
 //
 // この端末で足した護石は IndexedDB の "mhwilds-sns:charms-local" に、charms.json の要素と同じ形の配列で保存する。
 // id は "u0001" から (data/charms.json の "c0001" と重ならない)。設定タブの「全データの書き出し」にも自動で入る。
@@ -13,7 +15,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import {
   html, Card, Button, Hint, KeyValue, Badge, Notice, Loading, Empty, Segmented, TextInput, BottomSheet, PickerField,
-  toast, formatSlots,
+  toast, formatSlots, normalizeSearch,
 } from '../components/index.js';
 import { useAppState, setCharm, setTab, getState } from '../../state.js';
 import { kvGet, kvSet, copyText } from '../../store.js';
@@ -275,7 +277,7 @@ export function charmPickerItems(data, local = localStore.charms) {
 
 // ================================================================ 表示用の言葉
 
-function ctxOf(data) {
+export function ctxOf(data) {
   return {
     rules: (data && data.talismanRules) || { rarities: {}, groups: {} },
     skills: (data && data.index && data.index.skills) || new Map(),
@@ -306,6 +308,16 @@ function slotsLine(c, kind) {
 function skillsText(c, ctx) {
   const list = (c.skills || []).map((s) => `${skillName(s.skillId, ctx, s.name)} Lv${s.level}`);
   return list.length ? list.join('、') : 'スキルなし';
+}
+
+/** シートから取り込んだ護石の番号「シート No.88」(シートの護石でなければ空) */
+export function sheetLabel(c) {
+  return c && c.sheetNo != null ? `シート No.${c.sheetNo}` : '';
+}
+
+/** スロットを確かめていない護石か (シートの読み取りのスロットを、一番低い形にしたもの) */
+export function slotsUnconfirmed(c) {
+  return !!(c && c.slotsProvisional === true);
 }
 
 function charmTitle(c, kind, ctx) {
@@ -412,6 +424,53 @@ export function checkCharm(charm, ctx) {
 export function charmSignature(c) {
   const sk = (c.skills || []).map((s) => `${s.skillId}:${s.level}`).sort().join(',');
   return [c.rarity ?? '', normalizeSlots(c.armorSlots, 3).join(','), normalizeSlots(c.weaponSlots, 1).join(','), sk].join('|');
+}
+
+// ================================================================ 一覧の絞り込み (シートの護石が 250 個あるため)
+
+/** 一覧に一度に出す数 (シートの護石は 250 個あるので、iPhone で描く量を抑える。「さらに出す」で足す) */
+export const CHARM_PAGE = 40;
+
+/** 一覧の絞り方 */
+export const CHARM_FILTERS = [
+  { value: 'all', label: '全部' },
+  { value: 'unconfirmed', label: 'スロット未確認' },
+  { value: 'issue', label: '注意・エラー' },
+];
+
+function entryMatches(e, filter) {
+  if (filter === 'unconfirmed') return slotsUnconfirmed(e.charm);
+  if (filter === 'issue') return e.issues.length > 0;
+  return true;
+}
+
+/**
+ * 一覧の行 (makeEntries の要素) を、探す言葉と絞り方で絞る。
+ * 言葉は空白で区切ると全部を含むもの。数だけ (「88」「No.88」) はシートの No. か番号 (c0001 など) と同じもの。
+ * ほかはレア度・名前・スキルの名前・番号のどれかに含むもの (全角/半角・ひらがな/カタカナはそろえて比べる)。
+ */
+export function filterCharmEntries(entries, { query = '', filter = 'all' } = {}, ctx) {
+  const tokens = String(query || '').split(/[\s　]+/).map((t) => normalizeSearch(t)).filter(Boolean);
+  return entries.filter((e) => {
+    if (!entryMatches(e, filter)) return false;
+    if (!tokens.length) return true;
+    const c = e.charm;
+    if (!e.__search) {
+      e.__search = normalizeSearch(`${charmTitle(c, e.kind, ctx)} ${skillsText(c, ctx)} ${c.id} ${sheetLabel(c)}`);
+    }
+    return tokens.every((t) => {
+      const m = /^(?:no\.?)?(\d+)$/.exec(t);
+      if (m) return Number(m[1]) === Number(c.sheetNo) || normalizeSearch(c.id) === t || normalizeSearch(c.id).endsWith(m[1].padStart(4, '0'));
+      return e.__search.includes(t);
+    });
+  });
+}
+
+/** 絞り方ごとの数 {all, unconfirmed, issue} */
+export function charmFilterCounts(entries) {
+  const out = {};
+  for (const f of CHARM_FILTERS) out[f.value] = entries.filter((e) => entryMatches(e, f.value)).length;
+  return out;
 }
 
 // ================================================================ 手で足すときの選択肢 (抽選表から)
@@ -705,7 +764,8 @@ function CharmRow({ entry, ctx, equipped, onOpen }) {
       onClick=${onOpen}>
       <span class="row-main">
         <span class="row-label">
-          ${charmTitle(c, entry.kind, ctx)}
+          ${charmTitle(c, entry.kind, ctx)}${c.sheetNo != null ? html` <span class="charm-sheet-no">${sheetLabel(c)}</span>` : ''}
+          ${slotsUnconfirmed(c) && html` <${Badge} kind="unconfirmed">スロット未確認</${Badge}>`}
           ${equipped && html` <${Badge} kind="info">装備中</${Badge}>`}
           ${entry.importedAs && html` <${Badge} kind="ok">取り込み済み</${Badge}>`}
         </span>
@@ -729,6 +789,7 @@ function PhotoNotice() {
     <${Notice} kind="info" title="写真で足すには">
       <p>iPhone でゲームの護石の画面を撮って、Claude に「護石取り込んで」と送ってください。</p>
       <p>Claude が写真を読み取って足します。足した護石は、アプリが次に新しくなったときに「Claude が取り込んだ護石」に出ます。</p>
+      <p>Google ドライブの所持護石の表を直したときは、Claude に「護石のシートを取り込んで」と送ってください。</p>
     </${Notice}>`;
 }
 
@@ -812,6 +873,7 @@ function DetailSheet({ entry, ctx, equippedId, onClose, onEdit }) {
 
   const rows = [
     ['どこの護石', isLocal ? 'この端末で足した分' : 'Claude が取り込んだ分'],
+    c.sheetNo != null && ['シートの番号', `No.${c.sheetNo}`],
     ['種類', entry.kind === 'fixed' ? '生産する護石' : '鑑定する護石'],
     ['スキル', html`${(c.skills || []).length ? (c.skills || []).map((s) => html`
       <span style="display:block">${skillName(s.skillId, ctx, s.name)} Lv${s.level}</span>`) : 'なし'}`],
@@ -836,6 +898,12 @@ function DetailSheet({ entry, ctx, equippedId, onClose, onEdit }) {
       <div class="stack" data-charm-sheet="detail" data-charm-id=${c.id}>
         ${isEquipped && html`<p class="hint" style="margin-top:0"><${Badge} kind="info">装備中</${Badge}> 今の装備の護石です。</p>`}
         <${KeyValue} rows=${rows} />
+        ${slotsUnconfirmed(c) && html`
+          <${Notice} kind="unconfirmed" title="スロットはまだ確かめていません">
+            <p>シートのスロットの Lv は、動画の読み取りで当てになりません。数だけを使い、ゲームで出る一番低い Lv にしています。</p>
+            <p>シートの値は ${Array.isArray(c.sheetSlots) && c.sheetSlots.length ? c.sheetSlots.join('・') : 'なし'} です。</p>
+            <p>ゲームの画面で確かめたら、Claude に「${c.sheetNo != null ? `シート No.${c.sheetNo}` : `護石 ${c.id}`} のスロットは 防具用 Lv2 が 1 つ」のように伝えてください。合っていたときも伝えてください。Claude が直すと、アプリが次に新しくなったときに「スロット未確認」の印が消えます。</p>
+          </${Notice}>`}
         <${ValidationNotice} entry=${entry} />
         ${entry.importedAs && html`
           <${Notice} kind="ok" title="Claude が取り込み済みです">
@@ -1167,7 +1235,8 @@ function ImportSheet({ ctx, existing, onClose }) {
 
 // ================================================================ 画面: 本体
 
-function makeEntries(dataCharms, localCharms, ctx) {
+/** 一覧の行: {charm, origin: 'data'|'local', kind, importedAs, check, issues} (テストからも使う) */
+export function makeEntries(dataCharms, localCharms, ctx) {
   const out = [];
   const dataSigs = new Map();
   for (const c of dataCharms) {
@@ -1193,6 +1262,9 @@ export default function CharmsTab({ data, active }) {
   const [editor, setEditor] = useState(null);     // null | {seq, charm: null (足す) | 護石 (直す)}
   const [exp, setExp] = useState(null);           // null | {kind, title, intro, text}
   const [importSeq, setImportSeq] = useState(0);  // 0 = 閉じている。開くたびに増やす (シートを新しく作る)
+  const [query, setQuery] = useState('');          // 一覧を探す言葉 (Claude が取り込んだ護石)
+  const [listFilter, setListFilter] = useState('all');
+  const [limit, setLimit] = useState(CHARM_PAGE);   // 一覧に出す数 (探す言葉・絞り方を変えたら戻す)
   const openEditor = (charm) => setEditor({ seq: ++sheetSeq, charm });
 
   // タブを開くたびに保存領域と合わせる (設定タブで全データを読み込んだ・初期化したとき用)
@@ -1203,6 +1275,15 @@ export default function CharmsTab({ data, active }) {
   const dataCharms = (data.lists && data.lists.charms) || [];
   const entries = useMemo(() => makeEntries(dataCharms, local.charms, ctx), [dataCharms, local.charms, ctx]);
   const dataEntries = entries.filter((e) => e.origin === 'data');
+  // 一覧が長いとき (シートの護石) は、探す欄と絞り方を出す
+  const showTools = dataEntries.length > 8;
+  const shownData = useMemo(() => (showTools ? filterCharmEntries(dataEntries, { query, filter: listFilter }, ctx) : dataEntries),
+    [entries, showTools, query, listFilter, ctx]);
+  const counts = useMemo(() => charmFilterCounts(dataEntries), [entries]);
+  const shownRows = shownData.slice(0, limit);
+  const rest = shownData.length - shownRows.length;
+  const changeQuery = (q) => { setQuery(q); setLimit(CHARM_PAGE); };
+  const changeFilter = (f) => { setListFilter(f); setLimit(CHARM_PAGE); };
   const localEntries = entries.filter((e) => e.origin === 'local');
   const imported = localEntries.filter((e) => e.importedAs);
   const detail = detailId ? entries.find((e) => e.charm.id === detailId) || null : null;
@@ -1250,10 +1331,31 @@ export default function CharmsTab({ data, active }) {
       <${PhotoNotice} />
 
       <${Card} title="Claude が取り込んだ護石" sub=${`${dataEntries.length} 個`} flush>
-        ${dataEntries.length ? dataEntries.map((e) => html`
-          <${CharmRow} key=${e.charm.id} entry=${e} ctx=${ctx} equipped=${equippedId === e.charm.id}
-            onOpen=${() => setDetailId(e.charm.id)} />`) : html`
-          <${Empty}>まだありません。上の案内のとおり写真を Claude に送ると、ここに出ます。</${Empty}>`}
+        ${showTools && html`
+          <div class="charm-tools" data-charm-tools="1">
+            <input class="input" type="search" value=${query} placeholder="シートの No. かスキルの名前で探す" aria-label="護石を探す"
+              enterkeyhint="search" autocomplete="off" data-charm-search="1"
+              onInput=${(e) => changeQuery(e.currentTarget.value)} />
+            <${Segmented} value=${listFilter} onChange=${changeFilter}
+              options=${CHARM_FILTERS.map((f) => ({ value: f.value, label: `${f.label} ${counts[f.value]}` }))} />
+            ${(query || listFilter !== 'all') && html`
+              <p class="hint" data-charm-matched=${shownData.length}>${dataEntries.length} 個のうち、合う護石は ${shownData.length} 個です。</p>`}
+          </div>`}
+        <div class="charm-list">
+          ${shownRows.length ? shownRows.map((e) => html`
+            <${CharmRow} key=${e.charm.id} entry=${e} ctx=${ctx} equipped=${equippedId === e.charm.id}
+              onOpen=${() => setDetailId(e.charm.id)} />`) : dataEntries.length ? html`
+            <${Empty}>合う護石がありません。探す言葉か絞り方を変えてください。</${Empty}>` : html`
+            <${Empty}>まだありません。上の案内のとおり写真を Claude に送ると、ここに出ます。</${Empty}>`}
+        </div>
+        ${rest > 0 && html`
+          <${Pad}>
+            <p class="hint" style="margin-top:0" data-charm-rest=${rest}>あと ${rest} 個あります。</p>
+            <div class="btn-row">
+              <${Button} onClick=${() => setLimit(limit + CHARM_PAGE)} data-charm-action="more">さらに ${Math.min(CHARM_PAGE, rest)} 個を出す</${Button}>
+              <${Button} variant="ghost" onClick=${() => setLimit(Infinity)} data-charm-action="all">全部出す</${Button}>
+            </div>
+          </${Pad}>`}
       </${Card}>
 
       <${Card} title="この端末で足した護石" sub=${local.status === 'ready' ? `${localEntries.length} 個・この端末にだけ保存` : null} flush

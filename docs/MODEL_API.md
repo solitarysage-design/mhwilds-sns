@@ -449,11 +449,16 @@ const base = planBaseline(job, state.build, { index, skillEffects, motions });  
     「残り ÷ 残りの回の数」を渡す (先に最後まで終わった回が使わなかった分が後の回に回る。`runs[].input.budget` はその最初の値)。
     `opts.budget` を渡したとき (テスト・ベンチの仕事量の予算など) は `null` で、各回は入力の `budget` のまま。
   - 属性やられがオン → `runs` は `blight-skill` (属性やられ耐性 Lv3) と `blight-resist` (各属性の耐性スキル Lv3) の 2 つ。オフなら `main` の 1 つ。
+    (2026-10-24) `blight-resist` の入力には `armorResistMin` (属性ごとに「20 − 耐性スキル Lv3 の分」= いまは 0) を付ける。守りのチェック
+    (耐性の合計 ≥ 20) を探索の条件にして、回の上位が守りで落ちる組で埋まらないようにする (所持護石が 246 個になって S3z・S4z の 1 位が
+    前より悪くなったため。`docs/SEARCH_DESIGN.md` 2.12 節・12 章)。要件の行 (`requirementsFrom`) は `byResistArmorMin` を持つ。
   - `costRun` = 守りの要件を外した探索 (`stopAfter: 'partial'`・自分で足した必須は残す)。守りの要件がオンのときだけ。
   - `tryKey` を渡すと「試す」用 (その行をオンにして全部 `stopAfter: 'partial'`・`costRun` なし・武器 2 本なし)。
   - 属性やられの行はあるが、防ぎ方 (`bySkill` / `byResist`) が行ごとにそろわない (データの欠け) ときは、必須にせず `main` の 1 回にして警告 `blight-not-required`。
   - `blocked` (相手のデータの読み込み中・装備固定) のときは `runs: []`。
 - `createPlanRunner(job, data, {createSearch, optimizeWeaponSide, now})`: `step(ms)` / `progress()` / `result()` / `cancel()` / `extend({ms} | {activeMs})`。
+  (2026-10-24) 相手が 1 体・武器 1 本 (`merge.mode: 'single'`) のときは、2 回目からの回に `floor` = 前の回で守りを満たした組の K 番目の値を
+  渡す (それより下の組は合わせた上位 K に入らない)。`result().stats.runs[].floor` に渡した値 (渡さなかった回は null)。
   `data` は Worker の data (生データ + `index`)。索引には入力の `extraWeapons`・`charms.extra` (端末の所持アーティア・護石) を足して使う
   (守りのチェック・いまの装備の値・相手ごとの値の計算し直し)。
   探索の回の予算は、`job.runsBudget` があれば回を始めるときに渡す: 「残りの持ち時間 ÷ 残りの回の数」(`activeMs`)。回が終わったら
@@ -543,6 +548,8 @@ const search = createSearch({
   stopAfter: undefined,            // 'partial' = 仕上げ 1 (途中の結果) で止める
   current: state.build,            // 渡すと result().baseline = {value} (同じ式で計算した今の装備の値)
   gamma: gammaIndexOf(targetData), // 渡すと results[].gamma に「歴戦王の素材が要る」の印 (下)。同じ類に γ でないものがあればそちらを出す
+  armorResistMin: { fire: 0 },     // (2026-10-24) 防具 5 部位の属性の耐性の合計の下限。相手タブの耐性の回だけ (SEARCH_DESIGN.md 2.12 節)
+  floor: 1520.2,                   // (2026-10-24) これ以下の値の構成は要らない。相手タブで前の回の上位 K 番目の値 (RECOMMEND_DESIGN.md 5.3 節)
 }, data);                          // data = data.js の core のデータ (index・skillEffects・motions を読む) か {index, effects, motions}
 
 while (!search.step(80)) {         // 80ms ぶん進める。終わったら (中止・失敗を含む) true
@@ -583,7 +590,11 @@ search.extendable;                 // 続ける所があるか (extend が true 
 - 計算し直し (`check`) は result() のたびに上位 K 件ぶん comboExpected を呼ぶ (同じ構成は覚える)。仮置きの発動率のままだと 1 件 20〜30ms (Node)。
 - テスト用の入力: `beam: [幅, ...]` (ビームの幅) / `dominance: false` (優越の除去をしない。総当たりと同じ数え方になる) /
   `sieve: false` (武器も探すときの 2 段のふるいをしない) か `{top, weapons}` (測り直す防具・護石の組の数 既定 50・dfs を回す武器の数 既定 3) /
-  `tight: false` (締めた上界を使わない。前の上界と比べる用。`docs/SEARCH_DESIGN.md` 2.4 節) か `solver.js` の `TIGHT` の一部を差し替えるもの。
+  `tight: false` (締めた上界を使わない。前の上界と比べる用。`docs/SEARCH_DESIGN.md` 2.4 節) か `solver.js` の `TIGHT` の一部を差し替えるもの /
+  `spread: false` (護石の類をばらして探す工夫をしない。前と比べる用。`docs/SEARCH_DESIGN.md` 2.13 節。2026-10-24)。
+- (2026-10-24) `armorResistMin` を渡すと、防具 5 部位の耐性の合計が下限に届かない構成を出さない (届かないなら `infeasible` で、`missing` は
+  `{skillId: null, name: '防具の火耐性の合計', element, min, reason}`)。`alternatives` の防具も、入れ替えて下限を割るものは出さない。
+  `floor` は fast の damage だけ。最後まで回って 1 件も無くても `infeasible` にしない (floor より上が無いだけのため)。
 - 必須のシリーズ/グループスキルは、残りの部位を「どのボーナスに数えるか」割り当てて判定する (部位の取り合い・ゴグα/β の 2 つのシリーズも
   見る。満たせない組は最初の上界で分かる。`docs/SEARCH_DESIGN.md` 2.8 節・11 章)。
 

@@ -127,13 +127,26 @@ function normalizeInput(input, core, warnings) {
     stopAfter: inp.stopAfter === 'partial' ? 'partial' : null,
     current: isObj(inp.current) ? inp.current : null,
     gamma: gammaOf(inp.gamma),
+    // 防具 5 部位の属性の耐性の合計の下限 ({fire: 0, ...}。相手タブの耐性の回。知らない属性・数でない値は外す)
+    armorResistMin: armorResistMinOf(inp.armorResistMin),
+    // これ以下の値の構成は要らない (相手タブで、前の回の上位 K 番目の値。fast の damage だけ)
+    floor: inp.floor != null && Number.isFinite(Number(inp.floor)) && objective === 'damage' ? Number(inp.floor) : null,
     // テスト用: ビームの幅 / 優越の除去をしない (総当たりと同じ数え方にする) / 武器も探すときの 2 段のふるい (false でしない) /
-    // 締めた上界 (false で前の上界。比べる用)
+    // 締めた上界 (false で前の上界。比べる用) / 護石の類をばらして探す工夫 (false でしない。SEARCH_DESIGN.md 2.13 節。比べる用)
     beam: Array.isArray(inp.beam) ? inp.beam : undefined,
     dominance: inp.dominance !== false,
     sieve: inp.sieve === false ? false : (isObj(inp.sieve) ? inp.sieve : undefined),
     tight: inp.tight === false ? false : (isObj(inp.tight) ? inp.tight : undefined),
+    spread: inp.spread !== false,
   };
+}
+
+/** input.armorResistMin → {属性: 下限} (火・水・雷・氷・龍で、数のものだけ) か null */
+function armorResistMinOf(x) {
+  if (!isObj(x)) return null;
+  const out = {};
+  for (const [e, v] of Object.entries(x)) if (['fire', 'water', 'thunder', 'ice', 'dragon'].includes(e) && v != null && Number.isFinite(Number(v))) out[e] = Number(v);
+  return Object.keys(out).length ? out : null;
 }
 
 /** input.gamma (gammaIndexOf の結果) → {armor: Map<id, {monsterId, name}>, charms: Map<id, {...}>} か null */
@@ -216,6 +229,7 @@ export function createSearch(input, data) {
       weapons: n.weapons, targets: n.targets, combo: n.combo, uptimes: n.uptimes, monsterStatus: n.monsterStatus,
       buffs: n.buffs, required: n.required, limitBreak: n.limitBreak, sharpness: n.sharpness, charmRefs: n.charmRefs,
       armorExclude: n.armorExclude, decoCount: n.decoCount, objective: n.objective, K: n.K,
+      ...(n.armorResistMin ? { armorResistMin: n.armorResistMin } : {}),
       ...(n.dominance ? {} : { domK: Infinity, weaponDominance: false }),
     });
     prepareMs = now() - tp;
@@ -223,6 +237,8 @@ export function createSearch(input, data) {
     if (n.objective === 'damage') uptimeWarnings(P, n, core, warnings);
     S = new BnbSolver(P, {
       mode: n.mode, objective: n.objective, K: n.K, budget: n.budget, stopAfter: n.stopAfter, beam: n.beam, sieve: n.sieve, tight: n.tight,
+      spread: n.spread,
+      ...(n.floor != null ? { floor: n.floor } : {}),
     });
   }
 
@@ -252,7 +268,8 @@ export function createSearch(input, data) {
 
   /** 満たす構成が無いと分かった (最初の上界で -∞、または木を最後まで回って 1 件も無い) */
   function provenInfeasible() {
-    return !!(S && (S.infeasible || (S.done && S.dfsFinished && !S.cut && !S.list.length)));
+    // floor (これ以下は要らない) を渡したときは、最後まで回って 1 件も無くても「無い」とは言えない (floor より上が無いだけ)
+    return !!(S && (S.infeasible || (S.done && S.dfsFinished && !S.cut && !S.list.length && n.floor == null)));
   }
 
   function infeasibleInfo() {
@@ -264,6 +281,16 @@ export function createSearch(input, data) {
       for (const q of keep) lv[P.rOf.get(q.skillId)] = P.reqLv[P.rOf.get(q.skillId)];
       return lv;
     };
+    // 防具の耐性の合計の下限 (armorResistMin) だけで届かないなら、スキルではなくそれを出す
+    if (P.resE && P.resE.length && !S.rootFeasible(only([]))) {
+      const LABEL = { fire: '火', water: '水', thunder: '雷', ice: '氷', dragon: '龍' };
+      return {
+        missing: P.resE.map((e, i) => ({
+          skillId: null, name: `防具の${LABEL[e] || e}耐性の合計`, level: null, element: e, min: P.resMin[i],
+          reason: `防具 5 部位をどう組んでも ${P.resMin[i]} 以上になりません`,
+        })),
+      };
+    }
     const kindReason = (q) => {
       const kind = n.idx.skills.get(q.skillId)?.kind;
       const r = P.rOf.get(q.skillId);

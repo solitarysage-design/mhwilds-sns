@@ -457,9 +457,14 @@ export function requirementsFrom(items, opts = {}) {
       const bySkill = blightSkillId != null && level != null ? [{ skillId: blightSkillId, level }] : null;
       const byResist = elements.length && elements.every((e) => resist[e])
         ? elements.map((e) => ({ skillId: resist[e].skillId, level: resistLevelFor(resist[e], threshold) })) : null;
+      // 耐性スキルをその Lv にしたとき、守りのチェック (耐性の合計 ≥ threshold) に防具 5 部位の耐性の合計が要る下限
+      // (探索の条件 armorResistMin。2026-10-24: 所持護石が増えると、耐性の回の上位が「防具の耐性が足りない組」で埋まり、
+      // 守りを満たす組が上位の外に押し出されたため。いまのデータは耐性スキルの必須の Lv = 最大の Lv なので、これで過不足が無い)
+      const byResistArmorMin = byResist
+        ? Object.fromEntries(elements.map((e, i) => [e, threshold - (Number(resist[e].levels[String(byResist[i].level)]) || 0)])) : null;
       const skillName = top.skill?.name || '属性やられ耐性';
       rows.push({
-        ...base, ...lv, kind: 'blight', elements, threshold, blightSkillId, skillName, bySkill, byResist,
+        ...base, ...lv, kind: 'blight', elements, threshold, blightSkillId, skillName, bySkill, byResist, byResistArmorMin,
         label: `${names.join('・')}属性やられを防ぐ`,
         orText: `${skillName} Lv${level ?? '?'}、または ${names.join('・')}の耐性を${elements.length > 1 ? 'それぞれ ' : ''}${threshold} 以上`,
         options: [bySkill, byResist].filter(Boolean),
@@ -1252,9 +1257,17 @@ export function planToJob(plan, opts = {}) {
       });
     }
     if (blightRows.every((r) => r.byResist)) {
+      // 防具の耐性の合計の下限も探索の条件にする (守りのチェックで後から落とす組で上位が埋まらないように。属性ごとに一番きつい行)
+      const armorResistMin = {};
+      for (const r of blightRows) {
+        for (const [e, v] of Object.entries(r.byResistArmorMin || {})) armorResistMin[e] = Math.max(armorResistMin[e] ?? -Infinity, v);
+      }
       job.runs.push({
         key: 'blight-resist', label: `${names}の耐性スキルで防ぐ組を探しています`,
-        input: { ...base, required: merged([...req, ...blightRows.flatMap((r) => r.byResist)]), budget: budgetOf(), ...stopAfter },
+        input: {
+          ...base, required: merged([...req, ...blightRows.flatMap((r) => r.byResist)]),
+          ...(Object.keys(armorResistMin).length ? { armorResistMin } : {}), budget: budgetOf(), ...stopAfter,
+        },
       });
     }
   }
@@ -1834,11 +1847,39 @@ export function createPlanRunner(job, data, deps = {}) {
     if (p.pool.kind === 'activeMs') p.pool.spent += Math.min(p.given.activeMs, Math.max(0, spentOf(run) - p.spent0));
   };
 
+  /**
+   * 後の回の floor (これ以下の値の構成は要らない): 相手が 1 体・武器 1 本 (merge.mode 'single') なら、合わせた結果の並びは期待値の順
+   * なので、前の回で守りを満たした組の K 番目の値より下の組は、最後まで探しても上位 K に入らない。その値を後の回の探索に渡して
+   * 刈らせる (最後まで探したときの上位は変わらない。2026-10-24: 耐性の回を守りの条件つきで探すと重くなった分を減らすため)。
+   * 多頭 (回数 T で並べ直す)・武器 2 本 (後で武器を合わせ直す) は並びが探索の値と違うので渡さない
+   */
+  const floorFor = (run) => {
+    if (!job.merge || job.merge.mode !== 'single' || multi || run.extra || !index) return null;
+    const i = st.runs.indexOf(run);
+    if (i <= 0) return null;
+    const seen = new Set();
+    const vals = [];
+    for (const prev of st.runs.slice(0, i)) {
+      for (const res of (prev.result && prev.result.results) || []) {
+        const k = buildKey(res.build);
+        if (seen.has(k) || !(finite(res.value) != null)) continue;
+        seen.add(k);
+        if (defenseCheck(res.build, job.requirements, index, effects).ok) vals.push(res.value);
+      }
+    }
+    if (vals.length < K) return null;
+    vals.sort((a, b) => b - a);
+    return vals[K - 1];
+  };
+
   const stepRunSearch = (run, deadline) => {
     if (!run.search) {
       try {
         // 予算を回を始めるときに受け取った回 (run.budget) は、入力の予算の代わりにそれで回す
-        run.search = createSearch(run.budget ? { ...run.input, budget: run.budget } : run.input, data);
+        const floor = run === st.cost ? null : floorFor(run);
+        if (floor != null) run.floor = floor;
+        const input = { ...run.input, ...(run.budget ? { budget: run.budget } : {}), ...(floor != null ? { floor } : {}) };
+        run.search = createSearch(input, data);
       } catch (e) {
         st.error = (e && e.message) || String(e);
         return true;
@@ -1994,6 +2035,8 @@ export function createPlanRunner(job, data, deps = {}) {
         key: r.key, label: r.label, status: r.status, ms: r.ms, stats: r.result ? r.result.stats || null : null,
         // 持ち時間から受け取った予算 (いちばん新しい回・延長の分。入力の予算のまま回した回は null)
         budget: r.pass ? { ...r.pass.given } : null,
+        // 前の回から受け取った floor (これ以下の値は要らない。floorFor。渡さなかった回は null)
+        floor: r.floor ?? null,
       })),
     };
   }

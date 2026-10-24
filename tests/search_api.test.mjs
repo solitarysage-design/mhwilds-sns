@@ -240,8 +240,19 @@ test('入力の注意: 知らない必須は外して続ける・仮置きの発
   const { r: x } = run(cases.B4x);
   assert.equal(x.status, 'infeasible');
   assert.ok(performance.now() - t0 < 1000);
-  const names = x.infeasible.missing.map((m) => m.skillId).sort();
-  assert.deepEqual(names, [skillId('見切り'), skillId('超会心')].sort());
+  // 「足りない」は、同時には届かない最小の組 (どれか 1 つを外すと「無い」とは言えなくなる)。どの組になるかは所持護石で変わる
+  // (所持護石 1 個のときは 見切り5・超会心5。シートの護石を取り込んだ 2026-10-24 からは 見切り・超会心 の付いた護石で
+  // その 2 つは届くようになり、攻撃5・見切り5・超会心5 になった) ので、組の中身ではなく決まりを確かめる
+  const missing = x.infeasible.missing.map((m) => ({ skillId: m.skillId, level: m.level }));
+  const want = cases.B4x.required;
+  assert.ok(missing.length >= 2 && missing.every((m) => want.some((q) => q.skillId === m.skillId && q.level === m.level)),
+    JSON.stringify(missing));
+  assert.equal(run({ ...cases.B4x, required: missing }).r.status, 'infeasible', '足りないスキルだけでも満たせない');
+  for (const m of missing) {
+    const rest = missing.filter((q) => q !== m);
+    assert.notEqual(run({ ...cases.B4x, required: rest, budget: { work: 0 } }).r.status, 'infeasible', `${m.skillId} を外すと届く`);
+  }
+  assert.ok(x.infeasible.missing.every((m) => /同時には届きません/.test(m.reason)));
   // 武器・相手が無いと例外
   assert.throws(() => createSearch({ ...cases.B1, weapons: [] }, data), /武器/);
   assert.throws(() => createSearch({ ...cases.B1, targets: [] }, data), /相手/);
@@ -253,7 +264,9 @@ test('budget.activeMs: 計算した時間だけで数える (step の間に止�
   let away = 0;
   performance.now = () => realNow() + away;
   try {
-    const budget = 800;
+    // 予算は dfs の前の段 (ビーム・polish1) より十分長く。予算を見るのは dfs からなので、ms の予算の回も dfs の頭 (+ minDfsMs) までは回る
+    // (2026-10-24: シートの護石を取り込んで B1 の polish1 までが約 0.4 秒 → 約 1 秒になり、800ms では差が出なくなった)
+    const budget = 2500;
     const s = createSearch({ ...cases.B1, beam: [5, 10], budget: { activeMs: budget } }, data);
     while (!s.step(30)) away += 10000;
     const r = s.result();

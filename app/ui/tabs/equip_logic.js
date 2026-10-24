@@ -370,14 +370,20 @@ export function armorItems(idx, armorList, part, filter = {}) {
 
 // ---------------------------------------------------------------- 護石
 
-/** 護石の 2 行目 */
+/** 護石の 2 行目 (シートから取り込んだ護石でスロットを確かめていないものは「スロット未確認」も) */
 export function charmSub(c, idx) {
   const parts = [skillsText(c.skills, idx) || 'スキルなし'];
   if ('armorSlots' in c || 'weaponSlots' in c) {
-    parts.push(`スロット 防具用 ${formatSlots(c.armorSlots)}・武器用 ${formatSlots(c.weaponSlots)}`);
+    parts.push(`スロット 防具用 ${formatSlots(c.armorSlots)}・武器用 ${formatSlots(c.weaponSlots)}${c.slotsProvisional === true ? ' (未確認)' : ''}`);
   }
   if (c.rarity != null) parts.push(`レア ${c.rarity}`);
   return parts.join('・');
+}
+
+/** 持っている護石の名前 (シートから取り込んだ護石は「秘歴の護石 シート No.88」) */
+export function charmLabel(c) {
+  const name = (c && c.name) || '護石';
+  return c && c.sheetNo != null ? `${name} シート No.${c.sheetNo}` : name;
 }
 
 /**
@@ -386,7 +392,8 @@ export function charmSub(c, idx) {
  */
 export function charmItems(idx, fileCharms, localCharms, fixed) {
   const own = (c, group) => ({
-    value: c.id, label: c.name || '護石', sub: charmSub(c, idx), group, keywords: '持っている 所持',
+    value: c.id, label: charmLabel(c), sub: charmSub(c, idx), group,
+    keywords: `持っている 所持${c.sheetNo != null ? ` シート No.${c.sheetNo}` : ''}`,
   });
   const fileIds = new Set((fileCharms || []).map((c) => c.id));
   const mine = [

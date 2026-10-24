@@ -31,6 +31,22 @@ export const MEMO_LIMITS = Object.freeze({ leafMemo: 60000, weaponGain: 20000, l
  */
 export const TIGHT = Object.freeze({ zeroDepth: 2, uniDepth: 2, uniEvals: 5, chainArmor: 8, screen: true });
 
+/**
+ * ビームの状態 (上界の大きい順) から W 個を選ぶ: まず護石の類ごとに一番上界の大きい状態を 1 つずつ (上界の順に W 個まで)、
+ * 残りを上界の順に足す。戻り値も上界の大きい順 (docs/SEARCH_DESIGN.md 2.13 節)
+ */
+export function spreadByCharm(states, W) {
+  if (states.length <= W) return states.slice();
+  const seen = new Set();
+  const pick = [];
+  const rest = [];
+  for (const s of states) {
+    if (s.charm >= 0 && !seen.has(s.charm) && pick.length < W) { seen.add(s.charm); pick.push(s); } else rest.push(s);
+  }
+  for (const s of rest) { if (pick.length >= W) break; pick.push(s); }
+  return pick.sort((x, y) => y.ub - x.ub);
+}
+
 export class BnbSolver {
   /**
    * @param P prepare() の結果
@@ -42,7 +58,14 @@ export class BnbSolver {
    *   stopAfter: 'partial' (polish1 で止める), partOrder, maxSolutions (none で集める数。既定 K), eps (exact で刈る許し),
    *   sieve: 武器も探すときの 2 段のふるい (docs/SEARCH_DESIGN.md 2.7 節)。{top: 測り直す防具・護石の組の数 (既定 50),
    *          weapons: dfs を回す武器の数 (既定 3)} か false (ふるわない。全部の武器で dfs),
-   *   tight: false (締めた上界を使わない。比べる・テスト用) か TIGHT の一部を差し替えるもの
+   *   tight: false (締めた上界を使わない。比べる・テスト用) か TIGHT の一部を差し替えるもの,
+   *   floor: これ以下の値の構成は要らない (刈るしきい値の下限。相手タブで、前の回の上位 K 番目の値を後の回に渡す。
+   *          docs/RECOMMEND_DESIGN.md 5.3 節。dfs の間だけ使い、fast は margin も同じく掛ける。ビームは近似の表で珠の詰め方を
+   *          刈るので、外から来たしきい値で刈ると満たせる葉まで落とすことがある (確かめた) ため使わない),
+   *   spread: false (護石の類をばらして探す工夫をしない。比べる・テスト用。docs/SEARCH_DESIGN.md 2.13 節。既定は fast でする:
+   *          最初のビームで護石の類ごとに一番上界の高い状態を先に 1 つずつ残し、dfs の根では護石の類を「それまでに見つかった値」の
+   *          高い順に回る。所持護石が 250 個になると、上界の高い暫定の護石の類がビームと dfs の先頭を埋めて、生産する護石の類の
+   *          良い組が予算の外になったため。刈る規則は変えないので、最後まで探したときの上位は変わらない)
    * }
    */
   constructor(P, o = {}) {
@@ -55,6 +78,8 @@ export class BnbSolver {
     this.M = this.mode === 'fast' && !this.none ? (o.M ?? this.K * 2) : this.K;
     this.eps = o.eps || 0;
     this.margin = this.mode === 'fast' && !this.none ? (o.margin ?? 0.01) : 0;
+    this.floor = !this.none && o.floor != null && Number.isFinite(Number(o.floor)) ? Number(o.floor) : null;
+    this.spread = this.mode === 'fast' && !this.none && o.spread !== false;
     this.list = []; // 上位 (fast では M 件。exact が false のものは近似の葉の値 = 下限)
     this.keys = new Map();
     this.stats = {
@@ -78,8 +103,10 @@ export class BnbSolver {
     this.wSlot = 0;
     this.chosen = new Array(6).fill(-1);
     const sparse = (lv) => { const a = []; for (let r = 0; r < R; r++) if (lv[r]) a.push(r, lv[r]); return a; };
-    this.partCls = this.partOrder.map((p) => P.parts[p].map((c) => ({ ...c, sk: sparse(c.lv) })));
+    this.partCls = this.partOrder.map((p, pi) => P.parts[p].map((c) => ({ ...c, sk: sparse(c.lv), pi })));
     this.charmCls = P.charms.map((c) => ({ ...c, sk: sparse(c.lv) }));
+    // 護石の類ごとの、見つかった構成の一番良い値 (ビーム・ふるい・dfs の葉。近似の値。spread で dfs の根を回る順に使う)
+    this.charmBest = new Float64Array(this.charmCls.length).fill(NEG);
     this.armorR = [];
     this.weaponR = [];
     this.reqR = [];
@@ -114,6 +141,24 @@ export class BnbSolver {
     this.stats.kidsScreened = 0;
     this.partMaxLv = this.partCls.map((cls) => { const m = new Int8Array(R); for (const c of cls) for (let r = 0; r < R; r++) if (c.lv[r] > m[r]) m[r] = c.lv[r]; return m; });
     this.partMaxSlots = this.partCls.map((cls) => [0, 1, 2].map((i) => Math.max(0, ...cls.map((c) => c.slots[i]))));
+    // 防具の耐性の合計の下限 (P.resMin。相手タブの耐性の回だけ。docs/SEARCH_DESIGN.md 2.12 節)。
+    // res = 決めた部位の「類の中で一番耐性の高い防具」の和 (属性ごと)、resSuffix[from] = 部位 from から後の、部位ごとの類の最大の和。
+    // res + resSuffix が下限に届かない枝は満たせない。属性が 1 つなら葉では正確 (類の中で一番高い防具を選べばよい)。
+    // 属性が 2 つ以上なら、葉で類の中の防具の耐性の並び (resFront) から本当に選べるかを確かめる (resistLeafOk)
+    this.resN = P.resE ? P.resE.length : 0;
+    this.res = new Int16Array(this.resN);
+    this.selCls = new Array(5).fill(null);
+    this.resSuffix = Array.from({ length: 6 }, () => new Int16Array(this.resN));
+    if (this.resN) {
+      for (let pi = 4; pi >= 0; pi--) {
+        for (let e = 0; e < this.resN; e++) {
+          let m = -32768;
+          for (const c of this.partCls[pi]) if (c.resMax[e] > m) m = c.resMax[e];
+          this.resSuffix[pi][e] = this.resSuffix[pi + 1][e] + (this.partCls[pi].length ? m : 0);
+        }
+      }
+    }
+    this.stats.resistCut = 0;
     this.charmMaxLv = new Int8Array(R);
     for (const c of this.charmCls) for (let r = 0; r < R; r++) if (c.lv[r] > this.charmMaxLv[r]) this.charmMaxLv[r] = c.lv[r];
     this.charmMaxSlots = [0, 1, 2].map((i) => Math.max(0, ...this.charmCls.map((c) => c.slots[i])));
@@ -160,9 +205,12 @@ export class BnbSolver {
   // ---------------------------------------------------------------- 上位の並び
   /** 刈るしきい値 = K 番目の値。fast は仕上げの候補を残すため少し下げる (margin) */
   threshold() {
-    if (this.polishing || this.list.length < this.K) return NEG;
+    if (this.polishing) return NEG;
+    const f = this.floor == null || this.phase !== 'dfs' ? NEG : this.margin ? this.floor * (1 - this.margin) : this.floor;
+    if (this.list.length < this.K) return f;
     const v = this.list[this.K - 1].value;
-    return this.margin ? v * (1 - this.margin) : v;
+    const t = this.margin ? v * (1 - this.margin) : v;
+    return t > f ? t : f;
   }
   prune(ub, extra = NEG) {
     const t = Math.max(this.threshold(), extra);
@@ -187,7 +235,7 @@ export class BnbSolver {
     const wp = P.weapons[wi];
     this.wi = wi; this.wp = wp; this.ws = this.wws[wi];
     this.gt = this.ws.gt;
-    this.raw.fill(0); this.setCnt.fill(0); this.grpCnt.fill(0); this.slot = [0, 0, 0, 0]; this.wSlot = 0;
+    this.raw.fill(0); this.setCnt.fill(0); this.grpCnt.fill(0); this.slot = [0, 0, 0, 0]; this.wSlot = 0; this.res.fill(0);
     for (let r = 0; r < P.R; r++) this.raw[r] = wp.lv[r];
     for (const s of wp.sIdx) this.setCnt[s]++;
     if (wp.gIdx >= 0) this.grpCnt[wp.gIdx]++;
@@ -203,6 +251,42 @@ export class BnbSolver {
     for (let s = 1; s <= 3; s++) this.slot[s] += sign * c.slotCount[s];
     for (const s of c.sIdx) this.setCnt[s] += sign;
     if (c.gIdx >= 0) this.grpCnt[c.gIdx] += sign;
+    if (this.resN) {
+      for (let e = 0; e < this.resN; e++) this.res[e] += sign * c.resMax[e];
+      this.selCls[c.pi] = sign > 0 ? c : null;
+    }
+  }
+  /** 防具の耐性の合計の下限に、残りの部位 (partOrder[from..4]) で届くか (from = 5 で属性が 2 つ以上なら、選べる防具の組で確かめる) */
+  resistFeasible(from) {
+    const min = this.P.resMin;
+    const suf = this.resSuffix[from];
+    for (let e = 0; e < this.resN; e++) if (this.res[e] + suf[e] < min[e]) return false;
+    return from < 5 || this.resN === 1 || this.resistLeafOk();
+  }
+  /** 5 部位の類を決めたとき、類の中の防具を選んで全部の属性の下限を満たせるか (類ごとの耐性の並び resFront を深さ優先で) */
+  resistLeafOk() {
+    const n = this.resN;
+    const min = this.P.resMin;
+    const sel = this.selCls;
+    const acc = this._resAcc || (this._resAcc = new Int16Array(n));
+    // 後ろの部位の最大の和 (枝を刈る)
+    const tail = this._resTail || (this._resTail = Array.from({ length: 6 }, () => new Int16Array(n)));
+    for (let pi = 4; pi >= 0; pi--) for (let e = 0; e < n; e++) tail[pi][e] = tail[pi + 1][e] + sel[pi].resMax[e];
+    acc.fill(0);
+    const rec = (pi) => {
+      if (pi === 5) return true;
+      for (const v of sel[pi].resFront) {
+        let ok = true;
+        for (let e = 0; e < n; e++) if (acc[e] + v[e] + tail[pi + 1][e] < min[e]) { ok = false; break; }
+        if (!ok) continue;
+        for (let e = 0; e < n; e++) acc[e] += v[e];
+        const r = rec(pi + 1);
+        for (let e = 0; e < n; e++) acc[e] -= v[e];
+        if (r) return true;
+      }
+      return false;
+    };
+    return rec(0);
   }
   applyAt(d, idx, sign = +1) {
     if (d === 0) this.applyCharm(this.charmCls[idx], sign); else this.applyPiece(this.partCls[d - 1][idx], sign);
@@ -381,6 +465,7 @@ export class BnbSolver {
   bound(charmDone, from, rec = -1) {
     const P = this.P;
     this.stats.boundCalls++;
+    if (this.resN && !this.resistFeasible(from)) { this.stats.resistCut++; return NEG; }
     const L = this.levels();
     if (this.reqSG.length && !this.setGroupFeasible(from)) return NEG;
     const budget = [0, this.slot[1], this.slot[2], this.slot[3]];
@@ -1184,6 +1269,7 @@ export class BnbSolver {
   }
 
   record(sol) {
+    if (this.chosen[0] >= 0 && sol.value > this.charmBest[this.chosen[0]]) this.charmBest[this.chosen[0]] = sol.value;
     const e = {
       value: sol.value, exact: !!sol.exact, wi: this.wi, charm: this.chosen[0], parts: this.chosen.slice(1, 6),
       ws: sol.ws, deco: sol.deco, foundMs: now() - this.t0, phase: this.phase,
@@ -1353,7 +1439,7 @@ export class BnbSolver {
       }
     }
     next.sort((x, y) => y.ub - x.ub);
-    b.states = next.slice(0, b.W);
+    b.states = this.spread && this.phase === 'beam1' ? spreadByCharm(next, b.W) : next.slice(0, b.W);
     b.level++;
     if (b.level <= 5) return false;
     // 葉: 近似の珠詰め
@@ -1458,7 +1544,14 @@ export class BnbSolver {
       if (ub > NEG && !(!this.none && this.prune(ub))) kids.push({ idx: ci, ub, screen: rec >= 0 ? this.kidUbOf(rec).slice() : null });
     }
     if (!this.none) kids.sort((a, b) => b.ub - a.ub);
-    this.stack = [{ d: 0, kids, i: 0, applied: -1 }];
+    // spread: 根は見つかった値の高い順 (同じなら上界の順)。上界の順ではなくなるので、根では刈れる子を 1 つずつ飛ばす (anyOrder)
+    let anyOrder = false;
+    if (this.spread) {
+      const cb = this.charmBest;
+      kids.sort((a, b) => (cb[a.idx] === cb[b.idx] ? b.ub - a.ub : cb[b.idx] > cb[a.idx] ? 1 : -1));
+      anyOrder = true;
+    }
+    this.stack = [{ d: 0, kids, i: 0, applied: -1, anyOrder }];
   }
   /** 状態を作り直す (extend で表を測り直した後も、いまの位置から続ける) */
   restoreStack() {
@@ -1496,7 +1589,8 @@ export class BnbSolver {
       if (fr.applied >= 0) { this.applyAt(fr.d, fr.applied, -1); fr.applied = -1; }
       if (fr.i >= fr.kids.length) { st.pop(); continue; }
       const kid = fr.kids[fr.i++];
-      if (!this.none && this.prune(kid.ub)) { fr.i = fr.kids.length; continue; }
+      // 子は上界の大きい順なので、刈れる子の後ろも全部刈れる (anyOrder の節 = spread の根だけは、その子だけ飛ばす)
+      if (!this.none && this.prune(kid.ub)) { if (!fr.anyOrder) fr.i = fr.kids.length; continue; }
       this.applyAt(fr.d, kid.idx);
       fr.applied = kid.idx;
       if (fr.d === 5) {

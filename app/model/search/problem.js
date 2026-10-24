@@ -34,7 +34,11 @@ function slotsGeNested(a, b) {
  *   charmRefs: [使う護石の参照 (文字列 = 所持・端末 / 数値 = 生産)], armorExclude: [防具の id],
  *   decoCount: null | {装飾品 id: 持っている数} (null = 全部持っている), objective: 'damage' | 'none',
  *   K, domK (この数以上の類に優越される類を捨てる。既定 1。泣シミュ型は捨てない), weaponDominance (既定 true),
- *   light (true = 防具の類と上界用の評価器を作らない。武器の側だけを選び直す optimizeWeaponSide 用)
+ *   light (true = 防具の類と上界用の評価器を作らない。武器の側だけを選び直す optimizeWeaponSide 用),
+ *   armorResistMin: {fire: 0, ...} (防具 5 部位の属性の耐性の合計の下限。相手タブの「耐性の値で属性やられを防ぐ」回が、守りのチェック
+ *     (耐性の合計 ≥ 20) を探索の条件に入れるために使う。docs/SEARCH_DESIGN.md 2.12 節。防具の類は耐性で分けず (分けると類が増えて
+ *     遅くなる)、類ごとに中の防具の耐性 (mres)・その最大 (resMax)・どれにも負けない耐性の並び (resFront) を持つ。優越の除去は、
+ *     下の類のどの防具の耐性も、上の類のどれかの防具が全部の属性で以上のときだけ)
  * }
  */
 export function prepare(data, o) {
@@ -208,6 +212,18 @@ export function prepare(data, o) {
   const setIdx = new Map(sets.map((s, i) => [s.id, i]));
   const groupIdx = new Map(groups.map((g, i) => [g.id, i]));
 
+  // ---- 防具の耐性の合計の下限 (armorResistMin)。resE = 見る属性、resMin = その下限
+  const resE = [];
+  const resMinList = [];
+  for (const [e, v] of Object.entries(o.armorResistMin || {})) {
+    if (ELEMENTAL.includes(e) && Number.isFinite(Number(v))) { resE.push(e); resMinList.push(Math.round(Number(v))); }
+  }
+  const resMin = Int16Array.from(resMinList);
+  const resOf = (a) => Int16Array.from(resE.map((e) => Math.round(Number(a.resist && a.resist[e]) || 0)));
+  const vecGe = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] < b[i]) return false; return true; };
+  /** 下の類 B のどの防具の耐性も、上の類 A のどれかの防具が全部の属性で以上 (耐性の下限を満たす組で B を A に替えられる) */
+  const resCovers = (A, B) => !resE.length || B.resFront.every((b) => A.resFront.some((a) => vecGe(a, b)));
+
   // ---- 防具: 部位ごとに同値類 → domK 個以上に優越される類を捨てる
   const exclude = new Set((o.armorExclude || []).map(Number));
   const parts = {};
@@ -227,12 +243,20 @@ export function prepare(data, o) {
       const gIdx = groupIdx.has(a.groupBonusId) ? groupIdx.get(a.groupBonusId) : -1;
       const key = `${lv.join(',')}|${slots.join(',')}|${sIdx.join(',')}|${gIdx}`;
       let c = classes.get(key);
-      if (!c) classes.set(key, (c = { lv, slots, sIdx, gIdx, members: [] }));
+      if (!c) classes.set(key, (c = { lv, slots, sIdx, gIdx, members: [], mres: [] }));
       c.members.push(a.id);
+      c.mres.push(resOf(a));
     }
     const list = [...classes.values()];
+    for (const c of list) {
+      c.resMax = new Int16Array(resE.length);
+      for (let i = 0; i < resE.length; i++) c.resMax[i] = Math.max(...c.mres.map((v) => v[i]));
+      // どれにも負けない耐性の並び (同じ並びは 1 つ)
+      const uniq = [...new Map(c.mres.map((v) => [v.join(','), v])).values()];
+      c.resFront = uniq.filter((v) => !uniq.some((w) => w !== v && vecGe(w, v) && w.join() !== v.join()));
+    }
     const dom = (A, B) => B.sIdx.every((s) => A.sIdx.includes(s)) && (B.gIdx < 0 || B.gIdx === A.gIdx)
-      && canEmulate(A.lv, A.slots, B.lv, B.slots);
+      && resCovers(A, B) && canEmulate(A.lv, A.slots, B.lv, B.slots);
     const kept = list.filter((B) => {
       let n = 0;
       for (const A of list) if (A !== B && dom(A, B) && ++n >= domK) return false;
@@ -381,6 +405,7 @@ export function prepare(data, o) {
   return {
     patternCache, K, domK, idx, ids, R, rOf, kind, maxLv, touchesAffinity, reqLv, required, armorDeco, wDecos: wDecosAll, sets, groups,
     parts, partStats, charms, charmClassesBefore: cList.length, weapons, weaponsBefore, weaponSide, hid, warnings, opts: o, data,
+    resE, resMin,
     skillName: (r) => skillById.get(ids[r]).name,
   };
 }

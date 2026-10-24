@@ -50,6 +50,18 @@ export function realizeEntry(P, S, e, avoid = null) {
     const cls = S.partCls[i][e.parts[i]];
     [armor[part], alternatives[part]] = pick(cls.members, avoid && avoid.armor);
   });
+  // 防具の耐性の合計の下限 (P.resMin。相手タブの耐性の回) があれば、類の中から下限を満たす防具を選び直す。同じ値になる防具 (alternatives)
+  // も、入れ替えても下限を満たすものだけ
+  if (P.resE && P.resE.length) {
+    const picked = pickByResist(P, S, e, avoid && avoid.armor);
+    if (picked) {
+      S.partOrder.forEach((part, i) => {
+        const cls = S.partCls[i][e.parts[i]];
+        armor[part] = picked.ids[i];
+        alternatives[part] = cls.members.filter((m, j) => m !== picked.ids[i] && picked.swapOk(i, cls.mres[j]));
+      });
+    }
+  }
   alternatives.charm = charmAlt;
   const charm = charmRef == null ? null : (typeof charmRef === 'number' ? idx.charmsFixed.get(charmRef) : idx.charms.get(charmRef));
   const isFixed = !charm || (!('armorSlots' in charm) && !('weaponSlots' in charm));
@@ -93,6 +105,48 @@ export function realizeEntry(P, S, e, avoid = null) {
   const limitBreak = Object.fromEntries(ARMOR_PARTS.map((p) => [p, lbOf(p) && Array.isArray(idx.armor.get(armor[p]).slotsLimitBreak)]));
   const build = { weapon: wp.ref, armor, charm: charmRef, decorations: decos, limitBreak };
   return { build, alternatives };
+}
+
+/**
+ * 防具の耐性の合計の下限 (P.resMin) を満たすように、5 部位の類の中から防具を選ぶ (avoid に無いもの → 元の並びの順に試す深さ優先)。
+ * → {ids: [部位ごとの防具 id (partOrder の順)], swapOk(i, 耐性の並び): 部位 i をその耐性の防具に替えても下限を満たすか} | null
+ */
+function pickByResist(P, S, e, avoidSet) {
+  const n = P.resE.length;
+  const min = P.resMin;
+  const cls = S.partOrder.map((_, i) => S.partCls[i][e.parts[i]]);
+  const order = cls.map((c) => {
+    const idx = c.members.map((_, j) => j);
+    return avoidSet && avoidSet.size ? [...idx.filter((j) => !avoidSet.has(c.members[j])), ...idx.filter((j) => avoidSet.has(c.members[j]))] : idx;
+  });
+  const tail = Array.from({ length: 6 }, () => new Array(n).fill(0));
+  for (let i = 4; i >= 0; i--) for (let k = 0; k < n; k++) tail[i][k] = tail[i + 1][k] + cls[i].resMax[k];
+  const acc = new Array(n).fill(0);
+  const pick = new Array(5).fill(-1);
+  const rec = (i) => {
+    if (i === 5) return true;
+    for (const j of order[i]) {
+      const v = cls[i].mres[j];
+      let ok = true;
+      for (let k = 0; k < n; k++) if (acc[k] + v[k] + tail[i + 1][k] < min[k]) { ok = false; break; }
+      if (!ok) continue;
+      for (let k = 0; k < n; k++) acc[k] += v[k];
+      pick[i] = j;
+      if (rec(i + 1)) return true;
+      for (let k = 0; k < n; k++) acc[k] -= v[k];
+    }
+    return false;
+  };
+  if (!rec(0)) return null;
+  // acc = 選んだ防具の耐性の合計
+  return {
+    ids: pick.map((j, i) => cls[i].members[j]),
+    swapOk: (i, v) => {
+      const cur = cls[i].mres[pick[i]];
+      for (let k = 0; k < n; k++) if (acc[k] - cur[k] + v[k] < min[k]) return false;
+      return true;
+    },
+  };
 }
 
 /**

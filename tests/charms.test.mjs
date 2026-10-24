@@ -161,7 +161,7 @@ test('固定護石との区別', () => {
 });
 
 test('泣シミュ形式: 12 項目の書き出し', () => {
-  const c = myCharms.charms[0];
+  const c = myCharms.charms.find((x) => x.id === 'c0001'); // シートの護石は No. 順なので、c0001 は先頭とは限らない
   assert.equal(toNakiSimRow(c, skills), 'ガード性能,3,属性吸収,1,,0,2,0,0,0,0,0');
   const f = toNakiSimFields({ rarity: 8, skills: [sk('攻撃', 2), sk('見切り', 1), sk('挑戦者', 1)], armorSlots: [1, 0, 0], weaponSlots: [1] }, skills);
   assert.equal(f.length, 12);
@@ -174,7 +174,7 @@ test('泣シミュ形式: 12 項目の書き出し', () => {
 
 test('泣シミュ形式: 往復 (書き出し → 読み込み) で同じ護石に戻る', () => {
   const samples = [
-    myCharms.charms[0],
+    myCharms.charms.find((x) => x.id === 'c0001'),
     { name: '栄世の護石', rarity: 8, skills: [sk('攻撃', 2), sk('見切り', 1), sk('挑戦者', 1)], armorSlots: [1, 0, 0], weaponSlots: [1] },
     { name: '未解の護石', rarity: 5, skills: [sk('ＫＯ術', 1), sk('回避性能', 2), sk('体術', 3)], armorSlots: [1, 1, 0], weaponSlots: [0] },
   ];
