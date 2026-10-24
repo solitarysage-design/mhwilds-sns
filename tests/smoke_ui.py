@@ -1052,6 +1052,11 @@ def power_tab_expected_value(page, ctx: Ctx):
             ctx.fail(f"火力タブのスキルなし比が damage.js と合いません: 画面 {vs} / 計算 {exp['vs']}")
         if "既定の肉質" not in page.inner_text(f"{POWER_PANEL} [data-power-target]"):
             ctx.fail("相手を選んでいないのに「既定の肉質」と出ていません")
+        # 灼熱化 (火竜の力) の説明: この連携を続けたときの間隔 (結論) と、技のつなぎの秒数が見積もりであること (2026-10-24)
+        hint = page.locator(f"{POWER_PANEL} [data-power-extra-hint]")
+        hint_text = hint.inner_text() if hint.count() else ""
+        if "この連携を続けると約" not in hint_text or "技のつなぎの秒数は見積もりです" not in hint_text:
+            ctx.fail(f"火力タブに灼熱化の説明 (約 N 秒に 1 回・見積もり) が出ていません: {hint_text!r}")
         # 発動率: 連撃の段は本人の前提 (2026-10-22: 5 ヒット以降段 100%。仮ではない) → 「仮」の印は無く、根拠の文が出る。
         # スライダーで 1〜4 段を 30% にすると期待値が変わり、「既定に戻す」が出る
         chain = f'{POWER_PANEL} [data-condition="chain"]'

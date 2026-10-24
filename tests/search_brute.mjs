@@ -48,6 +48,7 @@ export function smallUptimes(effects) {
  * @param o {seed, perPart (2〜3), charms (2〜3), weapon ('w-test' か weapons_sns の id), limitBreak, required, targets,
  *            include: {部位: [必ず入れる防具の id]},
  *            keepArmor / keepSets: KEEP_ARMOR_SKILLS / KEEP_SETS に足して残すスキル・シリーズの名前,
+ *            weaponDecos: 必ず入れる武器用の珠の id、weaponDecosOnly: true なら武器用の珠は weaponDecos だけ,
  *            uptimes: 発動率 (省略は smallUptimes。探すタブの既定で解くときは仮置きを 0% にしたもの)}
  * @returns {{data, input, artian, info}}  data は createSearch に渡すデータ (絞ったもの)、input は createSearch の入力
  */
@@ -106,8 +107,10 @@ export function makeSmallProblem(raw, artian, o) {
   const decos = raw.decorations.decorations;
   const armorDecos = decos.filter((d) => d.kind === 'armor' && d.skills.length === 1 && keepArmor.has(d.skills[0].skillId));
   const wPool = decos.filter((d) => d.kind === 'weapon' && d.skills.every((s) => keepWeapon.has(s.skillId)));
-  const wPick = [];
-  for (const want of [(d) => d.slot === 1, (d) => d.slot === 2, (d) => d.slot === 3 && d.skills.length === 1,
+  // o.weaponDecos (珠の id) は必ず入れる (ほかは大きさごとに乱数で 1 つずつ。渡さなければ前と同じ選び方)。
+  // o.weaponDecosOnly なら武器用の珠は o.weaponDecos だけ
+  const wPick = (o.weaponDecos || []).map((id) => decos.find((d) => d.id === id));
+  for (const want of o.weaponDecosOnly ? [] : [(d) => d.slot === 1, (d) => d.slot === 2, (d) => d.slot === 3 && d.skills.length === 1,
     (d) => d.slot === 3 && d.skills.length === 2]) {
     const c = wPool.filter((d) => want(d) && !wPick.includes(d));
     if (c.length) wPick.push(c[Math.floor(rnd() * c.length)]);
@@ -299,7 +302,8 @@ function fills(sizes, decos) {
 
 /**
  * 独立の総当たり。全部の防具・護石の組 × 珠の全部の入れ方を computeBuild + comboExpected で計算し、組ごとの最良を返す。
- * @returns {{all: [{value, armor, charm}], count}}  all は値の大きい順 (必須を満たさない組は入れない)
+ * @returns {{all: [{value, armor, charm, levels}], count}}  all は値の大きい順 (必須を満たさない組は入れない)。
+ *   levels = その組の最良の珠の入れ方のスキルの Lv ({skillId: Lv})
  */
 export function bruteForce(data, input) {
   const idx = indexEquipData({
@@ -358,6 +362,7 @@ export function bruteForce(data, input) {
       const wSizes = [...r0.slots.weapon.map((s) => s.size), ...r0.slots.charmWeapon.map((s) => s.size)];
       const raw = new Map(r0.skills.map((s) => [s.skillId, s.rawLevel]));
       let best = -Infinity;
+      let bestLv = null;
       for (const af of fillsOf(aSizes, aDecos)) {
         const av = decoVec(aDecos, af);
         for (const wf of fillsOf(wSizes, wDecos)) {
@@ -367,10 +372,10 @@ export function bruteForce(data, input) {
           for (const [id, l] of lv) lv.set(id, Math.min(l, maxOf(id)));
           if ((input.required || []).some((q) => (lv.get(q.skillId) || 0) < q.level)) continue;
           const v = value(lv);
-          if (v > best) best = v;
+          if (v > best) { best = v; bestLv = lv; }
         }
       }
-      if (best > -Infinity) all.push({ value: best, armor, charm });
+      if (best > -Infinity) all.push({ value: best, armor, charm, levels: Object.fromEntries([...bestLv].filter(([, l]) => l > 0)) });
     }
   };
   rec(0);

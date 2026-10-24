@@ -17,6 +17,7 @@ import {
   comboExpected, normalizeSkills, conditionGroupDefs, conditionSourceMissing,
   resolveSkills, resolveConditions, factorPatterns,
 } from '../../model/damage.js';
+import { formatNumber } from '../components/labels.js';
 
 /** スキルの組に合わせた input (perSkills があれば斬れ味などを決め直す) */
 export function inputFor(input, skills) {
@@ -56,8 +57,10 @@ const PER_PART_WARNINGS = new Set(['no-wound']);
 /**
  * 狙う部位の割合で加重平均したコンボ 1 回の期待値。
  * 返り値は comboExpected と同じ形 (total / physical / element / extra / steps / conditions / warnings /
- * unsupported / unknown / lowConfidence / patterns) に、perTarget (部位ごとの {label, weight, total}) と mixed を足したもの。
+ * unsupported / unknown / lowConfidence / patterns / extraChecks) に、perTarget (部位ごとの {label, weight, total}) と mixed を足したもの。
  * 条件グループ・未対応スキルなどはスキルだけで決まるので、部位によらず同じ (最初の部位のものを使う)。
+ * extraChecks (灼熱化の判定の要約) は、判定の回数を部位の割合で平均し、発動の回数と間隔を出し直す
+ * (部位で変わるのは傷口でだけ出るヒットの有無だけ)。
  */
 export function mixExpected(input0, targets) {
   const input = inputFor(input0, input0.skills);
@@ -77,8 +80,10 @@ export function mixExpected(input0, targets) {
         // 匠は skill_effects.json に無いが、斬れ味の色で火力に効く (「火力に関係しない」には入れない)
         unknown: r.unknown.filter((s) => !isHandicraft(input, s.skillId)),
         lowConfidence: r.lowConfidence, sharpness: input.sharpness,
+        extraChecks: (r.extraChecks || []).map((x) => ({ ...x, checksPerCycle: 0 })),
       };
     }
+    (r.extraChecks || []).forEach((x, i) => { if (acc.extraChecks[i]) acc.extraChecks[i].checksPerCycle += m.weight * x.checksPerCycle; });
     acc.total += m.weight * r.total;
     acc.physical += m.weight * r.physical;
     acc.element += m.weight * r.element;
@@ -99,9 +104,26 @@ export function mixExpected(input0, targets) {
       : r.warnings;
     mergeWarnings(acc.warnings, ws);
   }
+  for (const x of acc.extraChecks) {
+    x.procsPerCycle = x.perCheck * x.checksPerCycle;
+    x.secPerProc = x.procsPerCycle > 0 ? x.cycleSec / x.procsPerCycle : null;
+  }
   acc.perTarget = perTarget;
   acc.mixed = mixed;
   return acc;
+}
+
+/**
+ * 「追加」の説明。灼熱化があれば、この連携を続けたときの発動の間隔 (結論) → 判定の決まり (理由) → 見積もりの断り の順。
+ * r = mixExpected の結果 (extraChecks の灼熱化を使う。部位の割合で平均したもの)。文は本人の好み (短い文・結論が先・です/ます)
+ */
+export function extraHintText(r) {
+  const x = (r.extraChecks || []).find((c) => c.kind === 'scorch' && c.secPerProc > 0);
+  if (!x) return '追加 = スキルの追加ダメージです (発動の確率込み)。';
+  const every = formatNumber(1 / x.perCheck, 0);
+  return `追加 = 灼熱化などスキルの追加ダメージです。灼熱化は、この連携を続けると約 ${formatNumber(x.secPerProc, 1)} 秒に 1 回出ます。`
+    + `${formatNumber(x.cooldownSec, 1)} 秒に 1 回だけ判定し、平均すると ${every} 回に 1 回出るためです。`
+    + `技のつなぎの秒数は見積もりです。${x.estimated ? '秒数の分からない技は、仮の長さで数えています。' : ''}`;
 }
 
 /** 加重平均の合計だけ (速さ優先。スキル火力表で何度も呼ぶ) */

@@ -14,7 +14,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const TESTS = ['tests/search_eval.test.mjs', 'tests/search_small.test.mjs', 'tests/search_required.test.mjs', 'tests/search_api.test.mjs',
   'tests/search_weapon_side.test.mjs', 'tests/search_setgroup.test.mjs', 'tests/search_gamma.test.mjs', 'tests/damage_factored.test.mjs',
-  'tests/search_worker_plan.test.mjs', 'tests/search_bound.test.mjs', 'tests/search_bound_random.test.mjs', 'tests/search_bound_done.test.mjs'];
+  'tests/search_worker_plan.test.mjs', 'tests/search_bound.test.mjs', 'tests/search_bound_random.test.mjs', 'tests/search_bound_done.test.mjs',
+  'tests/scorch.test.mjs'];
 
 /** 変異: file の find (1 か所だけ) を replace に。why = 見つけるはずのテスト */
 const MUTANTS = [
@@ -29,6 +30,18 @@ const MUTANTS = [
     find: ': sharpnessMultipliers(color, rules);', replace: ": sharpnessMultipliers(color === 'white' ? 'blue' : color, rules);", why: '6.1' },
   { name: 'damage: 属性の加算の上限を外す', file: 'app/model/damage.js',
     find: 'const a = Math.min(add, rules.elementAddLimit ?? Infinity);', replace: 'const a = add;', why: '6.1' },
+  // ---- 灼熱化 (2026-10-24。scorch.test.mjs の手計算と、評価器 = comboExpected で落ちるはず)
+  { name: '灼熱化: 判定の待ちを入れない (対象ヒットごとに判定)', file: 'app/model/damage.js',
+    find: 'if (t - last >= cd - CHECK_EPS) { last = t; counts[i] += 1; }', replace: 'if (true) { last = t; counts[i] += 1; }', why: 'scorch' },
+  { name: '灼熱化: 火の加算を倍率より先に足す', file: 'app/model/damage.js',
+    find: 'el = el * (mods.fireMul ?? 1) + (mods.fireAdd ?? 0);', replace: 'el = (el + (mods.fireAdd ?? 0)) * (mods.fireMul ?? 1);', why: 'scorch' },
+  { name: '灼熱化: 評価器だけ判定の割合でなくヒットの回数で数える', file: 'app/model/search/evaluator.js',
+    find: '            const chk = classChecks(xd)[k];', replace: '            const chk = cScnt[k];', why: '6.1/scorch' },
+  { name: '灼熱化: 評価器だけ火の属性スキルを武器の属性に合うものだけ数える', file: 'app/model/search/evaluator.js',
+    find: "const fire = !fx.elementType || fx.elementType === 'fire';", replace: 'const fire = !fx.elementType || fx.elementType === weaponElementType;',
+    why: '6.1/scorch' },
+  { name: '灼熱化: 因子分解で火の加算の期待値に確率を掛けない', file: 'app/model/damage.js',
+    find: 'e.sFa += s.w * (d.sFa + s.part.fa * d.P);', replace: 'e.sFa += s.w * (d.sFa + s.part.fa);', why: 'factored/scorch' },
   // ---- 評価器 (速い道)
   { name: '評価器: 速い道の弱点特効の境 (>= → >)', file: 'app/model/search/evaluator.js',
     find: 'const box = (physHz >= wpMin ? 1 : 0)', replace: 'const box = (physHz > wpMin ? 1 : 0)', why: '6.1' },

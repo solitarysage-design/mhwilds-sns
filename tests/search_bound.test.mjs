@@ -42,6 +42,11 @@ const PROBLEMS = [
     required: [['風圧耐性', 3], ['気絶耐性', 3]], uptimes: zeroPlaceholders },
   { seed: 42, perPart: 2, charms: 3, targets: MIX, keepArmor: ['スタミナ急速回復', '回避性能'], include: { head: [328, 41], legs: [332, 45] },
     required: [['スタミナ急速回復', 3], ['回避性能', 3]] },
+  // 灼熱化 (2026-10-24): 火でない武器 (龍属性の鎖刃剣アルトリウス) + 火竜の力 (護火竜β・ゴグメイルβ) + 火属性攻撃強化 (火炎珠)。
+  // 火属性攻撃強化は火竜の力があるときだけ灼熱化の火の分に効く (補い合う形)。△連携 (対象ヒット 4 つ)。武器用の珠は火炎珠だけにして、
+  // 火属性攻撃強化が上位の組に入るようにする。match で上位 10 件も総当たりと比べる
+  { seed: 31, perPart: 2, charms: 2, targets: HEAD, weapon: 1064, combo: 2, include: { head: [66], chest: [676], arms: [68], waist: [69] },
+    weaponDecos: [155, 154, 294], weaponDecosOnly: true, match: true, scorch: true },
 ];
 
 for (const pr of PROBLEMS) {
@@ -58,6 +63,11 @@ for (const pr of PROBLEMS) {
     console.log(`  種 ${pr.seed}: 状態 ${o.states}・前より締まった ${o.tighter}・ふるいの類 ${o.screened}・表の行 ${o.rows}・耐性の珠をまとめて見た回 ${joint}`);
     assert.ok(o.tighter > 0);
     if (pr.seed >= 41) assert.ok(joint > 0, '珠の数をまとめて見る下限を通った');
+    if (pr.scorch) {
+      // 総当たりの上位に、火竜の力と火属性攻撃強化の両方が入った組がある (この問題で補い合う形を通っている)
+      const sc = skillId('火竜の力'); const fu = skillId('火属性攻撃強化');
+      assert.ok(brute.all.slice(0, 10).some((x) => x.levels[sc] > 0 && x.levels[fu] > 0), '上位に火竜の力 + 火属性攻撃強化の組がある');
+    }
     joint = 0;
     if (pr.match) {
       const ex = createSearch({ ...input, mode: 'exact', dominance: false, K: 10 }, data);

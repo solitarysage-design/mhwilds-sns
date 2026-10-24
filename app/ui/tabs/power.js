@@ -1,7 +1,7 @@
 // 火力タブ: いまの装備・相手・コンボでの期待値 (物理/属性の内訳・スキルなし比)、条件ごとの発動率、
 // スキルごとの効き目 (外すと何 % 下がるか)、スキル火力表 (Lv ごとの上がり方)。
 // 計算は damage.js (power_calc.js で「狙う部位の割合」の加重平均に包む)。相手の決め方は target_mix.js。
-// 1 秒あたりの火力 (DPS) は出さない (技の時間が非公開)。コンボ 1 回あたりの期待値だけ。
+// 1 秒あたりの火力 (DPS) は出さない (技のつなぎの秒数は見積もりで、灼熱化の判定の間隔にだけ使う)。コンボ 1 回あたりの期待値だけ。
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import {
   html, Card, Button, Hint, Badge, Notice, Loading, ErrorBox, Slider, Segmented, Select,
@@ -14,6 +14,7 @@ import { useTargetData } from '../../data.js';
 import { computeBuild } from '../../model/build.js';
 import {
   mixContribution, skillTableCandidates, tableContext, skillTableRow, sortTableRows, conditionSummary, rebalanceCategorical,
+  extraHintText,
 } from './power_calc.js';
 import { resolveTargetMix, monsterStatusOf, ELEMENT_KEYS } from './target_mix.js';
 import { useEquipIndex } from './equip_index.js';
@@ -145,7 +146,7 @@ function HeroCard({ r, combo, mixed }) {
         <span><span class="pw-dot pw-c-elem"></span>属性 ${formatNumber(r.element, 0)} (${formatNumber(elem, 0)}%)</span>
         ${r.extra > 0 && html`<span><span class="pw-dot pw-c-extra"></span>追加 ${formatNumber(r.extra, 0)}</span>`}
       </div>
-      ${r.extra > 0 && html`<${Hint}>追加 = 灼熱化などスキルの追加ダメージ (発動の確率込み)。</${Hint}>`}
+      ${r.extra > 0 && html`<${Hint}><span data-power-extra-hint>${extraHintText(r)}</span></${Hint}>`}
       ${mixed && r.perTarget && html`
         <ul class="pw-steps">
           ${r.perTarget.map((p) => html`
