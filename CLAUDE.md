@@ -18,7 +18,9 @@
 
 2026-10-24 にシートは護石の動画 (IMG_7657.MOV) の全コマで直され、410 行・スロット確認済みになった (RARE 8 のスロット①は武器用。
 追加分は No.257 以降・欠番あり)。別に動画を読み直した結果 (`C:\Users\solit\Documents\mhwilds_護石_動画で読み直し_2026-10-25.csv`) と
-410 個すべて一致した。いまの `data/charms.json` (408 個・生産護石と同じ 2 行は除く) はこのシートを `--slots-confirmed` で取り込んだもの。
+410 個すべて一致した。2026-10-29 に No.424〜465 (動画 IMG_7674・IMG_7667・IMG_7675) を足し、スロットを動画で確かめて 18 行を直した
+(別の AI が Lv1 の印を「2」と読んでいた)。いまの `data/charms.json` (450 個・生産護石と同じ 2 行は除く) はこのシートを
+`--slots-confirmed` で取り込んだもの。
 
 1. Claude の Google Drive コネクタで「護石一覧」を CSV に書き出す。CSV はリポの外 (作業用のフォルダ) に置き、リポに入れない。
 2. `node tools/import_charms.mjs <CSV> --slots-confirmed --report <一覧.json>` で `data/charms.json` を書き換える (`--dry-run` で書かずに確かめられる)。
