@@ -7607,23 +7607,6 @@
    "note": ""
   },
   {
-   "id": "s447",
-   "name": "未解の護石",
-   "rarity": 5,
-   "skills": [
-    {"skillId": 66, "name": "攻めの守勢", "level": 1},
-    {"skillId": 101, "name": "氷耐性", "level": 3}
-   ],
-   "armorSlots": [2, 1, 0],
-   "weaponSlots": [0],
-   "sheetNo": 447,
-   "slotsProvisional": false,
-   "sheetSlots": [2, 1],
-   "source": "シート「所持護石一覧」No.447",
-   "addedAt": "2026-10-29",
-   "note": ""
-  },
-  {
    "id": "s448",
    "name": "未解の護石",
    "rarity": 5,
