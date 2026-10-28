@@ -1368,7 +1368,15 @@ export class BnbSolver {
         else if (this.phase === 'dfs') {
           if (this.overBudget(stepStart)) { this.cut = true; this.nextPhase(); continue; }
           if (this.dfsStep(end, stepStart)) { if (!this.cut) this.dfsFinished = true; this.nextPhase(); }
-        } else if (this.phase.startsWith('polish')) { if (this.polishStep(end)) this.nextPhase(); }
+        } else if (this.phase.startsWith('polish')) {
+          if (this.polishStep(end)) {
+            const wasPolish1 = this.phase === 'polish1';
+            this.nextPhase();
+            // 途中の結果 (partialReady) が出たら、dfs を始める前にいったん返す。同じ区切りで dfs を回すと、呼んだ側が
+            // 読む前に厳密でない葉 (近似の値) が上位に入り、途中の結果に混ざる (所持護石が増えると起きやすい)
+            if (wasPolish1 && !this.done) return false;
+          }
+        }
       }
       return true;
     } finally {
