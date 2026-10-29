@@ -1,4 +1,32 @@
 {
  "schema": 1,
- "weapons": []
+ "weapons": [
+  {
+   "id": "w0001",
+   "name": "破滅のキリエヴェルド (攻撃激化・龍)",
+   "baseWeaponId": 1180,
+   "attack": 220,
+   "affinity": 6,
+   "element": {
+    "type": "dragon",
+    "value": 320
+   },
+   "sharpness": [
+    140,
+    40,
+    40,
+    80,
+    30,
+    20
+   ],
+   "slots": [
+    3,
+    3,
+    3
+   ],
+   "setBonusId": 3,
+   "groupBonusId": 2,
+   "note": "2026-10-29 本人の数値 (表示の攻撃 308 = 220・会心 6%・龍 320・黒蝕竜の力・鱗張りの技法)。切れ味・スロットは復元ボーナスなしの値"
+  }
+ ]
 }

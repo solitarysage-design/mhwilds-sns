@@ -36,7 +36,8 @@ test('武器の一覧: 片手剣 95 本と持っている武器。巨戟アー�
   const items = L.weaponItems(idx0, data.lists.weapons, data.lists.myWeapons);
   assert.equal(items.length, data.lists.weapons.length + data.lists.myWeapons.length);
   assert.equal(data.lists.weapons.length, 95);
-  const kirie = items.filter((it) => it.label.startsWith('破滅のキリエヴェルド'));
+  // 片手剣のデータ (weapons_sns) の 3 本。持っている武器 (my_weapons) の巨戟アーティアは数えない
+  const kirie = items.filter((it) => typeof it.value === 'number' && it.label.startsWith('破滅のキリエヴェルド'));
   assert.equal(kirie.length, 3);
   assert.equal(new Set(kirie.map((it) => it.label)).size, 3, '3 本の名前が同じだと選べない');
   for (const v of ['攻撃激化', '会心激化', '属性激化']) assert.ok(kirie.some((it) => it.label.includes(v)));
@@ -88,11 +89,13 @@ test('アーティアを「持っている武器」にする: 属性・シリー
   const rw = L.resolveWeaponRef('wltest', idx);
   assert.deepEqual(L.damageWeapon(rw), { attack: src.attack, affinity: src.affinity, element: { type: 'fire', value: 300 } });
   assert.equal(L.weaponName(rw), '破滅のキリエヴェルド (属性激化・火)');
-  // 持っている武器は一覧の先頭
-  const items = L.weaponItems(idx, data.lists.weapons, L.mergeById(data.lists.myWeapons, local));
-  assert.equal(items[0].value, 'wltest');
-  assert.match(items[0].sub, /火 300/);
-  assert.match(items[0].sub, /シリーズ: 火竜の力/);
+  // 持っている武器 (my_weapons.json → 画面で足した分) は一覧の先頭
+  const owned = L.mergeById(data.lists.myWeapons, local);
+  const items = L.weaponItems(idx, data.lists.weapons, owned);
+  assert.deepEqual(items.slice(0, owned.length).map((it) => it.value), owned.map((x) => x.id));
+  const it = items.find((x) => x.value === 'wltest');
+  assert.match(it.sub, /火 300/);
+  assert.match(it.sub, /シリーズ: 火竜の力/);
 });
 
 test('巨戟でないアーティアにはシリーズ/グループを付けない・名前を入れたらそれを使う', () => {
