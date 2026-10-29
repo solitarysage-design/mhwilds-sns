@@ -505,7 +505,8 @@ export class BnbSolver {
         g = this.decoGreedy(L, budget, need.forced);
       }
       if (g === NEG) return NEG;
-      const f0 = this.wp.ev.evaluate(L);
+      // 上界の f(いま) は表と同じ評価器 (exact は evB = 研ぐまでの減り方を入れない。problem.js の評価器の注記)
+      const f0 = this.boundEv().evaluate(L);
       const wg = this.weaponGain(charmDone ? this.wSlot : this.charmMaxW, L);
       const setCredit = this.setCredits(L, from);
       const grpCredit = this.groupCredits(L, from);
@@ -976,8 +977,17 @@ export class BnbSolver {
     const lim = () => Math.max(T, best);
     const gtSave = this.gt;
     if (exact && !none) this.gt = this.leafTable(L0);
+    // 研ぐまでの減り方があるとき (fast の近似の葉): 珠の入れ方は白の表 (gtW) と evB で刈り込み、組の値だけ ev で出す。
+    // 武器の珠の組の増え方は、減り方込みの表 (いまの最良の所で測った増え方) では小さく出る (匠・業物・達人芸・会心率が斬れ味で
+    // 食い合う) ので、達芸珠の組を打ち切っていた。白の値は減り方込みの値以上なので、白で刈り込めば切りすぎない
+    const whiteLeaf = !exact && !none && this.mode !== 'exact' && !!this.wp.sharpUse && !!this.ws.gtW;
+    if (whiteLeaf) this.gt = this.ws.gtW;
     try {
-      const f0 = none ? 0 : this.wp.ev.evaluate(L0);
+      // 刈り込みの f(いま) は増え方の表と同じ評価器。組の値は armorDfs が ev で出す。研ぐまでの減り方があるとき、厳密に解く
+      // (exact。表 = leafTable = 斬れ味がずっと一番上の色の評価器) なら f も同じく evB にそろえる (減り方込みの f に白の表の
+      // 増え方を足すと、会心の珠が斬れ味を長持ちさせる分が抜けて、よい珠の入れ方を切る。仕上げで 915.5 → 908.5 になっていた)
+      const evPrune = (exact || whiteLeaf) && !none && this.wp.sharpUse ? this.wp.evB : this.boundEv();
+      const f0 = none ? 0 : evPrune.evaluate(L0);
       const wl = this.wsList(this.wSlot).map((w) => {
         let v = 0;
         if (!none) for (const r of this.weaponR) if (w.vec[r]) v += this.hatSum(r, L0[r], w.vec[r]);
@@ -999,10 +1009,10 @@ export class BnbSolver {
         if (!ok) continue;
         for (let r = 0; r < P.R; r++) L1[r] = Math.min(P.maxLv[r], L0[r] + w.vec[r]);
         if (!none) {
-          const f1 = this.wp.ev.evaluate(L1);
+          const f1 = evPrune.evaluate(L1);
           if (this.prune(f1 + g0, lim())) continue;
         }
-        const res = this.armorDfs(L1, budget, forced, lim);
+        const res = this.armorDfs(L1, budget, forced, lim, evPrune);
         if (res && res.value > best) { best = res.value; bestSol = { value: res.value, ws: w, deco: res.deco, exact }; }
         if (none && bestSol) break;
       }
@@ -1012,7 +1022,7 @@ export class BnbSolver {
   }
 
   /** 防具用の珠: スキルを 1 つずつ、入れる Lv を多い順に決める。上界 = f(いま) + 残りの貪欲 (並べた品を使い回す) */
-  armorDfs(L1, budget, forced, lim) {
+  armorDfs(L1, budget, forced, lim, evB = this.boundEv()) {
     const P = this.P;
     const ev = this.wp.ev;
     const none = this.none;
@@ -1075,7 +1085,7 @@ export class BnbSolver {
       if (!none) {
         const g = rest(i);
         if (g === NEG) return;
-        if (this.prune(ev.evaluate(L) + g, Math.max(lim(), best ? best.value : NEG))) return;
+        if (this.prune(evB.evaluate(L) + g, Math.max(lim(), best ? best.value : NEG))) return;
       }
       const r = sk[i]; const s = P.armorDeco[r].slot;
       const room = P.maxLv[r] - L[r];
@@ -1101,14 +1111,26 @@ export class BnbSolver {
   }
 
   // ---------------------------------------------------------------- 表
-  setTables(ctxOf) {
+  /**
+   * 上界の f(いま) の評価器: exact は表 (evU・evA) と同じく研ぐまでの減り方を入れない evB、fast は組の値と同じ ev。
+   * fast のビームも evB (表も evB で測る。setTables の white。problem.js の評価器の注記)
+   */
+  boundEv() {
+    return this.mode === 'exact' || this.whiteTables ? this.wp.evB : this.wp.ev;
+  }
+  /** white = 増え方の表を evB (研ぐまでの減り方を入れない) で測る (fast のビームの段) */
+  setTables(ctxOf, white = false) {
     const P = this.P;
     if (this.none) return;
+    this.whiteTables = white && this.mode !== 'exact';
     P.weapons.forEach((wp, i) => {
       const ctx = this.mode === 'exact' ? null : ctxOf(wp, i);
       this.wws[i].gt = this.mode === 'exact'
         ? (this.wws[i].gtValid || (this.wws[i].gtValid = gainTable(P, wp, 'valid')))
-        : gainTable(P, wp, 'local', ctx);
+        : gainTable(P, wp, 'local', ctx, this.whiteTables ? wp.evB : wp.ev);
+      // 研ぐまでの減り方があるとき: 葉で珠を決めるときに使う白の表 (evB で測る。decoOpt の whiteLeaf)
+      this.wws[i].gtW = this.mode === 'exact' || !wp.sharpUse ? null
+        : this.whiteTables ? this.wws[i].gt : gainTable(P, wp, 'local', ctx, wp.evB);
       this.wws[i].ctx = ctx;
       this.wws[i].bt = null;
       this.wws[i].chainG = null;
@@ -1203,7 +1225,9 @@ export class BnbSolver {
    */
   chainGroupsOf() {
     const P = this.P;
-    const ev = this.wp.evU || this.wp.ev;
+    const ev = this.wp.evU || this.wp.evB;
+    // 斬れ味のスキルは白の評価器 (evU) では効かないが、fast の表では減り方込みで効くので、火力に効かない扱いにしない
+    const sharpSet = new Set(this.mode === 'exact' ? [] : P.sharpR || []);
     const top = Int8Array.from(P.maxLv);
     const zero = new Int8Array(P.R);
     const fTop = ev.evaluate(top);
@@ -1212,6 +1236,7 @@ export class BnbSolver {
     for (let r = 0; r < P.R; r++) {
       const t = top.slice(); t[r] = 0;
       const z = zero.slice(); z[r] = P.maxLv[r];
+      if (sharpSet.has(r)) continue;
       if (Math.abs(ev.evaluate(t) - fTop) <= Math.abs(fTop) * 1e-12 && Math.abs(ev.evaluate(z) - f0) <= Math.abs(f0) * 1e-12) flat.push(r);
     }
     const isFlat = new Uint8Array(P.R);
@@ -1299,7 +1324,7 @@ export class BnbSolver {
         if (this.o.dfs !== false) this.phaseQueue.push({ name: 'dfs' });
         this.phaseQueue.push({ name: 'polish2' });
       }
-      this.setTables((wp) => this.halfContext(wp));
+      this.setTables((wp) => this.halfContext(wp), true);
     } else {
       this.phaseQueue.push({ name: 'dfs' });
       this.setTables(() => null);
@@ -1329,7 +1354,7 @@ export class BnbSolver {
     // fast: 段階の頭で、いまの最良の所で表を測り直す
     if (this.mode === 'fast' && !this.none && this.list.length && !ph.name.startsWith('polish')) {
       const ctx = this.finalLevels(this.list[0]);
-      this.setTables(() => ctx);
+      this.setTables(() => ctx, ph.name.startsWith('beam'));
     }
     if (ph.name.startsWith('beam')) this.beamInit(ph.width);
     else if (ph.name === 'dfs') this.dfsBegin(ph);

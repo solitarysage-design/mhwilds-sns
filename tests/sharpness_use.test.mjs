@@ -14,7 +14,7 @@ import {
   resolveWeaponRef, damageWeapon, sharpnessResolver, sharpnessUseOf, handicraftSkillId, autoSharpness,
 } from '../app/model/weapon.js';
 import { sharpnessShareText, sharpnessKeepText, sharpnessIntervalOptions } from '../app/ui/tabs/equip_logic.js';
-import { loadRepoData, makeCases } from './search_cases.mjs';
+import { loadRepoData, makeCases, searchDataOf } from './search_cases.mjs';
 import { makeSmallProblem, bruteForce } from './search_brute.mjs';
 
 // state.js は 'preact/hooks' を名前で import する。node では app/vendor の同じファイルに向ける (tests/state.test.mjs と同じ)
@@ -247,4 +247,39 @@ test('画面の文: 色の割合・一番上の色がもつ秒数・秒数の候
   assert.equal(sharpnessKeepText(long), '研ぐまで白のままです');
   assert.deepEqual(sharpnessIntervalOptions(60).map((o) => o.value), [0, 30, 60, 120, 180]);
   assert.deepEqual(sharpnessIntervalOptions(90).map((o) => o.label), ['減らない', '30 秒', '1 分', '90 秒', '2 分', '3 分']);
+});
+
+test('探索 (研ぐまで 60 秒・達人芸必須): fast が厳密 (白の上界) と同じ 1 位 (2026-10-29 の取りこぼしの再現)', () => {
+  // 歴戦王アルシュベルドの鎖翼刃 2 か所と尻尾・本人の巨戟アーティア (攻撃 220・会心 6・龍 320・兇爪竜の力)。防具と護石を絞った問題。
+  // 直す前の fast は、葉で武器の珠の組を「いまの最良の所 (匠 3 で白が足りた所)」で測った表で並べて達芸珠の組を打ち切り、
+  // 900.4 (護石 匠3) を返していた (正しくは 915.5 = 護石 攻撃2・匠1 と 攻撃珠Ⅲ・達芸珠)
+  const setIdOf = (n) => raw.bonuses.setBonuses.find((b) => b.name === n).id;
+  const grpIdOf = (n) => raw.bonuses.groupBonuses.find((b) => b.name === n).id;
+  const w = { id: 'w-sharp', name: '巨戟アーティア (攻撃激化・龍)', baseWeaponId: 1180, attack: 220, affinity: 6,
+    element: { type: 'dragon', value: 320 }, setBonusId: setIdOf('兇爪竜の力'), groupBonusId: grpIdOf('鱗張りの技法') };
+  const armorNames = ['オリオンヘッドα', '護兇爪竜ヘルムβ', '護闢獣ヘルムβ', 'アーフィヘッドα', 'ダハディラメイルγ', '護兇爪竜メイルβ',
+    '護兇爪竜アームβ', 'ダハディラアームγ', 'ダハディラコイルγ', '護兇爪竜コイルβ', 'ダハディラグリーヴγ', '護兇爪竜グリーヴβ'];
+  const charmIds = ['s251', 's256', 's442', 's001', 's016', 's070'];
+  const small = {
+    ...raw, armor: { ...raw.armor, armor: raw.armor.armor.filter((a) => armorNames.includes(a.name)) },
+    charms: { ...raw.charms, charms: raw.charms.charms.filter((c) => charmIds.includes(c.id)) }, charmsFixed: { ...raw.charmsFixed, charms: [] },
+  };
+  const data = searchDataOf(small);
+  const third = 1 / 3;
+  const input = {
+    weapons: ['w-sharp'], extraWeapons: [w],
+    targets: ['left-wing-blade', 'right-wing-blade', 'tail'].map((k) => ({ weight: third, target: targetOf('アルシュベルド', k) })),
+    combo: combos.find((c) => c.id === 'just_rush_perfect'), uptimes: zeroPlaceholders, monsterStatus: [], buffs: {}, sharpness: null,
+    sharpnessInterval: 60, required: [{ skillId: skillId('回避性能'), level: 1 }, { skillId: skillId('龍耐性'), level: 3 }, { skillId: TATSU, level: 1 }],
+    charms: { owned: true, fixed: true }, limitBreak: true, decorations: { owned: null }, armorExclude: [], armorResistMin: { dragon: 0 },
+    objective: 'damage', K: 3,
+  };
+  const run = (extra) => { const s = createSearch({ ...input, ...extra }, data); while (!s.step(1e9)); return s.result(); };
+  const ex = run({ mode: 'exact', dominance: false });
+  const fa = run({ mode: 'fast', budget: { work: 2000000 } });
+  assert.equal(ex.status, 'done');
+  close(fa.results[0].value, ex.results[0].value, 1e-9);
+  const top = fa.results[0];
+  assert.ok(top.skills.some((x) => x.skillId === TATSU), '1 位に達人芸');
+  assert.equal(top.build.charm, 's251', '1 位の護石は 攻撃2・鈍器使い1・匠1');
 });

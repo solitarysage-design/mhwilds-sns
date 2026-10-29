@@ -116,11 +116,12 @@ export function prepare(data, o) {
   }
   for (const q of required) if (!cand.includes(q.skillId)) cand.push(q.skillId);
   const maxOf = (id) => skillById.get(id)?.maxLevel ?? 0;
-  const evalOpts = (wp, ids, uncapped, patternCache) => ({
+  // white = true: 研ぐまでの減り方を入れない (斬れ味はずっと一番上の色)。上界の見積もり用 (wp.evB・evU・evA)
+  const evalOpts = (wp, ids, uncapped, patternCache, white = false) => ({
     effects, motions: data.motions, combo: o.combo, targets: o.targets, weapon: wp.dmg,
     uptimes: o.uptimes || {}, monsterStatus: o.monsterStatus, buffs: o.buffs, relevantIds: ids,
     sharpness: wp.sharpFn || wp.fixedSharp || 'white', handicraftIndex: ids.indexOf(hid), uncapped, patternCache,
-    sharpnessUse: wp.sharpUse,
+    sharpnessUse: white ? null : wp.sharpUse,
   });
   const sigOf = (wp) => [wp.dmg.element ? wp.dmg.element.type : '-', wp.dmg.element ? 1 : 0,
     ...[0, 1, 2, 3, 4, 5].map((lv) => (wp.sharpFn ? wp.sharpFn(lv) : wp.fixedSharp)),
@@ -323,6 +324,14 @@ export function prepare(data, o) {
   }).map((c) => ({ ...c, slotCount: [0, 1, 2, 3].map((s) => c.slots.filter((x) => x === s).length) }));
 
   // ---- 会心率を動かすスキル (上限を外した評価器で上界を作る)
+  // 斬れ味のスキル (研ぐまでの減り方があるときだけ。匠と、斬れ味を減らさない確率を持つ業物・達人芸)
+  const sharpR = [];
+  if (weapons.some((wp) => wp.sharpUse)) {
+    ids.forEach((id, r) => {
+      const lv = (effMap[String(id)] && effMap[String(id)].levels) || [];
+      if (id === hid || lv.some((l) => Number.isFinite(l.sharpnessSave) || Number.isFinite(l.critSharpnessSave))) sharpR.push(r);
+    });
+  }
   const touchesAffinity = new Uint8Array(R);
   for (let r = 0; r < R; r++) {
     const e = effMap[String(ids[r])];
@@ -378,13 +387,25 @@ export function prepare(data, o) {
   }
 
   // ---- 武器ごと: 評価器 (上限あり / 全部外す / 攻撃・属性だけ外す)。条件のパターンの覚えは全部の評価器で使い回す (メモリ)
+  //      研ぐまでの減り方があるとき (2026-10-29):
+  //      - evB / evU / evA = 斬れ味がずっと一番上の色の評価器 (mode 'exact' の上界用)。減り方込みの値はいつもそれ以下
+  //        (色の割合で混ぜた補正 ≤ 一番上の色の補正) なので、保証のある上界の前提は前と同じに成り立つ。ただし減り方込みの値との
+  //        差の分だけ切れる枝が減り、画面の探索 (fast) では予算に収まらない (B1z で 10 倍以上)
+  //      - fast は前のまま減り方込みの評価器 (ev) で増え方を測る (近似)。ただし匠・業物・達人芸・会心率は斬れ味で食い合うので、
+  //        いまの最良 (白の足りた所) で測った表では武器の珠の組の増え方が小さく出る。葉で武器の珠の組を並べるときは、表ではなく
+  //        組ごとに評価器で値を出す (solver.js の decoOpt)。表で並べると達芸珠の組を打ち切り、915.5 の組を見落として 900.4 を
+  //        返していた (研ぐまで 60 秒・達人芸必須)。表を 2 か所 (斬れ味のスキルを下げた所) で測る直し方は、上界が 2% ほど甘く
+  //        なって探索が 10 倍以上遅くなったのでやめた
+  //      - fast のビーム (途中の状態を上界で並べて上位だけ残す) は evB で並べる (solver.js の setTables・boundEv)。途中の状態には
+  //        まだ武器の珠 (達芸珠など) が入っていないので、減り方込みで並べると斬れ味の悪い値で低く見え、よい枝を早く捨てていた
   const patternCache = new Map();
   for (const wp of weapons) {
     if (!none) {
       wp.ev = makeEvaluator(evalOpts(wp, ids, false, patternCache));
+      wp.evB = wp.sharpUse ? makeEvaluator(evalOpts(wp, ids, false, patternCache, true)) : wp.ev;
       if (!o.light) {
-        wp.evU = makeEvaluator(evalOpts(wp, ids, true, patternCache));
-        wp.evA = makeEvaluator(evalOpts(wp, ids, 'attack', patternCache));
+        wp.evU = makeEvaluator(evalOpts(wp, ids, true, patternCache, true));
+        wp.evA = makeEvaluator(evalOpts(wp, ids, 'attack', patternCache, true));
       }
     }
     wp.mask = new Uint8Array(R);
@@ -437,7 +458,7 @@ export function prepare(data, o) {
   }
 
   return {
-    patternCache, K, domK, idx, ids, R, rOf, kind, maxLv, touchesAffinity, reqLv, required, armorDeco, wDecos: wDecosAll, sets, groups,
+    patternCache, K, domK, idx, ids, R, rOf, kind, maxLv, touchesAffinity, sharpR, reqLv, required, armorDeco, wDecos: wDecosAll, sets, groups,
     parts, partStats, charms, charmClassesBefore: cList.length, weapons, weaponsBefore, weaponSide, hid, warnings, opts: o, data,
     resE, resMin,
     skillName: (r) => skillById.get(ids[r]).name,
@@ -450,10 +471,10 @@ export function prepare(data, o) {
  *   外した評価器 (会心率は切る)。上限を外した期待値は Lv について優モジュラ (補い合う) なので、Top の増え方は
  *   どの途中の状態の増え方より大きい → 足し算の上界が成り立つ (前提: Lv を上げて火力が下がらない・同時に起きない条件の
  *   発動率の合計が 100% 以下)。
- * mode 'local': 上限ありの評価器で、ctx (Lv の並び) の所で測る。上界の保証は無い (近似)。
+ * mode 'local': 上限ありの評価器 (evLocal。既定 wp.ev) で、ctx (Lv の並び) の所で測る。上界の保証は無い (近似)。
  * @returns {{delta: Float64Array[], hat: Float64Array[][]}}
  */
-export function gainTable(P, wp, mode = 'valid', ctx = null) {
+export function gainTable(P, wp, mode = 'valid', ctx = null, evLocal = wp.ev) {
   const { R, maxLv } = P;
   const delta = [];
   if (mode === 'valid') {
@@ -475,7 +496,7 @@ export function gainTable(P, wp, mode = 'valid', ctx = null) {
       for (let j = 0; j < maxLv[r]; j++) {
         const a = c.slice(); a[r] = j + 1;
         const b = c.slice(); b[r] = j;
-        row[j] = Math.max(0, wp.ev.evaluate(a) - wp.ev.evaluate(b));
+        row[j] = Math.max(0, evLocal.evaluate(a) - evLocal.evaluate(b));
       }
       delta.push(row);
     }
