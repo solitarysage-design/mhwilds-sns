@@ -9,7 +9,7 @@
    "https://raw.githubusercontent.com/dzxrly/MHWS-in-json/database-20261020-070700-4a99b26/MHWS-in-json/natives/STM/GameDesign/Enemy/CommonData/Data/EmCommonData.user.3.json",
    "data/skills.json"
   ],
-  "generatedAt": "2026-10-24T04:33:53Z",
+  "generatedAt": "2026-10-29T06:54:16Z",
   "gameVersion": "1.042",
   "gameDataBuild": "1.42.0.2",
   "license": "ゲームデータの抽出は dzxrly/MHWS-in-json (MIT)。数値はカプコンのゲームデータ由来。",
@@ -4112,6 +4112,101 @@
    ],
    "requiresSkillId": 95
   },
+  "117": {
+   "name": "業物",
+   "kind": "weapon",
+   "gameId": 1050520384,
+   "gameSkill": "HunterSkill_015",
+   "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      10,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "sharpnessSave": 0.1
+    },
+    {
+     "level": 2,
+     "gameLevel": 2,
+     "raw": [
+      25,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "sharpnessSave": 0.25
+    },
+    {
+     "level": 3,
+     "gameLevel": 3,
+     "raw": [
+      50,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "sharpnessSave": 0.5
+    }
+   ],
+   "source": "SkillData HunterSkill_015 _value[0]=斬れ味を消費しない確率%",
+   "confidence": "high",
+   "note": "斬れ味を減らす当たりのたびに、この確率で減らない。研ぐまでの攻撃の秒数を入れたときだけ火力に効く (入れないと斬れ味はずっと一番上の色)。",
+   "verification": [
+    {
+     "item": "業物",
+     "gameData": [
+      0.1,
+      0.25,
+      0.5
+     ],
+     "survey": [
+      0.1,
+      0.25,
+      0.5
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
   "120": {
    "name": "巧撃",
    "kind": "armor",
@@ -4472,6 +4567,57 @@
       15,
       20,
       25
+     ],
+     "match": true
+    }
+   ],
+   "requiresSkillId": null
+  },
+  "124": {
+   "name": "達人芸",
+   "kind": "weapon",
+   "gameId": 1389859584,
+   "gameSkill": "HunterSkill_004",
+   "conditional": false,
+   "conditionGroup": null,
+   "activeStates": null,
+   "defaultUptime": 1.0,
+   "uptimeBasis": "",
+   "condition": "",
+   "supported": true,
+   "levels": [
+    {
+     "level": 1,
+     "gameLevel": 1,
+     "raw": [
+      80,
+      0,
+      0,
+      0
+     ],
+     "attackAdd": 0,
+     "attackMul": 1.0,
+     "affinityAdd": 0,
+     "critMul": null,
+     "elementAdd": 0,
+     "elementMul": 1.0,
+     "weakPointAffinity": 0,
+     "woundAffinity": 0,
+     "critElementMul": null,
+     "critSharpnessSave": 0.8
+    }
+   ],
+   "source": "SkillData HunterSkill_004 _value[0]=会心のとき斬れ味を消費しない確率%",
+   "confidence": "medium",
+   "note": "会心が出た当たりで、この確率で斬れ味が減らない (業物と別々に効くと仮定)。研ぐまでの攻撃の秒数を入れたときだけ火力に効く (入れないと斬れ味はずっと一番上の色)。",
+   "verification": [
+    {
+     "item": "達人芸",
+     "gameData": [
+      0.8
+     ],
+     "survey": [
+      0.8
      ],
      "match": true
     }

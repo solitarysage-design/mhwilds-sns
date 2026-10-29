@@ -162,6 +162,11 @@ def _sym(v) -> str:
     return m.group(2) if m else str(v)
 
 
+# 斬れ味を減らす量 (_CustomKireajiReduce) の既定値と、1 目盛りあたりの値
+SHARPNESS_REDUCE_DEFAULT = 10
+SHARPNESS_REDUCE_UNIT = 10
+
+
 class HitTable:
     """RCOL のヒット定義を引く。"""
 
@@ -188,6 +193,10 @@ class HitTable:
             "sharpnessMul": (not no_use) or force,   # 斬れ味補正が掛かるか
             "consumesSharpness": not no_use,          # 斬れ味を消費するか
             "sharpnessCostRaw": p["_CustomKireajiReduce"] if p["_IsCustomKireajiReduce"] else None,
+            # 1 回で減る斬れ味の目盛り。_CustomKireajiReduce は既定の当たりで 10 (= 1 目盛りと読む。ゲージは満タン 400 で
+            # 武器の斬れ味の値と同じ単位。_HealKireaji=400)。専用の値の技 (滑り込み斬り 5 など) はその値 ÷ 10
+            "sharpnessCost": 0 if no_use else (p["_CustomKireajiReduce"] if p["_IsCustomKireajiReduce"] else SHARPNESS_REDUCE_DEFAULT)
+            / SHARPNESS_REDUCE_UNIT,
             "hien": bool(p["_IsSkillHien"]),
             "additionalDamage": bool(p["_UseSkillAdditionalDamage"]),
             "continuousAttack": bool(p["_UseSkillContinuousAttack"]),

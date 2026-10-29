@@ -158,6 +158,7 @@ export default function EquipTab({ data, active }) {
   combo: null,                  // combos_sns.json の id か 技 id の配列。null = 先頭の代表コンボ
   uptimes: {},                  // 条件グループの発動率。damage.js の uptimes にそのまま渡せる (例 {enraged: 0.7, chain: {hit5plus: 0.7}})
   sharpness: null,              // null = 武器から自動 / 'red'〜'purple' = 固定
+  sharpnessInterval: 60,        // 研ぐまでに攻撃する秒数 (2026-10-29。自動のときだけ効く。0 = 減らない。setSharpnessInterval)
   mySets: [],                   // マイセット [{id: 's…', name, savedAt (ISO), build (上の build と同じ形)}]
   tabs: {},                     // タブごとの小さな画面状態 {power: {showDetail: true}, ...} (setTabState)
 }
@@ -204,6 +205,7 @@ const off = subscribe((s) => { … });                 // 変わるたびに呼�
 | `setUptimeState(groupId, stateId, ratio)` | categorical の 1 つの段だけ変える |
 | `resetUptime(groupId?)` | 既定 (skill_effects.json の defaultUptime) に戻す。省くと全部 |
 | `setSharpness(color \| null)` | 斬れ味の色の固定 / 自動 |
+| `setSharpnessInterval(sec)` | 研ぐまでに攻撃する秒数 (0〜3600。0 = 減らない = 一番上の色のまま。装備タブ・火力タブの欄。2026-10-29) |
 | `saveMySet(name, {overwriteId})` → id | 今の装備をマイセットに (overwriteId で上書き) |
 | `loadMySet(id)` / `renameMySet(id, name)` / `deleteMySet(id)` | マイセットを使う / 名前を変える / 消す |
 | `setTabState(tab, patch)` | タブごとの小さな画面状態 (浅いマージ。JSON にできる値だけ) |

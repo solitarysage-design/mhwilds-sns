@@ -2,8 +2,8 @@
 // computeBuild + comboExpected での計算し直し (docs/SEARCH_DESIGN.md 3.4 節)。
 // ソルバの中の評価 (速い評価器・Lv の足し算) とずれていないかをここで確かめる。import は相対パスだけ。
 import { computeBuild, ARMOR_PARTS } from '../build.js';
-import { comboExpected } from '../damage.js';
-import { resolveWeaponRef, damageWeapon, autoSharpness } from '../weapon.js';
+import { comboExpected, sharpnessPlan } from '../damage.js';
+import { resolveWeaponRef, damageWeapon, autoSharpness, sharpnessUseOf } from '../weapon.js';
 
 const DECO_LISTS = ['weapon', ...ARMOR_PARTS, 'charmArmor', 'charmWeapon'];
 
@@ -152,8 +152,9 @@ function pickByResist(P, S, e, avoidSet) {
 /**
  * 装備一式を computeBuild + comboExpected で計算し直す (部位の割合で加重平均)。
  * @param ctx {idx, effects, motions, combo, targets: [{weight, group?, target}], uptimes, monsterStatus, buffs,
- *             sharpness: null (自動) | 色}
- * @returns {{value, perTarget: number[], perGroup, r (computeBuild の結果), sharpness, factored: bool, error}}
+ *             sharpness: null (自動) | 色, sharpnessInterval: 研ぐまでに攻撃する秒数 (0・省略 = 一番上の色のまま)}
+ * @returns {{value, perTarget: number[], perGroup, r (computeBuild の結果), sharpness, sharpnessPlan, factored: bool, error}}
+ *   sharpnessPlan = 研ぐまでの減り方 (damage.js の sharpnessPlan。全部の相手をまとめて 1 つ。減り方を入れないときは null)
  *   value は相手・コンボが無ければ null。factored = 条件の組み合わせが MAX_PATTERNS を超えたので、comboExpected が因子分解の
  *   合計で出した (値は同じ。技ごとの内訳が無いだけ)。comboExpected が例外なら error に文 (value は null)
  */
@@ -161,16 +162,21 @@ export function checkBuild(build, ctx) {
   const r = computeBuild(build, ctx.idx);
   const w = resolveWeaponRef(build.weapon, ctx.idx) || (typeof build.weapon === 'object' ? build.weapon : null);
   const sharpness = ctx.sharpness || (w ? autoSharpness(w, ctx.idx, r.skillLevels).color : null) || 'white';
-  const out = { value: null, perTarget: [], perGroup: null, r, sharpness, factored: false, error: null };
+  const out = { value: null, perTarget: [], perGroup: null, r, sharpness, sharpnessPlan: null, factored: false, error: null };
   if (!ctx.targets || !ctx.targets.length || !ctx.combo) return out;
   const skills = r.skills.filter((s) => s.level > 0).map((s) => ({ skillId: s.skillId, level: s.level }));
   try {
     let v = 0;
+    const base = {
+      weapon: damageWeapon(w), sharpness, skills, uptimes: ctx.uptimes || {}, effects: ctx.effects,
+      motions: ctx.motions, combo: ctx.combo, monsterStatus: ctx.monsterStatus, buffs: ctx.buffs,
+      sharpnessUse: sharpnessUseOf(w, ctx.idx, r.skillLevels, ctx.sharpnessInterval, ctx.sharpness),
+    };
+    // 研ぐまでの減り方は全部の相手をまとめて 1 つ (ゲージは 1 本。探索の評価器と同じ)
+    out.sharpnessPlan = sharpnessPlan(base, ctx.targets);
+    if (out.sharpnessPlan) base.sharpnessShares = out.sharpnessPlan.shares;
     for (const t of ctx.targets) {
-      const x = comboExpected({
-        weapon: damageWeapon(w), sharpness, skills, uptimes: ctx.uptimes || {}, effects: ctx.effects,
-        motions: ctx.motions, combo: ctx.combo, target: t.target, monsterStatus: ctx.monsterStatus, buffs: ctx.buffs,
-      });
+      const x = comboExpected({ ...base, target: t.target });
       if (x.factored) out.factored = true;
       out.perTarget.push(x.total);
       v += t.weight * x.total;

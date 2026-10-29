@@ -48,6 +48,7 @@
 | `elementRate` | `_StatusAttrRate`。ただし `_UseStatusAttrPower=false` のヒット (盾) は 0 |
 | `sharpnessMul` (斬れ味補正が掛かる) | `!_IsNoUseKireaji || _IsForceUseKireajiAttackRate` |
 | `consumesSharpness` (斬れ味を消費する) | `!_IsNoUseKireaji` |
+| `sharpnessCost` (1 回で減る目盛り。2026-10-29) | `_IsNoUseKireaji` なら 0、`_IsCustomKireajiReduce` なら `_CustomKireajiReduce` ÷ 10、ほかは 10 ÷ 10 = 1。既定の当たりの `_CustomKireajiReduce` がみな 10 で、砥石の `_HealKireaji` = 400 が武器の斬れ味の満タン (匠込み 400) と同じ単位なので、10 = 1 目盛りと読んだ (確度 medium。滑り込み斬り 0.5・白傷への集中弱点攻撃 0.3) |
 | `canCrit` | `!_IsNoCritical` |
 | `hien` (飛燕の対象) | `_IsSkillHien` |
 | `additionalDamage` (灼熱化などの対象と推定) | `_UseSkillAdditionalDamage` |

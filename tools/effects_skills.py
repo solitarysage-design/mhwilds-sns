@@ -9,7 +9,8 @@
           conditionGroup (発動率を持つ条件グループの id。rules.conditionGroups)、
           activeStates (主効果 = levels[] の値が出る段。binary は ["on"])
     levels[] の追加: gameLevel, raw, byState (段ごとの効果。主効果と違う段だけ), elementType, hardPartMul,
-                     hardPartMaxHitzone, jumpMul, lowSharpnessMul, lowSharpnessMaxColor, extraDamage (docs/ARCHITECTURE.md)
+                     hardPartMaxHitzone, jumpMul, lowSharpnessMul, lowSharpnessMaxColor, extraDamage,
+                     sharpnessSave, critSharpnessSave (docs/ARCHITECTURE.md)
 条件つきスキルの発動率はスキルごとに持たない。defaultUptime / uptimeBasis は条件グループの既定値から入れる
 (画面と計算は rules.conditionGroups の値を使う。ここの defaultUptime は主効果が出る割合の参考値)。
 """
@@ -188,6 +189,23 @@ def build_specs() -> dict[str, dict]:
         "HunterSkill_020", conditional=False, levels=lv, confidence="medium",
         source="SkillData HunterSkill_020 _value[0]=倍率%。色のしきい値はスキル説明文",
         note="物理ダメージにだけ掛ける扱い (MHWS-in-json の加工は attack.hit.rate)。"))
+
+    # 業物・達人芸: 斬れ味を減らさない確率。斬れ味の減り方 (研ぐまでの攻撃の秒数) を入れたときだけ火力に効く
+    lv = _levels("HunterSkill_015", lambda r, i: {"sharpnessSave": _r(r["value"][0] / 100)})
+    add("HunterSkill_015", _skill(
+        "HunterSkill_015", conditional=False, levels=lv, confidence="high",
+        source="SkillData HunterSkill_015 _value[0]=斬れ味を消費しない確率%",
+        note="斬れ味を減らす当たりのたびに、この確率で減らない。研ぐまでの攻撃の秒数を入れたときだけ火力に効く"
+             " (入れないと斬れ味はずっと一番上の色)。",
+        verification=[_verify("業物", _vals(lv, "sharpnessSave"), [0.1, 0.25, 0.5])]))
+
+    lv = _levels("HunterSkill_004", lambda r, i: {"critSharpnessSave": _r(r["value"][0] / 100)})
+    add("HunterSkill_004", _skill(
+        "HunterSkill_004", conditional=False, levels=lv, confidence="medium",
+        source="SkillData HunterSkill_004 _value[0]=会心のとき斬れ味を消費しない確率%",
+        note="会心が出た当たりで、この確率で斬れ味が減らない (業物と別々に効くと仮定)。研ぐまでの攻撃の秒数を入れたときだけ"
+             "火力に効く (入れないと斬れ味はずっと一番上の色)。",
+        verification=[_verify("達人芸", _vals(lv, "critSharpnessSave"), [0.8])]))
 
     lv = _levels("HunterSkill_028", lambda r, i: {"attackMul": _r(r["value"][0] / 100)})
     add("HunterSkill_028", _skill(

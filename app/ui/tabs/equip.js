@@ -10,7 +10,7 @@ import {
 } from '../components/index.js';
 import {
   useAppState, getState, setWeapon, setArmor, setLimitBreak, setCharm, setDecoration, setDecorations, clearDecorations,
-  clearBuild, setSharpness, setTabState, saveMySet, loadMySet, renameMySet, deleteMySet,
+  clearBuild, setSharpness, setSharpnessInterval, setTabState, saveMySet, loadMySet, renameMySet, deleteMySet,
   resolveTarget, resolveCombo, ARMOR_PARTS, SHARPNESS_ORDER,
 } from '../../state.js';
 import { useTargetData } from '../../data.js';
@@ -149,6 +149,7 @@ function ConfirmButton({ label, confirmLabel, message, onConfirm, variant = 'dan
 
 function SharpnessField({ weapon, idx, result }) {
   const sharpness = useAppState((s) => s.sharpness);
+  const interval = useAppState((s) => s.sharpnessInterval);
   const auto = L.autoSharpness(weapon, idx, result.skillLevels);
   const options = [
     { value: null, label: auto.color ? `自動 (${SHARPNESS_LABEL[auto.color]})` : '自動' },
@@ -161,7 +162,8 @@ function SharpnessField({ weapon, idx, result }) {
     <div class="field" data-eq="sharpness">
       <div class="field-head">
         <span class="field-label">斬れ味</span>
-        <span class="field-end">${sharpness ? `${SHARPNESS_LABEL[sharpness]}で計算` : auto.color ? `${SHARPNESS_LABEL[auto.color]}で計算 (自動)` : '白で計算'}</span>
+        <span class="field-end">${sharpness ? `${SHARPNESS_LABEL[sharpness]}で計算`
+          : `${auto.color ? SHARPNESS_LABEL[auto.color] : '白'}${interval > 0 ? 'から下がる分も計算' : 'で計算'}${auto.color ? ' (自動)' : ''}`}</span>
       </div>
       ${auto.gauge && max > 0 && html`
         <div class="eq-gauge" role="img" aria-label=${`斬れ味ゲージ。一番上の色は${SHARPNESS_LABEL[auto.color] || '不明'}`}>
@@ -176,9 +178,19 @@ function SharpnessField({ weapon, idx, result }) {
         </div>`}
       <${Segmented} options=${options} value=${sharpness} onChange=${(v) => setSharpness(v)} />
       <p class="hint">
-        「自動」は、いまの装備で出る一番上の色${auto.handicraft ? ` (匠 Lv${auto.handicraft} を含む)` : ''}で火力を計算します。
+        「自動」は、いまの装備で出る一番上の色${auto.handicraft ? ` (匠 Lv${auto.handicraft} を含む)` : ''}から計算します。
         ${auto.handicraft ? ' ゲージの薄い所が匠で伸びた分です。' : ''}
       </p>
+      ${!sharpness && html`
+        <div data-eq="sharpness-interval">
+          <${Segmented} label="研ぐまでに攻撃する時間" options=${L.sharpnessIntervalOptions(interval)} value=${interval}
+            onChange=${(v) => setSharpnessInterval(v)} />
+          <p class="hint">
+            ${interval > 0
+              ? `研いでから ${L.sharpnessIntervalLabel(interval)}攻撃する間に斬れ味が下がる分を入れて計算します (当たるたびに 1 目盛り減る。業物・達人芸・匠で長持ち)。移動や回避の時間は入れません。`
+              : '斬れ味は減らない (ずっと一番上の色) として計算します。業物・達人芸は火力に入りません。'}
+          </p>
+        </div>`}
     </div>`;
 }
 
@@ -659,6 +671,7 @@ const quote = (list) => list.map((x) => `「${x}」`).join('');
  */
 function usePowerSummary({ active, data, idx, weapon, result }) {
   const sharpState = useAppState((s) => s.sharpness);
+  const sharpIv = useAppState((s) => s.sharpnessInterval);
   const uptimes = useAppState((s) => s.uptimes);
   const comboRef = useAppState((s) => s.combo);
   const stTarget = useAppState((s) => s.target);
@@ -683,9 +696,9 @@ function usePowerSummary({ active, data, idx, weapon, result }) {
     if (!active || !weapon || !tgt.target) return null;
     return L.summarizePower({
       weapon, sharpness: sharp, skills: result.skills, uptimes, data, combo, target: tgt.target, targets: mixTargets,
-      perSkills: L.sharpnessResolver(weapon, idx, sharpState), monsterStatus,
+      perSkills: L.sharpnessResolver(weapon, idx, sharpState, { intervalSec: sharpIv }), monsterStatus,
     });
-  }, [active, weapon, sharp, sharpState, idx, result, uptimes, data, combo, tgt, mixTargets, monsterStatus]);
+  }, [active, weapon, sharp, sharpState, sharpIv, idx, result, uptimes, data, combo, tgt, mixTargets, monsterStatus]);
   return { summary, tgt, targetLabel, sharp, sharpState, needsElement };
 }
 
@@ -757,7 +770,9 @@ function PowerCard({ weapon, ps }) {
         <${KeyValue} rows=${[
           ['コンボ', summary.comboName],
           ['相手', targetLabel],
-          ['斬れ味', `${SHARPNESS_LABEL[sharp]}${sharpState ? '' : ' (自動)'}`],
+          ['斬れ味', summary.sharpnessPlan
+            ? `研ぐまで ${L.sharpnessIntervalLabel(summary.sharpnessPlan.intervalSec)}: ${L.sharpnessShareText(summary.sharpnessPlan)} (${L.sharpnessKeepText(summary.sharpnessPlan)})`
+            : `${SHARPNESS_LABEL[sharp]}${sharpState ? '' : ' (自動)'}`],
           ['内訳', `物理 ${formatNumber(summary.physical)}・属性 ${formatNumber(summary.element)}${summary.extra > 0 ? `・追加 ${formatNumber(summary.extra)}` : ''}`],
         ]} />
         ${tgt.source === 'default' && html`

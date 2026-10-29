@@ -108,17 +108,36 @@ export function handicraftSkillId(idx) {
  * 斬れ味の色をスキルの組から決める関数 (power_calc.js の input.perSkills)。
  * 斬れ味を固定しているとき (fixedColor がある)・武器が無いときは null (色は変わらない)。
  * 自動のときは匠の Lv で色が変わるので、スキルを外したとき・スキルなしのときの色を決め直すのに使う。
+ * opts.intervalSec (研ぐまでに攻撃する秒数) が正なら、匠込みのゲージも返す ({sharpness, sharpnessUse: {gauge, intervalSec}}。
+ * damage.js の comboExpected が研ぐまでの色の割合で混ぜる)。
  */
-export function sharpnessResolver(weapon, idx, fixedColor) {
+export function sharpnessResolver(weapon, idx, fixedColor, opts = {}) {
   if (fixedColor || !weapon) return null;
   const hid = handicraftSkillId(idx);
+  const intervalSec = Number(opts.intervalSec) > 0 ? Number(opts.intervalSec) : 0;
   const cache = new Map();
   return (skills) => {
     let lv = 0;
     for (const s of skills || []) if (hid != null && Number(s.skillId) === hid) lv = Number(s.level) || 0;
-    if (!cache.has(lv)) cache.set(lv, autoSharpness(weapon, idx, hid != null ? { [hid]: lv } : {}).color || 'white');
-    return { sharpness: cache.get(lv) };
+    if (!cache.has(lv)) {
+      const a = autoSharpness(weapon, idx, hid != null ? { [hid]: lv } : {});
+      cache.set(lv, intervalSec && a.gauge
+        ? { sharpness: a.color || 'white', sharpnessUse: { gauge: a.gauge, intervalSec } }
+        : { sharpness: a.color || 'white' });
+    }
+    return cache.get(lv);
   };
+}
+
+/**
+ * 研ぐまでの斬れ味の減り方の入力 (damage.js の comboExpected の sharpnessUse)。
+ * 斬れ味を固定しているとき・秒数が 0 か無いとき・ゲージの分からない武器は null (一番上の色のまま)。
+ * @param skillLevels computeBuild(...).skillLevels (匠の Lv を見る)
+ */
+export function sharpnessUseOf(w, idx, skillLevels, intervalSec, fixedColor = null) {
+  if (fixedColor || !w || !(Number(intervalSec) > 0)) return null;
+  const a = autoSharpness(w, idx, skillLevels || {});
+  return a.gauge ? { gauge: a.gauge, intervalSec: Number(intervalSec) } : null;
 }
 
 /**

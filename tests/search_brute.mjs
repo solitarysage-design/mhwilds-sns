@@ -9,8 +9,8 @@
 //   (スロットの大きい順に 1 つずつ。同じ大きさは順を問わない) → 珠で足した Lv の組のうち他に負けないもの (パレート。
 //   Lv を上げて火力が下がらない前提。tests/search_api.test.mjs で確かめる) → comboExpected (部位の割合で加重平均) → 上位 K。
 import { computeBuild, indexEquipData, ARMOR_PARTS } from '../app/model/build.js';
-import { comboExpected } from '../app/model/damage.js';
-import { resolveWeaponRef, damageWeapon, autoSharpness } from '../app/model/weapon.js';
+import { comboExpected, sharpnessPlan } from '../app/model/damage.js';
+import { resolveWeaponRef, damageWeapon, autoSharpness, sharpnessUseOf } from '../app/model/weapon.js';
 
 /** 残す防具スキル・武器スキル・シリーズ/グループ (名前) */
 export const KEEP_ARMOR_SKILLS = ['弱点特効', '挑戦者', '逆襲'];
@@ -340,11 +340,14 @@ export function bruteForce(data, input) {
       const skills = list.map(([skillId, level]) => ({ skillId, level }));
       const sl = Object.fromEntries(list);
       const sharpness = input.sharpness || autoSharpness(w, idx, sl).color || 'white';
+      const base = { weapon: dw, sharpness, skills, uptimes: input.uptimes, effects: data.skillEffects,
+        motions: data.motions, combo: input.combo, monsterStatus: input.monsterStatus, buffs: input.buffs,
+        // 研ぐまでの減り方 (input.sharpnessInterval)。部位をまとめて 1 つ (damage.js の sharpnessPlan)
+        sharpnessUse: sharpnessUseOf(w, idx, sl, input.sharpnessInterval, input.sharpness) };
+      const plan = sharpnessPlan(base, input.targets);
+      if (plan) base.sharpnessShares = plan.shares;
       v = 0;
-      for (const t of input.targets) {
-        v += t.weight * comboExpected({ weapon: dw, sharpness, skills, uptimes: input.uptimes, effects: data.skillEffects,
-          motions: data.motions, combo: input.combo, target: t.target, monsterStatus: input.monsterStatus, buffs: input.buffs }).total;
-      }
+      for (const t of input.targets) v += t.weight * comboExpected({ ...base, target: t.target }).total;
       valueCache.set(key, v);
     }
     return v;

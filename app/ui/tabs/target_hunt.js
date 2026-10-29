@@ -272,6 +272,7 @@ function useHuntPower({ data, idx, buildResult, weaponFull }) {
   const comboRef = useAppState((s) => s.combo);
   const uptimes = useAppState((s) => s.uptimes);
   const sharpSel = useAppState((s) => s.sharpness);
+  const sharpIv = useAppState((s) => s.sharpnessInterval);
   return useMemo(() => {
     const combo = resolveCombo(comboRef, data.combos);
     const comboName = combo ? (Array.isArray(combo) ? '自分で組んだコンボ' : combo.name) : '';
@@ -283,10 +284,10 @@ function useHuntPower({ data, idx, buildResult, weaponFull }) {
       input: {
         weapon: L.damageWeapon(weaponFull), sharpness: sharpSel || autoColor || 'white', skills: buildResult.skills,
         uptimes, effects: data.skillEffects, motions: data.motions, combo,
-        perSkills: L.sharpnessResolver(weaponFull, idx, sharpSel),
+        perSkills: L.sharpnessResolver(weaponFull, idx, sharpSel, { intervalSec: sharpIv }),
       },
     };
-  }, [comboRef, uptimes, sharpSel, data, idx, buildResult, weaponFull]);
+  }, [comboRef, uptimes, sharpSel, sharpIv, data, idx, buildResult, weaponFull]);
 }
 
 const shareText = (w) => `${Math.round(w * 100)}%`;
@@ -692,6 +693,7 @@ export function HuntCards({ data, td, monster, target, ui, idx, buildResult, wea
   const comboRef = useAppState((s) => s.combo);
   const uptimes = useAppState((s) => s.uptimes);
   const sharpness = useAppState((s) => s.sharpness);
+  const sharpnessInterval = useAppState((s) => s.sharpnessInterval);
   const kind = individualKindOf(target);
   const ctx = useMemo(() => questContext(td, target), [td, target]);
   const power = useHuntPower({ data, idx, buildResult, weaponFull });
@@ -704,14 +706,14 @@ export function HuntCards({ data, td, monster, target, ui, idx, buildResult, wea
       const p = builder({
         target, tabTarget: ui, search, targetData: td,
         core: { index: idx, skillEffects: data.skillEffects, motions: data.motions, combos: data.combos },
-        current: { build, combo: comboRef, uptimes, sharpness },
+        current: { build, combo: comboRef, uptimes, sharpness, sharpnessInterval },
       });
       return p && typeof p === 'object' ? p : null;
     } catch (e) {
       console.warn('おすすめを作れませんでした', e);
       return null;
     }
-  }, [active, builder, target, ui, search, td, idx, data, build, comboRef, uptimes, sharpness]);
+  }, [active, builder, target, ui, search, td, idx, data, build, comboRef, uptimes, sharpness, sharpnessInterval]);
   const skillLevels = (buildResult && buildResult.skillLevels) || {};
   const onEquip = () => goToTab('equip', { top: true });
 

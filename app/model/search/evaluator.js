@@ -13,16 +13,21 @@
 //  - 攻撃・属性の上限に当たりうるとき・条件つきスキルが会心倍率などを変えるときは、全パターンを回る遅い道に落ちる。
 //  - uncapped: true で上限 (攻撃 ×4.0/+400・属性 ×2.3/+400・会心率 ±100) を外した版、'attack' で攻撃・属性の上限だけ外した版
 //    (分枝限定の上界用)。
+//  - sharpnessUse (研ぐまでの斬れ味の減り方) を渡すと、damage.js の sharpnessPlan と同じく、減る当たりの会心率 (パターンの期待値)・
+//    業物・達人芸・匠込みのゲージから色の割合を出し、斬れ味補正を混ぜる。減り方は consumeTargets (省略 = targets) の部位をまとめて 1 つ。
+//    業物・達人芸・匠は互いに効きを食い合うので、上界の「全部最大の所の増え方が一番大きい」前提は崩れる (mode 'exact' でも目安)。
 // damage.js の aggregateModifiers / computeStats / hitDamage の式を写しているので、damage.js を直したらここも直す
 // (tests/search_eval.test.mjs がずれを見張る)。import は相対パスだけ (Worker から読むため)。
 import {
   resolveSkills, resolveConditions, enumeratePatterns, mergeRules, conditionGroupDefs, comboPlan, planCheckWeights, extraDamageOnce,
-  SHARPNESS_ORDER, ELEMENTAL_TYPES,
+  hitSharpnessCost, SHARPNESS_ORDER, ELEMENTAL_TYPES,
 } from '../damage.js';
 
-// 効果のチャネル (aggregateModifiers が使う項目)。C_FMUL / C_FADD = 灼熱化の火の分の倍率・加算 (aggregateModifiers の fireMul / fireAdd)
+// 効果のチャネル (aggregateModifiers が使う項目)。C_FMUL / C_FADD = 灼熱化の火の分の倍率・加算 (aggregateModifiers の fireMul / fireAdd)。
+// C_SAVE / C_CSAVE = 斬れ味を減らさない確率 (業物 / 達人芸。damage.js の sharpnessSavesOf。条件なしのスキルだけ見る)
 const C_AMUL = 0, C_AADD = 1, C_AFF = 2, C_CRIT = 3, C_EMUL = 4, C_EADD = 5, C_WPA = 6, C_WA = 7, C_WPMIN = 8,
-  C_CEM = 9, C_HPM = 10, C_HPMAX = 11, C_JUMP = 12, C_LSM = 13, C_LSC = 14, C_FMUL = 15, C_FADD = 16, NCH = 17;
+  C_CEM = 9, C_HPM = 10, C_HPMAX = 11, C_JUMP = 12, C_LSM = 13, C_LSC = 14, C_FMUL = 15, C_FADD = 16, C_SAVE = 17, C_CSAVE = 18,
+  NCH = 19;
 
 /** 遅い道で並べるパターンの数の上限 (comboExpected の MAX_PATTERNS より大きくてよい。因子の積で作るので例外にはしない) */
 const SLOW_MAX_PATTERNS = 1 << 18;
@@ -58,7 +63,41 @@ function channelOf(raw, weaponElementType) {
   const fire = !fx.elementType || fx.elementType === 'fire';
   c[C_FMUL] = fire ? (fx.elementMul ?? 1) : 1;
   c[C_FADD] = fire ? (fx.elementAdd ?? 0) : 0;
+  c[C_SAVE] = Number.isFinite(fx.sharpnessSave) ? fx.sharpnessSave : 0;
+  c[C_CSAVE] = Number.isFinite(fx.critSharpnessSave) ? fx.critSharpnessSave : 0;
   return { c, extra: fx.extraDamage || null };
+}
+
+/**
+ * 斬れ味を減らす当たりの組 (肉質・傷口・会心できるか ごと) と、1 周で減る目盛り・1 周の秒数 (部位の割合で平均)。
+ * damage.js の comboSharpnessUse を部位の割合でまとめたもの (sharpnessPlan) と同じ数え方。
+ * @returns {{classes: [{physHz, isWound, canCrit, u}], units, cycleSec}}
+ */
+function buildConsumeClasses(motions, combo, targets) {
+  const sumW = targets.reduce((a, t) => a + Math.max(0, Number(t.weight) || 0), 0);
+  const map = new Map();
+  let units = 0; let cycleSec = 0;
+  for (const t of targets) {
+    const w = sumW > 0 ? Math.max(0, Number(t.weight) || 0) / sumW : 1 / targets.length;
+    if (!(w > 0)) continue;
+    const plan = comboPlan(motions, combo, t.target, []);
+    cycleSec += w * plan.reduce((a, st) => a + st.lengthSec, 0);
+    for (const st of plan) {
+      const hz = st.hitzone || {};
+      for (const h of st.hits) {
+        const c = hitSharpnessCost(h) * (h.count ?? 1);
+        if (!(c > 0)) continue;
+        units += w * c;
+        const physHz = physicalHitzone(hz, h.type);
+        const canCrit = h.canCrit !== false;
+        const key = `${physHz}|${st.isWound ? 1 : 0}|${canCrit ? 1 : 0}`;
+        let k = map.get(key);
+        if (!k) map.set(key, (k = { physHz, isWound: !!st.isWound, canCrit, u: 0 }));
+        k.u += w * c;
+      }
+    }
+  }
+  return { classes: [...map.values()], units, cycleSec };
 }
 
 function physicalHitzone(hz, type) {
@@ -162,6 +201,8 @@ function productPatterns(ps) {
  *   sharpness: 固定の色 (文字列) か、匠の Lv → 色 の関数。handicraftIndex: relevantIds の中の匠の添字 (-1 = 無し)
  *   uncapped: true なら上限を全部外した版、'attack' なら攻撃・属性の上限だけ外した版
  *   patternCache: 条件のパターンの覚え (Map) を評価器どうしで使い回すとき渡す (同じ relevantIds の配列・effects・uptimes・monsterStatus)
+ *   sharpnessUse: 研ぐまでの斬れ味の減り方 {intervalSec, gaugeFn (匠の Lv → 匠込みのゲージ), consumeTargets (減り方を数える部位。
+ *     省略 = targets)} | null。sharpness が色を返す関数のときだけ渡す (色を固定したときは渡さない)
  * @returns {{evaluate(levels: Int8Array): number, R, ids, classes, evals, slowEvals, patternSets}}
  */
 export function makeEvaluator(o) {
@@ -189,6 +230,76 @@ export function makeEvaluator(o) {
   const wpMinRule = rules.weakPointMinHitzone;
   const hardMaxRule = rules.hardPartMaxHitzone;
   const sharpTable = SHARPNESS_ORDER.map((c) => rules.sharpness[c]);
+
+  // ---- 研ぐまでの斬れ味の減り方 (sharpnessUse)。減る当たりの組は部位をまとめて 1 つ (ゲージは 1 本)
+  const su = o.sharpnessUse && Number(o.sharpnessUse.intervalSec) > 0 && typeof o.sharpnessUse.gaugeFn === 'function'
+    ? o.sharpnessUse : null;
+  const cons = su ? buildConsumeClasses(o.motions, o.combo, su.consumeTargets || o.targets) : null;
+  const nCons = cons ? cons.classes.length : 0;
+  const consHz = new Float64Array(nCons); const consWound = new Uint8Array(nCons); const consCrit = new Uint8Array(nCons);
+  const consU = new Float64Array(nCons);
+  if (cons) {
+    cons.classes.forEach((k, q) => { consHz[q] = k.physHz; consWound[q] = k.isWound ? 1 : 0; consCrit[q] = k.canCrit ? 1 : 0; consU[q] = k.u; });
+  }
+  const rawPerSec = cons && cons.cycleSec > 0 ? cons.units / cons.cycleSec : 0;
+  const intervalSec = su ? Number(su.intervalSec) : 0;
+  const NS = SHARPNESS_ORDER.length;
+  const WHITE = SHARPNESS_ORDER.indexOf('white');
+  // 匠の Lv → ゲージ (足りない色は 0) と、色の割合・斬れ味補正の入れ物 (評価のたびに作らない。探索で何百万回も呼ぶため)
+  const gauges = [];
+  const SH = new Float64Array(NS);
+  const MX = { sp: 0, spN: 0, se: 0, seN: 0 };
+  const gaugeOf = (hLv) => {
+    let g = gauges[hLv];
+    if (!g) {
+      const src = su.gaugeFn(hLv) || [];
+      g = new Float64Array(NS);
+      for (let i = 0; i < NS; i++) g[i] = Math.max(0, Number(src[i]) || 0);
+      gauges[hLv] = g;
+    }
+    return g;
+  };
+  /**
+   * 会心率 (減る当たりの平均) と業物・達人芸・匠の Lv → 色の割合 (SH に書く。damage.js の sharpnessPlan → sharpnessShares と
+   * 同じ式・同じ足し順)
+   */
+  function sharesFor(hLv, critRate, save, csave) {
+    const g = gaugeOf(hLv);
+    const keep = (1 - save) * (1 - csave * critRate);
+    const perSec = rawPerSec * keep;
+    SH.fill(0);
+    let top = -1;
+    for (let i = NS - 1; i >= 0; i--) if (g[i] > 0) { top = i; break; }
+    if (top < 0) { SH[WHITE] = 1; return SH; }
+    if (!(intervalSec > 0) || !(perSec > 0)) { SH[top] = 1; return SH; }
+    let left = intervalSec;
+    for (let i = top; i >= 0 && left > 0; i--) {
+      const t = Math.min(left, g[i] / perSec);
+      SH[i] += t / intervalSec;
+      left -= t;
+    }
+    if (left > 0) SH[0] += left / intervalSec;
+    return SH;
+  }
+  /** 会心率 a (%) → 会心の確率 (マイナス会心は 0。damage.js の hitAffinity を 0〜100 で読むのと同じ) */
+  const critProb = (a) => (a <= 0 ? 0 : a >= 100 ? 1 : a / 100);
+  /**
+   * 色の割合 → 斬れ味補正 (damage.js の mixedSharpness と同じ)。sp / se = 斬れ味補正の掛かるヒットの物理 (鈍器使い込み) / 属性、
+   * spN / seN = 掛からないヒットの物理 (鈍器使いだけ) / 属性
+   */
+  function mixedSharp(shares, lsm, lsc) {
+    let sp = 0, spN = 0, se = 0, seN = 0;
+    const low = lsm !== 1 && lsc >= 0;
+    for (let i = 0; i < shares.length; i++) {
+      const x = shares[i];
+      if (!(x > 0)) continue;
+      const L = low && i <= lsc ? lsm : 1;
+      const t = sharpTable[i];
+      sp += x * t.physical * L; spN += x * 1 * L; se += x * t.element; seN += x * 1;
+    }
+    MX.sp = sp; MX.spN = spN; MX.se = se; MX.seN = seN;
+    return MX;
+  }
 
   const { classes, plans } = buildHitClasses(o.motions, o.combo, o.targets, elemType);
   const nClass = classes.length;
@@ -428,6 +539,19 @@ export function makeEvaluator(o) {
     const hardMax = Number.isNaN(b.hpmax0) ? hardMaxRule : b.hpmax0;
     const lowOn = b.lsm0 !== 1 && b.lsc0 >= 0 && b.colorIdx <= b.lsc0;
     const sh = b.sh;
+    // 研ぐまでの減り方: 減る当たりの会心率を会心率の分布で出し、色の割合で斬れ味補正を混ぜる (鈍器使いも割合で掛ける)
+    let mx = null;
+    if (su) {
+      let cu = 0;
+      for (let q = 0; q < nCons; q++) {
+        if (!consCrit[q]) continue;
+        const off = (consHz[q] >= wpMin ? b.wpa0 : 0) + (consWound[q] ? b.wa0 : 0);
+        let e = 0;
+        for (let x = 0; x < n; x++) e += dP[x] * critProb(wAff + dV[x] + off);
+        cu += consU[q] * e;
+      }
+      mx = mixedSharp(sharesFor(b.hLv, cons.units > 0 ? cu / cons.units : 0, b.save0, b.csave0), b.lsm0, b.lsc0);
+    }
     // 灼熱化の 1 回分は火の倍率と加算に線形なので、パターンの期待値 = E[1] × 1 回分 (倍率 = E[積]/E[1]・加算 = E[和]/E[1])
     const fireMods = sP > 0 ? { fireMul: sFM / sP, fireAdd: sFA / sP } : null;
     let total = 0;
@@ -437,12 +561,12 @@ export function makeEvaluator(o) {
     for (let k = 0; k < nClass; k++) {
       const physHz = cPhysHz[k];
       const box = (physHz >= wpMin ? 1 : 0) + (cWound[k] ? 2 : 0) + (cCrit[k] ? 4 : 0);
-      const sp = cSharp[k] ? sh.physical : 1;
-      const se = cSharp[k] ? sh.element : 1;
+      const sp = mx ? (cSharp[k] ? mx.sp : mx.spN) : cSharp[k] ? sh.physical : 1;
+      const se = mx ? (cSharp[k] ? mx.se : mx.seN) : cSharp[k] ? sh.element : 1;
       let physMul = 1;
       if (b.hpm0 !== 1 && physHz <= hardMax) physMul *= b.hpm0;
       if (cHien[k]) physMul *= b.jm0;
-      if (lowOn) physMul *= b.lsm0;
+      if (lowOn && !mx) physMul *= b.lsm0;
       bP[box] += (cSmv[k] / 100) * (physHz / 100) * sp * physMul;
       if (useElem && cSrate[k] > 0) bE[box] += cSrate[k] * (cElemHz[k] / 100) * se / 10;
       total += cSfix[k];
@@ -522,7 +646,8 @@ export function makeEvaluator(o) {
     // 条件なしの効果を先にまとめる
     let am0 = buffs.attackMul ?? 1, aa0 = buffs.attackAdd ?? 0, af0 = buffs.affinityAdd ?? 0, cm0 = NaN;
     let em0 = buffs.elementMul ?? 1, ea0 = buffs.elementAdd ?? 0, wpa0 = 0, wa0 = 0, wpmin0 = NaN, cem0 = NaN;
-    let hpm0 = 1, hpmax0 = NaN, jm0 = 1, lsm0 = 1, lsc0 = -1, fm0 = 1, fa0 = 0;
+    let hpm0 = 1, hpmax0 = NaN, jm0 = 1, lsm0 = 1, lsc0 = -1, fm0 = 1, fa0 = 0, save0 = 0, csave0 = 0;
+    const hLv = hIdx >= 0 ? levels[hIdx] : 0;
     const extras0 = [];
     const condList = [];
     for (let r = 0; r < R; r++) {
@@ -539,6 +664,8 @@ export function makeEvaluator(o) {
       jm0 *= c[C_JUMP];
       if (!Number.isNaN(c[C_LSM]) && c[C_LSM] >= lsm0) { lsm0 = c[C_LSM]; lsc0 = c[C_LSC]; }
       fm0 *= c[C_FMUL]; fa0 += c[C_FADD];
+      if (c[C_SAVE] > save0) save0 = c[C_SAVE];
+      if (c[C_CSAVE] > csave0) csave0 = c[C_CSAVE];
       if (row.main.extra) extras0.push(row.main.extra);
     }
     if (Number.isNaN(cem0)) cem0 = 0;
@@ -549,6 +676,7 @@ export function makeEvaluator(o) {
     if (fast) {
       const v = fastPath(ps, levels, condList, {
         am0, aa0, af0, cm0, em0, ea0, wpa0, wa0, wpmin0, cem0, hpm0, hpmax0, jm0, lsm0, lsc0, fm0, fa0, extras0, colorIdx, sh,
+        save0, csave0, hLv,
       });
       if (v !== null) return v;
     }
@@ -557,6 +685,31 @@ export function makeEvaluator(o) {
     const pats = ps.pats || productPatterns(ps);
     // 全パターンは小さいときだけ覚える (大きいものを覚えるとメモリを食う。遅い道はまれ)
     if (!ps.pats && pats.length <= SLOW_KEEP_PATTERNS) ps.pats = pats;
+    // 研ぐまでの減り方: 先に全パターンで減る当たりの会心率を出す (色の割合はパターンによらず 1 つ)
+    let slowShares = null;
+    if (su) {
+      let cu = 0;
+      for (let pi = 0; pi < pats.length; pi++) {
+        const p = pats[pi];
+        let af = af0, wpa = wpa0, wa = wa0, wpmin = wpmin0;
+        for (let i = 0; i < condList.length; i++) {
+          const r = condList[i];
+          const row = tab[r][levels[r] > 7 ? 7 : levels[r]];
+          const s = p.st[ps.gposByKey[groupKeyOf[r]]];
+          let ch = row.byState[s];
+          if (!ch) { if (actStatesOf[r].includes(s)) ch = row.main; else continue; }
+          const c = ch.c;
+          af += c[C_AFF]; wpa += c[C_WPA]; wa += c[C_WA];
+          if (!Number.isNaN(c[C_WPMIN])) wpmin = c[C_WPMIN];
+        }
+        const wpMinP = Number.isNaN(wpmin) ? wpMinRule : wpmin;
+        for (let q = 0; q < nCons; q++) {
+          if (!consCrit[q]) continue;
+          cu += p.w * consU[q] * critProb(wAff + af + (consHz[q] >= wpMinP ? wpa : 0) + (consWound[q] ? wa : 0));
+        }
+      }
+      slowShares = sharesFor(hLv, cons.units > 0 ? cu / cons.units : 0, save0, csave0);
+    }
     for (let pi = 0; pi < pats.length; pi++) {
       const p = pats[pi];
       let am = am0, aa = aa0, af = af0, cm = cm0, em = em0, ea = ea0, wpa = wpa0, wa = wa0, wpmin = wpmin0, cem = cem0;
@@ -589,6 +742,7 @@ export function makeEvaluator(o) {
       const wpMin = Number.isNaN(wpmin) ? wpMinRule : wpmin;
       const hardMax = Number.isNaN(hpmax) ? hardMaxRule : hpmax;
       const lowOn = lsm !== 1 && lsc >= 0 && colorIdx <= lsc;
+      const mx = slowShares ? mixedSharp(slowShares, lsm, lsc) : null;
       let sub = 0;
       for (let k = 0; k < nClass; k++) {
         const physHz = cPhysHz[k];
@@ -596,8 +750,8 @@ export function makeEvaluator(o) {
         if (physHz >= wpMin) a += wpa;
         if (cWound[k]) a += wa;
         const aff = a < affLo ? affLo : (a > affHi ? affHi : a);
-        const sp = cSharp[k] ? sh.physical : 1;
-        const se = cSharp[k] ? sh.element : 1;
+        const sp = mx ? (cSharp[k] ? mx.sp : mx.spN) : cSharp[k] ? sh.physical : 1;
+        const se = mx ? (cSharp[k] ? mx.se : mx.seN) : cSharp[k] ? sh.element : 1;
         let critExp = 1;
         if (cCrit[k]) {
           const pr = aff / 100;
@@ -606,7 +760,7 @@ export function makeEvaluator(o) {
         let physMul = 1;
         if (hpm !== 1 && physHz <= hardMax) physMul *= hpm;
         if (cHien[k]) physMul *= jm;
-        if (lowOn) physMul *= lsm;
+        if (lowOn && !mx) physMul *= lsm;
         let d = attack * (cSmv[k] / 100) * (physHz / 100) * sp * critExp * physMul + cSfix[k];
         if (cSrate[k] > 0 && element > 0) {
           let critE = 1;

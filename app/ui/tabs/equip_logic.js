@@ -8,14 +8,15 @@
 import { indexEquipData, decorationFitError, targetKind, ARMOR_PARTS, DECO_TARGETS } from '../../model/build.js';
 import {
   baseWeaponOf, resolveWeaponRef, damageWeapon, sharpnessGauge, gaugeWithHandicraft, topSharpness,
-  handicraftSkillId, sharpnessResolver, autoSharpness,
+  handicraftSkillId, sharpnessResolver, sharpnessUseOf, autoSharpness,
 } from '../../model/weapon.js';
 import { mixExpected, mixTotal } from './power_calc.js';
-import { ELEMENT_LABEL, DECO_TARGET_LABEL, PART_LABEL, formatSlots } from '../components/labels.js';
+import { ELEMENT_LABEL, DECO_TARGET_LABEL, PART_LABEL, SHARPNESS_LABEL, formatSlots } from '../components/labels.js';
+import { SHARPNESS_ORDER } from '../../model/damage.js';
 
 export {
   baseWeaponOf, resolveWeaponRef, damageWeapon, sharpnessGauge, gaugeWithHandicraft, topSharpness,
-  handicraftSkillId, sharpnessResolver, autoSharpness,
+  handicraftSkillId, sharpnessResolver, sharpnessUseOf, autoSharpness,
 };
 
 /** 護石タブが端末で足した護石を置くキー (docs/UI_API.md の store.js 節の例と同じ)。配列か {charms: 配列} */
@@ -31,6 +32,47 @@ export const DEFAULT_HITZONE = Object.freeze({ slash: 45, blunt: 45, fire: 20, w
 export const DEFAULT_TARGET = Object.freeze({ hitzone: DEFAULT_HITZONE, wound: null, isWound: false });
 /** 既定の肉質の言い方 (装備タブ・火力タブで同じ言い方にする) */
 export const DEFAULT_HITZONE_TEXT = '切断 45・打撃 45・属性 20';
+
+/** 研ぐまでに攻撃する秒数の候補 (装備タブ・火力タブ)。0 = 減らない (斬れ味はずっと一番上の色) */
+export const SHARPNESS_INTERVAL_CHOICES = Object.freeze([0, 30, 60, 120, 180]);
+
+/** 秒数の表示 (0 = 「減らない」、60 秒きざみは「2 分」など) */
+export function sharpnessIntervalLabel(sec) {
+  const v = Number(sec) || 0;
+  if (!(v > 0)) return '減らない';
+  return v % 60 === 0 ? `${v / 60} 分` : `${v} 秒`;
+}
+
+/** 秒数を選ぶ欄の候補。いまの値が候補に無ければ (読み込んだデータなど) それも並べる */
+export function sharpnessIntervalOptions(current) {
+  const list = [...SHARPNESS_INTERVAL_CHOICES];
+  const v = Number(current) || 0;
+  if (!list.includes(v)) list.push(v);
+  return list.sort((a, b) => a - b).map((x) => ({ value: x, label: sharpnessIntervalLabel(x) }));
+}
+
+/**
+ * 研ぐまでの斬れ味の色の割合の文 (damage.js の sharpnessPlan の結果)。上の色から「白 32%・青 45%・緑 23%」。
+ * 1% 未満の色は出さない。plan が無ければ ''
+ */
+export function sharpnessShareText(plan) {
+  if (!plan || !Array.isArray(plan.shares)) return '';
+  const parts = [];
+  for (let i = plan.shares.length - 1; i >= 0; i--) {
+    const s = plan.shares[i];
+    if (s >= 0.005) parts.push(`${SHARPNESS_LABEL[SHARPNESS_ORDER[i]] || SHARPNESS_ORDER[i]} ${Math.round(s * 100)}%`);
+  }
+  return parts.join('・');
+}
+
+/** 一番上の色がもつ秒数の文 (「白は攻撃し続けて約 19 秒もちます」/ 研ぐまで落ちないとき「研ぐまで白のままです」) */
+export function sharpnessKeepText(plan) {
+  if (!plan || !Array.isArray(plan.sec)) return '';
+  const color = SHARPNESS_LABEL[SHARPNESS_ORDER[plan.top]] || '一番上の色';
+  const sec = plan.sec[plan.top];
+  if (!Number.isFinite(sec) || sec >= plan.intervalSec) return `研ぐまで${color}のままです`;
+  return `${color}は攻撃し続けて約 ${Math.round(sec)} 秒もちます`;
+}
 const MAX_NAME = 60;
 
 const isObj = (x) => x != null && typeof x === 'object' && !Array.isArray(x);
@@ -640,7 +682,8 @@ export function defaultTargetReason(reason) {
  *   perSkills は sharpnessResolver の結果 (斬れ味が自動のとき。スキルなしの色を匠なしで決め直す)。
  *   monsterStatus は相手が使う状態異常 (target_mix.js の monsterStatusOf。狂竜症などの条件のもとの確かめ)。
  * @returns {{total, physical, element, extra, noSkills, vsNoSkillsPct, comboName, conditions, placeholders,
- *            warnings, lowConfidence, unsupported, mixed, perTarget} | {error}}
+ *            warnings, lowConfidence, unsupported, mixed, perTarget, sharpnessPlan} | {error}}
+ *   sharpnessPlan = 研ぐまでの減り方 (perSkills が sharpnessUse を返すとき。damage.js の sharpnessPlan)。無ければ null
  */
 export function summarizePower(p) {
   if (!p.combo) return { error: 'コンボのデータがありません' };
@@ -672,6 +715,7 @@ export function summarizePower(p) {
       unsupported: r.unsupported || [],
       mixed: !!r.mixed,
       perTarget: r.perTarget || [],
+      sharpnessPlan: r.sharpnessPlan || null,
     };
   } catch (e) {
     return { error: e && e.message ? e.message : String(e) };

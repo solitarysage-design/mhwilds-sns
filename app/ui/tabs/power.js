@@ -8,7 +8,7 @@ import {
   SHARPNESS_LABEL, ELEMENT_LABEL, formatNumber, formatPct, formatPctChange,
 } from '../components/index.js';
 import {
-  useAppState, setCombo, setSharpness, setUptime, resetUptime, setTabState, resolveCombo, SHARPNESS_ORDER,
+  useAppState, setCombo, setSharpness, setSharpnessInterval, setUptime, resetUptime, setTabState, resolveCombo, SHARPNESS_ORDER,
 } from '../../state.js';
 import { useTargetData } from '../../data.js';
 import { computeBuild } from '../../model/build.js';
@@ -158,7 +158,7 @@ function HeroCard({ r, combo, mixed }) {
 
 // ---------------------------------------------------------------- 条件 (相手・斬れ味・コンボ)
 
-function SettingsCard({ data, comboRef, combo, sharpSel, autoColor, weaponName, resolvedLabel, isWound, fallback, fallbackTitle, r, ui }) {
+function SettingsCard({ data, comboRef, combo, sharpSel, sharpIv, autoColor, weaponName, resolvedLabel, isWound, fallback, fallbackTitle, r, ui }) {
   const comboOptions = data.lists.combos.map((c) => ({ value: c.id, label: c.name }));
   const sharpOptions = [
     { value: null, label: autoColor ? `自動 (${SHARPNESS_LABEL[autoColor]})` : '自動' },
@@ -187,8 +187,19 @@ function SettingsCard({ data, comboRef, combo, sharpSel, autoColor, weaponName, 
         </${Notice}>`}
       <div class="field">
         <${Select} label="斬れ味" value=${sharpSel} options=${sharpOptions} onChange=${(v) => setSharpness(v)}
-          hint="自動 = 武器の斬れ味ゲージの一番上の色 (匠の Lv 込み。装備タブと同じ)" />
+          hint="自動 = 武器の斬れ味ゲージの一番上の色から (匠の Lv 込み。装備タブと同じ)" />
       </div>
+      ${!sharpSel && html`
+        <div class="field" data-power-sharp-interval>
+          <${Select} label="研ぐまでに攻撃する時間" value=${sharpIv} options=${L.sharpnessIntervalOptions(sharpIv)}
+            onChange=${(v) => setSharpnessInterval(v)}
+            hint="研いでから次に研ぐまでに攻撃し続ける時間 (移動・回避は入れない)。斬れ味は当たるたびに 1 目盛り減り、業物・達人芸・匠で長持ちします" />
+          ${r.sharpnessPlan && html`
+            <p class="hint" data-power-sharp-plan>
+              研ぐまでの斬れ味: ${L.sharpnessShareText(r.sharpnessPlan)}。${L.sharpnessKeepText(r.sharpnessPlan)}
+              (減る当たりの会心率 ${formatNumber(r.sharpnessPlan.critRate * 100, 0)}%${r.sharpnessPlan.save > 0 ? `・業物 ${formatNumber(r.sharpnessPlan.save * 100, 0)}%` : ''}${r.sharpnessPlan.critSave > 0 ? '・達人芸あり' : ''})。
+            </p>`}
+        </div>`}
       <div class="field">
         <${Select} label="コンボ" value=${typeof comboRef === 'string' ? comboRef : (Array.isArray(comboRef) ? undefined : combo && combo.id)}
           options=${comboOptions} onChange=${(v) => setCombo(v)} />
@@ -405,7 +416,7 @@ function TableNameCell({ row, effects, uptimes, nameOf, ctx }) {
     <th class="pw-name" scope="row">
       <span class="pw-name-main">${row.name}</span>
       ${KIND_SHORT[row.kind] && html`<span class="pw-name-sub">${KIND_SHORT[row.kind]}スキル</span>`}
-      ${row.sharpnessSkill && html`<span class="pw-name-sub">${ctx.sharpFixed ? '斬れ味を固定しているので変わりません' : '斬れ味の色が上がると効きます'}</span>`}
+      ${row.sharpnessSkill && html`<span class="pw-name-sub">${ctx.sharpFixed ? '斬れ味を固定しているので変わりません' : '斬れ味の色が上がる・ゲージが伸びると効きます'}</span>`}
       ${cond && html`<span class="pw-name-sub">${condText(cond)}${cond.placeholder ? ' (仮)' : ''}</span>`}
       ${cond && cond.inactive && html`<span class="pw-name-sub">${cond.needs}が要ります</span>`}
       ${row.requiresMissing && html`<span class="pw-name-sub">${nameOf(row.requiresSkillId)} が無いと効きません</span>`}
@@ -490,6 +501,7 @@ export default function PowerTab({ data, active }) {
   const comboRef = useAppState((s) => s.combo);
   const uptimes = useAppState((s) => s.uptimes);
   const sharpSel = useAppState((s) => s.sharpness);
+  const sharpIv = useAppState((s) => s.sharpnessInterval);
   const targetUi = useAppState((s) => s.tabs.target);
   const ui = useAppState((s) => s.tabs.power) || EMPTY;
 
@@ -525,7 +537,9 @@ export default function PowerTab({ data, active }) {
     [target, t.data, t.status]);
   const handicraft = useMemo(() => L.handicraftInfo(idx), [idx]);
   // 斬れ味が「自動」なら、スキルを外したとき・スキルなしのときの色を匠の Lv で決め直す
-  const perSkills = useMemo(() => L.sharpnessResolver(weaponFull, idx, sharpSel), [weaponFull, idx, sharpSel]);
+  // 研ぐまでに攻撃する秒数があれば、匠込みのゲージも渡す (業物・達人芸・匠の効き目が出る)
+  const perSkills = useMemo(() => L.sharpnessResolver(weaponFull, idx, sharpSel, { intervalSec: sharpIv }),
+    [weaponFull, idx, sharpSel, sharpIv]);
 
   const input = useMemo(() => (weapon && combo ? {
     weapon, sharpness, skills: buildResult.skills, uptimes,
@@ -600,7 +614,7 @@ export default function PowerTab({ data, active }) {
         </${Notice}>`}
       ${elemType && !ELEMENT_KEYS.includes(elemType) && html`
         <${Hint}>この武器の${elementName(elemType)}は状態異常の属性なので、属性ダメージは 0 として計算しています。</${Hint}>`}
-      <${SettingsCard} data=${data} comboRef=${comboRef} combo=${combo} sharpSel=${sharpSel} autoColor=${autoColor}
+      <${SettingsCard} data=${data} comboRef=${comboRef} combo=${combo} sharpSel=${sharpSel} sharpIv=${sharpIv} autoColor=${autoColor}
         weaponName=${L.weaponName(weaponFull)} resolvedLabel=${resolvedLabel} isWound=${target.isWound} fallback=${fallbackText}
         fallbackTitle=${fallbackTitle} r=${r} ui=${ui} />
       <${UptimeCard} conditions=${r.conditions} warnings=${r.warnings} />

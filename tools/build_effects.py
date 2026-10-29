@@ -164,6 +164,9 @@ def main() -> int:
             "elementRate": "技の属性補正。属性を使わないヒット (盾など) は 0",
             "sharpnessMul": "斬れ味補正が掛かるか (= !_IsNoUseKireaji || _IsForceUseKireajiAttackRate)",
             "consumesSharpness": "斬れ味を消費するか (= !_IsNoUseKireaji)",
+            "sharpnessCost": "1 回で減る斬れ味の目盛り (消費しないヒットは 0)。_CustomKireajiReduce ÷ 10 (専用の値が無いヒットは "
+                             "既定の 10 → 1)。10 を 1 目盛りと読んだのは推定 (確度 medium。既定の当たりがみな 10・砥石の _HealKireaji=400 が"
+                             "武器の斬れ味の満タンと同じ)",
             "hien": "飛燕の対象 (_IsSkillHien)",
             "additionalDamage": "追加ダメージ系スキル (灼熱化など) の対象と推定 (_UseSkillAdditionalDamage)",
             "count": "このヒットの回数",

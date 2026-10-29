@@ -16,6 +16,10 @@ export { ARMOR_PARTS, DECO_TARGETS, SHARPNESS_ORDER, INDIVIDUAL_KINDS };
 
 export const STATE_KEY = 'mhwilds-sns:state';
 export const STATE_SCHEMA = 1;
+/** 研ぐまでに攻撃する秒数の既定 (2026-10-29。斬れ味の減り方を入れた。0 = 減らない = 一番上の色のまま) */
+export const DEFAULT_SHARPNESS_INTERVAL = 60;
+/** 研ぐまでに攻撃する秒数の上限 */
+export const MAX_SHARPNESS_INTERVAL = 3600;
 /** 画面下のタブ (並び順どおり) */
 export const TABS = ['equip', 'power', 'target', 'search', 'charms', 'settings'];
 /** 手入力の肉質で持つ項目 (0〜100) */
@@ -135,6 +139,7 @@ export function defaultState() {
     combo: null,                  // combos_sns.json の id (文字列) か 技 id の配列。null = 先頭の代表コンボ
     uptimes: {},                  // {条件グループ id: 発動率}。damage.js の uptimes にそのまま渡せる (docs/MODEL_API.md)
     sharpness: null,              // null = 武器から自動 / 'red'〜'purple' = 固定
+    sharpnessInterval: DEFAULT_SHARPNESS_INTERVAL, // 研ぐまでに攻撃する秒数 (自動のとき。0 = 減らない = 一番上の色のまま)
     mySets: [],                   // [{id, name, savedAt, build}]
     tabs: {},                     // タブごとの小さな画面状態 {equip: {...}, power: {...}} (setTabState)
   };
@@ -388,6 +393,14 @@ function sanitizeTabs(raw) {
   return out;
 }
 
+/** 研ぐまでに攻撃する秒数 (0〜上限の整数。無い・数でない値は既定。前の版の保存データには無いので既定になる) */
+export function sanitizeSharpnessInterval(v) {
+  if (v === 0 || v === '0') return 0;
+  const n = Number(v);
+  if (v == null || v === '' || !Number.isFinite(n) || n < 0) return DEFAULT_SHARPNESS_INTERVAL;
+  return Math.min(MAX_SHARPNESS_INTERVAL, Math.round(n));
+}
+
 /** 保存データや読み込んだデータを、今の版の状態の形にそろえる。 */
 export function sanitizeState(raw) {
   const s = defaultState();
@@ -399,6 +412,7 @@ export function sanitizeState(raw) {
   s.combo = sanitizeCombo(raw.combo);
   s.uptimes = sanitizeUptimes(raw.uptimes);
   s.sharpness = SHARPNESS_ORDER.includes(raw.sharpness) ? raw.sharpness : null;
+  s.sharpnessInterval = sanitizeSharpnessInterval(raw.sharpnessInterval);
   s.mySets = sanitizeMySets(raw.mySets);
   s.tabs = sanitizeTabs(raw.tabs);
   return s;
@@ -939,6 +953,12 @@ export function uptimeOf(key, fallback = null, s = state) {
 export function setSharpness(color) {
   const v = SHARPNESS_ORDER.includes(color) ? color : null;
   update((s) => (s.sharpness === v ? s : { ...s, sharpness: v }));
+}
+
+/** 研ぐまでに攻撃する秒数 (斬れ味が自動のときの減り方。0 = 減らない = 一番上の色のまま) */
+export function setSharpnessInterval(sec) {
+  const v = sanitizeSharpnessInterval(sec);
+  update((s) => (s.sharpnessInterval === v ? s : { ...s, sharpnessInterval: v }));
 }
 
 // ---------------------------------------------------------------- 変更関数: 探すタブ (段階 2・3)

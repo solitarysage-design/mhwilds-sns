@@ -12,10 +12,12 @@
 //                       スキルを外す・Lv を変えるたびに色を決め直す (equip_logic.js の sharpnessResolver)
 //   handicraft        {skillId, name, maxLevel}  匠 (skill_effects.json に無い。斬れ味の色だけを変えるスキル)。
 //                       渡すと「スキルごとの効き目」「スキル火力表」に匠の行を出し、「火力に関係しない」から外す
+// perSkills が sharpnessUse (研ぐまでの減り方) も返すときは、ゲージが 1 本なので減り方を部位の割合でまとめて 1 回だけ出し
+// (damage.js の sharpnessPlan)、その色の割合 (sharpnessShares) を部位ごとの comboExpected に渡す (探索の評価器と同じ数え方)。
 
 import {
   comboExpected, normalizeSkills, conditionGroupDefs, conditionSourceMissing,
-  resolveSkills, resolveConditions, factorPatterns,
+  resolveSkills, resolveConditions, factorPatterns, sharpnessPlan,
 } from '../../model/damage.js';
 import { formatNumber, ELEMENT_LABEL } from '../components/labels.js';
 
@@ -24,6 +26,12 @@ export function inputFor(input, skills) {
   const list = normalizeSkills(skills);
   const extra = typeof input.perSkills === 'function' ? input.perSkills(list) : null;
   return extra ? { ...input, ...extra, skills: list } : { ...input, skills: list };
+}
+
+/** 研ぐまでの減り方を部位の割合でまとめて出し、色の割合を入れた input を返す (sharpnessUse が無ければ input のまま・plan は null) */
+function withSharedSharpness(input, mix) {
+  const plan = input.sharpnessUse ? sharpnessPlan(input, mix) : null;
+  return { input: plan ? { ...input, sharpnessShares: plan.shares } : input, plan };
 }
 
 const isHandicraft = (input, skillId) => !!(input.handicraft && Number(input.handicraft.skillId) === Number(skillId));
@@ -63,9 +71,9 @@ const PER_PART_WARNINGS = new Set(['no-wound']);
  * (部位で変わるのは傷口でだけ出るヒットの有無だけ)。
  */
 export function mixExpected(input0, targets) {
-  const input = inputFor(input0, input0.skills);
   const mix = normalizeMix(targets);
   if (!mix.length) throw new Error('相手 (肉質) が決まっていません');
+  const { input, plan: sharpPlan } = withSharedSharpness(inputFor(input0, input0.skills), mix);
   const mixed = mix.length > 1;
   let acc = null;
   const perTarget = [];
@@ -110,6 +118,7 @@ export function mixExpected(input0, targets) {
   }
   acc.perTarget = perTarget;
   acc.mixed = mixed;
+  acc.sharpnessPlan = sharpPlan;
   return acc;
 }
 
@@ -133,8 +142,8 @@ export function extraHintText(r) {
 
 /** 加重平均の合計だけ (速さ優先。スキル火力表で何度も呼ぶ) */
 export function mixTotal(input0, targets) {
-  const input = inputFor(input0, input0.skills);
   const mix = normalizeMix(targets);
+  const { input } = withSharedSharpness(inputFor(input0, input0.skills), mix);
   let total = 0;
   for (const m of mix) total += m.weight * comboExpected({ ...input, target: m.target }).total;
   return total;

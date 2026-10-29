@@ -21,6 +21,8 @@ export const MISMATCH_REL = 1e-9;
 
 /** 上界の前提が崩れる入力の警告 (docs/SEARCH_DESIGN.md 4 章の 6)。これがあると mode 'exact' でも quality は 'heuristic' */
 export const PREMISE_WARNINGS = Object.freeze(['exclusive-over-100', 'blunt-handicraft', 'non-monotone']);
+/** 研ぐまでに攻撃する秒数の上限 (入力の値をこれで切る) */
+export const MAX_SHARPNESS_INTERVAL = 3600;
 
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 const isObj = (x) => x != null && typeof x === 'object' && !Array.isArray(x);
@@ -109,6 +111,9 @@ function normalizeInput(input, core, warnings) {
     warn('unknown-sharpness', `斬れ味の色 (${sharpness}) が分からないので、自動で探しました`);
     sharpness = null;
   }
+  // 研ぐまでに攻撃する秒数 (0 = 斬れ味はずっと一番上の色。色を固定したときは使わない)
+  const iv = Number(inp.sharpnessInterval);
+  const sharpnessInterval = !sharpness && Number.isFinite(iv) && iv > 0 ? Math.min(iv, MAX_SHARPNESS_INTERVAL) : 0;
   // 珠の所持数 (null = 全部いくつでも持っている)
   const deco = isObj(inp.decorations) ? inp.decorations : {};
   const decoCount = isObj(deco.owned) ? deco.owned : null;
@@ -119,7 +124,7 @@ function normalizeInput(input, core, warnings) {
   if (!Object.keys(budget).length && mode === 'fast' && objective === 'damage') budget.ms = DEFAULT_BUDGET_MS;
   const K = Math.max(1, Math.min(100, Math.floor(Number(inp.K) || 10)));
   return {
-    idx, objective, mode, weapons, targets, combo, required, charmRefs, limitBreak, sharpness, decoCount, budget, K,
+    idx, objective, mode, weapons, targets, combo, required, charmRefs, limitBreak, sharpness, sharpnessInterval, decoCount, budget, K,
     uptimes: isObj(inp.uptimes) ? inp.uptimes : {},
     monsterStatus: Array.isArray(inp.monsterStatus) ? inp.monsterStatus : undefined,
     buffs: isObj(inp.buffs) ? inp.buffs : {},
@@ -220,6 +225,7 @@ export function createSearch(input, data) {
   const ctx = {
     idx: n.idx, effects: core.effects, motions: core.motions, combo: n.combo, targets: n.targets,
     uptimes: n.uptimes, monsterStatus: n.monsterStatus, buffs: n.buffs, sharpness: n.sharpness,
+    sharpnessInterval: n.sharpnessInterval,
   };
 
   function ensure() {
@@ -228,6 +234,7 @@ export function createSearch(input, data) {
     P = prepare({ idx: n.idx, effects: core.effects, motions: core.motions }, {
       weapons: n.weapons, targets: n.targets, combo: n.combo, uptimes: n.uptimes, monsterStatus: n.monsterStatus,
       buffs: n.buffs, required: n.required, limitBreak: n.limitBreak, sharpness: n.sharpness, charmRefs: n.charmRefs,
+      sharpnessInterval: n.sharpnessInterval,
       armorExclude: n.armorExclude, decoCount: n.decoCount, objective: n.objective, K: n.K,
       ...(n.armorResistMin ? { armorResistMin: n.armorResistMin } : {}),
       ...(n.dominance ? {} : { domK: Infinity, weaponDominance: false }),
@@ -428,8 +435,9 @@ export function createSearch(input, data) {
         status, results, infeasible: infeasibleInfo(), warnings: ws, baseline,
         // 「続けて探す」で続ける所があるか (B&B を最後まで回り終えて、2 段のふるいで外した武器も無ければ false)
         extendable: api.extendable,
-        quality: S && n.mode === 'exact' && S.done && !S.cut && !warnings.some((w) => PREMISE_WARNINGS.includes(w.code))
-          ? 'exact' : 'heuristic',
+        // 研ぐまでの減り方があると、上界の「全部最大の所の増え方が一番大きい」前提が崩れる (業物・達人芸・匠が食い合う) ので目安
+        quality: S && n.mode === 'exact' && S.done && !S.cut && !n.sharpnessInterval
+          && !warnings.some((w) => PREMISE_WARNINGS.includes(w.code)) ? 'exact' : 'heuristic',
         stats: S ? {
           prepareMs, elapsedMs: now() - t0, activeMs: S.activeMs + (prepareMs || 0),
           phases: S.stats.phases.map((p) => ({ ...p, endMs: p.endMs + (prepareMs || 0) })),
@@ -485,20 +493,24 @@ function weaponSidePrep(input, data) {
   const P = prepare({ idx: n.idx, effects: core.effects, motions: core.motions }, {
     weapons: n.weapons, targets: n.targets, combo: n.combo, uptimes: n.uptimes, monsterStatus: n.monsterStatus,
     buffs: n.buffs, required: n.required, limitBreak: n.limitBreak, sharpness: n.sharpness, charmRefs: [],
+    sharpnessInterval: n.sharpnessInterval,
     armorExclude: [], decoCount: n.decoCount, objective: 'damage', K: 1, light: true,
     ...(n.dominance ? {} : { weaponDominance: false }),
   });
   const groups = groupsOf(n.targets);
   const hIdx = P.ids.indexOf(P.hid);
-  // 武器ごと・group ごとの評価器 (group が 1 つなら下ごしらえの評価器をそのまま使う。条件のパターンの覚えは共有)
+  // 武器ごと・group ごとの評価器 (group が 1 つなら下ごしらえの評価器をそのまま使う。条件のパターンの覚えは共有)。
+  // 研ぐまでの減り方は、group ごとの評価器でも全部の相手をまとめて数える (checkBuild と同じ。ゲージは 1 本)
   const evs = P.weapons.map((wp) => (groups.length === 1 ? [wp.ev] : groups.map((g) => makeEvaluator({
     effects: core.effects, motions: core.motions, combo: n.combo, targets: g.targets, weapon: wp.dmg, uptimes: n.uptimes,
     monsterStatus: n.monsterStatus, buffs: n.buffs, relevantIds: P.ids, sharpness: wp.sharpFn || wp.fixedSharp || 'white',
     handicraftIndex: hIdx, patternCache: P.patternCache,
+    sharpnessUse: wp.sharpUse ? { ...wp.sharpUse, consumeTargets: n.targets } : null,
   }))));
   const ctx = {
     idx: n.idx, effects: core.effects, motions: core.motions, combo: n.combo, targets: n.targets,
     uptimes: n.uptimes, monsterStatus: n.monsterStatus, buffs: n.buffs, sharpness: n.sharpness,
+    sharpnessInterval: n.sharpnessInterval,
   };
   const prep = { data, n, P, groups, evs, ctx };
   weaponSideCache.set(input, prep);

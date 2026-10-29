@@ -11,12 +11,12 @@
 //   - 多頭は T = Σ 体力_i / 期待値_i を小さくする。ソルバには w_i ∝ 体力_i / 期待値_ref_i² の重みで渡し、上位を T で並べ直す (3.1 節)
 //   - 体力・回復系のスキルは自動では足さない (受けるダメージを計算できないため)
 import { ARMOR_PARTS, computeBuild } from './build.js';
-import { comboExpected, ELEMENTAL_TYPES } from './damage.js';
+import { comboExpected, sharpnessPlan, ELEMENTAL_TYPES } from './damage.js';
 import {
   archTemperedRewards, clampPlayers, elementRecommendationOf, gammaIndex, hitzoneFor, individualOf, monsterById, monstersOf, questById,
   questSubjects, targetHealth,
 } from './hunt.js';
-import { autoSharpness, damageWeapon, resolveWeaponRef } from './weapon.js';
+import { autoSharpness, damageWeapon, resolveWeaponRef, sharpnessUseOf } from './weapon.js';
 
 // ---------------------------------------------------------------- 定数
 
@@ -231,7 +231,8 @@ export function searchUptimes(effects, uptimes, mode = 'zero') {
  * 装備一式の、相手の部位ごとのコンボ 1 回の期待値 (computeBuild + comboExpected。探索の評価と同じ式)。
  * @param build state.build と同じ形
  * @param targets [{weight, target, group?}] (ソルバの targets と同じ)
- * @param ctx {index, effects, motions, combo, uptimes, monsterStatus, sharpness (null = 自動), buffs, noSkills,
+ * @param ctx {index, effects, motions, combo, uptimes, monsterStatus, sharpness (null = 自動), sharpnessInterval (研ぐまでに
+ *   攻撃する秒数。0・省略 = 一番上の色のまま。減り方は全部の相手をまとめて 1 つ = 探索と同じ), buffs, noSkills,
  *   errors (配列を渡すと、計算できなかった理由を入れる)}
  * @returns {{value, perTarget: number[], perGroup: {[group]: value}, skillLevels} | null}  武器が無い・計算できなければ null
  */
@@ -247,8 +248,17 @@ export function evaluateBuild(build, targets, ctx) {
   const input = {
     weapon: damageWeapon(w), sharpness, skills: skillLevels, uptimes: ctx.uptimes || {}, effects: ctx.effects,
     motions: ctx.motions, combo: ctx.combo, monsterStatus: ctx.monsterStatus, buffs: ctx.buffs || {},
+    sharpnessUse: sharpnessUseOf(w, ctx.index, skillLevels, ctx.sharpnessInterval, ctx.sharpness),
   };
   const perTarget = [];
+  let sPlan = null;
+  try {
+    sPlan = sharpnessPlan(input, list);
+  } catch (e) {
+    if (Array.isArray(ctx.errors)) ctx.errors.push((e && e.message) || String(e));
+    return null;
+  }
+  if (sPlan) input.sharpnessShares = sPlan.shares;
   for (const t of list) {
     try {
       perTarget.push(comboExpected({ ...input, target: t.target }).total);
@@ -271,7 +281,7 @@ export function evaluateBuild(build, targets, ctx) {
   });
   const perGroup = {};
   for (const g of Object.keys(groupW)) perGroup[g] = groupW[g] > 0 ? groupV[g] / groupW[g] : 0;
-  return { value, perTarget, perGroup, skillLevels };
+  return { value, perTarget, perGroup, skillLevels, sharpnessPlan: sPlan };
 }
 
 // ---------------------------------------------------------------- 脅威 → 要件
@@ -947,13 +957,15 @@ function subjectsFor(target, targetData, players, useTarget) {
  * 相手 → Plan (docs/RECOMMEND_DESIGN.md 5.3 節)。画面のスレッドで呼ぶ (探索はしない。いまの装備の期待値を相手ごとに数回計算する)。
  * 相手タブの「この相手のおすすめ」と探すタブの両方がこの結果を出す。
  * @param args {target: state.target, tabTarget: state.tabs.target, search: state.search, targetData (data.js の target データ),
- *   core: {index, skillEffects, motions, combos} (data.js の core データ), current: {build, combo, uptimes, sharpness, extraWeapons}}
+ *   core: {index, skillEffects, motions, combos} (data.js の core データ),
+ *   current: {build, combo, uptimes, sharpness, sharpnessInterval, extraWeapons}}
  * @returns Plan = {status: 'ok'|'no-target'|'no-data', blocked: null|{code, message}, mode: 'single'|'multi', useTarget,
  *   subjects: [{key, index, monsterId, kind, name, health, healthForT, targets, element: {rec, view}, threats, monsterStatus,
  *               current: {value, combos}|null}],
  *   element (elementPlan), requirements (requirementsFrom), notes, exclusions (gammaExclusions + gamma), weights (multiWeights),
  *   quest: {id, name, stars, multi, fixedEquipment, intruders} | null, players, preset, partsPolicy,
- *   inputs: {combo, uptimes, uptimeMode, placeholders, monsterStatus, sharpness, limitBreak, charms, armorExclude, sourceUptimes},
+ *   inputs: {combo, uptimes, uptimeMode, placeholders, monsterStatus, sharpness, sharpnessInterval, limitBreak, charms, armorExclude,
+ *     sourceUptimes},
  *   current: {value, T, perSubject, check} | null, marks: {preset: 'provisional', parts}, warnings: [{code, message}], license}
  */
 export function buildPlan({ target, tabTarget, search, targetData, core, current } = {}) {
@@ -984,7 +996,8 @@ export function buildPlan({ target, tabTarget, search, targetData, core, current
   }
   const inputs = {
     combo, uptimes: up.uptimes, uptimeMode: up.mode, placeholders: up.placeholders, sourceUptimes: isObj(cur.uptimes) ? cur.uptimes : {},
-    sharpness: cur.sharpness || null, limitBreak, charms, armorExclude: Array.isArray(sr.armorExclude) ? [...sr.armorExclude] : [],
+    sharpness: cur.sharpness || null, sharpnessInterval: Number(cur.sharpnessInterval) > 0 ? Number(cur.sharpnessInterval) : 0,
+    limitBreak, charms, armorExclude: Array.isArray(sr.armorExclude) ? [...sr.armorExclude] : [],
     monsterStatus: [], currentBuild: build && build.weapon != null ? build : null,
   };
   const plan = {
@@ -1079,7 +1092,7 @@ export function buildPlan({ target, tabTarget, search, targetData, core, current
   const evalCtx = {
     index, effects, motions: core && core.motions, combo, uptimes: up.uptimes,
     monsterStatus: plan.mode === 'multi' ? inputs.monsterStatus : (plan.subjects[0].monsterStatus || []),
-    sharpness: inputs.sharpness, errors: evalErrors,
+    sharpness: inputs.sharpness, sharpnessInterval: inputs.sharpnessInterval, errors: evalErrors,
   };
   const hs = subjectHealths(plan.subjects);
   plan.subjects.forEach((s, i) => {
@@ -1220,7 +1233,7 @@ export function planToJob(plan, opts = {}) {
   const extraCharms = Array.isArray(opts.extraCharms) ? opts.extraCharms : [];
   const base = {
     weapons: plan.element.weapons, targets, combo: plan.inputs.combo, uptimes, monsterStatus: plan.inputs.monsterStatus,
-    buffs: {}, sharpness: plan.inputs.sharpness, required: [],
+    buffs: {}, sharpness: plan.inputs.sharpness, sharpnessInterval: plan.inputs.sharpnessInterval || 0, required: [],
     charms: { owned: charms.owned !== false, extra: charms.local !== false ? extraCharms : [], fixed: charms.fixed !== false, fixedExclude: [...(ex.charmsFixed || [])] },
     extraWeapons: Array.isArray(opts.extraWeapons) ? opts.extraWeapons : [],
     limitBreak: plan.inputs.limitBreak, decorations: { owned: null },
@@ -1391,7 +1404,7 @@ export function planBaseline(job, build, data) {
   const index = indexWithExtras(data.index, input);
   const ev = evaluateBuild(build, input.targets, {
     index, effects: data.effects || data.skillEffects, motions: data.motions, combo: input.combo, uptimes: input.uptimes,
-    monsterStatus: input.monsterStatus, sharpness: input.sharpness, buffs: input.buffs,
+    monsterStatus: input.monsterStatus, sharpness: input.sharpness, sharpnessInterval: input.sharpnessInterval, buffs: input.buffs,
   });
   return ev ? baselineView(job.subjects, { value: ev.value, perGroup: ev.perGroup }) : null;
 }
@@ -1558,7 +1571,7 @@ export function createPlanRunner(job, data, deps = {}) {
 
   const evalCtxOf = (input) => ({
     index, effects, motions: data && data.motions, combo: input.combo, uptimes: input.uptimes,
-    monsterStatus: input.monsterStatus, sharpness: input.sharpness, buffs: input.buffs,
+    monsterStatus: input.monsterStatus, sharpness: input.sharpness, sharpnessInterval: input.sharpnessInterval, buffs: input.buffs,
   });
   const addWarning = (list, w) => {
     // 回ごとに数の変わる警告 (武器を絞った本数) は 1 行にまとめる

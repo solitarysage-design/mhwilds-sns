@@ -7,6 +7,8 @@
 //   出力 (標準出力に JSON): {skills: [{skillId, name, level, rawLevel, maxLevel}], total, physical, element, extra,
 //                           noSkills, vsNoSkillsPct, sharpness, combo, target, lowConfidence, unsupported, warnings}
 // 斬れ味が「自動」のときは、スキルの組ごとに斬れ味の色を決め直す (匠を外すと色が下がる。スキルなしは匠なしの色)。
+// 研ぐまでに攻撃する秒数 (state.sharpnessInterval。無ければ state.js の既定 60 秒) があれば、匠込みのゲージで研ぐまでの色の割合を
+// 混ぜる (damage.js の comboExpected の sharpnessUse。相手は 1 か所なので部位をまとめる必要は無い)。
 // テストの本体ではない (node --test tests/*.test.mjs には拾われない名前にしてある)。
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -21,6 +23,8 @@ const load = (name) => JSON.parse(readFileSync(join(ROOT, 'data', name), 'utf8')
 const DEFAULT_HITZONE = { slash: 45, blunt: 45, fire: 20, water: 20, thunder: 20, ice: 20, dragon: 20 };
 // 匠 1 Lv で伸びる斬れ味ゲージの長さ
 const HANDICRAFT_STEP = 10;
+// 研ぐまでに攻撃する秒数の既定 (state.js の DEFAULT_SHARPNESS_INTERVAL と同じ。前の版の状態には項目が無い)
+const DEFAULT_INTERVAL = 60;
 
 function main() {
   const input = JSON.parse(readFileSync(process.argv[2], 'utf8'));
@@ -54,7 +58,7 @@ function main() {
   // 斬れ味: 固定ならその色、自動なら匠の Lv を入れたゲージの一番上の色 (スキルの組ごとに決め直す)
   const hc = [...idx.skills.values()].find((s) => s.name === '匠');
   const srcSharp = w.sharpness ?? (base && base.sharpness);
-  const sharpForHandicraft = (lv) => {
+  const gaugeForHandicraft = (lv) => {
     const gauge = [...(Array.isArray(srcSharp) ? srcSharp : srcSharp.base)];
     const maxG = base && base.sharpness && Array.isArray(base.sharpness.handicraftMax) ? base.sharpness.handicraftMax
       : srcSharp && Array.isArray(srcSharp.handicraftMax) ? srcSharp.handicraftMax : gauge;
@@ -64,15 +68,21 @@ function main() {
       gauge[i] += add;
       budget -= add;
     }
+    return gauge;
+  };
+  const sharpForHandicraft = (lv) => {
+    const gauge = gaugeForHandicraft(lv);
     let top = -1;
     gauge.forEach((n, i) => { if (n > 0) top = i; });
     return top >= 0 ? SHARPNESS_ORDER[top] : 'white';
   };
-  const sharpOf = (list) => {
-    if (st.sharpness) return st.sharpness;
+  const handicraftOf = (list) => {
     const h = hc ? list.find((s) => s.skillId === hc.id) : null;
-    return sharpForHandicraft(h ? Number(h.level) || 0 : 0);
+    return h ? Number(h.level) || 0 : 0;
   };
+  const sharpOf = (list) => (st.sharpness ? st.sharpness : sharpForHandicraft(handicraftOf(list)));
+  const interval = st.sharpnessInterval == null ? DEFAULT_INTERVAL : Number(st.sharpnessInterval) || 0;
+  const useOf = (list) => (st.sharpness || !(interval > 0) ? null : { gauge: gaugeForHandicraft(handicraftOf(list)), intervalSec: interval });
 
   // コンボ (null = 先頭の代表コンボ)
   const combos = load('combos_sns.json').combos;
@@ -110,7 +120,7 @@ function main() {
   const calcInput = {
     weapon, uptimes: st.uptimes || {}, effects, motions: load('motions_sns.json'), combo, target, monsterStatus,
   };
-  const calc = (list) => comboExpected({ ...calcInput, skills: list, sharpness: sharpOf(list) });
+  const calc = (list) => comboExpected({ ...calcInput, skills: list, sharpness: sharpOf(list), sharpnessUse: useOf(list) });
   const list = build.skills.filter((s) => s.level > 0).map((s) => ({ skillId: s.skillId, level: s.level }));
   const r = calc(list);
   const none = calc([]);

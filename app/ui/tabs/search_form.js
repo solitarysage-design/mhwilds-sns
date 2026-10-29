@@ -169,6 +169,12 @@ export function searchUptimes(effects, uptimes, policy) {
 
 // ---------------------------------------------------------------- 限界突破・歴戦王の γ 防具
 
+/** 状態の研ぐまでに攻撃する秒数 (無い・壊れた値は 0 = 一番上の色のまま。state.js が既定を入れる) */
+function sharpnessIntervalOf(state) {
+  const v = Number(state && state.sharpnessInterval);
+  return Number.isFinite(v) && v > 0 ? v : 0;
+}
+
 /** 探すときの限界突破 (部位ごと)。mode: 'build' (装備タブと同じ) | 'all' | 'none' */
 export function limitBreakFor(mode, build) {
   const out = {};
@@ -499,6 +505,13 @@ export function buildJob(ctx) {
   }
   if (targets.fallback === 'no-part') notes.push({ code: 'no-part', message: '狙う部位を選んでいないので、弱点 1 か所で探します。' });
   if (targets.source === 'default') notes.push({ code: 'default-target', message: `相手を選んでいないので、${targets.label}で探します。` });
+  const iv = state.sharpness ? 0 : sharpnessIntervalOf(state);
+  if (iv > 0) {
+    notes.push({
+      code: 'sharpness-interval',
+      message: `斬れ味は、研いでから ${iv % 60 === 0 ? `${iv / 60} 分` : `${iv} 秒`}攻撃する間に下がる分を入れて探します (業物・達人芸・匠が効きます。装備タブ・火力タブで変えられます)。`,
+    });
+  }
 
   const uptimes = searchUptimes(core.skillEffects, state.uptimes, s.placeholders);
   const zeroed = s.placeholders === 'zero' ? placeholders.filter((p) => !p.fromInput).length : 0;
@@ -511,6 +524,8 @@ export function buildJob(ctx) {
     combo, uptimes,
     monsterStatus: monsterStatusOf(state.target, targetData) || [],
     buffs: {}, sharpness: state.sharpness || null,
+    // 研ぐまでに攻撃する秒数 (斬れ味が自動のときだけ。0 = 一番上の色のまま)
+    sharpnessInterval: state.sharpness ? 0 : sharpnessIntervalOf(state),
     required: requiredInput(s.required, idx),
     charms: {
       owned: s.charms.owned !== false, extra: extraCharms, fixed: s.charms.fixed !== false, fixedExclude: exclusions.charmsFixed,
@@ -534,7 +549,10 @@ export function buildJob(ctx) {
       plan = recommend.buildPlan({
         target: state.target, tabTarget: state.tabs && state.tabs.target, search: s, targetData,
         core: { index: idx, skillEffects: core.skillEffects, motions: core.motions, combos: core.combos },
-        current: { build: state.build, combo, uptimes: state.uptimes, sharpness: state.sharpness, extraWeapons: localWeapons || [] },
+        current: {
+          build: state.build, combo, uptimes: state.uptimes, sharpness: state.sharpness, sharpnessInterval: sharpnessIntervalOf(state),
+          extraWeapons: localWeapons || [],
+        },
       }) || null;
       if (plan && typeof recommend.planToJob === 'function' && !plan.blocked) {
         const ms = budgetMsOf(budget);
@@ -566,7 +584,7 @@ export function buildJob(ctx) {
       ? `おすすめの属性 (${usePlan ? nWeapons : weapon.weapons.length} 本)` : (weapon.current ? weaponName(weapon.current) : ''),
     weaponMode, placeholders: s.placeholders, zeroed, K, budgetSec: s.budgetSec,
     required: input.required.length, kind: job.kind, preset: s.preset, startBuild: state.build || null,
-    multi: usePlan && plan.mode === 'multi',
+    multi: usePlan && plan.mode === 'multi', sharpnessInterval: iv,
   };
   const inputKey = blockers.length ? null : inputKeyOf(job, dataVersionOf(core));
   return {
@@ -814,7 +832,7 @@ export function baselineValue(input, build, idx, core) {
     const v = mixTotal({
       weapon: damageWeapon(w), sharpness, skills: br.skills, uptimes: input.uptimes || {},
       effects: core.skillEffects, motions: core.motions, combo: input.combo, monsterStatus: input.monsterStatus,
-      buffs: input.buffs, perSkills: sharpnessResolver(w, idx, input.sharpness || null),
+      buffs: input.buffs, perSkills: sharpnessResolver(w, idx, input.sharpness || null, { intervalSec: input.sharpnessInterval }),
     }, input.targets);
     return Number.isFinite(v) && v > 0 ? v : null;
   } catch {

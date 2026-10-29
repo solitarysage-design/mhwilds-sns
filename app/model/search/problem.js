@@ -26,11 +26,28 @@ function slotsGeNested(a, b) {
 }
 
 /**
+ * 斬れ味のゲージ a が b 以上か: どの色についても「その色より上 (その色を含む) の長さ」が以上 (研いだ後のどの時刻でも色が以上)。
+ * same が true なら全部の色が同じときだけ。
+ */
+function gaugeGe(a, b, same) {
+  const n = Math.max(a.length, b.length);
+  let sa = 0; let sb = 0;
+  for (let i = n - 1; i >= 0; i--) {
+    const x = a[i] || 0; const y = b[i] || 0;
+    if (same && x !== y) return false;
+    sa += x; sb += y;
+    if (sa < sb) return false;
+  }
+  return true;
+}
+
+/**
  * 下ごしらえ。
  * @param data {idx: indexEquipData の結果 (端末の護石・所持アーティアも入れたもの), effects: skill_effects.json, motions}
  * @param o {
  *   weapons: [武器の参照], targets: [{weight, target}] (weight は足して 1), combo, uptimes, monsterStatus, buffs,
  *   required: [{skillId, level}], limitBreak: {head: bool, ...}, sharpness: null (自動) | 色,
+ *   sharpnessInterval: 研ぐまでに攻撃する秒数 (0・省略 = 斬れ味はずっと一番上の色。自動のときだけ効く),
  *   charmRefs: [使う護石の参照 (文字列 = 所持・端末 / 数値 = 生産)], armorExclude: [防具の id],
  *   decoCount: null | {装飾品 id: 持っている数} (null = 全部持っている), objective: 'damage' | 'none',
  *   K, domK (この数以上の類に優越される類を捨てる。既定 1。泣シミュ型は捨てない), weaponDominance (既定 true),
@@ -76,7 +93,15 @@ export function prepare(data, o) {
       if (!cache.has(lv)) cache.set(lv, autoSharpness(w, idx, hid != null ? { [hid]: lv } : {}).color || 'white');
       return cache.get(lv);
     };
-    weapons.push({ ref, w, dmg: damageWeapon(w), sharpFn, fixedSharp, name: w.displayName || w.name });
+    // 研ぐまでの減り方 (匠の Lv → 匠込みのゲージ)。ゲージの分からない武器は一番上の色のまま
+    const interval = !fixedSharp && Number(o.sharpnessInterval) > 0 ? Number(o.sharpnessInterval) : 0;
+    const gaugeCache = new Map();
+    const gaugeFn = (lv) => {
+      if (!gaugeCache.has(lv)) gaugeCache.set(lv, autoSharpness(w, idx, hid != null ? { [hid]: lv } : {}).gauge);
+      return gaugeCache.get(lv);
+    };
+    const sharpUse = interval && gaugeFn(0) ? { intervalSec: interval, gaugeFn } : null;
+    weapons.push({ ref, w, dmg: damageWeapon(w), sharpFn, fixedSharp, sharpUse, name: w.displayName || w.name });
   }
   if (!weapons.length) throw new Error('探す武器がありません');
 
@@ -95,9 +120,12 @@ export function prepare(data, o) {
     effects, motions: data.motions, combo: o.combo, targets: o.targets, weapon: wp.dmg,
     uptimes: o.uptimes || {}, monsterStatus: o.monsterStatus, buffs: o.buffs, relevantIds: ids,
     sharpness: wp.sharpFn || wp.fixedSharp || 'white', handicraftIndex: ids.indexOf(hid), uncapped, patternCache,
+    sharpnessUse: wp.sharpUse,
   });
   const sigOf = (wp) => [wp.dmg.element ? wp.dmg.element.type : '-', wp.dmg.element ? 1 : 0,
-    ...[0, 1, 2, 3, 4, 5].map((lv) => (wp.sharpFn ? wp.sharpFn(lv) : wp.fixedSharp))].join('|');
+    ...[0, 1, 2, 3, 4, 5].map((lv) => (wp.sharpFn ? wp.sharpFn(lv) : wp.fixedSharp)),
+    // 研ぐまでの減り方があると、業物・達人芸・匠の効き方がゲージの長さで変わる
+    ...(wp.sharpUse ? [wp.sharpUse.intervalSec, ...[0, 1, 2, 3, 4, 5].map((lv) => (wp.sharpUse.gaugeFn(lv) || []).join(':'))] : [])].join('|');
   const relevant = new Set(required.map((r) => r.skillId));
   const relCache = new Map();
   // Lv を上げて火力が下がるスキル (上界・優越の除去の前提が崩れる。docs/SEARCH_DESIGN.md 4 章の 6)
@@ -318,6 +346,8 @@ export function prepare(data, o) {
   // ---- 武器の支配除去 (武器も探すとき。整数計画の試作の wDom): 属性 (種類が同じで値が以上)・攻撃・会心・
   //      斬れ味 (匠 0〜5 の各 Lv で一番上の色)・スロット・スキル・シリーズ/グループが全部以上なら、下の武器は要らない
   //      (期待値はどれについても増える向きにしか動かない)。鈍器使いが関係するときは斬れ味の色が全部同じときだけ。
+  //      研ぐまでの減り方があるときは、色ではなくゲージ (匠 0〜5 の各 Lv で、どの色より上の長さも以上) で比べる
+  //      (鈍器使いが関係するときはゲージが全部同じときだけ)。
   const weaponsBefore = weapons.length;
   if (weapons.length > 1 && o.weaponDominance !== false && !none) {
     const bluntRel = !!(blunt && rOf.has(blunt.id));
@@ -332,6 +362,10 @@ export function prepare(data, o) {
       if (b.elem && !(a.elem && a.elem.type === b.elem.type && a.elem.value >= b.elem.value)) return false;
       for (let h = 0; h < 6; h++) {
         if (bluntRel ? a.sharpIdx[h] !== b.sharpIdx[h] : a.sharpIdx[h] < b.sharpIdx[h]) return false;
+      }
+      if (a.sharpUse || b.sharpUse) {
+        if (!a.sharpUse || !b.sharpUse) return false;
+        for (let h = 0; h < 6; h++) if (!gaugeGe(a.sharpUse.gaugeFn(h), b.sharpUse.gaugeFn(h), bluntRel)) return false;
       }
       if (!slotsGeNested(a.slots, b.slots)) return false;
       for (let r = 0; r < R; r++) if (a.lv[r] < b.lv[r]) return false;

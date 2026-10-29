@@ -627,6 +627,34 @@ export function extraApplies(x, hit) {
  *   comboExpected が planCheckWeights で出して渡す)。無いときは「待ちの明けた所で 1 回だけ判定する」として 1
  * @returns {{physical, element, extra, total, affinity, critExp}}
  */
+/** ヒットの会心率 (武器 + スキル + 弱点特効 (肉質しきい値以上) + 傷口の追加分。-100〜100 で切る) */
+function hitAffinity(physHz, isWound, stats, rules) {
+  const m = stats.mods;
+  const wpMin = m.weakPointMinHitzone ?? rules.weakPointMinHitzone;
+  let aff = stats.affinity;
+  if (physHz >= wpMin) aff += m.weakPointAffinity;
+  if (isWound) aff += m.woundAffinity;
+  return clampAffinity(aff, rules);
+}
+
+/**
+ * 斬れ味の色の割合 (sharpnessShares の shares) で混ぜた斬れ味補正。物理は鈍器使い (低い色で物理に掛かる) も込み。
+ * 斬れ味補正の掛からないヒット (sharpnessMul false) は色の補正 1 で、鈍器使いだけを色の割合で掛ける。
+ */
+function mixedSharpness(shares, hit, m, rules) {
+  const table = rules.sharpness || DEFAULT_RULES.sharpness;
+  const lowIdx = m.lowSharpnessMul !== 1 && m.lowSharpnessMaxColor ? SHARPNESS_ORDER.indexOf(m.lowSharpnessMaxColor) : -1;
+  let physical = 0; let element = 0;
+  for (let i = 0; i < shares.length; i++) {
+    const s = shares[i];
+    if (!(s > 0)) continue;
+    const t = hit.sharpnessMul === false ? { physical: 1, element: 1 } : table[SHARPNESS_ORDER[i]];
+    physical += s * t.physical * (i <= lowIdx ? m.lowSharpnessMul : 1);
+    element += s * t.element;
+  }
+  return { physical, element };
+}
+
 export function hitDamage(hit, stats, ctx) {
   const rules = ctx.rules || DEFAULT_RULES;
   const hz = ctx.hitzone || {};
@@ -635,21 +663,19 @@ export function hitDamage(hit, stats, ctx) {
   const count = hit.count ?? 1;
   const physHz = physicalHitzone(hz, hit.type);
 
-  // 会心率: 武器 + スキル + 弱点特効 (肉質しきい値以上) + 傷口の追加分
-  const wpMin = m.weakPointMinHitzone ?? rules.weakPointMinHitzone;
-  let aff = stats.affinity;
-  if (physHz >= wpMin) aff += m.weakPointAffinity;
-  if (ctx.isWound) aff += m.woundAffinity;
-  const affinity = clampAffinity(aff, rules);
+  const affinity = hitAffinity(physHz, ctx.isWound, stats, rules);
 
-  const sharp = hit.sharpnessMul === false ? { physical: 1, element: 1 } : sharpnessMultipliers(color, rules);
+  // 斬れ味: 色を 1 つに決めたとき (color) と、研ぐまでの色の割合で混ぜるとき (ctx.sharpnessShares。鈍器使いもここで掛ける)
+  const shares = ctx.sharpnessShares || null;
+  const sharp = shares ? mixedSharpness(shares, hit, m, rules)
+    : hit.sharpnessMul === false ? { physical: 1, element: 1 } : sharpnessMultipliers(color, rules);
   const critExp = hit.canCrit === false ? 1 : critExpectation(affinity, stats.critMul, rules);
 
   let physMul = 1;
   const hardMax = m.hardPartMaxHitzone ?? rules.hardPartMaxHitzone;
   if (m.hardPartMul !== 1 && physHz <= hardMax) physMul *= m.hardPartMul;
   if (hit.hien) physMul *= m.jumpMul;
-  if (m.lowSharpnessMul !== 1 && m.lowSharpnessMaxColor
+  if (!shares && m.lowSharpnessMul !== 1 && m.lowSharpnessMaxColor
       && SHARPNESS_ORDER.indexOf(color) <= SHARPNESS_ORDER.indexOf(m.lowSharpnessMaxColor)) {
     physMul *= m.lowSharpnessMul;
   }
@@ -901,7 +927,7 @@ function checkSpecsOf(active) {
  * 判定の割合をプランと spec ごとに 1 回だけ出し (全部のパターンで同じ)、hitDamage に渡す ctx (段ごと・ヒットごと) を作る。
  * checks[] は画面用の要約 (判定と発動の 1 周あたりの回数・発動の間隔の秒)。
  */
-function planContexts(plan, active, sharpness, rules, warnings) {
+function planContexts(plan, active, sharpness, rules, warnings, sharpnessShares = null) {
   const specs = checkSpecsOf(active);
   const weights = new Map();
   for (const s of specs) weights.set(s.spec, planCheckWeights(plan, s.spec, warnings));
@@ -911,7 +937,7 @@ function planContexts(plan, active, sharpness, rules, warnings) {
     return r;
   };
   const ctxs = plan.map((st, si) => st.hits.map((_, hi) => ({
-    hitzone: st.hitzone, isWound: st.isWound, sharpness, rules, checkWeight: (x) => weightOf(x).perHit[si][hi],
+    hitzone: st.hitzone, isWound: st.isWound, sharpness, sharpnessShares, rules, checkWeight: (x) => weightOf(x).perHit[si][hi],
   })));
   const checks = specs.map((s) => {
     const r = weights.get(s.spec);
@@ -1021,6 +1047,26 @@ function modsOfPart(p, lin) {
  * @returns {{total, physical, element, extra}}
  */
 function factoredTotals(fp, active, weapon, buffs, rules, plan, ctxs) {
+  let total = 0; let physical = 0; let element = 0; let extra = 0;
+  for (const { P, stats } of factoredStates(fp, active, weapon, buffs, rules)) {
+    for (let si = 0; si < plan.length; si++) {
+      const st = plan[si];
+      for (let hi = 0; hi < st.hits.length; hi++) {
+        const hit = st.hits[hi];
+        const d = hitDamage(hit, stats, ctxs[si][hi]);
+        total += P * d.total; physical += P * d.physical; element += P * d.element; extra += P * d.extra;
+      }
+    }
+  }
+  return { total, physical, element, extra };
+}
+
+/**
+ * 条件の塊ごとに畳み込んだ状態 (確率 P と、その状態の computeStats の結果)。状態は会心率・会心倍率などの効果で分けるので、
+ * 状態の中では会心率が 1 つに決まる (攻撃・属性は上限に当たらないときだけ期待値でまとめる)。
+ * @returns {Array<{P, stats}>}
+ */
+function factoredStates(fp, active, weapon, buffs, rules) {
   const elemType = weapon.element ? weapon.element.type : null;
   const elemBase = weapon.element ? Number(weapon.element.value) || 0 : 0;
   // 条件なしの効果 (位置は active の並び)
@@ -1094,24 +1140,152 @@ function factoredTotals(fp, active, weapon, buffs, rules, plan, ctxs) {
     }
     dist = next;
   }
-  let total = 0; let physical = 0; let element = 0; let extra = 0;
+  const out = [];
   for (const e of dist.values()) {
     if (!(e.P > 0)) continue;
     // 状態の中の期待値 (上限に当たらない・属性がいつも正なので、攻撃力・属性値の期待値をそのまま使える)
     const mods = modsOfPart(e.part, {
       am: e.sAm / e.P, aa: e.sAa / e.P, em: e.sEm / e.P, ea: e.sEa / e.P, fm: e.sFm / e.P, fa: e.sFa / e.P,
     });
-    const stats = computeStats(weapon, mods, rules);
-    for (let si = 0; si < plan.length; si++) {
-      const st = plan[si];
-      for (let hi = 0; hi < st.hits.length; hi++) {
-        const hit = st.hits[hi];
-        const d = hitDamage(hit, stats, ctxs[si][hi]);
-        total += e.P * d.total; physical += e.P * d.physical; element += e.P * d.element; extra += e.P * d.extra;
-      }
+    out.push({ P: e.P, stats: computeStats(weapon, mods, rules) });
+  }
+  return out;
+}
+
+// ------------------------------------------------------------------ 斬れ味の減り方 (2026-10-29)
+//
+// 研いだ直後は一番上の色。斬れ味を減らす当たり (consumesSharpness) のたびに sharpnessCost 目盛り減り、上の色から順に下がる。
+// 業物 (sharpnessSave) はいつも、達人芸 (critSharpnessSave) は会心の当たりで、その確率で減らない (2 つは別々に効くと仮定)。
+// 研ぐまでに攻撃する秒数 (intervalSec) の間、色ごとにいる時間の割合 (shares) で斬れ味補正を混ぜる。
+// 相手の部位が複数でもゲージは 1 本なので、減り方 (1 周で減る目盛り・会心率) は部位の割合でまとめて 1 つにする。
+
+/** 1 回当たると減る斬れ味の目盛り (count 回分ではなく 1 回分)。消費しない当たりは 0。motions の sharpnessCost が無ければ 1 */
+export function hitSharpnessCost(hit) {
+  if (!hit || hit.consumesSharpness === false) return 0;
+  return Number.isFinite(hit.sharpnessCost) ? hit.sharpnessCost : 1;
+}
+
+/**
+ * 効いているスキル (resolveSkills の active) の、斬れ味を減らさない確率。条件つきのスキルは見ない。
+ * @returns {{save: number (業物。いつも), critSave: number (達人芸。会心の当たりだけ)}}
+ */
+export function sharpnessSavesOf(active) {
+  let save = 0; let critSave = 0;
+  for (const a of active || []) {
+    if (a.conditional || !a.lv) continue;
+    if (Number.isFinite(a.lv.sharpnessSave)) save = Math.max(save, a.lv.sharpnessSave);
+    if (Number.isFinite(a.lv.critSharpnessSave)) critSave = Math.max(critSave, a.lv.critSharpnessSave);
+  }
+  return { save, critSave };
+}
+
+/**
+ * 研ぐまでの間に、斬れ味の色ごとにいる時間の割合。
+ * @param gauge [赤, 橙, 黄, 緑, 青, 白, 紫] の目盛り (匠込み。足りない色は 0)
+ * @param perSec 1 秒に減る目盛り (業物・達人芸込み)
+ * @param intervalSec 研ぐまでに攻撃する秒数
+ * @returns {{shares: number[] (SHARPNESS_ORDER の並び。足して 1), sec: number[] (色ごとにもつ秒数), top: number (一番上の色の添字)}}
+ *   ゲージが無い (全部 0) ときは白にいる。秒数が 0 か減らないときは一番上の色にいる。ゲージを使い切ったら赤のまま。
+ */
+export function sharpnessShares(gauge, perSec, intervalSec) {
+  const n = SHARPNESS_ORDER.length;
+  const shares = new Array(n).fill(0);
+  const sec = new Array(n).fill(0);
+  const g = SHARPNESS_ORDER.map((_, i) => Math.max(0, Number(gauge && gauge[i]) || 0));
+  let top = -1;
+  for (let i = n - 1; i >= 0; i--) if (g[i] > 0) { top = i; break; }
+  if (top < 0) {
+    top = SHARPNESS_ORDER.indexOf('white');
+    shares[top] = 1; sec[top] = Infinity;
+    return { shares, sec, top };
+  }
+  for (let i = 0; i < n; i++) sec[i] = perSec > 0 ? g[i] / perSec : (g[i] > 0 ? Infinity : 0);
+  if (!(intervalSec > 0) || !(perSec > 0)) { shares[top] = 1; return { shares, sec, top }; }
+  let left = intervalSec;
+  for (let i = top; i >= 0 && left > 0; i--) {
+    const t = Math.min(left, sec[i]);
+    shares[i] += t / intervalSec;
+    left -= t;
+  }
+  if (left > 0) shares[0] += left / intervalSec;
+  return { shares, sec, top };
+}
+
+/**
+ * コンボ 1 周で減る斬れ味 (業物・達人芸の前) と、その会心の見込み (目盛り × 会心率 の和)。条件のパターンで加重平均する。
+ * 会心率はダメージの計算と同じ (弱点特効・傷口の分を含む。マイナス会心は 0)。会心できない当たりは 0。
+ * @param input comboExpected と同じ (target を 1 つ)
+ * @returns {{units, critUnits, cycleSec}}  cycleSec = 1 周の秒数 (段の長さの和。灼熱化の判定と同じ)
+ */
+export function comboSharpnessUse(input) {
+  const effectsRules = (input.effects && input.effects.rules) || {};
+  const rules = mergeRules(input.rules || effectsRules);
+  const groupSrc = (input.rules && input.rules.conditionGroups) || effectsRules.conditionGroups || [];
+  const resolved = resolveSkills(input.skills, input.effects);
+  const cond = resolveConditions(resolved.active, groupSrc, input.uptimes, {
+    skillIds: normalizeSkills(input.skills).map((s) => s.skillId), monsterStatus: input.monsterStatus,
+  });
+  const target = input.target || {};
+  const plan = planSteps(comboSteps(input.combo), movesMap(input.motions), target, []);
+  const cycleSec = plan.reduce((t, st) => t + st.lengthSec, 0);
+  const hits = [];
+  let units = 0;
+  for (const st of plan) {
+    for (const h of st.hits) {
+      const c = hitSharpnessCost(h) * (h.count ?? 1);
+      if (!(c > 0)) continue;
+      units += c;
+      if (h.canCrit !== false) hits.push({ c, physHz: physicalHitzone(st.hitzone || {}, h.type), isWound: st.isWound });
     }
   }
-  return { total, physical, element, extra };
+  if (!(units > 0) || !hits.length) return { units, critUnits: 0, cycleSec };
+  const weapon = input.weapon || { attack: 0, affinity: 0, element: null };
+  const elemType = weapon.element ? weapon.element.type : null;
+  const buffs = input.buffs || {};
+  let critUnits = 0;
+  const add = (w, stats) => {
+    for (const x of hits) critUnits += w * x.c * Math.max(0, hitAffinity(x.physHz, x.isWound, stats, rules)) / 100;
+  };
+  const fp = factorPatterns(cond.groups);
+  const limit = Math.min(MAX_PATTERNS, input.maxPatterns ?? MAX_PATTERNS);
+  if (fp.count > limit) {
+    for (const { P, stats } of factoredStates(fp, cond.active, weapon, buffs, rules)) add(P, stats);
+  } else {
+    for (const p of enumeratePatterns(cond.groups).patterns) {
+      add(p.weight, computeStats(weapon, aggregateModifiers(effectsFor(cond.active, p.states), elemType, buffs), rules));
+    }
+  }
+  return { units, critUnits, cycleSec };
+}
+
+/**
+ * 研ぐまでの斬れ味の色の割合を、相手の部位をまとめて (ゲージ 1 本で) 出す。
+ * @param input comboExpected と同じ形 + sharpnessUse: {gauge (匠込みの目盛り), intervalSec}。target は使わず targets を使う
+ * @param targets [{weight, target}] (重みは足して 1 にそろえる。省略すると input.target 1 つ)
+ * @returns null (sharpnessUse が無い・秒数が 0) | {shares, sec, top, intervalSec, perSec, rawPerSec, keep, critRate, save, critSave,
+ *          unitsPerCycle, cycleSec}
+ *   rawPerSec = 業物・達人芸の前の 1 秒に減る目盛り、keep = 減る割合 ((1 - 業物) × (1 - 達人芸 × 会心率))、perSec = rawPerSec × keep
+ */
+export function sharpnessPlan(input, targets) {
+  const use = input.sharpnessUse;
+  if (!use || !(Number(use.intervalSec) > 0)) return null;
+  const list = Array.isArray(targets) && targets.length ? targets : [{ weight: 1, target: input.target || {} }];
+  const sumW = list.reduce((a, t) => a + Math.max(0, Number(t.weight) || 0), 0);
+  let units = 0; let critUnits = 0; let cycleSec = 0;
+  for (const t of list) {
+    const w = sumW > 0 ? Math.max(0, Number(t.weight) || 0) / sumW : 1 / list.length;
+    if (!(w > 0)) continue;
+    const r = comboSharpnessUse({ ...input, target: t.target });
+    units += w * r.units; critUnits += w * r.critUnits; cycleSec += w * r.cycleSec;
+  }
+  const { save, critSave } = sharpnessSavesOf(resolveSkills(input.skills, input.effects).active);
+  const critRate = units > 0 ? critUnits / units : 0;
+  const keep = (1 - save) * (1 - critSave * critRate);
+  const rawPerSec = cycleSec > 0 ? units / cycleSec : 0;
+  const perSec = rawPerSec * keep;
+  const intervalSec = Number(use.intervalSec);
+  const sh = sharpnessShares(use.gauge, perSec, intervalSec);
+  return { ...sh, intervalSec, perSec, rawPerSec, keep, critRate, save, critSave, unitsPerCycle: units, cycleSec };
 }
 
 /**
@@ -1119,6 +1293,8 @@ function factoredTotals(fp, active, weapon, buffs, rules, plan, ctxs) {
  * @param {object} input
  *   weapon:    {attack, affinity, element: {type, value}|null}  (weapons_sns.json / my_weapons.json の 1 件)
  *   sharpness: 'white' など (今の斬れ味の色)
+ *   sharpnessUse: {gauge, intervalSec} (省略可)。あれば研ぐまでの色の割合で斬れ味補正を混ぜる (sharpnessPlan。この部位 1 つで数える)
+ *   sharpnessShares: 色の割合 (SHARPNESS_ORDER の並び。省略可)。部位をまとめて sharpnessPlan で出したものを渡す。sharpnessUse より先
  *   skills:    [{skillId, level}] か {skillId: level}  (build.js の skills / skillLevels をそのまま渡せる)
  *   uptimes:   {条件グループ id: 発動率}。binary は 0〜1、categorical は {段 id: 割合}。省略したものは既定値
  *   effects:   data/skill_effects.json (丸ごと)
@@ -1131,7 +1307,8 @@ function factoredTotals(fp, active, weapon, buffs, rules, plan, ctxs) {
  *   rules:     既定は effects.rules → DEFAULT_RULES
  *   maxPatterns: (テスト用) 全パターンを並べる数の上限。既定 MAX_PATTERNS。0 にすると必ず因子分解の道で計算する
  * @returns {{total, physical, element, extra, patterns, factored, steps, conditions, warnings, unsupported, unknown, lowConfidence,
- *            extraChecks}}
+ *            extraChecks, sharpnessPlan}}
+ *   sharpnessPlan = sharpnessUse から出した色の割合など (sharpnessShares を渡したとき・sharpnessUse が無いときは null)
  *   条件の組み合わせ (パターン) が MAX_PATTERNS を超えるときは、同時に起きない条件の塊ごとに畳み込んで合計だけを出す
  *   (factored: true。値は全パターンの加重平均と同じ。steps は空で、警告 many-patterns)。patterns はパターンの数。
  *   extraChecks[]: 判定のある追加ダメージ (灼熱化) の要約 {kind, skillId, name, level, conditional, cooldownSec, perCheck,
@@ -1157,11 +1334,14 @@ export function comboExpected(input) {
   const weapon = input.weapon || { attack: 0, affinity: 0, element: null };
   const elemType = weapon.element ? weapon.element.type : null;
   const sharpness = input.sharpness || 'white';
-  const { ctxs, checks } = planContexts(plan, cond.active, sharpness, rules, warnings);
+  // 研ぐまでの色の割合: 呼ぶ側が部位をまとめて出したもの (sharpnessShares) か、sharpnessUse だけならこの部位 1 つで出す
+  const sPlan = Array.isArray(input.sharpnessShares) ? null : sharpnessPlan(input);
+  const shares = Array.isArray(input.sharpnessShares) ? input.sharpnessShares : (sPlan ? sPlan.shares : null);
+  const { ctxs, checks } = planContexts(plan, cond.active, sharpness, rules, warnings, shares);
   const common = {
     conditions: cond.groups.map(publicGroup), warnings,
     unsupported: resolved.unsupported, unknown: resolved.unknown, lowConfidence: resolved.lowConfidence,
-    extraChecks: checks,
+    extraChecks: checks, sharpnessPlan: sPlan,
   };
 
   if (factored) {

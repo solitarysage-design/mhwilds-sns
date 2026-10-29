@@ -415,6 +415,11 @@ const search = createSearch({
   monsterStatus: [],               // 相手の状態異常 (target_mix.js の monsterStatusOf)
   buffs: {},                       // アイテムなど
   sharpness: null,                 // null = 自動 (匠の Lv で決め直す) / 'white' など = 固定
+  sharpnessInterval: 60,           // 研ぐまでに攻撃する秒数 (2026-10-29。自動のときだけ。0・省略 = 一番上の色のまま)。
+                                   // 評価器は匠込みのゲージと業物・達人芸・減る当たりの会心率から色の割合を出して混ぜる
+                                   // (docs/MODEL_API.md の sharpnessPlan と同じ。減り方は全部の相手をまとめて 1 つ)。
+                                   // 業物・達人芸・匠は効きを食い合うので上界の前提 (全部最大の所の増え方が一番大きい) が崩れる
+                                   // → mode 'exact' でも quality は 'heuristic' (警告は出さない)。武器の支配除去はゲージで比べる
   required: [                      // 必須スキル (この Lv 以上)。武器/防具/シリーズ/グループ
     { skillId: 63, level: 3 },
   ],
@@ -497,6 +502,7 @@ search.extendable;                  // 続ける所があるか (extend が true
   - (実装 2b) 足したもの: `non-monotone` (Lv を上げると火力が下がるスキル。4 章の 6)・`weapons-sieved` (2.7 節)。
     `over-max-patterns` は無くした (comboExpected が因子分解の合計を返すので、外して繰り上げる候補が無い。4 章の 2)。
     `exclusive-over-100`・`blunt-handicraft`・`non-monotone` があると mode `exact` でも `quality` は `'heuristic'`。
+    (2026-10-29) 研ぐまでの減り方 (`sharpnessInterval` > 0) があるときも `'heuristic'` (業物・達人芸・匠が食い合う)。
     結果に `gamma` (印)・`check.factored` (因子分解の合計で確かめた)、`stats` に `sieve` を足した。
   - (2026-10-22) 結果に `extendable` (「続けて探す」で続ける所があるか。B&B を最後まで回り終えて、2 段のふるいで外した武器も残って
     いなければ false) を足した。締めた上界 (2.4 節) で探すタブの既定は最後まで終わることが多くなり、押しても何も変わらない「続けて探す」が

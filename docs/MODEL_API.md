@@ -104,6 +104,8 @@ const r = validateCharm(charm, talismanRules, skills, { charmsFixed });
 | `target` | `{hitzone: {slash, blunt, fire, water, thunder, ice, dragon}, wound: {…} \| null, isWound?: bool}` | `monsters.json` の `parts[].hitzone` / `parts[].wound` (0〜100。傷口の無い部位は null) |
 | `buffs` | `{attackAdd, attackMul, affinityAdd, elementAdd, elementMul}` (省略可) | アイテムなど人が足す分 |
 | `monsterStatus` | 相手が使う状態異常のキーの配列 (`['frenzy', 'poison']`)。省略 = 分からない | 画面は `target_mix.js` の `monsterStatusOf` (手入力・既定の肉質なら `[]`) |
+| `sharpnessUse` | `{gauge (匠込みの目盛り [赤…白(紫)]), intervalSec}` (省略可。2026-10-29) | 研ぐまでの色の割合で斬れ味補正を混ぜる (この部位 1 つで数える)。`weapon.js` の `sharpnessUseOf` / `sharpnessResolver(…, {intervalSec})` |
+| `sharpnessShares` | 色の割合 (`SHARPNESS_ORDER` の並び。省略可) | 部位をまとめて `sharpnessPlan` で出したもの。`sharpnessUse` より先に使う (部位の割合で平均するときはこちら) |
 
 ### 条件つきスキルの発動率 (条件ごと)
 
@@ -178,6 +180,7 @@ const r = comboExpected(input);
 // r.warnings[] … {code, message, ...}。message はそのまま画面に出せる日本語
 // r.unsupported[] … 計算に入れていないスキル {skillId, name, level, reason} (画面で「未対応」)
 // r.lowConfidence[] … 確度 low の値で計算したスキル {skillId, name, level, confidence, reason} (画面で「未確定」)
+// r.sharpnessPlan … sharpnessUse から出した研ぐまでの減り方 (下の sharpnessPlan と同じ形。sharpnessShares を渡したとき・無いときは null)
 // r.extraChecks[] … 判定のある追加ダメージ (灼熱化) の要約 (2026-10-24)
 //     {kind, skillId, name, level, conditional, cooldownSec, perCheck, cycleSec (1 周の秒数), checksPerCycle (1 周の判定の回数),
 //      procsPerCycle (= perCheck × checksPerCycle), secPerProc (発動の間隔の秒。出ないなら null), estimated (秒数の分からない段があった)}
@@ -209,6 +212,10 @@ const c = skillContribution(input);
 | `critExpectation(aff, critMul)` / `critElementExpectation(aff, critElementMul)` / `clampAffinity(aff)` | 会心まわり |
 | `sharpnessMultipliers(color)` / `effectiveElement(base, mul, add)` / `effectiveAttack(base, mul, add)` | 補正・上限 |
 | `mergeRules(effects)` / `DEFAULT_RULES` / `SHARPNESS_ORDER` / `ELEMENTAL_TYPES` / `MAX_PATTERNS` | 定数 (rules は `skill_effects.json` の値が優先) |
+| `sharpnessShares(gauge, perSec, intervalSec)` | 研ぐまでの色の割合 `{shares (足して 1), sec (色ごとにもつ秒数), top (一番上の色の添字)}`。上の色から順に減る。秒数 0・減らない → 一番上の色、ゲージが無い → 白、使い切ったら赤のまま (2026-10-29) |
+| `comboSharpnessUse(input)` | コンボ 1 周で減る目盛り `units`・その会心の見込み `critUnits` (目盛り × 会心率 の和。パターンの期待値)・1 周の秒数 `cycleSec` (1 部位) |
+| `sharpnessPlan(input, targets)` | 部位をまとめた研ぐまでの減り方 `{shares, sec, top, intervalSec, perSec, rawPerSec, keep, critRate, save, critSave, unitsPerCycle, cycleSec}` (`input.sharpnessUse` が無ければ null)。`keep = (1 - 業物) × (1 - 達人芸 × critRate)`、`perSec = rawPerSec × keep` |
+| `sharpnessSavesOf(active)` / `hitSharpnessCost(hit)` | 斬れ味を減らさない確率 `{save, critSave}` (条件なしのスキルだけ) / 1 回で減る目盛り (消費しない当たりは 0・無ければ 1) |
 
 警告のコード: `bad-uptime` (発動率が読めない → 既定値) / `unknown-state` (知らない段) / `uptime-over-100` (段の合計が 100% 超え →
 縮める) / `exclusive-conflict` (同時に起きない条件の合計が 100% 超え) / `unknown-condition-group` / `no-wound` /
@@ -234,6 +241,10 @@ const c = skillContribution(input);
   `model` の無い extraDamage (テスト用の前の形) は `chance` × (固定 + 属性/10 × 肉質/100) × count のまま。
   火竜の力は確度 low (技のつなぎの秒数が見積もりで、判定の回数がそれで変わる)。計算に使うと `lowConfidence` に入る
 - 盾のヒットは属性 0 (`elementRate: 0`)。斬れ味補正は `sharpnessMul` が true のヒットだけ
+- (2026-10-29) 研ぐまでの減り方 (`sharpnessUse` / `sharpnessShares`) があると、斬れ味物理 × 鈍器使い = Σ 色の割合 × 色の物理補正 ×
+  (その色で鈍器使いが効けば鈍器使いの倍率)、斬れ味属性 = Σ 色の割合 × 色の属性補正 (`sharpnessMul` が false のヒットは色の補正 1 で、
+  鈍器使いだけ割合で掛ける)。色の割合 = `sharpnessShares(匠込みのゲージ, 1 秒に減る目盛り, 研ぐまでの秒数)`。1 秒に減る目盛り =
+  (部位の割合で平均した 1 周の目盛り ÷ 1 周の秒数) × (1 - 業物) × (1 - 達人芸 × 減る当たりの会心率)
 
 ## weapon.js
 
@@ -248,7 +259,9 @@ import { resolveWeaponRef, damageWeapon, autoSharpness, sharpnessResolver, handi
 const w = resolveWeaponRef(build.weapon, idx);         // 数値 = weapons_sns の id / 文字列 = 所持武器の id → 武器 (所持武器は元の武器で補う) か null
 const dw = damageWeapon(w);                            // damage.js に渡す {attack, affinity, element}
 const s = autoSharpness(w, idx, r.skillLevels);        // {color, handicraft, gauge, baseGauge, maxGauge}。color = 匠込みの一番上の色
-const perSkills = sharpnessResolver(w, idx, state.sharpness); // スキルの組 → {sharpness}。固定・武器なしなら null
+const perSkills = sharpnessResolver(w, idx, state.sharpness, { intervalSec: state.sharpnessInterval });
+// スキルの組 → {sharpness, sharpnessUse? (秒数が正なら匠込みのゲージ)}。固定・武器なしなら null
+const use = sharpnessUseOf(w, idx, r.skillLevels, state.sharpnessInterval, state.sharpness); // {gauge, intervalSec} | null
 ```
 
 | 関数 | 中身 |
@@ -256,7 +269,8 @@ const perSkills = sharpnessResolver(w, idx, state.sharpness); // スキルの組
 | `resolveWeaponRef(ref, idx)` | 武器の参照 → 武器。所持武器 (my_weapons・画面で足した分) は `baseWeaponId` の武器で攻撃力・スロット・スキル・斬れ味などを補う |
 | `damageWeapon(w)` | `{attack, affinity, element}` (属性が無ければ null。null の武器は攻撃 0) |
 | `autoSharpness(w, idx, skillLevels)` | 斬れ味の自動の色 (匠 1 Lv で 10 ずつ、`handicraftMax` まで伸ばした一番上の色) |
-| `sharpnessResolver(w, idx, fixedColor)` | スキルの組ごとに色を決め直す関数 (power_calc.js の `perSkills`・探索の評価器)。匠の Lv ごとに覚える |
+| `sharpnessResolver(w, idx, fixedColor, {intervalSec}?)` | スキルの組ごとに色を決め直す関数 (power_calc.js の `perSkills`・探索の評価器)。匠の Lv ごとに覚える。`intervalSec` が正なら匠込みのゲージ (`sharpnessUse`) も返す |
+| `sharpnessUseOf(w, idx, skillLevels, intervalSec, fixedColor)` | damage.js の `sharpnessUse` (`{gauge, intervalSec}`)。色を固定・秒数 0・ゲージの分からない武器は null (2026-10-29) |
 | `handicraftSkillId(idx)` | 匠の skillId (名前で探す。無ければ null) |
 | `baseWeaponOf` / `sharpnessGauge` / `gaugeWithHandicraft` / `topSharpness` | 元の武器 / ゲージ `{base, handicraftMax}` / 匠を入れたゲージ / 一番上の色 |
 

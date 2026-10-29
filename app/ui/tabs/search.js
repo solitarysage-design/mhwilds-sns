@@ -317,6 +317,7 @@ export default function SearchTab({ data, active }) {
   const comboRef = useAppState((s) => s.combo);
   const uptimes = useAppState((s) => s.uptimes);
   const sharpness = useAppState((s) => s.sharpness);
+  const sharpnessInterval = useAppState((s) => s.sharpnessInterval);
   const tabTarget = useAppState((s) => s.tabs.target);
   const autoStart = useAppState((s) => s.search.autoStart);
 
@@ -328,11 +329,12 @@ export default function SearchTab({ data, active }) {
   const combo = useMemo(() => resolveCombo(comboRef, data.combos), [comboRef, data]);
 
   const jobOf = (b) => F.buildJob({
-    state: { build: b, target, search, combo: comboRef, uptimes, sharpness, tabs: { target: tabTarget } },
+    state: { build: b, target, search, combo: comboRef, uptimes, sharpness, sharpnessInterval, tabs: { target: tabTarget } },
     core: data, idx, targetData, combo, localCharms, localWeapons, recommend: R, budgetTest: budgetTest(),
   });
   const form = useMemo(() => jobOf(build),
-    [build, target, search, comboRef, uptimes, sharpness, tabTarget, data, idx, targetData, combo, localCharms, localWeapons]);
+    [build, target, search, comboRef, uptimes, sharpness, sharpnessInterval, tabTarget, data, idx, targetData, combo, localCharms,
+      localWeapons]);
   const fixed = useMemo(() => F.fixedConditions(data.skillEffects, uptimes), [data, uptimes]);
 
   const { snap, ctrl } = useSearchRun();
