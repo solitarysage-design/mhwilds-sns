@@ -7924,6 +7924,838 @@
    "source": "シート「所持護石一覧」No.465",
    "addedAt": "2026-10-29",
    "note": ""
+  },
+  {
+   "id": "s466",
+   "name": "栄世の護石",
+   "rarity": 8,
+   "skills": [
+    {"skillId": 53, "name": "弾導強化", "level": 2},
+    {"skillId": 69, "name": "特殊射撃強化", "level": 1},
+    {"skillId": 58, "name": "スタミナ急速回復", "level": 1}
+   ],
+   "armorSlots": [0, 0, 0],
+   "weaponSlots": [1],
+   "sheetNo": 466,
+   "slotsProvisional": false,
+   "sheetSlots": [1],
+   "source": "シート「所持護石一覧」No.466",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s467",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 66, "name": "攻めの守勢", "level": 2},
+    {"skillId": 85, "name": "鈍器使い", "level": 1},
+    {"skillId": 57, "name": "弱点特効", "level": 1}
+   ],
+   "armorSlots": [1, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 467,
+   "slotsProvisional": false,
+   "sheetSlots": [1],
+   "source": "シート「所持護石一覧」No.467",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s468",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 5, "name": "爆破ビン追加", "level": 1},
+    {"skillId": 69, "name": "特殊射撃強化", "level": 1},
+    {"skillId": 64, "name": "睡眠耐性", "level": 3}
+   ],
+   "armorSlots": [2, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 468,
+   "slotsProvisional": false,
+   "sheetSlots": [2],
+   "source": "シート「所持護石一覧」No.468",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s469",
+   "name": "栄世の護石",
+   "rarity": 8,
+   "skills": [
+    {"skillId": 91, "name": "水属性攻撃強化", "level": 2},
+    {"skillId": 140, "name": "ファーストショット", "level": 1},
+    {"skillId": 40, "name": "爆破属性強化", "level": 1}
+   ],
+   "armorSlots": [0, 0, 0],
+   "weaponSlots": [1],
+   "sheetNo": 469,
+   "slotsProvisional": false,
+   "sheetSlots": [1],
+   "source": "シート「所持護石一覧」No.469",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s470",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 7, "name": "高速変形", "level": 2},
+    {"skillId": 40, "name": "爆破属性強化", "level": 1},
+    {"skillId": 49, "name": "属性やられ耐性", "level": 1}
+   ],
+   "armorSlots": [1, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 470,
+   "slotsProvisional": false,
+   "sheetSlots": [1, 1],
+   "source": "シート「所持護石一覧」No.470",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s471",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 41, "name": "龍属性攻撃強化", "level": 3},
+    {"skillId": 64, "name": "睡眠耐性", "level": 3}
+   ],
+   "armorSlots": [2, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 471,
+   "slotsProvisional": false,
+   "sheetSlots": [2],
+   "source": "シート「所持護石一覧」No.471",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s472",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 21, "name": "毒ダメージ強化", "level": 1},
+    {"skillId": 59, "name": "ガード性能", "level": 1},
+    {"skillId": 156, "name": "雷耐性", "level": 3}
+   ],
+   "armorSlots": [1, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 472,
+   "slotsProvisional": false,
+   "sheetSlots": [1, 1],
+   "source": "シート「所持護石一覧」No.472",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s473",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 119, "name": "匠", "level": 3},
+    {"skillId": 146, "name": "裂傷耐性", "level": 3}
+   ],
+   "armorSlots": [1, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 473,
+   "slotsProvisional": false,
+   "sheetSlots": [1],
+   "source": "シート「所持護石一覧」No.473",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s474",
+   "name": "栄世の護石",
+   "rarity": 8,
+   "skills": [
+    {"skillId": 41, "name": "龍属性攻撃強化", "level": 3},
+    {"skillId": 58, "name": "スタミナ急速回復", "level": 1},
+    {"skillId": 84, "name": "水耐性", "level": 1}
+   ],
+   "armorSlots": [1, 1, 0],
+   "weaponSlots": [1],
+   "sheetNo": 474,
+   "slotsProvisional": false,
+   "sheetSlots": [1, 1, 1],
+   "source": "シート「所持護石一覧」No.474",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s475",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 12, "name": "毒属性強化", "level": 2},
+    {"skillId": 53, "name": "弾導強化", "level": 1},
+    {"skillId": 75, "name": "攻勢", "level": 1}
+   ],
+   "armorSlots": [1, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 475,
+   "slotsProvisional": false,
+   "sheetSlots": [1, 1],
+   "source": "シート「所持護石一覧」No.475",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s476",
+   "name": "栄世の護石",
+   "rarity": 8,
+   "skills": [
+    {"skillId": 82, "name": "会心撃【属性】", "level": 2},
+    {"skillId": 59, "name": "ガード性能", "level": 1},
+    {"skillId": 47, "name": "砲術", "level": 1}
+   ],
+   "armorSlots": [1, 0, 0],
+   "weaponSlots": [1],
+   "sheetNo": 476,
+   "slotsProvisional": true,
+   "sheetSlots": [1, 1],
+   "source": "シート「所持護石一覧」No.476",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s477",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 72, "name": "攻撃", "level": 2},
+    {"skillId": 137, "name": "フォースショット", "level": 1},
+    {"skillId": 14, "name": "体術", "level": 4}
+   ],
+   "armorSlots": [1, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 477,
+   "slotsProvisional": true,
+   "sheetSlots": [1],
+   "source": "シート「所持護石一覧」No.477",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s478",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 53, "name": "弾導強化", "level": 2},
+    {"skillId": 29, "name": "笛吹き名人", "level": 1},
+    {"skillId": 8, "name": "抜刀術【力】", "level": 1}
+   ],
+   "armorSlots": [1, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 478,
+   "slotsProvisional": true,
+   "sheetSlots": [2],
+   "source": "シート「所持護石一覧」No.478",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s479",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 91, "name": "水属性攻撃強化", "level": 3},
+    {"skillId": 108, "name": "ひるみ軽減", "level": 3}
+   ],
+   "armorSlots": [1, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 479,
+   "slotsProvisional": true,
+   "sheetSlots": [2],
+   "source": "シート「所持護石一覧」No.479",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s480",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 91, "name": "水属性攻撃強化", "level": 3},
+    {"skillId": 108, "name": "ひるみ軽減", "level": 2},
+    {"skillId": 55, "name": "悪臭耐性", "level": 1}
+   ],
+   "armorSlots": [1, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 480,
+   "slotsProvisional": true,
+   "sheetSlots": [1],
+   "source": "シート「所持護石一覧」No.480",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s481",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 12, "name": "毒属性強化", "level": 2},
+    {"skillId": 50, "name": "火属性攻撃強化", "level": 1},
+    {"skillId": 120, "name": "巧撃", "level": 1}
+   ],
+   "armorSlots": [1, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 481,
+   "slotsProvisional": true,
+   "sheetSlots": [1, 1],
+   "source": "シート「所持護石一覧」No.481",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s482",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 121, "name": "氷属性攻撃強化", "level": 3},
+    {"skillId": 90, "name": "整備", "level": 2},
+    {"skillId": 15, "name": "アイテム使用強化", "level": 1}
+   ],
+   "armorSlots": [1, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 482,
+   "slotsProvisional": true,
+   "sheetSlots": [2],
+   "source": "シート「所持護石一覧」No.482",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s483",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 121, "name": "氷属性攻撃強化", "level": 3},
+    {"skillId": 63, "name": "水場・油泥適応", "level": 2},
+    {"skillId": 43, "name": "ランナー", "level": 1}
+   ],
+   "armorSlots": [1, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 483,
+   "slotsProvisional": true,
+   "sheetSlots": [2],
+   "source": "シート「所持護石一覧」No.483",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s484",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 66, "name": "攻めの守勢", "level": 3},
+    {"skillId": 92, "name": "麻痺耐性", "level": 2},
+    {"skillId": 32, "name": "納刀術", "level": 1}
+   ],
+   "armorSlots": [1, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 484,
+   "slotsProvisional": true,
+   "sheetSlots": [1, 1],
+   "source": "シート「所持護石一覧」No.484",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s485",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 117, "name": "業物", "level": 2},
+    {"skillId": 41, "name": "龍属性攻撃強化", "level": 1},
+    {"skillId": 52, "name": "キノコ大好き", "level": 1}
+   ],
+   "armorSlots": [2, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 485,
+   "slotsProvisional": true,
+   "sheetSlots": [3],
+   "source": "シート「所持護石一覧」No.485",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s486",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 9, "name": "麻痺属性強化", "level": 2},
+    {"skillId": 41, "name": "龍属性攻撃強化", "level": 1},
+    {"skillId": 133, "name": "属性吸収", "level": 1}
+   ],
+   "armorSlots": [1, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 486,
+   "slotsProvisional": true,
+   "sheetSlots": [1, 1],
+   "source": "シート「所持護石一覧」No.486",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s487",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 6, "name": "通常弾・通常矢強化", "level": 1},
+    {"skillId": 122, "name": "精霊の加護", "level": 2},
+    {"skillId": 18, "name": "無我の境地", "level": 1}
+   ],
+   "armorSlots": [1, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 487,
+   "slotsProvisional": false,
+   "sheetSlots": [1],
+   "source": "シート「所持護石一覧」No.487",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s488",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 8, "name": "抜刀術【力】", "level": 3},
+    {"skillId": 128, "name": "毒耐性", "level": 3}
+   ],
+   "armorSlots": [1, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 488,
+   "slotsProvisional": false,
+   "sheetSlots": [1, 1],
+   "source": "シート「所持護石一覧」No.488",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s489",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 140, "name": "ファーストショット", "level": 3},
+    {"skillId": 118, "name": "防御", "level": 4}
+   ],
+   "armorSlots": [2, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 489,
+   "slotsProvisional": false,
+   "sheetSlots": [2],
+   "source": "シート「所持護石一覧」No.489",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s490",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 68, "name": "会心撃【特殊】", "level": 2},
+    {"skillId": 140, "name": "ファーストショット", "level": 1},
+    {"skillId": 49, "name": "属性やられ耐性", "level": 1}
+   ],
+   "armorSlots": [2, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 490,
+   "slotsProvisional": false,
+   "sheetSlots": [2],
+   "source": "シート「所持護石一覧」No.490",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s491",
+   "name": "栄世の護石",
+   "rarity": 8,
+   "skills": [
+    {"skillId": 47, "name": "砲術", "level": 3},
+    {"skillId": 120, "name": "巧撃", "level": 1}
+   ],
+   "armorSlots": [1, 0, 0],
+   "weaponSlots": [1],
+   "sheetNo": 491,
+   "slotsProvisional": false,
+   "sheetSlots": [1, 1],
+   "source": "シート「所持護石一覧」No.491",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s492",
+   "name": "栄世の護石",
+   "rarity": 8,
+   "skills": [
+    {"skillId": 7, "name": "高速変形", "level": 3},
+    {"skillId": 123, "name": "逆恨み", "level": 1},
+    {"skillId": 14, "name": "体術", "level": 2}
+   ],
+   "armorSlots": [0, 0, 0],
+   "weaponSlots": [1],
+   "sheetNo": 492,
+   "slotsProvisional": false,
+   "sheetSlots": [1],
+   "source": "シート「所持護石一覧」No.492",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s493",
+   "name": "未解の護石",
+   "rarity": 5,
+   "skills": [
+    {"skillId": 7, "name": "高速変形", "level": 1},
+    {"skillId": 52, "name": "キノコ大好き", "level": 1},
+    {"skillId": 67, "name": "急襲", "level": 1}
+   ],
+   "armorSlots": [2, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 493,
+   "slotsProvisional": false,
+   "sheetSlots": [2, 1],
+   "source": "シート「所持護石一覧」No.493",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s494",
+   "name": "史伝の護石",
+   "rarity": 6,
+   "skills": [
+    {"skillId": 66, "name": "攻めの守勢", "level": 2},
+    {"skillId": 75, "name": "攻勢", "level": 1}
+   ],
+   "armorSlots": [1, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 494,
+   "slotsProvisional": false,
+   "sheetSlots": [1],
+   "source": "シート「所持護石一覧」No.494",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s495",
+   "name": "未解の護石",
+   "rarity": 5,
+   "skills": [
+    {"skillId": 141, "name": "スタミナ奪取", "level": 1},
+    {"skillId": 156, "name": "雷耐性", "level": 2},
+    {"skillId": 111, "name": "満足感", "level": 2}
+   ],
+   "armorSlots": [1, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 495,
+   "slotsProvisional": false,
+   "sheetSlots": [1, 1],
+   "source": "シート「所持護石一覧」No.495",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s496",
+   "name": "未解の護石",
+   "rarity": 5,
+   "skills": [
+    {"skillId": 53, "name": "弾導強化", "level": 1},
+    {"skillId": 14, "name": "体術", "level": 3},
+    {"skillId": 122, "name": "精霊の加護", "level": 2}
+   ],
+   "armorSlots": [1, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 496,
+   "slotsProvisional": false,
+   "sheetSlots": [1, 1],
+   "source": "シート「所持護石一覧」No.496",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s497",
+   "name": "未解の護石",
+   "rarity": 5,
+   "skills": [
+    {"skillId": 78, "name": "睡眠属性強化", "level": 1},
+    {"skillId": 90, "name": "整備", "level": 2},
+    {"skillId": 18, "name": "無我の境地", "level": 2}
+   ],
+   "armorSlots": [1, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 497,
+   "slotsProvisional": false,
+   "sheetSlots": [1, 1],
+   "source": "シート「所持護石一覧」No.497",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s498",
+   "name": "未解の護石",
+   "rarity": 5,
+   "skills": [
+    {"skillId": 60, "name": "集中", "level": 1},
+    {"skillId": 105, "name": "気絶耐性", "level": 2},
+    {"skillId": 63, "name": "水場・油泥適応", "level": 2}
+   ],
+   "armorSlots": [2, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 498,
+   "slotsProvisional": false,
+   "sheetSlots": [2, 1],
+   "source": "シート「所持護石一覧」No.498",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s499",
+   "name": "未解の護石",
+   "rarity": 5,
+   "skills": [
+    {"skillId": 72, "name": "攻撃", "level": 1},
+    {"skillId": 128, "name": "毒耐性", "level": 3}
+   ],
+   "armorSlots": [2, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 499,
+   "slotsProvisional": false,
+   "sheetSlots": [2, 1],
+   "source": "シート「所持護石一覧」No.499",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s500",
+   "name": "未解の護石",
+   "rarity": 5,
+   "skills": [
+    {"skillId": 82, "name": "会心撃【属性】", "level": 1},
+    {"skillId": 123, "name": "逆恨み", "level": 2}
+   ],
+   "armorSlots": [2, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 500,
+   "slotsProvisional": false,
+   "sheetSlots": [2],
+   "source": "シート「所持護石一覧」No.500",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s501",
+   "name": "未解の護石",
+   "rarity": 5,
+   "skills": [
+    {"skillId": 104, "name": "強化持続", "level": 1},
+    {"skillId": 129, "name": "破壊王", "level": 2}
+   ],
+   "armorSlots": [1, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 501,
+   "slotsProvisional": false,
+   "sheetSlots": [1, 1],
+   "source": "シート「所持護石一覧」No.501",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s502",
+   "name": "未解の護石",
+   "rarity": 5,
+   "skills": [
+    {"skillId": 82, "name": "会心撃【属性】", "level": 1},
+    {"skillId": 13, "name": "災禍転福", "level": 1},
+    {"skillId": 48, "name": "環境利用の知識", "level": 2}
+   ],
+   "armorSlots": [2, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 502,
+   "slotsProvisional": false,
+   "sheetSlots": [2, 1],
+   "source": "シート「所持護石一覧」No.502",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s503",
+   "name": "史伝の護石",
+   "rarity": 6,
+   "skills": [
+    {"skillId": 126, "name": "砥石使用高速化", "level": 1},
+    {"skillId": 127, "name": "雷属性攻撃強化", "level": 1},
+    {"skillId": 112, "name": "植生学", "level": 4}
+   ],
+   "armorSlots": [1, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 503,
+   "slotsProvisional": false,
+   "sheetSlots": [1],
+   "source": "シート「所持護石一覧」No.503",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s504",
+   "name": "秘歴の護石",
+   "rarity": 7,
+   "skills": [
+    {"skillId": 50, "name": "火属性攻撃強化", "level": 2},
+    {"skillId": 40, "name": "爆破属性強化", "level": 1},
+    {"skillId": 36, "name": "ＫＯ術", "level": 1}
+   ],
+   "armorSlots": [2, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 504,
+   "slotsProvisional": false,
+   "sheetSlots": [2],
+   "source": "シート「所持護石一覧」No.504",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s505",
+   "name": "未解の護石",
+   "rarity": 5,
+   "skills": [
+    {"skillId": 66, "name": "攻めの守勢", "level": 1},
+    {"skillId": 84, "name": "水耐性", "level": 3}
+   ],
+   "armorSlots": [3, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 505,
+   "slotsProvisional": false,
+   "sheetSlots": [3],
+   "source": "シート「所持護石一覧」No.505",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s506",
+   "name": "未解の護石",
+   "rarity": 5,
+   "skills": [
+    {"skillId": 104, "name": "強化持続", "level": 1},
+    {"skillId": 81, "name": "逆襲", "level": 2}
+   ],
+   "armorSlots": [3, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 506,
+   "slotsProvisional": false,
+   "sheetSlots": [3],
+   "source": "シート「所持護石一覧」No.506",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s507",
+   "name": "史伝の護石",
+   "rarity": 6,
+   "skills": [
+    {"skillId": 103, "name": "抜刀術【技】", "level": 2},
+    {"skillId": 90, "name": "整備", "level": 2},
+    {"skillId": 123, "name": "逆恨み", "level": 1}
+   ],
+   "armorSlots": [2, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 507,
+   "slotsProvisional": false,
+   "sheetSlots": [2, 1],
+   "source": "シート「所持護石一覧」No.507",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s508",
+   "name": "未解の護石",
+   "rarity": 5,
+   "skills": [
+    {"skillId": 7, "name": "高速変形", "level": 1},
+    {"skillId": 108, "name": "ひるみ軽減", "level": 2},
+    {"skillId": 63, "name": "水場・油泥適応", "level": 2}
+   ],
+   "armorSlots": [2, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 508,
+   "slotsProvisional": false,
+   "sheetSlots": [2, 1],
+   "source": "シート「所持護石一覧」No.508",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s509",
+   "name": "史伝の護石",
+   "rarity": 6,
+   "skills": [
+    {"skillId": 29, "name": "笛吹き名人", "level": 1},
+    {"skillId": 7, "name": "高速変形", "level": 1},
+    {"skillId": 144, "name": "挑戦者", "level": 1}
+   ],
+   "armorSlots": [2, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 509,
+   "slotsProvisional": false,
+   "sheetSlots": [2, 1],
+   "source": "シート「所持護石一覧」No.509",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s510",
+   "name": "未解の護石",
+   "rarity": 5,
+   "skills": [
+    {"skillId": 66, "name": "攻めの守勢", "level": 1},
+    {"skillId": 38, "name": "鎖刃刺撃", "level": 1}
+   ],
+   "armorSlots": [2, 1, 0],
+   "weaponSlots": [0],
+   "sheetNo": 510,
+   "slotsProvisional": false,
+   "sheetSlots": [2, 1],
+   "source": "シート「所持護石一覧」No.510",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s511",
+   "name": "未解の護石",
+   "rarity": 5,
+   "skills": [
+    {"skillId": 119, "name": "匠", "level": 1},
+    {"skillId": 90, "name": "整備", "level": 2},
+    {"skillId": 77, "name": "回避性能", "level": 2}
+   ],
+   "armorSlots": [3, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 511,
+   "slotsProvisional": false,
+   "sheetSlots": [3],
+   "source": "シート「所持護石一覧」No.511",
+   "addedAt": "2026-10-31",
+   "note": ""
+  },
+  {
+   "id": "s512",
+   "name": "未解の護石",
+   "rarity": 5,
+   "skills": [
+    {"skillId": 36, "name": "ＫＯ術", "level": 1},
+    {"skillId": 52, "name": "キノコ大好き", "level": 2}
+   ],
+   "armorSlots": [3, 0, 0],
+   "weaponSlots": [0],
+   "sheetNo": 512,
+   "slotsProvisional": false,
+   "sheetSlots": [3],
+   "source": "シート「所持護石一覧」No.512",
+   "addedAt": "2026-10-31",
+   "note": ""
   }
  ]
 }
